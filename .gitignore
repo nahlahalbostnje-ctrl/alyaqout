@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Images & binaries (keep docs only)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4

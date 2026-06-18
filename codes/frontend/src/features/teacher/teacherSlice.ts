@@ -1,0 +1,136 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../services/axios';
+
+interface CourseCategory { id: number; name: string; grade: { id: number; name: string } }
+
+export interface TeacherCourse {
+  id: number;
+  title: string;
+  description: string;
+  thumbnail: string | null;
+  price: string;
+  is_free: boolean;
+  is_active: boolean;
+  category: CourseCategory;
+}
+
+export interface TeacherLiveClass {
+  id: number;
+  title: string;
+  description: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  status: 'scheduled' | 'live' | 'ended';
+  meeting_link: string | null;
+  agora_channel: string | null;
+  course: { id: number; title: string };
+}
+
+interface TeacherInfo { id: number; name: string }
+
+interface TeacherState {
+  teacher: TeacherInfo | null;
+  courses: TeacherCourse[];
+  liveClasses: TeacherLiveClass[];
+  upcoming: TeacherLiveClass[];
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: TeacherState = {
+  teacher: null,
+  courses: [],
+  liveClasses: [],
+  upcoming: [],
+  loading: false,
+  error: null,
+};
+
+export const fetchTeacherDashboard = createAsyncThunk(
+  'teacher/fetchDashboard',
+  async (_, { rejectWithValue }) => {
+    try {
+      const r = await api.get('/teacher/dashboard');
+      return r.data.data;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+export const fetchTeacherCourses = createAsyncThunk(
+  'teacher/fetchCourses',
+  async (_, { rejectWithValue }) => {
+    try {
+      const r = await api.get('/teacher/courses');
+      return r.data.data as TeacherCourse[];
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+export const fetchTeacherLiveClasses = createAsyncThunk(
+  'teacher/fetchLiveClasses',
+  async (_, { rejectWithValue }) => {
+    try {
+      const r = await api.get('/teacher/live-classes');
+      return r.data.data as TeacherLiveClass[];
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+export const updateTeacherClassStatus = createAsyncThunk(
+  'teacher/updateClassStatus',
+  async (classId: number, { rejectWithValue }) => {
+    try {
+      const r = await api.patch(`/teacher/live-classes/${classId}/status`);
+      return r.data.data as TeacherLiveClass;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+const teacherSlice = createSlice({
+  name: 'teacher',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTeacherDashboard.pending,  (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchTeacherDashboard.fulfilled, (s, a) => {
+        s.loading  = false;
+        s.teacher  = a.payload.teacher;
+        s.courses  = a.payload.courses;
+        s.upcoming = a.payload.upcoming;
+      })
+      .addCase(fetchTeacherDashboard.rejected, (s, a) => {
+        s.loading = false;
+        s.error   = a.payload as string;
+      })
+
+      .addCase(fetchTeacherCourses.pending,   (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchTeacherCourses.fulfilled, (s, a) => { s.loading = false; s.courses = a.payload; })
+      .addCase(fetchTeacherCourses.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
+
+      .addCase(fetchTeacherLiveClasses.pending,   (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchTeacherLiveClasses.fulfilled, (s, a) => { s.loading = false; s.liveClasses = a.payload; })
+      .addCase(fetchTeacherLiveClasses.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
+
+      .addCase(updateTeacherClassStatus.fulfilled, (s, a) => {
+        const idx = s.liveClasses.findIndex((c) => c.id === a.payload.id);
+        if (idx !== -1) s.liveClasses[idx] = a.payload;
+        const upIdx = s.upcoming.findIndex((c) => c.id === a.payload.id);
+        if (upIdx !== -1) s.upcoming[upIdx] = a.payload;
+      });
+  },
+});
+
+export default teacherSlice.reducer;

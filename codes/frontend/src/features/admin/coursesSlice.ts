@@ -1,0 +1,123 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../services/axios';
+
+export interface Course {
+  id: number;
+  category_id: number;
+  teacher_id: number | null;
+  title: string;
+  description: string | null;
+  thumbnail: string | null;
+  price: string;
+  is_free: boolean;
+  is_active: boolean;
+  sort_order: number;
+  category?: { id: number; name: string; grade_id: number; grade?: { id: number; name: string } };
+  teacher?: { id: number; name: string } | null;
+}
+
+export interface CoursePayload {
+  category_id: number;
+  title: string;
+  description?: string;
+  price?: number;
+  is_free?: boolean;
+  sort_order?: number;
+}
+
+interface CoursesState {
+  list: Course[];
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: CoursesState = { list: [], loading: false, error: null };
+
+export const fetchCourses = createAsyncThunk(
+  'courses/fetchAll',
+  async (categoryId: number | null, { rejectWithValue }) => {
+    try {
+      const params = categoryId ? { category_id: categoryId } : {};
+      const { data } = await api.get('/admin/courses', { params });
+      return data.data as Course[];
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تحميل الدورات');
+    }
+  }
+);
+
+export const addCourse = createAsyncThunk(
+  'courses/add',
+  async (payload: CoursePayload, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post('/admin/courses', payload);
+      return data.data as Course;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل إضافة الدورة');
+    }
+  }
+);
+
+export const toggleCourse = createAsyncThunk(
+  'courses/toggle',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const { data } = await api.patch(`/admin/courses/${id}/toggle`);
+      return data.data as Course;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تغيير الحالة');
+    }
+  }
+);
+
+export const assignTeacher = createAsyncThunk(
+  'courses/assignTeacher',
+  async (payload: { courseId: number; teacherId: number | null }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.put(`/admin/courses/${payload.courseId}`, {
+        teacher_id: payload.teacherId,
+      });
+      return data.data as Course;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعيين المعلم');
+    }
+  }
+);
+
+export const deleteCourse = createAsyncThunk(
+  'courses/delete',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await api.delete(`/admin/courses/${id}`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل الحذف');
+    }
+  }
+);
+
+const coursesSlice = createSlice({
+  name: 'courses',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCourses.pending,   (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchCourses.fulfilled, (s, a) => { s.loading = false; s.list = a.payload; })
+      .addCase(fetchCourses.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
+      .addCase(addCourse.fulfilled,    (s, a) => { s.list.push(a.payload); })
+      .addCase(assignTeacher.fulfilled, (s, a) => {
+        const i = s.list.findIndex((c) => c.id === a.payload.id);
+        if (i !== -1) s.list[i] = a.payload;
+      })
+      .addCase(toggleCourse.fulfilled, (s, a) => {
+        const i = s.list.findIndex((c) => c.id === a.payload.id);
+        if (i !== -1) s.list[i] = a.payload;
+      })
+      .addCase(deleteCourse.fulfilled, (s, a) => {
+        s.list = s.list.filter((c) => c.id !== a.payload);
+      });
+  },
+});
+
+export default coursesSlice.reducer;
