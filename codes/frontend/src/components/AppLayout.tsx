@@ -32,45 +32,95 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50" dir="rtl">
-
+    <div
+      className="flex min-h-screen"
+      dir="rtl"
+      style={{ background: '#060d1f', fontFamily: "'Cairo', sans-serif" }}
+    >
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-white border-l border-gray-100 shadow-sm flex flex-col h-screen sticky top-0 flex-shrink-0">
-
+      <aside
+        className="w-64 flex flex-col h-screen sticky top-0 flex-shrink-0"
+        style={{
+          background: 'linear-gradient(180deg, #040a18 0%, #060d1f 100%)',
+          borderLeft: '1px solid rgba(245,166,35,0.1)',
+        }}
+      >
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-gray-100">
+        <div className="px-5 pt-7 pb-5">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="ياقوت" className="w-10 h-10 object-contain flex-shrink-0" />
+            <div className="relative flex-shrink-0">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'rgba(245,166,35,0.25)',
+                  filter: 'blur(14px)',
+                  transform: 'scale(1.4)',
+                }}
+              />
+              <img src="/logo.png" alt="ياقوت" className="relative w-10 h-10 object-contain" />
+            </div>
             <div>
-              <h1 className="text-gray-900 font-bold text-lg leading-tight">منصة الياقوت</h1>
-              <p className="text-gray-400 text-xs">{roleLabel}</p>
+              <h1
+                className="text-white font-black text-base leading-tight"
+                style={{ letterSpacing: '-0.2px' }}
+              >
+                منصة الياقوت
+              </h1>
+              <p className="text-xs font-semibold mt-0.5" style={{ color: '#f5a623', opacity: 0.65 }}>
+                {roleLabel}
+              </p>
             </div>
           </div>
+          <div
+            className="mt-4 h-px"
+            style={{
+              background:
+                'linear-gradient(to left, transparent, rgba(245,166,35,0.3), transparent)',
+            }}
+          />
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-0.5">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group ${
-                  isActive
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  isActive ? '' : 'hover:bg-white/5'
                 }`
+              }
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      background: 'linear-gradient(135deg, #f5a623 0%, #ffd166 100%)',
+                      color: '#040a18',
+                      boxShadow: '0 4px 18px rgba(245,166,35,0.28)',
+                    }
+                  : { color: 'rgba(255,255,255,0.45)' }
               }
             >
               {({ isActive }) => (
                 <>
-                  <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                  <span
+                    className="w-5 h-5 flex-shrink-0 transition-colors"
+                    style={{ color: isActive ? '#040a18' : 'rgba(255,255,255,0.3)' }}
+                  >
                     {item.icon}
                   </span>
-                  <span className="flex-1">{item.label}</span>
+                  <span
+                    className="flex-1 transition-colors"
+                    style={isActive ? {} : { color: 'rgba(255,255,255,0.45)' }}
+                  >
+                    {item.label}
+                  </span>
                   {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ background: 'rgba(4,10,24,0.45)' }}
+                    />
                   )}
                 </>
               )}
@@ -79,22 +129,51 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
         </nav>
 
         {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-gray-100 space-y-1">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50">
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0">
+        <div
+          className="px-2.5 py-3 space-y-1"
+          style={{ borderTop: '1px solid rgba(245,166,35,0.08)' }}
+        >
+          <div
+            className="flex items-center gap-3 px-3 py-3 rounded-xl"
+            style={{
+              background: 'rgba(245,166,35,0.06)',
+              border: '1px solid rgba(245,166,35,0.1)',
+            }}
+          >
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #f5a623, #ffd166)',
+                color: '#040a18',
+              }}
+            >
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{user?.name}</p>
-              <p className="text-xs text-gray-400">{roleLabel}</p>
+              <p className="text-sm font-bold text-white truncate leading-tight">{user?.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#f5a623', opacity: 0.55 }}>
+                {roleLabel}
+              </p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 px-3 py-2.5 rounded-xl transition"
+            className="w-full flex items-center gap-2.5 text-sm px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
             تسجيل الخروج
           </button>
@@ -103,27 +182,41 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col min-w-0">
-
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-10">
+        <header
+          className="h-16 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-10"
+          style={{
+            background: 'rgba(7,14,34,0.95)',
+            borderBottom: '1px solid rgba(245,166,35,0.07)',
+            backdropFilter: 'blur(16px)',
+          }}
+        >
           <div className="flex-1" />
           <div className="flex items-center gap-4">
             <NotificationBell />
-            <div className="h-8 w-px bg-gray-100" />
+            <div className="h-8 w-px" style={{ background: 'rgba(245,166,35,0.12)' }} />
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs"
+                style={{
+                  background: 'linear-gradient(135deg, #f5a623, #ffd166)',
+                  color: '#040a18',
+                }}
+              >
                 {initials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-800 leading-tight">{user?.name}</p>
-                <p className="text-xs text-gray-400">{roleLabel}</p>
+                <p className="text-sm font-bold text-white leading-tight">{user?.name}</p>
+                <p className="text-xs" style={{ color: '#f5a623', opacity: 0.55 }}>
+                  {roleLabel}
+                </p>
               </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto" style={{ background: '#060d1f' }}>
           {children}
         </main>
       </div>

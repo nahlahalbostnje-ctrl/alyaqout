@@ -66,46 +66,85 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#f5f4ff', fontFamily: "'Cairo', sans-serif" }} dir="rtl">
-
-      {/* Sidebar */}
-      <aside className="w-60 flex-shrink-0 flex flex-col"
-        style={{ background: 'linear-gradient(180deg, #6d28d9 0%, #5b21b6 50%, #4c1d95 100%)', boxShadow: '4px 0 24px rgba(109,40,217,0.15)' }}>
-
+    <div
+      className="flex min-h-screen"
+      style={{ background: '#060d1f', fontFamily: "'Cairo', sans-serif" }}
+      dir="rtl"
+    >
+      {/* ── Sidebar ── */}
+      <aside
+        className="w-60 flex-shrink-0 flex flex-col h-screen sticky top-0"
+        style={{
+          background: 'linear-gradient(180deg, #040a18 0%, #060d1f 100%)',
+          borderLeft: '1px solid rgba(245,166,35,0.1)',
+        }}
+      >
         {/* Logo */}
-        <div className="px-6 pt-7 pb-5">
+        <div className="px-5 pt-7 pb-5">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="ياقوت" className="w-10 h-10 object-contain flex-shrink-0" />
+            <div className="relative flex-shrink-0">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'rgba(245,166,35,0.25)',
+                  filter: 'blur(14px)',
+                  transform: 'scale(1.4)',
+                }}
+              />
+              <img src="/logo.png" alt="ياقوت" className="relative w-10 h-10 object-contain" />
+            </div>
             <div>
-              <p className="text-white font-black text-xl leading-none" style={{ fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.3px' }}>منصة الياقوت</p>
-              <p className="text-purple-200/70 text-xs mt-0.5" style={{ fontFamily: "'Cairo', sans-serif" }}>بوابة الطالب</p>
+              <p className="text-white font-black text-base leading-none" style={{ letterSpacing: '-0.2px' }}>
+                منصة الياقوت
+              </p>
+              <p className="text-xs font-semibold mt-0.5" style={{ color: '#f5a623', opacity: 0.65 }}>
+                بوابة الطالب
+              </p>
             </div>
           </div>
+          <div
+            className="mt-4 h-px"
+            style={{
+              background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.3), transparent)',
+            }}
+          />
         </div>
 
-        <div className="mx-5 h-px bg-white/10 mb-3" />
-
         {/* Nav */}
-        <nav className="flex-1 px-3 py-2 space-y-0.5">
+        <nav className="flex-1 px-2.5 py-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white text-purple-700 shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  isActive ? '' : 'hover:bg-white/5'
                 }`
               }
-              style={{ fontFamily: "'Cairo', sans-serif" }}
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      background: 'linear-gradient(135deg, #f5a623 0%, #ffd166 100%)',
+                      color: '#040a18',
+                      boxShadow: '0 4px 18px rgba(245,166,35,0.28)',
+                    }
+                  : { color: 'rgba(255,255,255,0.45)' }
+              }
             >
               {({ isActive }) => (
                 <>
-                  <span className={isActive ? 'text-purple-600' : 'text-white/60'}>
+                  <span style={{ color: isActive ? '#040a18' : 'rgba(255,255,255,0.3)' }}>
                     <NavIcon>{item.icon}</NavIcon>
                   </span>
-                  <span>{item.label}</span>
+                  <span className="flex-1" style={isActive ? {} : { color: 'rgba(255,255,255,0.45)' }}>
+                    {item.label}
+                  </span>
+                  {isActive && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ background: 'rgba(4,10,24,0.45)' }}
+                    />
+                  )}
                 </>
               )}
             </NavLink>
@@ -113,20 +152,39 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* User Card */}
-        <div className="m-3 p-3 rounded-2xl bg-white/10 backdrop-blur-sm mb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-purple-700 text-sm font-black flex-shrink-0 bg-white shadow-sm">
+        <div
+          className="px-2.5 py-3 space-y-1"
+          style={{ borderTop: '1px solid rgba(245,166,35,0.08)' }}
+        >
+          <div
+            className="flex items-center gap-3 px-3 py-3 rounded-xl"
+            style={{
+              background: 'rgba(245,166,35,0.06)',
+              border: '1px solid rgba(245,166,35,0.1)',
+            }}
+          >
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #f5a623, #ffd166)',
+                color: '#040a18',
+              }}
+            >
               {initials}
             </div>
-            <div className="overflow-hidden flex-1">
-              <p className="text-white text-sm font-bold truncate" style={{ fontFamily: "'Cairo', sans-serif" }}>{user?.name}</p>
-              <p className="text-purple-200/60 text-xs" style={{ fontFamily: "'Cairo', sans-serif" }}>طالب</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate leading-tight">{user?.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#f5a623', opacity: 0.55 }}>
+                طالب
+              </p>
             </div>
           </div>
-          <button onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-red-300 hover:text-white hover:bg-red-500/30 transition-all"
-            style={{ fontFamily: "'Cairo', sans-serif" }}>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 text-sm px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             تسجيل الخروج
@@ -134,21 +192,27 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
         {/* Header */}
-        <header className="h-14 flex items-center justify-between px-6 flex-shrink-0 bg-white"
-          style={{ borderBottom: '1px solid #ede9fe', boxShadow: '0 1px 8px rgba(109,40,217,0.06)' }}>
-          <div>
-            <span className="text-slate-400 text-sm" style={{ fontFamily: "'Cairo', sans-serif" }}>
-              مرحباً، <span className="text-purple-700 font-bold">{user?.name}</span>
-            </span>
-          </div>
+        <header
+          className="h-14 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-10"
+          style={{
+            background: 'rgba(7,14,34,0.95)',
+            borderBottom: '1px solid rgba(245,166,35,0.07)',
+            backdropFilter: 'blur(16px)',
+          }}
+        >
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
+            مرحباً،{' '}
+            <span style={{ color: '#f5a623', fontWeight: 700 }}>{user?.name}</span>
+          </span>
           <NotificationBell />
         </header>
 
-        <main className="flex-1 overflow-auto" style={{ background: '#f5f4ff' }}>{children}</main>
+        <main className="flex-1 overflow-auto" style={{ background: '#060d1f' }}>
+          {children}
+        </main>
       </div>
 
       <EmergencyButton />

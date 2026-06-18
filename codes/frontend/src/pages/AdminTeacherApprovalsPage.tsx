@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  goldL:   '#ffd166',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+};
+
 interface PendingExam {
   id:               number;
   title:            string;
@@ -34,18 +42,14 @@ function ApprovalBadge({ onApprove, onReject, busy }: {
 }) {
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={onApprove}
-        disabled={busy}
-        className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50"
-      >
+      <button onClick={onApprove} disabled={busy}
+        className="text-xs px-3 py-1.5 rounded-lg font-semibold transition disabled:opacity-50"
+        style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
         {busy ? '...' : 'قبول'}
       </button>
-      <button
-        onClick={onReject}
-        disabled={busy}
-        className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition font-semibold disabled:opacity-50"
-      >
+      <button onClick={onReject} disabled={busy}
+        className="text-xs px-3 py-1.5 rounded-lg font-semibold transition disabled:opacity-50"
+        style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
         {busy ? '...' : 'رفض'}
       </button>
     </div>
@@ -71,11 +75,8 @@ export default function AdminTeacherApprovalsPage() {
 
   const load = async () => {
     setLoading(true);
-    try {
-      await Promise.all([loadExams(), loadHomeworks()]);
-    } finally {
-      setLoading(false);
-    }
+    try { await Promise.all([loadExams(), loadHomeworks()]); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -85,9 +86,7 @@ export default function AdminTeacherApprovalsPage() {
     try {
       await api.patch(`/admin/approvals/exams/${exam.id}`, { status });
       setExams((prev) => prev.filter((e) => e.id !== exam.id));
-    } finally {
-      setBusyId(null);
-    }
+    } finally { setBusyId(null); }
   };
 
   const handleHomeworkDecision = async (hw: PendingHomework, status: 'approved' | 'rejected') => {
@@ -95,9 +94,7 @@ export default function AdminTeacherApprovalsPage() {
     try {
       await api.patch(`/admin/approvals/homeworks/${hw.id}`, { status });
       setHomeworks((prev) => prev.filter((h) => h.id !== hw.id));
-    } finally {
-      setBusyId(null);
-    }
+    } finally { setBusyId(null); }
   };
 
   const tabs: { key: Tab; label: string; count: number }[] = [
@@ -107,23 +104,29 @@ export default function AdminTeacherApprovalsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-800">موافقات المعلمين</h2>
-          <p className="text-sm text-gray-400 mt-1">مراجعة وقبول أو رفض محتوى المعلمين قبل نشره للطلاب</p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <h2 className="text-xl font-bold text-white">موافقات المعلمين</h2>
+          </div>
+          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>مراجعة وقبول أو رفض محتوى المعلمين قبل نشره للطلاب</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit mb-6">
+        <div className="flex gap-2 mb-6">
           {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition flex items-center gap-2 ${tab === t.key ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className="px-5 py-2 text-sm font-semibold rounded-xl transition flex items-center gap-2"
+              style={tab === t.key
+                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
+                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
               {t.label}
               {t.count > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${tab === t.key ? 'bg-purple-100 text-purple-700' : 'bg-gray-200 text-gray-500'}`}>
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                  style={tab === t.key
+                    ? { background: 'rgba(4,10,24,0.25)', color: '#040a18' }
+                    : { background: 'rgba(245,166,35,0.15)', color: DK.gold }}>
                   {t.count}
                 </span>
               )}
@@ -131,96 +134,92 @@ export default function AdminTeacherApprovalsPage() {
           ))}
         </div>
 
-        {loading && <p className="text-gray-400 text-sm">جاري التحميل...</p>}
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+          </div>
+        )}
 
         {/* Exams Tab */}
         {!loading && tab === 'exams' && (
-          <>
-            {exams.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                <p className="text-3xl mb-2">✅</p>
-                <p className="text-gray-500 font-semibold">لا توجد امتحانات بانتظار الموافقة</p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">الامتحان</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">المعلم</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">الكورس</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">المدة</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">التاريخ</th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {exams.map((exam) => (
-                      <tr key={exam.id} className="hover:bg-gray-50 transition">
-                        <td className="px-4 py-3 font-semibold text-gray-800">{exam.title}</td>
-                        <td className="px-4 py-3 text-gray-600">{exam.teacher.name}</td>
-                        <td className="px-4 py-3 text-gray-500">{exam.course.title}</td>
-                        <td className="px-4 py-3 text-gray-500">{exam.duration_minutes} دقيقة</td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(exam.created_at)}</td>
-                        <td className="px-4 py-3">
-                          <ApprovalBadge
-                            busy={busyId === exam.id}
-                            onApprove={() => handleExamDecision(exam, 'approved')}
-                            onReject={() => handleExamDecision(exam, 'rejected')}
-                          />
-                        </td>
-                      </tr>
+          exams.length === 0 ? (
+            <div className="text-center py-16 rounded-2xl" style={DK.card}>
+              <p className="font-semibold text-white">لا توجد امتحانات بانتظار الموافقة</p>
+            </div>
+          ) : (
+            <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
+              <table className="w-full text-sm">
+                <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                  <tr>
+                    {['الامتحان', 'المعلم', 'الكورس', 'المدة', 'التاريخ', ''].map((h) => (
+                      <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider"
+                        style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exams.map((exam) => (
+                    <tr key={exam.id} className="transition"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                      <td className="px-4 py-3 font-semibold text-white">{exam.title}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{exam.teacher.name}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{exam.course.title}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{exam.duration_minutes} دقيقة</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: DK.dimTxt }}>{formatDate(exam.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <ApprovalBadge busy={busyId === exam.id}
+                          onApprove={() => handleExamDecision(exam, 'approved')}
+                          onReject={() => handleExamDecision(exam, 'rejected')} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
 
         {/* Homeworks Tab */}
         {!loading && tab === 'homeworks' && (
-          <>
-            {homeworks.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                <p className="text-3xl mb-2">✅</p>
-                <p className="text-gray-500 font-semibold">لا توجد واجبات بانتظار الموافقة</p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">الواجب</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">المعلم</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">الكورس</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">تاريخ التسليم</th>
-                      <th className="text-right px-4 py-3 text-gray-500 font-semibold">أُضيف في</th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {homeworks.map((hw) => (
-                      <tr key={hw.id} className="hover:bg-gray-50 transition">
-                        <td className="px-4 py-3 font-semibold text-gray-800">{hw.title}</td>
-                        <td className="px-4 py-3 text-gray-600">{hw.teacher.name}</td>
-                        <td className="px-4 py-3 text-gray-500">{hw.course.title}</td>
-                        <td className="px-4 py-3 text-gray-500">{formatDate(hw.due_date)}</td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(hw.created_at)}</td>
-                        <td className="px-4 py-3">
-                          <ApprovalBadge
-                            busy={busyId === hw.id}
-                            onApprove={() => handleHomeworkDecision(hw, 'approved')}
-                            onReject={() => handleHomeworkDecision(hw, 'rejected')}
-                          />
-                        </td>
-                      </tr>
+          homeworks.length === 0 ? (
+            <div className="text-center py-16 rounded-2xl" style={DK.card}>
+              <p className="font-semibold text-white">لا توجد واجبات بانتظار الموافقة</p>
+            </div>
+          ) : (
+            <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
+              <table className="w-full text-sm">
+                <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                  <tr>
+                    {['الواجب', 'المعلم', 'الكورس', 'تاريخ التسليم', 'أُضيف في', ''].map((h) => (
+                      <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider"
+                        style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
+                  </tr>
+                </thead>
+                <tbody>
+                  {homeworks.map((hw) => (
+                    <tr key={hw.id} className="transition"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                      <td className="px-4 py-3 font-semibold text-white">{hw.title}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{hw.teacher.name}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{hw.course.title}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{formatDate(hw.due_date)}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: DK.dimTxt }}>{formatDate(hw.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <ApprovalBadge busy={busyId === hw.id}
+                          onApprove={() => handleHomeworkDecision(hw, 'approved')}
+                          onReject={() => handleHomeworkDecision(hw, 'rejected')} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
       </div>
     </AdminLayout>

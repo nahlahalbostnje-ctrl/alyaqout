@@ -1309,4 +1309,99 @@
 
 ---
 
+### [2026-06-18] — بيانات فلسطين + إصلاح Cursor + GitHub + تحليل الفجوة
+
+#### Part 1: Palestine Seeder (بيانات اختبار شاملة)
+
+- **ما تم:**
+  - إنشاء `PalestineSeeder.php` — يغطي جميع 33 جداول ببيانات فلسطين (PS, +970, ILS):
+    - 1 admin + 10 teachers + 10 parents + 15 students + 2 supervisors
+    - 12 grades + 12 categories + 12 courses
+    - 36 units + 36 lessons + 108 videos (4 courses × 3 units × 3 lessons × 3 videos)
+    - 10 packages + 15 subscriptions + 12 live classes
+    - 10 exams + 50 exam_questions + 12 exam_submissions
+    - 10 homeworks + 12 homework_submissions
+    - 15 supervisor_student + 12 attendance_records
+    - 15 gamification_points + 10 leagues + 15 league_participants
+    - 10 emergency_requests + 1 settings record
+    - 10 coupons (PS_WELCOME10, PS_RAMADAN30...) + 10 banners
+    - 12 leads + 10 CMS pages + 12 FAQs + 7 social_links
+    - 15 notifications + 5 notification_broadcasts
+  - إضافة `PalestineSeeder::class` لـ `DatabaseSeeder.php`
+  - إضافة كلمات مفتاحية فلسطين لـ `LoginPage.tsx`:
+    ```
+    ps_admin:      '00970444444444'
+    ps_teacher:    '00970111111111'
+    ps_student:    '00970222222221'
+    ps_parent:     '00970333333331'
+    ps_supervisor: '00970555555551'
+    ```
+  - اكتشاف مخالفات بين التوثيق والـ migrations وإصلاحها (انظر GAP_ANALYSIS)
+
+- **الأخطاء المكتشفة والمُصلَحة:**
+  - `live_classes` status='active' غير صحيح → صحيح: 'scheduled'|'live'|'ended'
+  - `subscriptions` يحتاج: country_id, created_by, payment_method, payment_status, amount_paid
+  - `emergency_requests` column اسمه `teacher_id` وليس `accepted_by`
+  - `league_participants` لا يحتوي score أو rank — (league_id, student_id, joined_at) فقط
+  - `settings` لا تحتوي created_at
+  - `exams` column اسمه `duration` وليس `duration_minutes`
+
+- **الملفات المنشأة/المعدّلة:**
+  - `codes/backend/database/seeders/PalestineSeeder.php` ← جديد
+  - `codes/backend/database/seeders/DatabaseSeeder.php` ← معدّل
+
+---
+
+#### Part 2: إصلاح TeacherApprovalController
+
+- **Bug:** السطر 27 من `TeacherApprovalController.php` يطلب column `duration_minutes` — لكن الـ migration ينشئ column اسمه `duration`
+- **الإصلاح:** `->get(['id', 'title', 'course_id', 'teacher_id', 'duration', 'created_at'])`
+
+---
+
+#### Part 3: GlobalCursor — إصلاح الـ Cursor على الداشبورد
+
+- **المشكلة:** `cursor: none !important` مُطبَّق globally في `index.css` لكن GlobalCursor لم يكن يُعرض إلا داخل LandingPage وLoginPage
+- **الحل:**
+  - إنشاء `src/components/GlobalCursor.tsx` — مكوّن مستقل بـ dot + ring (Framer Motion springs)
+  - إضافته كأول child في `App.tsx` خارج `<Routes>` ← يعمل على جميع الصفحات
+
+- **الملفات المنشأة/المعدّلة:**
+  - `codes/frontend/src/components/GlobalCursor.tsx` ← جديد
+  - `codes/frontend/src/App.tsx` ← إضافة `<GlobalCursor />`
+
+---
+
+#### Part 4: إعداد GitHub
+
+- **ما تم:**
+  - تهيئة git repo في `C:\Users\HP\Desktop\Yaqoot\`
+  - إنشاء `.gitignore` في الجذر
+  - Commit أولي: 288 ملف
+  - Push إلى `https://github.com/nahlahalbostnje-ctrl/alyaqout` (branch: master)
+- **القاعدة:** رفع الكود بعد كل جلسة عمل
+
+---
+
+#### Part 5: اختبار API الكامل
+
+- **النتيجة:** 50/50 endpoints نجحت عبر 6 أدوار (super_admin, admin, teacher, student, parent, supervisor) + public endpoints
+- **الدول المُختبَرة:** الأردن + فلسطين
+
+---
+
+#### Part 6: تحليل الفجوة
+
+- **ما تم:**
+  - إنشاء `GAP_ANALYSIS_2026-06-18.md` — يوثّق:
+    - الفرق بين PROJECT_PLAN والكود الفعلي
+    - ما لم يُبنَ بعد (Flutter، dashboard redesign، OTP حقيقي...)
+    - المخالفات بين schema التوثيق وschema المigrations الفعلية
+    - ترتيب الأولويات قبل الإطلاق الحقيقي
+
+- **الملفات المنشأة:**
+  - `GAP_ANALYSIS_2026-06-18.md` ← جديد في جذر المشروع
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

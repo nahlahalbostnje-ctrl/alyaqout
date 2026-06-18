@@ -215,9 +215,9 @@ export default function App() {
           <PrivateRoute roles={['supervisor']}><SupervisorStudyRoomPage /></PrivateRoute>
         } />
 
-        {/* Live Room — accessible to teacher and student */}
+        {/* Live Room — accessible to teacher, student, and admin (observer) */}
         <Route path="/live/:channel" element={
-          <PrivateRoute roles={['teacher', 'student']}><LiveRoomPage /></PrivateRoute>
+          <PrivateRoute roles={['teacher', 'student', 'admin']}><LiveRoomPage /></PrivateRoute>
         } />
 
         <Route path="*" element={<Navigate to="/login" replace />} />

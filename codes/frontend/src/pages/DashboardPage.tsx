@@ -11,6 +11,24 @@ import {
 } from '../features/countries/countriesSlice';
 import SuperAdminLayout from '../components/SuperAdminLayout';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  goldL:   '#ffd166',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  input:   {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  },
+};
+
 const emptyForm = { name: '', code: '', currency: '', phone_code: '', sort_order: 0, is_active: true };
 
 export default function DashboardPage() {
@@ -21,7 +39,6 @@ export default function DashboardPage() {
   const [form, setForm]           = useState(emptyForm);
   const [saving, setSaving]       = useState(false);
   const [actionErr, setActionErr] = useState('');
-
   const [modal, setModal] = useState<
     | { type: 'add' }
     | { type: 'edit';   country: Country }
@@ -66,84 +83,111 @@ export default function DashboardPage() {
 
   return (
     <SuperAdminLayout>
-      <div className="p-6" dir="rtl">
+      <div className="p-8 min-h-screen" dir="rtl" style={{ fontFamily: "'Cairo', sans-serif" }}>
 
         {/* Page header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">إدارة الدول</h2>
-            <p className="text-gray-400 text-sm mt-0.5">عرض وإدارة الدول المسجّلة في المنصة</p>
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-6 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.7 }}>
+              السوبر أدمن
+            </span>
           </div>
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            إضافة دولة
-          </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-black text-white" style={{ letterSpacing: '-0.5px' }}>إدارة الدول</h1>
+              <p className="text-sm mt-1.5" style={{ color: DK.dimTxt }}>عرض وإدارة الدول المسجّلة في المنصة</p>
+            </div>
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 hover:-translate-y-0.5"
+              style={{
+                background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`,
+                color: DK.navy,
+                boxShadow: '0 4px 18px rgba(245,166,35,0.3)',
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              إضافة دولة
+            </button>
+          </div>
+          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.2), transparent)' }} />
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <StatCard label="إجمالي الدول" value={list.length}                               icon="🌍" color="indigo" />
-          <StatCard label="دول نشطة"     value={list.filter((c) => c.is_active).length}    icon="✅" color="green"  />
-          <StatCard label="دول معطّلة"   value={list.filter((c) => !c.is_active).length}   icon="⏸" color="gray"   />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <StatCard label="إجمالي الدول"  value={list.length}                             accent="#f5a623" iconPath="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <StatCard label="دول نشطة"      value={list.filter((c) => c.is_active).length}  accent="#34d399" iconPath="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <StatCard label="دول معطّلة"    value={list.filter((c) => !c.is_active).length} accent="#f87171" iconPath="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </div>
 
         {/* Table */}
-        {loading && <p className="text-center text-gray-400 py-12 text-sm">جاري التحميل…</p>}
-        {error   && <p className="text-center text-red-500 py-6 text-sm">{error}</p>}
+        {loading && (
+          <div className="flex justify-center py-16">
+            <div className="w-12 h-12 rounded-full border-2 animate-spin"
+              style={{ borderColor: 'rgba(245,166,35,0.2)', borderTopColor: DK.gold }} />
+          </div>
+        )}
+        {error && (
+          <p className="text-center py-6 text-sm" style={{ color: '#f87171' }}>{error}</p>
+        )}
 
         {!loading && !error && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="rounded-2xl overflow-hidden" style={DK.card}>
             <table className="w-full text-sm text-right">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">#</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">الدولة</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">الرمز</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">العملة</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">كود الهاتف</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">الحالة</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase">الإجراءات</th>
+                <tr style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                  {['#', 'الدولة', 'الرمز', 'العملة', 'كود الهاتف', 'الحالة', 'الإجراءات'].map((h) => (
+                    <th key={h} className="px-5 py-3.5 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {list.map((country, i) => (
-                  <tr key={country.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-4 text-gray-400 text-xs font-medium">{i + 1}</td>
+                  <tr
+                    key={country.id}
+                    className="transition-colors"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.03)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                  >
+                    <td className="px-5 py-4 text-xs font-medium" style={{ color: DK.dimTxt }}>{i + 1}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
+                          style={{ background: 'rgba(245,166,35,0.12)', color: DK.gold, border: '1px solid rgba(245,166,35,0.2)' }}
+                        >
                           {country.code}
                         </div>
-                        <span className="font-semibold text-gray-800">{country.name}</span>
+                        <span className="font-bold text-white">{country.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-gray-500 font-mono text-xs">{country.code}</td>
-                    <td className="px-5 py-4 text-gray-500 text-sm">{country.currency}</td>
-                    <td className="px-5 py-4 text-gray-500 font-mono text-xs">{country.phone_code || '—'}</td>
+                    <td className="px-5 py-4 font-mono text-xs" style={{ color: DK.dimTxt }}>{country.code}</td>
+                    <td className="px-5 py-4 text-sm" style={{ color: DK.dimTxt }}>{country.currency}</td>
+                    <td className="px-5 py-4 font-mono text-xs" style={{ color: DK.dimTxt }}>{country.phone_code || '—'}</td>
                     <td className="px-5 py-4">
                       <button
                         onClick={() => handleToggle(country.id)}
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition ${
+                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all"
+                        style={
                           country.is_active
-                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}
+                            ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
+                            : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(255,255,255,0.08)' }
+                        }
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${country.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${country.is_active ? 'bg-emerald-400' : 'bg-white/20'}`} />
                         {country.is_active ? 'نشط' : 'معطّل'}
                       </button>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5">
-                        <Btn onClick={() => openView(country)}                                    variant="gray">عرض</Btn>
-                        <Btn onClick={() => openEdit(country)}                                    variant="indigo">تعديل</Btn>
-                        <Btn onClick={() => navigate(`/dashboard/countries/${country.id}/admins`)} variant="purple">المسؤولون</Btn>
-                        <Btn onClick={() => openDelete(country)}                                  variant="red">حذف</Btn>
+                        <ActionBtn onClick={() => openView(country)}    variant="ghost">عرض</ActionBtn>
+                        <ActionBtn onClick={() => openEdit(country)}    variant="gold">تعديل</ActionBtn>
+                        <ActionBtn onClick={() => navigate(`/dashboard/countries/${country.id}/admins`)} variant="blue">المسؤولون</ActionBtn>
+                        <ActionBtn onClick={() => openDelete(country)}  variant="red">حذف</ActionBtn>
                       </div>
                     </td>
                   </tr>
@@ -151,7 +195,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
             {list.length === 0 && (
-              <p className="text-center text-gray-400 text-sm py-16">لا توجد دول. أضف دولة جديدة.</p>
+              <p className="text-center py-16 text-sm" style={{ color: DK.dimTxt }}>لا توجد دول. أضف دولة جديدة.</p>
             )}
           </div>
         )}
@@ -159,60 +203,81 @@ export default function DashboardPage() {
 
       {/* Modal: Add / Edit */}
       {(modal?.type === 'add' || modal?.type === 'edit') && (
-        <Modal title={modal.type === 'add' ? 'إضافة دولة جديدة' : 'تعديل بيانات الدولة'} onClose={closeModal}>
+        <DarkModal title={modal.type === 'add' ? 'إضافة دولة جديدة' : 'تعديل بيانات الدولة'} onClose={closeModal}>
           <div className="space-y-4">
-            <Field label="اسم الدولة"              value={form.name}       onChange={(v) => f('name', v)} />
-            <Field label="الرمز (مثال: PS)"         value={form.code}       onChange={(v) => f('code', v)} />
-            <Field label="العملة (مثال: ILS)"       value={form.currency}   onChange={(v) => f('currency', v)} />
-            <Field label="كود الهاتف (مثال: +970)"  value={form.phone_code} onChange={(v) => f('phone_code', v)} />
-            <Field label="الترتيب"                  value={String(form.sort_order)} onChange={(v) => f('sort_order', parseInt(v) || 0)} type="number" />
+            <DarkField label="اسم الدولة"             value={form.name}       onChange={(v) => f('name', v)} />
+            <DarkField label="الرمز (مثال: PS)"        value={form.code}       onChange={(v) => f('code', v)} />
+            <DarkField label="العملة (مثال: ILS)"      value={form.currency}   onChange={(v) => f('currency', v)} />
+            <DarkField label="كود الهاتف (مثال: +970)" value={form.phone_code} onChange={(v) => f('phone_code', v)} />
+            <DarkField label="الترتيب"                 value={String(form.sort_order)} onChange={(v) => f('sort_order', parseInt(v) || 0)} type="number" />
             <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input type="checkbox" checked={form.is_active} onChange={(e) => f('is_active', e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-indigo-600" />
-              <span className="text-sm text-gray-700">دولة نشطة</span>
+              <input type="checkbox" checked={form.is_active} onChange={(e) => f('is_active', e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: DK.gold }} />
+              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>دولة نشطة</span>
             </label>
-            {actionErr && <p className="text-red-500 text-xs">{actionErr}</p>}
-            <div className="flex gap-3 pt-1">
-              <button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50">
+            {actionErr && <p className="text-xs" style={{ color: '#f87171' }}>{actionErr}</p>}
+            <div className="flex gap-3 pt-2">
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40"
+                style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}>
                 {saving ? 'جاري الحفظ…' : 'حفظ'}
               </button>
-              <button onClick={closeModal} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm">إلغاء</button>
+              <button onClick={closeModal}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                إلغاء
+              </button>
             </div>
           </div>
-        </Modal>
+        </DarkModal>
       )}
 
       {/* Modal: View */}
       {modal?.type === 'view' && liveView && (
-        <Modal title={liveView.name} onClose={closeModal}>
-          <dl className="space-y-0 divide-y divide-gray-50 mb-4">
-            <DR k="الرمز"      v={liveView.code} />
-            <DR k="العملة"     v={liveView.currency} />
-            <DR k="كود الهاتف" v={liveView.phone_code || '—'} />
-            <DR k="الترتيب"    v={String(liveView.sort_order)} />
-            <DR k="الحالة"     v={liveView.is_active ? 'نشط' : 'معطّل'} />
-            <DR k="المسؤولون"  v={`${liveView.admins.length} مسؤول`} />
+        <DarkModal title={liveView.name} onClose={closeModal}>
+          <dl className="space-y-0 mb-5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <DarkRow k="الرمز"      v={liveView.code} />
+            <DarkRow k="العملة"     v={liveView.currency} />
+            <DarkRow k="كود الهاتف" v={liveView.phone_code || '—'} />
+            <DarkRow k="الترتيب"    v={String(liveView.sort_order)} />
+            <DarkRow k="الحالة"     v={liveView.is_active ? 'نشط' : 'معطّل'} />
+            <DarkRow k="المسؤولون"  v={`${liveView.admins.length} مسؤول`} />
           </dl>
           <div className="flex gap-3">
-            <button onClick={() => { closeModal(); navigate(`/dashboard/countries/${liveView.id}/admins`); }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-semibold text-sm">
+            <button onClick={() => { closeModal(); navigate(`/dashboard/countries/${liveView.id}/admins`); }}
+              className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90"
+              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}>
               إدارة المسؤولين
             </button>
-            <button onClick={closeModal} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm">إغلاق</button>
+            <button onClick={closeModal}
+              className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+              style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+              إغلاق
+            </button>
           </div>
-        </Modal>
+        </DarkModal>
       )}
 
       {/* Modal: Delete */}
       {modal?.type === 'delete' && (
-        <Modal title="تأكيد الحذف" onClose={closeModal}>
-          <p className="text-sm text-gray-600 mb-5">هل تريد حذف دولة <strong>{modal.country.name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.</p>
-          {actionErr && <p className="text-red-500 text-xs mb-3">{actionErr}</p>}
+        <DarkModal title="تأكيد الحذف" onClose={closeModal}>
+          <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            هل تريد حذف دولة <strong className="text-white">{modal.country.name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+          </p>
+          {actionErr && <p className="text-xs mb-3" style={{ color: '#f87171' }}>{actionErr}</p>}
           <div className="flex gap-3">
-            <button onClick={handleDelete} disabled={saving} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50">
+            <button onClick={handleDelete} disabled={saving}
+              className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40"
+              style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
               {saving ? 'جاري الحذف…' : 'حذف'}
             </button>
-            <button onClick={closeModal} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm">إلغاء</button>
+            <button onClick={closeModal}
+              className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+              style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+              إلغاء
+            </button>
           </div>
-        </Modal>
+        </DarkModal>
       )}
     </SuperAdminLayout>
   );
@@ -220,43 +285,61 @@ export default function DashboardPage() {
 
 /* ── Micro components ── */
 
-function StatCard({ label, value, icon, color }: { label: string; value: number; icon: string; color: string }) {
-  const colors: Record<string, string> = {
-    indigo: 'bg-indigo-50 text-indigo-700',
-    green:  'bg-emerald-50 text-emerald-700',
-    gray:   'bg-gray-50 text-gray-600',
-  };
+function StatCard({ label, value, accent, iconPath }: { label: string; value: number; accent: string; iconPath: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${colors[color]}`}>{icon}</div>
+    <div className="rounded-2xl p-5 flex items-center gap-4 group hover:-translate-y-1 transition-transform duration-300"
+      style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}>
+        <svg className="w-5 h-5" fill="none" stroke={accent} viewBox="0 0 24 24" strokeWidth={1.75}>
+          <path strokeLinecap="round" strokeLinejoin="round" d={iconPath} />
+        </svg>
+      </div>
       <div>
-        <p className="text-2xl font-bold text-gray-800">{value}</p>
-        <p className="text-sm text-gray-400">{label}</p>
+        <p className="text-2xl font-black text-white">{value}</p>
+        <p className="text-xs font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
       </div>
     </div>
   );
 }
 
-type BtnVariant = 'gray' | 'indigo' | 'purple' | 'red';
-function Btn({ onClick, variant, children }: { onClick: () => void; variant: BtnVariant; children: React.ReactNode }) {
-  const s: Record<BtnVariant, string> = {
-    gray:   'border-gray-200 text-gray-600 bg-gray-50 hover:bg-gray-100',
-    indigo: 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100',
-    purple: 'border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100',
-    red:    'border-red-200 text-red-600 bg-red-50 hover:bg-red-100',
+type ActionVariant = 'ghost' | 'gold' | 'blue' | 'red';
+function ActionBtn({ onClick, variant, children }: { onClick: () => void; variant: ActionVariant; children: React.ReactNode }) {
+  const styles: Record<ActionVariant, React.CSSProperties> = {
+    ghost: { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' },
+    gold:  { background: 'rgba(245,166,35,0.12)',  color: '#f5a623',  border: '1px solid rgba(245,166,35,0.2)' },
+    blue:  { background: 'rgba(96,165,250,0.12)',  color: '#60a5fa',  border: '1px solid rgba(96,165,250,0.2)' },
+    red:   { background: 'rgba(239,68,68,0.1)',    color: '#f87171',  border: '1px solid rgba(239,68,68,0.2)' },
   };
   return (
-    <button onClick={onClick} className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition ${s[variant]}`}>{children}</button>
+    <button onClick={onClick}
+      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+      style={styles[variant]}>
+      {children}
+    </button>
   );
 }
 
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function DarkModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" dir="rtl" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      dir="rtl"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md p-6 max-h-[90vh] overflow-y-auto rounded-2xl"
+        style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold text-gray-800">{title}</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-xl leading-none transition">×</button>
+          <h2 className="text-base font-bold text-white">{title}</h2>
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-white/10"
+            style={{ color: 'rgba(255,255,255,0.4)' }}>
+            ×
+          </button>
         </div>
         {children}
       </div>
@@ -264,20 +347,30 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-function Field({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+function DarkField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+      <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          ...DK.input,
+          transition: 'border-color 0.2s',
+        }}
+        onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
+        onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+      />
     </div>
   );
 }
 
-function DR({ k, v }: { k: string; v: string }) {
+function DarkRow({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex gap-3 py-3">
-      <dt className="text-gray-400 text-xs w-24 shrink-0 pt-0.5">{k}</dt>
-      <dd className="text-gray-800 font-semibold text-sm">{v}</dd>
+    <div className="flex gap-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <dt className="text-xs w-24 shrink-0 pt-0.5" style={{ color: 'rgba(245,166,35,0.5)' }}>{k}</dt>
+      <dd className="font-bold text-sm text-white">{v}</dd>
     </div>
   );
 }

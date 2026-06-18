@@ -8,35 +8,56 @@ import { fetchPackages } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  goldL:   '#ffd166',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  inputStyle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  }
+};
+
 type FilterStatus = 'all' | 'active' | 'expired' | 'cancelled' | 'pending';
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'فعّال', expired: 'منتهي', cancelled: 'ملغى', pending: 'معلّق',
 };
-const STATUS_STYLE: Record<string, string> = {
-  active:    'bg-emerald-100 text-emerald-700',
-  expired:   'bg-slate-100 text-slate-500',
-  cancelled: 'bg-red-100 text-red-600',
-  pending:   'bg-amber-100 text-amber-700',
-};
+
+function statusStyle(s: string) {
+  if (s === 'active')    return { background: 'rgba(52,211,153,0.12)', color: '#34d399' };
+  if (s === 'cancelled') return { background: 'rgba(239,68,68,0.1)',   color: '#f87171' };
+  if (s === 'pending')   return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' };
+  return { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' };
+}
+
+function paymentStyle(s: string) {
+  if (s === 'paid')     return { background: 'rgba(52,211,153,0.12)', color: '#34d399' };
+  if (s === 'pending')  return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' };
+  return { background: 'rgba(239,68,68,0.1)', color: '#f87171' };
+}
+
 const PAYMENT_LABEL: Record<string, string> = {
   paid: 'مدفوع', pending: 'بانتظار الدفع', refunded: 'مسترجع',
-};
-const PAYMENT_STYLE: Record<string, string> = {
-  paid:     'bg-teal-50 text-teal-700',
-  pending:  'bg-amber-50 text-amber-700',
-  refunded: 'bg-red-50 text-red-600',
 };
 
 function DaysBar({ days, total }: { days: number; total: number }) {
   const pct = total > 0 ? Math.min(100, Math.round((days / total) * 100)) : 0;
-  const color = pct > 50 ? 'bg-emerald-400' : pct > 20 ? 'bg-amber-400' : 'bg-red-400';
+  const barColor = pct > 50 ? '#34d399' : pct > 20 ? '#fbbf24' : '#f87171';
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
       </div>
-      <span className="text-xs text-slate-500 w-16 text-left">{days} يوم</span>
+      <span className="text-xs w-16 text-left" style={{ color: DK.dimTxt }}>{days} يوم</span>
     </div>
   );
 }
@@ -51,6 +72,7 @@ export default function SubscriptionsPage() {
   const [showModal, setModal] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     student_id: '',
@@ -101,291 +123,231 @@ export default function SubscriptionsPage() {
     await dispatch(cancelSubscription(sub.id));
   };
 
-  const filterTabs: { key: FilterStatus; label: string; count: number; color: string }[] = [
-    { key: 'all',       label: 'الكل',     count: stats.total,     color: 'text-slate-600' },
-    { key: 'active',    label: 'فعّالة',   count: stats.active,    color: 'text-emerald-600' },
-    { key: 'expired',   label: 'منتهية',   count: stats.expired,   color: 'text-slate-400' },
-    { key: 'cancelled', label: 'ملغاة',    count: stats.cancelled, color: 'text-red-500' },
-    { key: 'pending',   label: 'معلّقة',   count: stats.pending,   color: 'text-amber-600' },
+  const filterTabs: { key: FilterStatus; label: string; count: number }[] = [
+    { key: 'all',       label: 'الكل',     count: stats.total     },
+    { key: 'active',    label: 'فعّالة',   count: stats.active    },
+    { key: 'expired',   label: 'منتهية',   count: stats.expired   },
+    { key: 'cancelled', label: 'ملغاة',    count: stats.cancelled },
+    { key: 'pending',   label: 'معلّقة',   count: stats.pending   },
+  ];
+
+  const inputStyle = (field: string) => ({
+    ...DK.inputStyle,
+    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
+  });
+
+  const statsCards = [
+    { label: 'فعّالة',  value: stats.active,    color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
+    { label: 'منتهية',  value: stats.expired,   color: DK.dimTxt, bg: 'rgba(255,255,255,0.04)' },
+    { label: 'ملغاة',   value: stats.cancelled, color: '#f87171', bg: 'rgba(239,68,68,0.08)' },
+    { label: 'معلّقة',  value: stats.pending,   color: '#fbbf24', bg: 'rgba(245,158,11,0.08)' },
   ];
 
   return (
     <AdminLayout>
-      <div className="p-8 min-h-screen bg-gradient-to-br from-slate-50 to-teal-50/30">
-
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">الاشتراكات</h2>
-            <p className="text-slate-400 text-sm mt-1">إدارة اشتراكات الطلاب والباقات المفعّلة</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <div>
+              <h2 className="text-xl font-bold text-white">الاشتراكات</h2>
+              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة اشتراكات الطلاب والباقات المفعّلة</p>
+            </div>
           </div>
-          <button
-            onClick={openModal}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200"
-            style={{ background: 'linear-gradient(135deg, #0d9488, #0891b2)' }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            اشتراك جديد
+          <button onClick={openModal} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+            + اشتراك جديد
           </button>
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'فعّالة',  value: stats.active,    from: 'from-emerald-500', to: 'to-teal-600',   bg: 'from-emerald-50 to-teal-50' },
-            { label: 'منتهية',  value: stats.expired,   from: 'from-slate-400',  to: 'to-slate-500',  bg: 'from-slate-50 to-gray-50' },
-            { label: 'ملغاة',   value: stats.cancelled, from: 'from-red-400',    to: 'to-rose-500',   bg: 'from-red-50 to-rose-50' },
-            { label: 'معلّقة',  value: stats.pending,   from: 'from-amber-400',  to: 'to-orange-500', bg: 'from-amber-50 to-orange-50' },
-          ].map((s) => (
-            <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-2xl p-5 border border-white shadow-sm`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-slate-500 text-xs font-medium">{s.label}</p>
-                  <p className="text-3xl font-bold text-slate-800 mt-1">{s.value}</p>
-                </div>
-                <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${s.from} ${s.to} shadow-md`} />
-              </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {statsCards.map((s) => (
+            <div key={s.label} className="rounded-2xl p-4" style={{ background: s.bg, border: '1px solid rgba(245,166,35,0.08)' }}>
+              <p className="text-xs mb-1" style={{ color: DK.dimTxt }}>{s.label}</p>
+              <p className="text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 bg-white rounded-2xl p-1 w-fit shadow-sm border border-slate-100 mb-6">
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-5 flex-wrap">
           {filterTabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                filter === t.key
-                  ? 'bg-teal-600 text-white shadow-sm'
-                  : `${t.color} hover:bg-slate-50`
-              }`}
-            >
-              {t.label}
-              <span className={`mr-1.5 text-xs ${filter === t.key ? 'text-teal-100' : 'text-slate-400'}`}>
-                ({t.count})
-              </span>
+            <button key={t.key} onClick={() => setFilter(t.key)}
+              className="px-4 py-1.5 rounded-xl text-sm font-medium transition"
+              style={filter === t.key
+                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
+                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+              {t.label} ({t.count})
             </button>
           ))}
         </div>
 
-        {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
+          <div className="flex items-center justify-center py-16 gap-3">
+            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
           </div>
         )}
 
-        {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-100 text-red-600 rounded-2xl px-5 py-4 text-sm mb-4">{error}</div>
+          <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{error}</div>
         )}
 
-        {/* Table */}
         {!loading && !error && (
-          <>
-            {items.length > 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/60">
-                      {['الطالب', 'الباقة', 'تاريخ البداية', 'تاريخ الانتهاء', 'المتبقي', 'الحالة', 'الدفع', 'المبلغ', ''].map((h) => (
-                        <th key={h} className="px-5 py-3.5 text-right text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {items.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-5 py-4">
-                          <div>
-                            <p className="font-semibold text-slate-800">{sub.student.name}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">{sub.student.phone}</p>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <p className="font-medium text-slate-700">{sub.package.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{sub.package.duration_days} يوم</p>
-                        </td>
-                        <td className="px-5 py-4 text-slate-600 whitespace-nowrap">{sub.starts_at}</td>
-                        <td className="px-5 py-4 text-slate-600 whitespace-nowrap">{sub.ends_at}</td>
-                        <td className="px-5 py-4 min-w-[130px]">
-                          {sub.status === 'active'
-                            ? <DaysBar days={sub.days_remaining} total={sub.package.duration_days} />
-                            : <span className="text-xs text-slate-400">—</span>}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_STYLE[sub.status]}`}>
-                            {STATUS_LABEL[sub.status]}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${PAYMENT_STYLE[sub.payment_status]}`}>
-                            {PAYMENT_LABEL[sub.payment_status]}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 font-bold text-teal-700 whitespace-nowrap">
-                          {Number(sub.amount_paid).toFixed(2)}
-                        </td>
-                        <td className="px-5 py-4">
-                          {sub.status === 'active' && (
-                            <button
-                              onClick={() => handleCancel(sub)}
-                              className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all"
-                            >
-                              إلغاء
-                            </button>
-                          )}
-                        </td>
-                      </tr>
+          items.length > 0 ? (
+            <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
+              <table className="w-full text-sm">
+                <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                  <tr>
+                    {['الطالب', 'الباقة', 'البداية', 'الانتهاء', 'المتبقي', 'الحالة', 'الدفع', 'المبلغ', ''].map((h) => (
+                      <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider whitespace-nowrap"
+                        style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center text-3xl mb-4">📋</div>
-                <p className="text-slate-500 font-medium">لا توجد اشتراكات</p>
-                <p className="text-slate-400 text-sm mt-1">أضف اشتراكاً جديداً للبدء</p>
-              </div>
-            )}
-          </>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((sub) => (
+                    <tr key={sub.id} className="transition"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-white">{sub.student.name}</p>
+                        <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.student.phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p style={{ color: 'rgba(255,255,255,0.7)' }}>{sub.package.name}</p>
+                        <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.package.duration_days} يوم</p>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: DK.dimTxt }}>{sub.starts_at}</td>
+                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: DK.dimTxt }}>{sub.ends_at}</td>
+                      <td className="px-4 py-3 min-w-[130px]">
+                        {sub.status === 'active'
+                          ? <DaysBar days={sub.days_remaining} total={sub.package.duration_days} />
+                          : <span className="text-xs" style={{ color: DK.dimTxt }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs px-2 py-1 rounded-full font-medium" style={statusStyle(sub.status)}>
+                          {STATUS_LABEL[sub.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs px-2 py-1 rounded-full font-medium" style={paymentStyle(sub.payment_status)}>
+                          {PAYMENT_LABEL[sub.payment_status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-bold whitespace-nowrap" style={{ color: DK.gold }}>
+                        {Number(sub.amount_paid).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {sub.status === 'active' && (
+                          <button onClick={() => handleCancel(sub)}
+                            className="text-xs px-3 py-1.5 rounded-lg transition"
+                            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                            إلغاء
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24" style={{ color: DK.dimTxt }}>
+              <p className="font-medium text-white">لا توجد اشتراكات</p>
+              <p className="text-sm mt-1">أضف اشتراكاً جديداً للبدء</p>
+            </div>
+          )
         )}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-            {/* Modal header */}
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between"
-              style={{ background: 'linear-gradient(135deg, #f0fdfa, #f0f9ff)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl"
+          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">اشتراك جديد</h3>
-                <p className="text-slate-400 text-sm mt-0.5">تفعيل اشتراك يدوي لطالب</p>
+                <h3 className="text-lg font-bold text-white">اشتراك جديد</h3>
+                <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>تفعيل اشتراك يدوي لطالب</p>
               </div>
-              <button onClick={closeModal} className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
-                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button onClick={closeModal} className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: DK.dimTxt }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Student */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">الطالب *</label>
-                <select
-                  value={form.student_id}
-                  onChange={(e) => setForm({ ...form, student_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50"
-                >
-                  <option value="">اختر الطالب...</option>
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name} — {s.phone}</option>
-                  ))}
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الطالب *</label>
+                <select value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}
+                  onFocus={() => setFocusedInput('student')} onBlur={() => setFocusedInput(null)}
+                  style={{ ...inputStyle('student'), cursor: 'pointer' }}>
+                  <option value="" style={{ background: '#070e22' }}>اختر الطالب...</option>
+                  {students.map((s) => <option key={s.id} value={s.id} style={{ background: '#070e22' }}>{s.name} — {s.phone}</option>)}
                 </select>
               </div>
-
-              {/* Package */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">الباقة *</label>
-                <select
-                  value={form.package_id}
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الباقة *</label>
+                <select value={form.package_id}
                   onChange={(e) => {
                     const pkg = packages.find((p) => p.id === Number(e.target.value));
-                    setForm({ ...form, package_id: e.target.value, amount_paid: pkg ? pkg.price : '' });
+                    setForm({ ...form, package_id: e.target.value, amount_paid: pkg ? String(pkg.price) : '' });
                   }}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50"
-                >
-                  <option value="">اختر الباقة...</option>
-                  {packages.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} — {p.duration_days} يوم — {p.price}</option>
-                  ))}
+                  onFocus={() => setFocusedInput('pkg')} onBlur={() => setFocusedInput(null)}
+                  style={{ ...inputStyle('pkg'), cursor: 'pointer' }}>
+                  <option value="" style={{ background: '#070e22' }}>اختر الباقة...</option>
+                  {packages.map((p) => <option key={p.id} value={p.id} style={{ background: '#070e22' }}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
                 </select>
               </div>
-
-              {/* Starts at + Amount */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">تاريخ البداية *</label>
-                  <input
-                    type="date"
-                    value={form.starts_at}
-                    onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50"
-                  />
+                  <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>تاريخ البداية *</label>
+                  <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                    onFocus={() => setFocusedInput('date')} onBlur={() => setFocusedInput(null)}
+                    style={{ ...inputStyle('date'), colorScheme: 'dark' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">المبلغ المدفوع</label>
-                  <input
-                    type="number"
-                    value={form.amount_paid}
-                    onChange={(e) => setForm({ ...form, amount_paid: e.target.value })}
-                    placeholder="0.00"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50"
-                    dir="ltr"
-                  />
+                  <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>المبلغ المدفوع</label>
+                  <input type="number" value={form.amount_paid} onChange={(e) => setForm({ ...form, amount_paid: e.target.value })}
+                    placeholder="0.00" dir="ltr"
+                    onFocus={() => setFocusedInput('amount')} onBlur={() => setFocusedInput(null)}
+                    style={inputStyle('amount')} />
                 </div>
               </div>
-
-              {/* Payment status */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">حالة الدفع</label>
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>حالة الدفع</label>
                 <div className="flex gap-2">
-                  {[
-                    { v: 'paid',    l: 'مدفوع' },
-                    { v: 'pending', l: 'بانتظار الدفع' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.v}
-                      type="button"
-                      onClick={() => setForm({ ...form, payment_status: opt.v })}
-                      className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-all ${
-                        form.payment_status === opt.v
-                          ? 'bg-teal-600 text-white border-teal-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'
-                      }`}
-                    >
+                  {[{ v: 'paid', l: 'مدفوع' }, { v: 'pending', l: 'بانتظار الدفع' }].map((opt) => (
+                    <button key={opt.v} type="button" onClick={() => setForm({ ...form, payment_status: opt.v })}
+                      className="flex-1 py-2 rounded-xl text-sm font-medium transition"
+                      style={form.payment_status === opt.v
+                        ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
+                        : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
                       {opt.l}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Notes */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">ملاحظات</label>
-                <textarea
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  rows={2}
-                  placeholder="مثلاً: حوالة بنكية رقم #..."
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50 resize-none"
-                />
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>ملاحظات</label>
+                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={2} placeholder="مثلاً: حوالة بنكية رقم #..."
+                  onFocus={() => setFocusedInput('notes')} onBlur={() => setFocusedInput(null)}
+                  style={{ ...inputStyle('notes'), resize: 'none' }} />
               </div>
-
               {formError && (
-                <p className="bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm">{formError}</p>
+                <p className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{formError}</p>
               )}
-
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #0d9488, #0891b2)' }}
-                >
+                <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
+                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
                   {submitting ? 'جاري التفعيل...' : 'تفعيل الاشتراك'}
                 </button>
               </div>

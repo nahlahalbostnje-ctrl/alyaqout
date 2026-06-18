@@ -2,6 +2,23 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  inputStyle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '8px 12px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  }
+};
+
 interface Supervisor {
   id:            number;
   name:          string;
@@ -34,15 +51,11 @@ export default function AdminSupervisorAssignmentPage() {
     try {
       const { data } = await api.get('/admin/supervisors');
       setSupervisors(data.supervisors);
-    } finally {
-      setLoadingSupervisors(false);
-    }
+    } finally { setLoadingSupervisors(false); }
   };
 
   const loadStudents = async (supervisor: Supervisor) => {
-    setLoadingStudents(true);
-    setAssigned([]);
-    setUnassigned([]);
+    setLoadingStudents(true); setAssigned([]); setUnassigned([]);
     try {
       const [assignedRes, freeRes] = await Promise.all([
         api.get(`/admin/supervisors/${supervisor.id}/students`),
@@ -50,17 +63,13 @@ export default function AdminSupervisorAssignmentPage() {
       ]);
       setAssigned(assignedRes.data.students);
       setUnassigned(freeRes.data.students);
-    } finally {
-      setLoadingStudents(false);
-    }
+    } finally { setLoadingStudents(false); }
   };
 
   useEffect(() => { loadSupervisors(); }, []);
 
   const selectSupervisor = (sup: Supervisor) => {
-    setSelected(sup);
-    setSearchAssigned('');
-    setSearchFree('');
+    setSelected(sup); setSearchAssigned(''); setSearchFree('');
     loadStudents(sup);
   };
 
@@ -74,9 +83,7 @@ export default function AdminSupervisorAssignmentPage() {
       setSupervisors((prev) => prev.map((s) =>
         s.id === selected.id ? { ...s, student_count: s.student_count + 1 } : s
       ));
-    } finally {
-      setAssigning(null);
-    }
+    } finally { setAssigning(null); }
   };
 
   const handleRemove = async (student: Student) => {
@@ -89,9 +96,7 @@ export default function AdminSupervisorAssignmentPage() {
       setSupervisors((prev) => prev.map((s) =>
         s.id === selected.id ? { ...s, student_count: s.student_count - 1 } : s
       ));
-    } finally {
-      setRemoving(null);
-    }
+    } finally { setRemoving(null); }
   };
 
   const filteredAssigned  = assigned.filter((s) =>
@@ -103,38 +108,46 @@ export default function AdminSupervisorAssignmentPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-800">تعيين الطلاب للمشرفين</h2>
-          <p className="text-sm text-gray-400 mt-1">كل مشرف يتابع 100–150 طالباً</p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <h2 className="text-xl font-bold text-white">تعيين الطلاب للمشرفين</h2>
+          </div>
+          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>كل مشرف يتابع 100–150 طالباً</p>
         </div>
 
         <div className="grid grid-cols-4 gap-6 min-h-[calc(100vh-200px)]">
 
           {/* Supervisors Column */}
           <div className="col-span-1 space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">المشرفون</p>
-            {loadingSupervisors && <p className="text-gray-400 text-sm">جاري التحميل...</p>}
+            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>المشرفون</p>
+            {loadingSupervisors && (
+              <div className="flex justify-center py-8">
+                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+              </div>
+            )}
             {!loadingSupervisors && supervisors.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-8">لا يوجد مشرفون</p>
+              <p className="text-sm text-center py-8" style={{ color: DK.dimTxt }}>لا يوجد مشرفون</p>
             )}
             {supervisors.map((sup) => (
-              <button
-                key={sup.id}
-                onClick={() => selectSupervisor(sup)}
-                className={`w-full text-right px-4 py-3 rounded-xl text-sm transition flex items-start gap-3 ${selected?.id === sup.id ? 'bg-purple-50 border border-purple-200' : 'bg-white border border-gray-100 hover:bg-gray-50'}`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs flex-shrink-0 mt-0.5">
+              <button key={sup.id} onClick={() => selectSupervisor(sup)}
+                className="w-full text-right px-4 py-3 rounded-xl text-sm transition flex items-start gap-3"
+                style={selected?.id === sup.id
+                  ? { background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)' }
+                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                  style={{ background: 'rgba(245,166,35,0.15)', color: DK.gold }}>
                   {sup.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold truncate ${selected?.id === sup.id ? 'text-purple-700' : 'text-gray-800'}`}>
+                  <p className="font-semibold truncate" style={{ color: selected?.id === sup.id ? DK.gold : 'rgba(255,255,255,0.8)' }}>
                     {sup.name}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>
                     {sup.student_count} طالب
                     {sup.student_count >= 150 && (
-                      <span className="mr-1 text-orange-500 font-semibold">• ممتلئ</span>
+                      <span className="mr-1 font-semibold" style={{ color: '#fbbf24' }}>• ممتلئ</span>
                     )}
                   </p>
                 </div>
@@ -143,44 +156,42 @@ export default function AdminSupervisorAssignmentPage() {
           </div>
 
           {/* Assigned Students Column */}
-          <div className="col-span-1.5 col-span-2" style={{ gridColumn: 'span 2' }}>
+          <div className="col-span-2">
             {!selected ? (
-              <div className="h-full flex items-center justify-center bg-white rounded-2xl border border-dashed border-gray-200">
+              <div className="h-full flex items-center justify-center rounded-2xl"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,166,35,0.2)' }}>
                 <div className="text-center">
-                  <p className="text-3xl mb-2">👈</p>
-                  <p className="text-gray-400 text-sm">اختر مشرفاً لعرض طلابه</p>
+                  <p className="text-sm" style={{ color: DK.dimTxt }}>اختر مشرفاً لعرض طلابه</p>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="p-4 border-b border-gray-100">
-                  <p className="font-bold text-gray-800">{selected.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">الطلاب المعيّنون ({assigned.length})</p>
-                  <input
-                    value={searchAssigned}
-                    onChange={(e) => setSearchAssigned(e.target.value)}
-                    placeholder="بحث..."
-                    className="mt-2 w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  />
+              <div className="rounded-2xl overflow-hidden h-full flex flex-col" style={DK.card}>
+                <div className="p-4" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                  <p className="font-bold text-white">{selected.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>الطلاب المعيّنون ({assigned.length})</p>
+                  <input value={searchAssigned} onChange={(e) => setSearchAssigned(e.target.value)}
+                    placeholder="بحث..." className="mt-2"
+                    style={DK.inputStyle} />
                 </div>
-                <div className="overflow-y-auto max-h-[calc(100vh-360px)]">
+                <div className="overflow-y-auto flex-1">
                   {loadingStudents && (
-                    <p className="text-gray-400 text-sm text-center py-6">جاري التحميل...</p>
+                    <div className="flex justify-center py-8">
+                      <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+                    </div>
                   )}
                   {!loadingStudents && filteredAssigned.length === 0 && (
-                    <p className="text-gray-400 text-sm text-center py-6">لا يوجد طلاب معيّنون</p>
+                    <p className="text-sm text-center py-8" style={{ color: DK.dimTxt }}>لا يوجد طلاب معيّنون</p>
                   )}
                   {filteredAssigned.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50 last:border-0">
+                    <div key={student.id} className="flex items-center justify-between px-4 py-2.5"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                       <div>
-                        <p className="text-sm font-medium text-gray-800">{student.name}</p>
-                        <p className="text-xs text-gray-400">{student.grade?.name ?? '—'} • {student.phone}</p>
+                        <p className="text-sm font-medium text-white">{student.name}</p>
+                        <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'} • {student.phone}</p>
                       </div>
-                      <button
-                        onClick={() => handleRemove(student)}
-                        disabled={removing === student.id}
-                        className="text-xs text-red-400 hover:text-red-600 transition disabled:opacity-40 px-2 py-1"
-                      >
+                      <button onClick={() => handleRemove(student)} disabled={removing === student.id}
+                        className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40"
+                        style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
                         {removing === student.id ? '...' : 'إزالة'}
                       </button>
                     </div>
@@ -192,37 +203,35 @@ export default function AdminSupervisorAssignmentPage() {
 
           {/* Unassigned Students Column */}
           <div className="col-span-1">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">طلاب بلا مشرف</p>
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="p-3 border-b border-gray-100">
-                <input
-                  value={searchFree}
-                  onChange={(e) => setSearchFree(e.target.value)}
-                  placeholder="بحث..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                />
+            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>طلاب بلا مشرف</p>
+            <div className="rounded-2xl overflow-hidden" style={DK.card}>
+              <div className="p-3" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                <input value={searchFree} onChange={(e) => setSearchFree(e.target.value)}
+                  placeholder="بحث..." style={DK.inputStyle} />
               </div>
               <div className="overflow-y-auto max-h-[calc(100vh-320px)]">
                 {!selected && (
-                  <p className="text-gray-400 text-xs text-center py-6">اختر مشرفاً أولاً</p>
+                  <p className="text-xs text-center py-6" style={{ color: DK.dimTxt }}>اختر مشرفاً أولاً</p>
                 )}
                 {selected && loadingStudents && (
-                  <p className="text-gray-400 text-xs text-center py-6">جاري التحميل...</p>
+                  <div className="flex justify-center py-6">
+                    <div className="w-5 h-5 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+                  </div>
                 )}
                 {selected && !loadingStudents && filteredUnassigned.length === 0 && (
-                  <p className="text-gray-400 text-xs text-center py-6">لا يوجد طلاب بلا مشرف</p>
+                  <p className="text-xs text-center py-6" style={{ color: DK.dimTxt }}>لا يوجد طلاب بلا مشرف</p>
                 )}
                 {selected && !loadingStudents && filteredUnassigned.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between px-3 py-2 border-b border-gray-50 last:border-0">
+                  <div key={student.id} className="flex items-center justify-between px-3 py-2"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-800 truncate">{student.name}</p>
-                      <p className="text-xs text-gray-400">{student.grade?.name ?? '—'}</p>
+                      <p className="text-xs font-medium text-white truncate">{student.name}</p>
+                      <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'}</p>
                     </div>
-                    <button
-                      onClick={() => handleAssign(student)}
+                    <button onClick={() => handleAssign(student)}
                       disabled={assigning === student.id || assigned.length >= 150}
-                      className="text-xs text-purple-600 hover:text-purple-800 transition disabled:opacity-40 px-1.5 py-1 flex-shrink-0 mr-1"
-                    >
+                      className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40 flex-shrink-0 mr-1"
+                      style={{ background: 'rgba(245,166,35,0.1)', color: DK.gold }}>
                       {assigning === student.id ? '...' : 'تعيين'}
                     </button>
                   </div>
@@ -230,7 +239,7 @@ export default function AdminSupervisorAssignmentPage() {
               </div>
             </div>
             {selected && assigned.length >= 150 && (
-              <p className="text-xs text-orange-500 mt-2 text-center font-semibold">
+              <p className="text-xs mt-2 text-center font-semibold" style={{ color: '#fbbf24' }}>
                 وصل المشرف للحد الأقصى (150 طالب)
               </p>
             )}

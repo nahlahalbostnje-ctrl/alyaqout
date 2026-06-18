@@ -1,65 +1,57 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import {
-  fetchUsers,
-  addUser,
-  toggleUser,
-  deleteUser,
-  type UserRole,
-} from '../features/admin/usersSlice';
+import { fetchUsers, addUser, toggleUser, deleteUser } from '../features/admin/usersSlice';
 import AdminLayout from '../components/AdminLayout';
 
-const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'teacher', label: 'المعلمون' },
-  { value: 'student', label: 'الطلاب' },
-  { value: 'parent',  label: 'أولياء الأمور' },
-];
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  teacher: 'معلم',
-  student: 'طالب',
-  parent:  'ولي أمر',
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  inputStyle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  }
 };
 
-const ROLE_COLORS: Record<UserRole, string> = {
-  teacher: 'bg-blue-100 text-blue-700',
-  student: 'bg-purple-100 text-purple-700',
-  parent:  'bg-orange-100 text-orange-700',
-};
+type Role = 'teacher' | 'student' | 'parent';
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
   const { list: users, loading } = useAppSelector((s) => s.adminUsers);
 
-  const [activeTab, setActiveTab] = useState<UserRole>('teacher');
+  const [role, setRole]           = useState<Role>('teacher');
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm]           = useState({ name: '', phone: '', role: 'teacher' as UserRole });
+  const [form, setForm]           = useState({ name: '', phone: '', role: 'teacher' as Role });
   const [addError, setAddError]   = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
   const [toggling, setToggling]   = useState<number | null>(null);
   const [deleting, setDeleting]   = useState<number | null>(null);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
-  useEffect(() => {
-    dispatch(fetchUsers(null));
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchUsers(null)); }, [dispatch]);
+
+  const filtered = users.filter((u) => u.role === role);
 
   const openModal = () => {
-    setForm({ name: '', phone: '', role: activeTab });
+    setForm({ name: '', phone: '', role });
     setAddError(null);
     setShowModal(true);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAddLoading(true);
-    setAddError(null);
+    setAddLoading(true); setAddError(null);
     const result = await dispatch(addUser(form));
     setAddLoading(false);
-    if (addUser.fulfilled.match(result)) {
-      setShowModal(false);
-    } else {
-      setAddError(result.payload as string);
-    }
+    if (addUser.fulfilled.match(result)) setShowModal(false);
+    else setAddError(result.payload as string);
   };
 
   const handleToggle = async (id: number) => {
@@ -69,106 +61,109 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذا الحساب؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
     setDeleting(id);
     await dispatch(deleteUser(id));
     setDeleting(null);
   };
 
-  const displayed = users.filter((u) => u.role === activeTab);
+  const inputStyle = (field: string) => ({
+    ...DK.inputStyle,
+    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
+  });
+
+  const tabs: { key: Role; label: string }[] = [
+    { key: 'teacher', label: 'المعلمون' },
+    { key: 'student', label: 'الطلاب' },
+    { key: 'parent',  label: 'أولياء الأمور' },
+  ];
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">إدارة المستخدمين</h2>
-          <button
-            onClick={openModal}
-            className="bg-teal-700 hover:bg-teal-800 text-white text-sm px-4 py-2 rounded-lg transition"
-          >
-            + إضافة {ROLE_LABELS[activeTab]}
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <h2 className="text-xl font-bold text-white">المستخدمون</h2>
+          </div>
+          <button onClick={openModal} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
+            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+            + إضافة مستخدم
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-5 bg-gray-200 p-1 rounded-xl w-fit">
-          {ROLES.map((r) => {
-            const count = users.filter((u) => u.role === r.value).length;
-            return (
-              <button
-                key={r.value}
-                onClick={() => setActiveTab(r.value)}
-                className={`px-5 py-2 rounded-lg text-sm font-medium transition ${
-                  activeTab === r.value
-                    ? 'bg-white text-teal-700 shadow'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                {r.label}
-                <span className={`mr-2 text-xs px-1.5 py-0.5 rounded-full ${
-                  activeTab === r.value ? 'bg-teal-100 text-teal-700' : 'bg-gray-300 text-gray-600'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        {/* Role Tabs */}
+        <div className="flex gap-2 mb-5">
+          {tabs.map((t) => (
+            <button key={t.key} onClick={() => setRole(t.key)}
+              className="px-5 py-2 rounded-xl text-sm font-semibold transition"
+              style={role === t.key
+                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
+                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
           {loading ? (
-            <p className="text-center py-12 text-gray-400">جاري التحميل...</p>
-          ) : displayed.length === 0 ? (
-            <p className="text-center py-12 text-gray-400">
-              لا يوجد {ROLE_LABELS[activeTab]} بعد.
-            </p>
+            <div className="flex items-center justify-center py-16 gap-3">
+              <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="text-center py-12" style={{ color: DK.dimTxt }}>لا يوجد مستخدمون من هذه الفئة بعد.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
+              <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-right font-medium">الاسم</th>
-                  <th className="px-6 py-3 text-right font-medium">رقم الهاتف</th>
-                  <th className="px-6 py-3 text-right font-medium">الدور</th>
-                  <th className="px-6 py-3 text-right font-medium">الحالة</th>
-                  <th className="px-6 py-3 text-right font-medium">إجراءات</th>
+                  {['الاسم', 'رقم الهاتف', 'تاريخ التسجيل', 'الحالة', 'إجراءات'].map((h) => (
+                    <th key={h} className="px-6 py-3 text-right font-semibold uppercase text-xs tracking-wider"
+                      style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {displayed.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-800">{user.name}</td>
-                    <td className="px-6 py-4 text-gray-500" dir="ltr">{user.phone}</td>
+              <tbody>
+                {filtered.map((user) => (
+                  <tr key={user.id} className="transition"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[user.role]}`}>
-                        {ROLE_LABELS[user.role]}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ background: 'rgba(245,166,35,0.15)', color: DK.gold }}>
+                          {user.name?.[0] ?? '?'}
+                        </div>
+                        <span className="font-medium text-white">{user.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4" style={{ color: DK.dimTxt }} dir="ltr">{user.phone}</td>
+                    <td className="px-6 py-4 text-xs" style={{ color: DK.dimTxt }}>
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG') : '—'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                      }`}>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium"
+                        style={user.is_active
+                          ? { background: 'rgba(52,211,153,0.12)', color: '#34d399' }
+                          : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
                         {user.is_active ? 'نشط' : 'معطّل'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <button
-                        onClick={() => handleToggle(user.id)}
-                        disabled={toggling === user.id}
-                        className={`text-xs px-3 py-1.5 rounded-lg transition font-medium disabled:opacity-50 ${
-                          user.is_active
-                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                            : 'bg-green-50 text-green-700 hover:bg-green-100'
-                        }`}
-                      >
-                        {toggling === user.id ? '...' : user.is_active ? 'تعطيل' : 'تفعيل'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        disabled={deleting === user.id}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition disabled:opacity-50"
-                      >
-                        {deleting === user.id ? '...' : 'حذف'}
-                      </button>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button onClick={() => handleToggle(user.id)} disabled={toggling === user.id}
+                          className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                          style={user.is_active
+                            ? { background: 'rgba(239,68,68,0.1)', color: '#f87171' }
+                            : { background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                          {toggling === user.id ? '...' : user.is_active ? 'تعطيل' : 'تفعيل'}
+                        </button>
+                        <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
+                          className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                          {deleting === user.id ? '...' : 'حذف'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -180,66 +175,45 @@ export default function UsersPage() {
 
       {/* Add User Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">
-              إضافة {ROLE_LABELS[form.role]}
-            </h3>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-full max-w-sm p-6 rounded-2xl" style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
+            <h3 className="text-lg font-semibold mb-4 text-white">إضافة مستخدم</h3>
             <form onSubmit={handleAdd} className="space-y-3">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">الدور</label>
-                <select
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                >
-                  {ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label.replace(/ون$/, '')}</option>
-                  ))}
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الدور</label>
+                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
+                  onFocus={() => setFocusedInput('role')} onBlur={() => setFocusedInput(null)}
+                  style={{ ...inputStyle('role'), cursor: 'pointer' }}>
+                  <option value="teacher" style={{ background: '#070e22' }}>معلم</option>
+                  <option value="student" style={{ background: '#070e22' }}>طالب</option>
+                  <option value="parent"  style={{ background: '#070e22' }}>ولي أمر</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">الاسم الكامل</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="مثال: أحمد محمد"
-                  required
-                  autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                />
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الاسم</label>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="الاسم الكامل" required autoFocus
+                  onFocus={() => setFocusedInput('name')} onBlur={() => setFocusedInput(null)}
+                  style={inputStyle('name')} />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">رقم الهاتف</label>
-                <input
-                  type="text"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+962791234567"
-                  required
-                  dir="ltr"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                />
+                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>رقم الهاتف (واتساب)</label>
+                <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="مثال: 9665xxxxxxxx+" required dir="ltr"
+                  onFocus={() => setFocusedInput('phone')} onBlur={() => setFocusedInput(null)}
+                  style={inputStyle('phone')} />
               </div>
-              {addError && (
-                <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{addError}</p>
-              )}
+              {addError && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{addError}</p>}
               <div className="flex gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={addLoading}
-                  className="flex-1 bg-teal-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-teal-800 disabled:opacity-50"
-                >
-                  {addLoading ? 'جاري الإنشاء...' : 'إنشاء'}
+                <button type="submit" disabled={addLoading}
+                  className="flex-1 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                  {addLoading ? 'جاري الإضافة...' : 'إضافة'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-200"
-                >
-                  إلغاء
-                </button>
+                <button type="button" onClick={() => setShowModal(false)}
+                  className="flex-1 py-2 rounded-xl text-sm"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
               </div>
             </form>
           </div>

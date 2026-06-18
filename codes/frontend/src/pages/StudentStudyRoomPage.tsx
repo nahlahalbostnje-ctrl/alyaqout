@@ -5,13 +5,18 @@ import { useAppSelector } from '../app/hooks';
 import StudentLayout from '../components/StudentLayout';
 
 interface Message {
-  id:       string;
-  userId:   number;
-  userName: string;
-  text:     string;
-  role:     string;
+  id:        string;
+  userId:    number;
+  userName:  string;
+  text:      string;
+  role:      string;
   timestamp: number;
 }
+
+const DK = {
+  gold:   '#f5a623',
+  dimTxt: 'rgba(255,255,255,0.4)',
+};
 
 const font = { fontFamily: "'Cairo', sans-serif" };
 
@@ -20,8 +25,8 @@ function formatTime(ts: number) {
 }
 
 export default function StudentStudyRoomPage() {
-  const user    = useAppSelector((s) => s.auth.user);
-  const roomId  = `room_${user?.id}`;
+  const user   = useAppSelector((s) => s.auth.user);
+  const roomId = `room_${user?.id}`;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText]         = useState('');
@@ -58,8 +63,7 @@ export default function StudentStudyRoomPage() {
       text:      trimmed,
       timestamp: Date.now(),
     });
-    setText('');
-    setSending(false);
+    setText(''); setSending(false);
   };
 
   const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -68,18 +72,18 @@ export default function StudentStudyRoomPage() {
 
   return (
     <StudentLayout>
-      <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)', background: '#f5f4ff' }} dir="rtl">
+      <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)', background: '#040a18' }} dir="rtl">
 
         {/* Header */}
-        <div className="bg-white px-6 py-4 flex-shrink-0" style={{ borderBottom: '1px solid #ede9fe' }}>
+        <div className="flex-shrink-0 px-6 py-4" style={{ background: '#070e22', borderBottom: '1px solid rgba(245,166,35,0.1)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}>
+              style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)' }}>
               📚
             </div>
             <div>
-              <h2 className="font-black text-slate-800 text-base" style={font}>غرفة الواجبات</h2>
-              <p className="text-xs text-slate-400" style={font}>اسأل مشرفك عن أي شيء — نرد بأسرع وقت</p>
+              <h2 className="font-black text-white text-base" style={font}>غرفة الواجبات</h2>
+              <p className="text-xs" style={{ color: DK.dimTxt, ...font }}>اسأل مشرفك عن أي شيء — نرد بأسرع وقت</p>
             </div>
           </div>
         </div>
@@ -89,8 +93,8 @@ export default function StudentStudyRoomPage() {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center gap-3 opacity-60">
               <p className="text-5xl">💬</p>
-              <p className="text-slate-500 font-semibold text-sm" style={font}>لا توجد رسائل بعد</p>
-              <p className="text-slate-400 text-xs" style={font}>ابدأ بسؤال مشرفك عن أي واجب أو درس</p>
+              <p className="font-semibold text-sm text-white" style={font}>لا توجد رسائل بعد</p>
+              <p className="text-xs" style={{ color: DK.dimTxt, ...font }}>ابدأ بسؤال مشرفك عن أي واجب أو درس</p>
             </div>
           )}
 
@@ -100,15 +104,15 @@ export default function StudentStudyRoomPage() {
               <div key={msg.id} className={`flex ${isMe ? 'justify-start' : 'justify-end'}`}>
                 <div className="max-w-xs lg:max-w-md">
                   {!isMe && (
-                    <p className="text-xs font-bold mb-1 px-1" style={{ color: '#7c3aed', ...font }}>
+                    <p className="text-xs font-bold mb-1 px-1" style={{ color: DK.gold, ...font }}>
                       {msg.userName}
                     </p>
                   )}
                   <div className="px-4 py-2.5 rounded-2xl text-sm"
                     style={{
-                      background: isMe ? 'linear-gradient(135deg, #7c3aed, #5b21b6)' : '#fff',
-                      color:      isMe ? '#fff' : '#1e293b',
-                      border:     isMe ? 'none' : '1px solid #ede9fe',
+                      background: isMe ? 'linear-gradient(135deg, #f5a623, #ffd166)' : 'rgba(255,255,255,0.06)',
+                      color:      isMe ? '#040a18' : '#fff',
+                      border:     isMe ? 'none' : '1px solid rgba(245,166,35,0.1)',
                       borderTopRightRadius: isMe ? '4px' : '16px',
                       borderTopLeftRadius:  isMe ? '16px' : '4px',
                     }}>
@@ -125,29 +129,33 @@ export default function StudentStudyRoomPage() {
         </div>
 
         {/* Input */}
-        <div className="bg-white flex-shrink-0 p-4 flex items-end gap-3"
-          style={{ borderTop: '1px solid #ede9fe' }}>
+        <div className="flex-shrink-0 p-4 flex items-end gap-3"
+          style={{ background: '#070e22', borderTop: '1px solid rgba(245,166,35,0.08)' }}>
           <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={text} onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKey}
             placeholder="اكتب سؤالك هنا... (Enter للإرسال)"
             rows={1}
-            className="flex-1 resize-none border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-            style={{ ...font, maxHeight: '120px', overflowY: 'auto' }}
+            className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm focus:outline-none"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(245,166,35,0.15)',
+              color: '#fff',
+              maxHeight: '120px',
+              overflowY: 'auto',
+              ...font,
+            }}
             onInput={(e) => {
               const t = e.currentTarget;
               t.style.height = 'auto';
               t.style.height = `${Math.min(t.scrollHeight, 120)}px`;
             }}
           />
-          <button
-            onClick={send}
-            disabled={sending || !text.trim()}
+          <button onClick={send} disabled={sending || !text.trim()}
             className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-2xl transition disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}
-          >
-            <svg className="w-5 h-5 text-white rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)' }}>
+            <svg className="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              style={{ color: '#040a18' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>

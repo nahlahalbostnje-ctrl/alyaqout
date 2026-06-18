@@ -11,6 +11,24 @@ import {
 } from '../features/countries/countriesSlice';
 import SuperAdminLayout from '../components/SuperAdminLayout';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  goldL:   '#ffd166',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  inputStyle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  } as React.CSSProperties,
+};
+
 export default function CountryAdminsPage() {
   const { countryId } = useParams<{ countryId: string }>();
   const navigate       = useNavigate();
@@ -28,16 +46,14 @@ export default function CountryAdminsPage() {
   const [editForm, setEditForm]           = useState({ name: '', phone: '' });
   const [editSaving, setEditSaving]       = useState(false);
   const [editErr, setEditErr]             = useState('');
+  const [toggling, setToggling]           = useState<number | null>(null);
 
   useEffect(() => {
     if (list.length === 0) dispatch(fetchCountries());
   }, [dispatch, list.length]);
 
   async function handleAdd() {
-    if (!form.name.trim() || !form.phone.trim()) {
-      setFormErr('الاسم ورقم الهاتف مطلوبان');
-      return;
-    }
+    if (!form.name.trim() || !form.phone.trim()) { setFormErr('الاسم ورقم الهاتف مطلوبان'); return; }
     setSaving(true); setFormErr('');
     try {
       await dispatch(createCountryAdmin({ countryId: Number(countryId), name: form.name, phone: form.phone })).unwrap();
@@ -47,7 +63,9 @@ export default function CountryAdminsPage() {
   }
 
   async function handleToggle(adminId: number) {
+    setToggling(adminId);
     await dispatch(toggleCountryAdmin({ countryId: Number(countryId), adminId }));
+    setToggling(null);
   }
 
   function openEdit(admin: CountryAdmin) {
@@ -73,14 +91,17 @@ export default function CountryAdminsPage() {
     try {
       await dispatch(deleteCountryAdmin({ countryId: Number(countryId), adminId: confirmDelete.id })).unwrap();
       setConfirmDelete(null);
-    } catch { /* error handled silently */ }
+    } catch { /* ignored */ }
     finally { setDeleting(false); }
   }
 
   if (loading && !country) {
     return (
       <SuperAdminLayout>
-        <div className="flex items-center justify-center h-64 text-gray-400">جاري التحميل…</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-10 h-10 rounded-full border-2 animate-spin"
+            style={{ borderColor: 'rgba(245,166,35,0.2)', borderTopColor: DK.gold }} />
+        </div>
       </SuperAdminLayout>
     );
   }
@@ -88,9 +109,15 @@ export default function CountryAdminsPage() {
   if (!country) {
     return (
       <SuperAdminLayout>
-        <div className="flex flex-col items-center justify-center h-64 gap-3" dir="rtl">
-          <p className="text-gray-500">الدولة غير موجودة</p>
-          <button onClick={() => navigate('/dashboard')} className="text-indigo-600 hover:underline text-sm">العودة للوحة التحكم</button>
+        <div className="flex flex-col items-center justify-center h-64 gap-4" dir="rtl">
+          <p style={{ color: DK.dimTxt }}>الدولة غير موجودة</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-sm font-bold transition hover:opacity-70"
+            style={{ color: DK.gold }}
+          >
+            العودة للوحة التحكم
+          </button>
         </div>
       </SuperAdminLayout>
     );
@@ -98,72 +125,103 @@ export default function CountryAdminsPage() {
 
   return (
     <SuperAdminLayout>
-      <div className="p-6" dir="rtl">
+      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif" }} dir="rtl">
 
-        {/* Page header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">مسؤولو {country.name}</h2>
-            <p className="text-gray-400 text-sm">{country.admins.length} مسؤول مسجّل</p>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all hover:bg-white/5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: DK.dimTxt }}
+            >
+              <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>
+              إدارة الدول
+            </span>
           </div>
+          <h1 className="text-2xl font-black text-white mt-1">مسؤولو {country.name}</h1>
+          <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>{country.admins.length} مسؤول مسجّل</p>
+          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.2), transparent)' }} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Admins list */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50">
-                <h3 className="font-semibold text-gray-700 text-sm">قائمة المسؤولين</h3>
+            <div className="rounded-2xl overflow-hidden" style={DK.card}>
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(245,166,35,0.55)' }}>قائمة المسؤولين</h3>
               </div>
               {country.admins.length === 0 ? (
-                <div className="py-16 text-center text-gray-400 text-sm">
-                  لا يوجد مسؤولون لهذه الدولة بعد
+                <div className="py-16 text-center">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                    style={{ background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.15)' }}>
+                    <svg className="w-5 h-5" fill="none" stroke="rgba(245,166,35,0.4)" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm" style={{ color: DK.dimTxt }}>لا يوجد مسؤولون لهذه الدولة بعد</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50">
+                <div>
                   {country.admins.map((admin) => (
-                    <div key={admin.id} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition">
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between px-5 py-4 transition-colors"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-bold text-sm">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+                          style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                        >
                           {admin.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-gray-800 font-semibold text-sm">{admin.name}</p>
-                          <p className="text-gray-400 text-xs mt-0.5">{admin.phone}</p>
+                          <p className="font-bold text-white text-sm">{admin.name}</p>
+                          <p className="text-xs mt-0.5 dir-ltr" style={{ color: DK.dimTxt }}>{admin.phone}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${admin.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <span
+                          className="text-xs px-2.5 py-1 rounded-full font-bold"
+                          style={admin.is_active
+                            ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
+                            : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(255,255,255,0.08)' }
+                          }
+                        >
                           {admin.is_active ? 'نشط' : 'معطّل'}
                         </span>
                         <button
                           onClick={() => openEdit(admin)}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
+                          style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
                         >
                           تعديل
                         </button>
                         <button
                           onClick={() => handleToggle(admin.id)}
-                          className={`text-xs px-3 py-1.5 rounded-lg font-medium border transition ${
-                            admin.is_active
-                              ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
-                              : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                          }`}
+                          disabled={toggling === admin.id}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80 disabled:opacity-40"
+                          style={admin.is_active
+                            ? { background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)' }
+                            : { background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
+                          }
                         >
-                          {admin.is_active ? 'تعطيل' : 'تفعيل'}
+                          {toggling === admin.id ? '...' : admin.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button
                           onClick={() => setConfirmDelete(admin)}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition"
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
+                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
                         >
                           حذف
                         </button>
@@ -177,34 +235,47 @@ export default function CountryAdminsPage() {
 
           {/* Add form */}
           <div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3 className="font-semibold text-gray-700 text-sm mb-4">إضافة مسؤول جديد</h3>
+            <div className="rounded-2xl p-5" style={DK.card}>
+              <h3 className="text-xs font-bold uppercase tracking-wide mb-5" style={{ color: 'rgba(245,166,35,0.55)' }}>
+                إضافة مسؤول جديد
+              </h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">الاسم الكامل</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>الاسم الكامل</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="مثال: محمد أحمد"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    style={DK.inputStyle}
+                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
+                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">رقم الهاتف</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>رقم الهاتف</label>
                   <input
                     type="text"
                     value={form.phone}
                     onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                     placeholder="+970599000000"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    dir="ltr"
+                    style={DK.inputStyle}
+                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
+                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
                   />
                 </div>
-                {formErr && <p className="text-red-500 text-xs">{formErr}</p>}
+                {formErr && (
+                  <p className="text-xs px-3 py-2 rounded-lg"
+                    style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                    {formErr}
+                  </p>
+                )}
                 <button
                   onClick={handleAdd}
                   disabled={saving}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50"
+                  className="w-full py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
+                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
                 >
                   {saving ? 'جاري الإضافة…' : 'إضافة المسؤول'}
                 </button>
@@ -215,43 +286,67 @@ export default function CountryAdminsPage() {
         </div>
       </div>
 
-      {/* Edit admin modal */}
+      {/* Edit modal */}
       {editAdmin && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" dir="rtl" onClick={() => setEditAdmin(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          dir="rtl"
+          onClick={() => setEditAdmin(null)}
+        >
+          <div
+            className="w-full max-w-sm p-6 rounded-2xl"
+            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-gray-800">تعديل بيانات المسؤول</h3>
-              <button onClick={() => setEditAdmin(null)} className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 text-xl leading-none">×</button>
+              <h3 className="text-base font-bold text-white">تعديل بيانات المسؤول</h3>
+              <button onClick={() => setEditAdmin(null)}
+                className="w-7 h-7 flex items-center justify-center rounded-full text-lg hover:bg-white/10 transition"
+                style={{ color: DK.dimTxt }}>×</button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">الاسم الكامل</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>الاسم الكامل</label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  style={DK.inputStyle}
+                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
+                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">رقم الهاتف</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>رقم الهاتف</label>
                 <input
                   type="text"
                   value={editForm.phone}
                   onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  dir="ltr"
+                  style={DK.inputStyle}
+                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
+                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
                 />
               </div>
-              {editErr && <p className="text-red-500 text-xs">{editErr}</p>}
+              {editErr && (
+                <p className="text-xs px-3 py-2 rounded-lg"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  {editErr}
+                </p>
+              )}
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={handleUpdate}
                   disabled={editSaving}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
+                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
                 >
                   {editSaving ? 'جاري الحفظ…' : 'حفظ التعديلات'}
                 </button>
-                <button onClick={() => setEditAdmin(null)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm">
+                <button onClick={() => setEditAdmin(null)}
+                  className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
                   إلغاء
                 </button>
               </div>
@@ -260,19 +355,42 @@ export default function CountryAdminsPage() {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
+      {/* Delete confirmation */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" dir="rtl" onClick={() => setConfirmDelete(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-bold text-gray-800 mb-2">تأكيد الحذف</h3>
-            <p className="text-sm text-gray-600 mb-5">
-              هل تريد حذف المسؤول <strong>{confirmDelete.name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          dir="rtl"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="w-full max-w-sm p-6 rounded-2xl"
+            style={{ background: '#070e22', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <svg className="w-6 h-6" fill="none" stroke="#f87171" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-bold text-white text-center mb-2">تأكيد الحذف</h3>
+            <p className="text-sm text-center mb-5" style={{ color: DK.dimTxt }}>
+              هل تريد حذف المسؤول <span className="text-white font-bold">{confirmDelete.name}</span>؟ لا يمكن التراجع.
             </p>
             <div className="flex gap-3">
-              <button onClick={handleDelete} disabled={deleting} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-semibold text-sm transition disabled:opacity-50">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
+                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
+              >
                 {deleting ? 'جاري الحذف…' : 'حذف'}
               </button>
-              <button onClick={() => setConfirmDelete(null)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm">
+              <button onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
                 إلغاء
               </button>
             </div>

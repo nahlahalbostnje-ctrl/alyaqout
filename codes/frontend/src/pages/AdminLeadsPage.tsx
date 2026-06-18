@@ -2,6 +2,23 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
+const DK = {
+  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  gold:    '#f5a623',
+  navy:    '#040a18',
+  dimTxt:  'rgba(255,255,255,0.4)',
+  inputStyle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    width: '100%',
+    outline: 'none',
+  }
+};
+
 interface Lead {
   id:           number;
   student_name: string;
@@ -36,12 +53,12 @@ const STATUS_LABELS: Record<string, string> = {
   lost:      'مفقود',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  new:       'bg-blue-100 text-blue-700',
-  contacted: 'bg-yellow-100 text-yellow-700',
-  converted: 'bg-green-100 text-green-700',
-  lost:      'bg-gray-100 text-gray-400',
-};
+function statusStyle(s: string) {
+  if (s === 'new')       return { background: 'rgba(96,165,250,0.12)',  color: '#60a5fa' };
+  if (s === 'contacted') return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' };
+  if (s === 'converted') return { background: 'rgba(52,211,153,0.12)', color: '#34d399' };
+  return { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' };
+}
 
 const SOURCE_LABELS: Record<string, string> = {
   book_now:   'احجز الآن',
@@ -88,27 +105,41 @@ export default function AdminLeadsPage() {
   };
 
   const statCards = stats ? [
-    { label: 'إجمالي',     value: stats.total,     color: 'bg-purple-50 text-purple-700 border-purple-100' },
-    { label: 'جديد',       value: stats.new,        color: 'bg-blue-50 text-blue-700 border-blue-100'       },
-    { label: 'تم التواصل', value: stats.contacted,  color: 'bg-yellow-50 text-yellow-700 border-yellow-100' },
-    { label: 'تحوّل',      value: stats.converted,  color: 'bg-green-50 text-green-700 border-green-100'   },
+    { label: 'إجمالي',     value: stats.total,    color: DK.gold,    bg: 'rgba(245,166,35,0.08)' },
+    { label: 'جديد',       value: stats.new,       color: '#60a5fa', bg: 'rgba(96,165,250,0.08)' },
+    { label: 'تم التواصل', value: stats.contacted, color: '#fbbf24', bg: 'rgba(245,158,11,0.08)' },
+    { label: 'تحوّل',      value: stats.converted, color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
   ] : [];
+
+  const selectStyle = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(245,166,35,0.15)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '8px 12px',
+    fontSize: '13px',
+    outline: 'none',
+    cursor: 'pointer',
+  };
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-800">العملاء المحتملون</h2>
-          <p className="text-sm text-gray-400 mt-1">إدارة طلبات الحجز والحصص المجانية</p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <h2 className="text-xl font-bold text-white">العملاء المحتملون</h2>
+          </div>
+          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>إدارة طلبات الحجز والحصص المجانية</p>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {statCards.map((card) => (
-              <div key={card.label} className={`rounded-xl border p-4 ${card.color}`}>
-                <p className="text-2xl font-bold">{card.value}</p>
-                <p className="text-xs mt-0.5 opacity-75">{card.label}</p>
+              <div key={card.label} className="rounded-2xl p-4" style={{ background: card.bg, border: '1px solid rgba(245,166,35,0.08)' }}>
+                <p className="text-2xl font-bold" style={{ color: card.color }}>{card.value}</p>
+                <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>{card.label}</p>
               </div>
             ))}
           </div>
@@ -116,76 +147,74 @@ export default function AdminLeadsPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-5">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
-          >
-            <option value="">كل الحالات</option>
-            <option value="new">جديد</option>
-            <option value="contacted">تم التواصل</option>
-            <option value="converted">تحوّل</option>
-            <option value="lost">مفقود</option>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
+            <option value="" style={{ background: '#070e22' }}>كل الحالات</option>
+            <option value="new"       style={{ background: '#070e22' }}>جديد</option>
+            <option value="contacted" style={{ background: '#070e22' }}>تم التواصل</option>
+            <option value="converted" style={{ background: '#070e22' }}>تحوّل</option>
+            <option value="lost"      style={{ background: '#070e22' }}>مفقود</option>
           </select>
-
-          <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
-          >
-            <option value="">كل المصادر</option>
-            <option value="book_now">احجز الآن</option>
-            <option value="free_class">حصة مجانية</option>
+          <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} style={selectStyle}>
+            <option value=""           style={{ background: '#070e22' }}>كل المصادر</option>
+            <option value="book_now"   style={{ background: '#070e22' }}>احجز الآن</option>
+            <option value="free_class" style={{ background: '#070e22' }}>حصة مجانية</option>
           </select>
         </div>
 
-        {loading && <p className="text-gray-400 text-sm">جاري التحميل...</p>}
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+          </div>
+        )}
 
         {!loading && leads && leads.data.length === 0 && (
-          <div className="text-center py-16 rounded-2xl bg-white border border-gray-100">
-            <p className="text-4xl mb-3">👤</p>
-            <p className="text-gray-500 font-semibold">لا توجد نتائج</p>
+          <div className="text-center py-16 rounded-2xl" style={DK.card}>
+            <p className="font-semibold text-white">لا توجد نتائج</p>
           </div>
         )}
 
         {!loading && leads && leads.data.length > 0 && (
           <>
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm mb-4">
+            <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }} className="mb-4">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
+                <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
                   <tr>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">الاسم</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">الهاتف</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">الصف</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">المصدر</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">التاريخ</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-semibold">الحالة</th>
+                    {['الاسم', 'الهاتف', 'الصف', 'المصدر', 'التاريخ', 'الحالة'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider"
+                        style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody>
                   {leads.data.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-gray-50 transition">
+                    <tr key={lead.id} className="transition"
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-800">{lead.student_name}</p>
-                        {lead.school && <p className="text-xs text-gray-400 mt-0.5">{lead.school}</p>}
+                        <p className="font-semibold text-white">{lead.student_name}</p>
+                        {lead.school && <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>{lead.school}</p>}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 font-mono" dir="ltr">{lead.phone}</td>
-                      <td className="px-4 py-3 text-gray-500">{lead.grade?.name ?? '—'}</td>
+                      <td className="px-4 py-3 font-mono" style={{ color: DK.dimTxt }} dir="ltr">{lead.phone}</td>
+                      <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{lead.grade?.name ?? '—'}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${lead.source === 'book_now' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                          style={lead.source === 'book_now'
+                            ? { background: 'rgba(245,166,35,0.12)', color: '#f5a623' }
+                            : { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>
                           {SOURCE_LABELS[lead.source]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(lead.created_at)}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: DK.dimTxt }}>{formatDate(lead.created_at)}</td>
                       <td className="px-4 py-3">
                         <select
                           value={lead.status}
                           disabled={updatingId === lead.id}
                           onChange={(e) => handleStatusChange(lead, e.target.value)}
-                          className={`text-xs border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-300 font-semibold ${STATUS_COLORS[lead.status]} border-transparent disabled:opacity-50`}
-                        >
+                          style={{ ...statusStyle(lead.status), borderRadius: '8px', padding: '4px 8px', fontSize: '12px', outline: 'none', cursor: 'pointer', border: 'none', fontFamily: "'Cairo', sans-serif" }}
+                          className="disabled:opacity-50">
                           {Object.entries(STATUS_LABELS).map(([val, label]) => (
-                            <option key={val} value={val}>{label}</option>
+                            <option key={val} value={val} style={{ background: '#070e22', color: '#fff' }}>{label}</option>
                           ))}
                         </select>
                       </td>
@@ -198,21 +227,17 @@ export default function AdminLeadsPage() {
             {/* Pagination */}
             {leads.last_page > 1 && (
               <div className="flex items-center justify-center gap-2">
-                <button
-                  disabled={page === 1}
+                <button disabled={page === 1}
                   onClick={() => { const p = page - 1; setPage(p); load(p); }}
-                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
-                >
+                  className="px-3 py-1.5 text-sm rounded-lg transition disabled:opacity-40"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
                   السابق
                 </button>
-                <span className="text-sm text-gray-500">
-                  صفحة {page} من {leads.last_page}
-                </span>
-                <button
-                  disabled={page === leads.last_page}
+                <span className="text-sm" style={{ color: DK.dimTxt }}>صفحة {page} من {leads.last_page}</span>
+                <button disabled={page === leads.last_page}
                   onClick={() => { const p = page + 1; setPage(p); load(p); }}
-                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
-                >
+                  className="px-3 py-1.5 text-sm rounded-lg transition disabled:opacity-40"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
                   التالي
                 </button>
               </div>

@@ -12,7 +12,7 @@ export interface LiveClass {
   scheduled_at: string;
   duration_minutes: number;
   status: ClassStatus;
-  meeting_link: string | null;
+  agora_channel: string | null;
   course?: { id: number; title: string };
   teacher?: { id: number; name: string };
 }
@@ -24,7 +24,6 @@ export interface LiveClassPayload {
   description?: string;
   scheduled_at: string;
   duration_minutes?: number;
-  meeting_link?: string;
 }
 
 interface LiveClassesState {
