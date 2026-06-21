@@ -35,7 +35,7 @@ import AdminCMSPage               from './pages/AdminCMSPage';
 import AdminSupervisorAssignmentPage from './pages/AdminSupervisorAssignmentPage';
 import AdminTeacherApprovalsPage    from './pages/AdminTeacherApprovalsPage';
 import LiveRoomPage               from './pages/LiveRoomPage';
-import TeacherDashboardPage       from './pages/TeacherDashboardPage';
+import TeacherMobileApp           from './pages/TeacherMobileApp';
 import TeacherCoursesPage         from './pages/TeacherCoursesPage';
 import TeacherLiveClassesPage     from './pages/TeacherLiveClassesPage';
 import TeacherExamsPage           from './pages/TeacherExamsPage';
@@ -175,7 +175,7 @@ export default function App() {
 
         {/* Teacher */}
         <Route path="/teacher/dashboard" element={
-          <PrivateRoute roles={['teacher']}><TeacherDashboardPage /></PrivateRoute>
+          <PrivateRoute roles={['teacher']}><TeacherMobileApp /></PrivateRoute>
         } />
         <Route path="/teacher/courses" element={
           <PrivateRoute roles={['teacher']}><TeacherCoursesPage /></PrivateRoute>
