@@ -3,15 +3,15 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -137,33 +137,33 @@ export default function AdminBannersPage() {
 
   const inputStyle = (field: string) => ({
     ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
+    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
   });
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
             <div>
-              <h2 className="text-xl font-bold text-white">البانرات</h2>
+              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>البانرات</h2>
               <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة بانرات الصفحة الرئيسية</p>
             </div>
           </div>
           <button onClick={openCreate} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
             + بانر جديد
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
           </div>
         ) : banners.length === 0 ? (
           <div className="text-center py-16 rounded-2xl" style={DK.card}>
-            <p className="font-semibold text-white mb-1">لا توجد بانرات بعد</p>
+            <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>لا توجد بانرات بعد</p>
             <p className="text-sm" style={{ color: DK.dimTxt }}>أضف أول بانر للصفحة الرئيسية</p>
           </div>
         ) : (
@@ -173,7 +173,7 @@ export default function AdminBannersPage() {
                 style={{ ...DK.card, borderRadius: '12px' }}>
                 {/* Thumbnail */}
                 <div className="w-24 h-16 rounded-lg overflow-hidden flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  style={{ background: '#F9FAFB' }}>
                   <img src={banner.image_url} alt={banner.title ?? 'بانر'}
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -183,14 +183,14 @@ export default function AdminBannersPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                       style={banner.is_active
-                        ? { background: 'rgba(52,211,153,0.12)', color: '#34d399' }
-                        : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                        ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
+                        : { background: '#F9FAFB', color: DK.dimTxt }}>
                       {banner.is_active ? 'فعّال' : 'معطّل'}
                     </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#F9FAFB', color: DK.dimTxt }}>
                       ترتيب: {banner.sort_order}
                     </span>
-                    {banner.title && <span className="font-bold text-white truncate">{banner.title}</span>}
+                    {banner.title && <span className="font-bold truncate" style={{ color: '#1B2038' }}>{banner.title}</span>}
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs mt-1" style={{ color: DK.dimTxt }}>
                     <span>{formatDate(banner.starts_at)} — {formatDate(banner.ends_at)}</span>
@@ -205,15 +205,15 @@ export default function AdminBannersPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button onClick={() => openEdit(banner)} className="text-xs px-3 py-1.5 rounded-lg transition font-semibold"
-                    style={{ background: 'rgba(245,166,35,0.1)', color: DK.gold }}>تعديل</button>
+                    style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>تعديل</button>
                   <button onClick={() => handleToggle(banner)} className="text-xs px-3 py-1.5 rounded-lg transition font-semibold"
                     style={banner.is_active
-                      ? { background: 'rgba(239,68,68,0.1)', color: '#f87171' }
-                      : { background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                      ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
+                      : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
                     {banner.is_active ? 'تعطيل' : 'تفعيل'}
                   </button>
                   <button onClick={() => handleDelete(banner.id)} className="text-xs px-3 py-1.5 rounded-lg transition"
-                    style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>حذف</button>
+                    style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
                 </div>
               </div>
             ))}
@@ -224,12 +224,12 @@ export default function AdminBannersPage() {
       {/* Create/Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
           <form onSubmit={handleSubmit} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
-            <h3 className="text-lg font-bold text-white mb-4">{editing ? 'تعديل البانر' : 'بانر جديد'}</h3>
+            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>{editing ? 'تعديل البانر' : 'بانر جديد'}</h3>
 
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{error}</p>}
+            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
 
             <div className="space-y-3">
               <div>
@@ -258,13 +258,13 @@ export default function AdminBannersPage() {
                   <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>يبدأ من</label>
                   <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
                     onFocus={() => setFocusedInput('start')} onBlur={() => setFocusedInput(null)}
-                    style={{ ...inputStyle('start'), colorScheme: 'dark' }} />
+                    style={inputStyle('start')} />
                 </div>
                 <div>
                   <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>ينتهي في</label>
                   <input type="date" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
                     onFocus={() => setFocusedInput('end')} onBlur={() => setFocusedInput(null)}
-                    style={{ ...inputStyle('end'), colorScheme: 'dark' }} />
+                    style={inputStyle('end')} />
                 </div>
               </div>
               <div>
@@ -280,12 +280,12 @@ export default function AdminBannersPage() {
             <div className="flex gap-3 mt-5">
               <button type="submit" disabled={saving}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
                 {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة البانر')}
               </button>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                 إلغاء
               </button>
             </div>

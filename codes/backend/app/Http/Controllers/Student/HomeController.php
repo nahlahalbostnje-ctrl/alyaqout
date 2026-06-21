@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceRecord;
 use App\Models\Course;
+use App\Models\Exam;
+use App\Models\Homework;
+use App\Models\HomeworkSubmission;
 use App\Models\LiveClass;
 use App\Models\Subscription;
+use App\Services\GamificationService;
 use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
@@ -43,6 +48,27 @@ class HomeController extends Controller
             ->latest()
             ->first();
 
+        // Extra stats for dashboard
+        $totalPoints = (new GamificationService())->totalPoints($studentId);
+
+        $pendingHomework = Homework::where('country_id', $countryId)
+            ->where('status', 'approved')
+            ->where('due_date', '>=', now())
+            ->whereNotIn('id', HomeworkSubmission::where('student_id', $studentId)->pluck('homework_id'))
+            ->count();
+
+        $upcomingExams = Exam::where('country_id', $countryId)
+            ->where('status', 'approved')
+            ->where('starts_at', '>=', now())
+            ->count();
+
+        $attendanceCount = AttendanceRecord::where('student_id', $studentId)->count();
+
+        // Level calculation: every 500 pts = 1 level
+        $level       = (int) floor($totalPoints / 500) + 1;
+        $xpInLevel   = $totalPoints % 500;
+        $xpForNext   = 500;
+
         return response()->json([
             'success' => true,
             'data'    => [
@@ -57,6 +83,16 @@ class HomeController extends Controller
                     'days_remaining' => max(0, (int) now()->diffInDays($activeSubscription->ends_at, false)),
                     'status'         => $activeSubscription->status,
                 ] : null,
+                'stats' => [
+                    'total_points'    => $totalPoints,
+                    'level'           => $level,
+                    'xp_in_level'     => $xpInLevel,
+                    'xp_for_next'     => $xpForNext,
+                    'pending_homework'=> $pendingHomework,
+                    'upcoming_exams'  => $upcomingExams,
+                    'attendance_count'=> $attendanceCount,
+                    'total_courses'   => $courses->count(),
+                ],
             ],
         ]);
     }

@@ -1,100 +1,121 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentLiveClasses } from '../features/student/studentSlice';
-import StudentLayout from '../components/StudentLayout';
-import type { StudentLiveClass } from '../features/student/studentSlice';
+import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
 
-const DK = {
-  gold:   '#f5a623',
-  dimTxt: 'rgba(255,255,255,0.4)',
+const DAYS = [
+  { label:'الأحد',    num:25 },
+  { label:'الاثنين',  num:27 },
+  { label:'الثلاثاء', num:28 },
+  { label:'الأربعاء', num:29 },
+  { label:'الخميس',  num:30 },
+];
+
+const MOCK_CLASSES = [
+  { time:'08:00 - 09:00', subject:'الرياضيات',         teacher:'أ. أحمد الحربي',   status:'live'      },
+  { time:'09:00 - 10:00', subject:'اللغة الإنجليزية',  teacher:'Sarah Johnson',     status:'scheduled' },
+  { time:'11:00 - 12:00', subject:'العلوم',             teacher:'أ. خالد النجار',   status:'scheduled' },
+  { time:'12:30 - 01:30', subject:'اللغة العربية',      teacher:'أ. فاطمة علي',     status:'scheduled' },
+  { time:'02:00 - 03:00', subject:'التربية الإسلامية', teacher:'أ. محمد سليمان',   status:'scheduled' },
+];
+
+const SUBJ_COLORS: Record<string, string> = {
+  'الرياضيات':         '#4F46E5',
+  'اللغة الإنجليزية': '#2563EB',
+  'العلوم':            '#059669',
+  'اللغة العربية':     '#D97706',
+  'التربية الإسلامية':'#DC2626',
 };
-
-function statusBadge(status: StudentLiveClass['status']) {
-  if (status === 'live') return (
-    <span className="text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
-      style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399' }}>
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-      جارية الآن
-    </span>
-  );
-  if (status === 'scheduled') return (
-    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-      style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>مجدولة</span>
-  );
-  return null;
-}
 
 export default function StudentLiveClassesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { liveClasses, loading, error } = useAppSelector((s) => s.student);
+  const { liveClasses } = useAppSelector(s => s.student);
+  const [dayIdx, setDayIdx] = useState(0);
 
   useEffect(() => { dispatch(fetchStudentLiveClasses()); }, [dispatch]);
 
-  const handleJoin = (cls: StudentLiveClass) => {
-    if (!cls.agora_channel) return;
-    navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
-  };
+  const display = liveClasses.length > 0
+    ? liveClasses.map(c => ({ time: c.start_time ?? '', subject: c.title ?? '', teacher: c.teacher?.name ?? '', status: c.status, id: c.id, channel: c.agora_channel }))
+    : MOCK_CLASSES;
 
   return (
-    <StudentLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h2 className="text-xl font-bold text-white">الحصص المباشرة</h2>
-          </div>
-          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>الحصص المجدولة والجارية في بلدك</p>
-        </div>
+    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
 
-        {loading && (
-          <div className="flex justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
-          </div>
-        )}
-        {error && <p className="text-sm px-4 py-3 rounded-xl mb-4" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{error}</p>}
-
-        {!loading && liveClasses.length === 0 && (
-          <p className="text-center py-12" style={{ color: DK.dimTxt }}>لا توجد حصص متاحة حالياً</p>
-        )}
-
-        <div className="space-y-3">
-          {liveClasses.map((cls) => (
-            <div key={cls.id} className="p-4 rounded-xl"
-              style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    {statusBadge(cls.status)}
-                    <p className="font-semibold text-white">{cls.title}</p>
-                  </div>
-                  {cls.description && (
-                    <p className="text-xs mb-2" style={{ color: DK.dimTxt }}>{cls.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-3 text-xs" style={{ color: DK.dimTxt }}>
-                    <span>📚 {cls.course.title}</span>
-                    <span>👤 {cls.teacher.name}</span>
-                    <span>🕐 {new Date(cls.scheduled_at).toLocaleString('ar-EG')}</span>
-                    <span>⏱ {cls.duration_minutes} دقيقة</span>
-                  </div>
-                </div>
-
-                {cls.status === 'live' && cls.agora_channel && (
-                  <button onClick={() => handleJoin(cls)}
-                    className="mr-4 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap"
-                    style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                    </svg>
-                    انضم الآن
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Status */}
+      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
+        <span>9:41</span><span>▶▶ 🔋</span>
       </div>
-    </StudentLayout>
+
+      {/* Header */}
+      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
+        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>جدول الحصص</h1>
+        <div style={{ width:36 }} />
+      </div>
+
+      {/* Day Strip */}
+      <div style={{ background:C.card, padding:'12px 16px', borderBottom:`1px solid ${C.border}`, display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none' }}>
+        {DAYS.map((d,i) => (
+          <button key={i} onClick={()=>setDayIdx(i)}
+            style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:4, padding:'8px 14px', borderRadius:14, border:'none', cursor:'pointer', background:dayIdx===i?C.navy2:'transparent', transition:'all 0.2s' }}>
+            <span style={{ fontSize:11, color:dayIdx===i?'rgba(255,255,255,0.7)':C.sub, fontWeight:500 }}>{d.label}</span>
+            <span style={{ fontSize:18, fontWeight:800, color:dayIdx===i?C.goldL:C.text, lineHeight:1 }}>{d.num}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Date label */}
+      <div style={{ padding:'14px 16px 10px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <p style={{ color:C.navy2, fontWeight:700, fontSize:15 }}>
+          {DAYS[dayIdx].label} {DAYS[dayIdx].num} مايو 2026
+        </p>
+        <span style={{ color:C.sub, fontSize:12 }}>{display.length} حصص</span>
+      </div>
+
+      {/* Class Cards */}
+      <div style={{ padding:'0 16px' }}>
+        {display.map((cls: any, i: number) => {
+          const color = SUBJ_COLORS[Object.keys(SUBJ_COLORS).find(k=>cls.subject?.includes(k.split(' ')[0]))??''] ?? C.blue;
+          const isLive = cls.status === 'live';
+          return (
+            <div key={i} style={{ background:C.card, borderRadius:18, padding:'14px 16px', marginBottom:10, boxShadow:C.shadow, border:`1px solid ${isLive?'rgba(22,163,74,0.3)':C.border}`, display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{ flexShrink:0, textAlign:'center' }}>
+                <p style={{ color:C.sub, fontSize:10.5, marginBottom:2 }}>{cls.time?.split(' - ')[0] ?? cls.time}</p>
+                <div style={{ width:3, height:28, borderRadius:2, background:color, margin:'4px auto' }} />
+                <p style={{ color:C.dim, fontSize:10.5 }}>{cls.time?.split(' - ')[1] ?? ''}</p>
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:3 }}>
+                  <p style={{ color:C.navy2, fontWeight:800, fontSize:14 }}>{cls.subject}</p>
+                  {isLive && (
+                    <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:10.5, fontWeight:700, color:'#16A34A', background:'rgba(22,163,74,0.08)', padding:'2px 8px', borderRadius:20 }}>
+                      <span style={{ width:6, height:6, borderRadius:'50%', background:'#16A34A', display:'inline-block' }} />
+                      مباشر
+                    </span>
+                  )}
+                </div>
+                <p style={{ color:C.sub, fontSize:12 }}>{cls.teacher}</p>
+              </div>
+              <button
+                onClick={()=>{ if(cls.channel||isLive) navigate(`/live/${cls.channel??'demo'}?classId=${cls.id??1}`); }}
+                style={{ flexShrink:0, padding:'8px 16px', borderRadius:11, background:isLive?C.goldGrad:`${color}18`, border:isLive?'none':`1px solid ${color}33`, color:isLive?'#1B2038':color, fontWeight:700, fontSize:12.5, cursor:'pointer', boxShadow:isLive?'0 3px 10px rgba(201,149,42,0.35)':'none' }}>
+                دخول
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom Button */}
+      <div style={{ padding:'6px 16px 16px' }}>
+        <button style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'pointer' }}>
+          عرض الجدول الكامل
+        </button>
+      </div>
+
+      <StudentBottomNav cur="/student/live-classes" />
+    </div>
   );
 }

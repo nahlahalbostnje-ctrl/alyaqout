@@ -3,11 +3,11 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
 };
 
 const font = { fontFamily: "'Cairo', sans-serif" };
@@ -74,9 +74,9 @@ export default function AdminSettingsPage() {
   };
 
   const inputStyle = (field: string): React.CSSProperties => ({
-    background: 'rgba(255,255,255,0.04)',
-    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -89,7 +89,7 @@ export default function AdminSettingsPage() {
     return (
       <AdminLayout>
         <div className="p-6 flex items-center justify-center py-16">
-          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
         </div>
       </AdminLayout>
     );
@@ -97,22 +97,22 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6 max-w-2xl" dir="rtl" style={font}>
+      <div className="p-6 max-w-2xl" dir="rtl" style={{ ...font, background: '#F5EDD8', minHeight: '100vh' }}>
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h2 className="text-xl font-bold text-white">إعدادات المنصة</h2>
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>إعدادات المنصة</h2>
           </div>
           <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>إعدادات المساعد الذكي والتكاملات</p>
         </div>
 
         {error && (
-          <div className="mb-4 text-sm px-4 py-3 rounded-xl" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <div className="mb-4 text-sm px-4 py-3 rounded-xl" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
             {error}
           </div>
         )}
         {saved && (
-          <div className="mb-4 text-sm px-4 py-3 rounded-xl" style={{ color: '#34d399', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+          <div className="mb-4 text-sm px-4 py-3 rounded-xl" style={{ color: '#10B981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
             تم حفظ الإعدادات بنجاح
           </div>
         )}
@@ -122,9 +122,9 @@ export default function AdminSettingsPage() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ background: 'rgba(245,166,35,0.1)' }}>🤖</div>
+                style={{ background: 'rgba(201,149,42,0.08)' }}>🤖</div>
               <div>
-                <h3 className="font-bold text-white">المساعد الذكي</h3>
+                <h3 className="font-bold" style={{ color: '#1B2038' }}>المساعد الذكي</h3>
                 <p className="text-xs" style={{ color: DK.dimTxt }}>بوت الدعم الدراسي للطلاب</p>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function AdminSettingsPage() {
               <div
                 onClick={() => handleChange('chatbot_enabled', !settings.chatbot_enabled)}
                 className="relative w-11 h-6 rounded-full transition-colors cursor-pointer"
-                style={{ background: settings.chatbot_enabled ? 'linear-gradient(135deg, #f5a623, #ffd166)' : 'rgba(255,255,255,0.1)' }}
+                style={{ background: settings.chatbot_enabled ? 'linear-gradient(135deg, #C9952A, #DDAD50)' : '#EDE3CE' }}
               >
                 <div
                   className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
@@ -148,18 +148,18 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-bold mb-1.5 block" style={{ color: 'rgba(255,255,255,0.7)' }}>مزوّد الذكاء الاصطناعي</label>
+              <label className="text-sm font-bold mb-1.5 block" style={{ color: '#1B2038' }}>مزوّد الذكاء الاصطناعي</label>
               <select value={settings.chatbot_provider}
                 onChange={(e) => handleChange('chatbot_provider', e.target.value)}
                 onFocus={() => setFocusedInput('provider')} onBlur={() => setFocusedInput(null)}
                 style={{ ...inputStyle('provider'), cursor: 'pointer' }}>
-                <option value="claude"  style={{ background: '#070e22' }}>Claude (Anthropic) — موصى به</option>
-                <option value="openai"  style={{ background: '#070e22' }}>GPT (OpenAI)</option>
+                <option value="claude">Claude (Anthropic) — موصى به</option>
+                <option value="openai">GPT (OpenAI)</option>
               </select>
             </div>
 
             <div>
-              <label className="text-sm font-bold mb-1.5 block" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <label className="text-sm font-bold mb-1.5 block" style={{ color: '#1B2038' }}>
                 مفتاح API
                 <span className="text-xs font-normal mr-2" style={{ color: DK.dimTxt }}>
                   {settings.chatbot_provider === 'claude'
@@ -177,7 +177,7 @@ export default function AdminSettingsPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>الـ System Prompt</label>
+                <label className="text-sm font-bold" style={{ color: '#1B2038' }}>الـ System Prompt</label>
                 <button onClick={() => handleChange('chatbot_system_prompt', DEFAULT_PROMPT)}
                   className="text-xs transition hover:underline" style={{ color: DK.gold }}>
                   استخدم الافتراضي
@@ -199,15 +199,15 @@ export default function AdminSettingsPage() {
         <div className="p-6 mb-6 rounded-2xl" style={DK.card}>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-              style={{ background: 'rgba(52,211,153,0.1)' }}>💬</div>
+              style={{ background: 'rgba(16,185,129,0.08)' }}>💬</div>
             <div>
-              <h3 className="font-bold text-white">واتساب</h3>
+              <h3 className="font-bold" style={{ color: '#1B2038' }}>واتساب</h3>
               <p className="text-xs" style={{ color: DK.dimTxt }}>رقم التواصل وزر واتساب العائم</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-bold mb-1.5 block" style={{ color: 'rgba(255,255,255,0.7)' }}>رقم واتساب</label>
+              <label className="text-sm font-bold mb-1.5 block" style={{ color: '#1B2038' }}>رقم واتساب</label>
               <input type="text" value={settings.whatsapp_number ?? ''}
                 onChange={(e) => handleChange('whatsapp_number', e.target.value)}
                 placeholder="+962791234567" dir="ltr"
@@ -215,7 +215,7 @@ export default function AdminSettingsPage() {
                 style={{ ...inputStyle('wa'), fontFamily: 'monospace' }} />
             </div>
             <div>
-              <label className="text-sm font-bold mb-1.5 block" style={{ color: 'rgba(255,255,255,0.7)' }}>رسالة الترحيب الافتراضية</label>
+              <label className="text-sm font-bold mb-1.5 block" style={{ color: '#1B2038' }}>رسالة الترحيب الافتراضية</label>
               <textarea rows={2} value={settings.whatsapp_default_message ?? ''}
                 onChange={(e) => handleChange('whatsapp_default_message', e.target.value)}
                 placeholder="مرحباً، أريد الاستفسار عن..."
@@ -227,7 +227,7 @@ export default function AdminSettingsPage() {
 
         <button onClick={handleSave} disabled={saving}
           className="w-full py-3.5 rounded-2xl font-bold text-sm transition disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18', ...font }}>
+          style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff', ...font }}>
           {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
         </button>
       </div>

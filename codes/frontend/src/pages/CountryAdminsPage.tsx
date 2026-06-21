@@ -12,15 +12,15 @@ import {
 import SuperAdminLayout from '../components/SuperAdminLayout';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -99,8 +99,8 @@ export default function CountryAdminsPage() {
     return (
       <SuperAdminLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-10 h-10 rounded-full border-2 animate-spin"
-            style={{ borderColor: 'rgba(245,166,35,0.2)', borderTopColor: DK.gold }} />
+          <div className="w-10 h-10 rounded-full animate-spin"
+            style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
         </div>
       </SuperAdminLayout>
     );
@@ -125,15 +125,15 @@ export default function CountryAdminsPage() {
 
   return (
     <SuperAdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif" }} dir="rtl">
+      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }} dir="rtl">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all hover:bg-white/5"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: DK.dimTxt }}
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all hover:bg-black/5"
+              style={{ background: '#F9FAFB', border: '1px solid #EDE3CE', color: DK.dimTxt }}
             >
               <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -144,9 +144,9 @@ export default function CountryAdminsPage() {
               إدارة الدول
             </span>
           </div>
-          <h1 className="text-2xl font-black text-white mt-1">مسؤولو {country.name}</h1>
+          <h1 className="text-2xl font-black mt-1" style={{ color: '#1B2038' }}>مسؤولو {country.name}</h1>
           <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>{country.admins.length} مسؤول مسجّل</p>
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.2), transparent)' }} />
+          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -154,14 +154,14 @@ export default function CountryAdminsPage() {
           {/* Admins list */}
           <div className="lg:col-span-2">
             <div className="rounded-2xl overflow-hidden" style={DK.card}>
-              <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
-                <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(245,166,35,0.55)' }}>قائمة المسؤولين</h3>
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid #EDE3CE' }}>
+                <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: DK.gold }}>قائمة المسؤولين</h3>
               </div>
               {country.admins.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                    style={{ background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.15)' }}>
-                    <svg className="w-5 h-5" fill="none" stroke="rgba(245,166,35,0.4)" viewBox="0 0 24 24">
+                    style={{ background: 'rgba(201,149,42,0.08)', border: '1px solid #EDE3CE' }}>
+                    <svg className="w-5 h-5" fill="none" stroke="rgba(201,149,42,0.4)" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -174,19 +174,19 @@ export default function CountryAdminsPage() {
                     <div
                       key={admin.id}
                       className="flex items-center justify-between px-5 py-4 transition-colors"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      style={{ borderBottom: '1px solid #EDE3CE' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                          style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                         >
                           {admin.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-sm">{admin.name}</p>
+                          <p className="font-bold text-sm" style={{ color: '#1B2038' }}>{admin.name}</p>
                           <p className="text-xs mt-0.5 dir-ltr" style={{ color: DK.dimTxt }}>{admin.phone}</p>
                         </div>
                       </div>
@@ -194,8 +194,8 @@ export default function CountryAdminsPage() {
                         <span
                           className="text-xs px-2.5 py-1 rounded-full font-bold"
                           style={admin.is_active
-                            ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
-                            : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(255,255,255,0.08)' }
+                            ? { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
+                            : { background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }
                           }
                         >
                           {admin.is_active ? 'نشط' : 'معطّل'}
@@ -203,7 +203,7 @@ export default function CountryAdminsPage() {
                         <button
                           onClick={() => openEdit(admin)}
                           className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
-                          style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
+                          style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.2)' }}
                         >
                           تعديل
                         </button>
@@ -212,8 +212,8 @@ export default function CountryAdminsPage() {
                           disabled={toggling === admin.id}
                           className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80 disabled:opacity-40"
                           style={admin.is_active
-                            ? { background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)' }
-                            : { background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
+                            ? { background: 'rgba(245,158,11,0.08)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }
+                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
                           }
                         >
                           {toggling === admin.id ? '...' : admin.is_active ? 'تعطيل' : 'تفعيل'}
@@ -221,7 +221,7 @@ export default function CountryAdminsPage() {
                         <button
                           onClick={() => setConfirmDelete(admin)}
                           className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
-                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
+                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
                         >
                           حذف
                         </button>
@@ -236,24 +236,24 @@ export default function CountryAdminsPage() {
           {/* Add form */}
           <div>
             <div className="rounded-2xl p-5" style={DK.card}>
-              <h3 className="text-xs font-bold uppercase tracking-wide mb-5" style={{ color: 'rgba(245,166,35,0.55)' }}>
+              <h3 className="text-xs font-bold uppercase tracking-wide mb-5" style={{ color: DK.gold }}>
                 إضافة مسؤول جديد
               </h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>الاسم الكامل</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الاسم الكامل</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     placeholder="مثال: محمد أحمد"
                     style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>رقم الهاتف</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>رقم الهاتف</label>
                   <input
                     type="text"
                     value={form.phone}
@@ -261,13 +261,13 @@ export default function CountryAdminsPage() {
                     placeholder="+970599000000"
                     dir="ltr"
                     style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                   />
                 </div>
                 {formErr && (
                   <p className="text-xs px-3 py-2 rounded-lg"
-                    style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                    style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
                     {formErr}
                   </p>
                 )}
@@ -275,7 +275,7 @@ export default function CountryAdminsPage() {
                   onClick={handleAdd}
                   disabled={saving}
                   className="w-full py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                 >
                   {saving ? 'جاري الإضافة…' : 'إضافة المسؤول'}
                 </button>
@@ -290,48 +290,48 @@ export default function CountryAdminsPage() {
       {editAdmin && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           dir="rtl"
           onClick={() => setEditAdmin(null)}
         >
           <div
             className="w-full max-w-sm p-6 rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-white">تعديل بيانات المسؤول</h3>
+              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>تعديل بيانات المسؤول</h3>
               <button onClick={() => setEditAdmin(null)}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-lg hover:bg-white/10 transition"
+                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
                 style={{ color: DK.dimTxt }}>×</button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>الاسم الكامل</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الاسم الكامل</label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
                   style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>رقم الهاتف</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>رقم الهاتف</label>
                 <input
                   type="text"
                   value={editForm.phone}
                   onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
                   dir="ltr"
                   style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 />
               </div>
               {editErr && (
                 <p className="text-xs px-3 py-2 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
                   {editErr}
                 </p>
               )}
@@ -340,13 +340,13 @@ export default function CountryAdminsPage() {
                   onClick={handleUpdate}
                   disabled={editSaving}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                 >
                   {editSaving ? 'جاري الحفظ…' : 'حفظ التعديلات'}
                 </button>
                 <button onClick={() => setEditAdmin(null)}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                   إلغاء
                 </button>
               </div>
@@ -359,38 +359,38 @@ export default function CountryAdminsPage() {
       {confirmDelete && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           dir="rtl"
           onClick={() => setConfirmDelete(null)}
         >
           <div
             className="w-full max-w-sm p-6 rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            style={{ background: '#FFFFFF', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-              <svg className="w-6 h-6" fill="none" stroke="#f87171" viewBox="0 0 24 24">
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <svg className="w-6 h-6" fill="none" stroke="#EF4444" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-white text-center mb-2">تأكيد الحذف</h3>
+            <h3 className="text-base font-bold text-center mb-2" style={{ color: '#1B2038' }}>تأكيد الحذف</h3>
             <p className="text-sm text-center mb-5" style={{ color: DK.dimTxt }}>
-              هل تريد حذف المسؤول <span className="text-white font-bold">{confirmDelete.name}</span>؟ لا يمكن التراجع.
+              هل تريد حذف المسؤول <span className="font-bold" style={{ color: '#1B2038' }}>{confirmDelete.name}</span>؟ لا يمكن التراجع.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
                 disabled={deleting}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
+                style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}
               >
                 {deleting ? 'جاري الحذف…' : 'حذف'}
               </button>
               <button onClick={() => setConfirmDelete(null)}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                 إلغاء
               </button>
             </div>

@@ -3,15 +3,15 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -32,7 +32,7 @@ const PREDEFINED_SLUGS = [
 ];
 
 function inputFocusStyle(focused: boolean) {
-  return { ...DK.inputStyle, border: focused ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)' };
+  return { ...DK.inputStyle, border: focused ? '1px solid #C9952A' : '1px solid #EDE3CE' };
 }
 
 // ─── Pages Tab ────────────────────────────────────────────────────────────────
@@ -89,13 +89,13 @@ function PagesTab() {
             <button key={p.slug} onClick={() => openPage(p.slug, p.label)}
               className="w-full text-right px-4 py-3 rounded-xl text-sm font-medium transition flex items-center justify-between"
               style={isActive
-                ? { background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', color: DK.gold }
-                : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}>
+                ? { background: 'rgba(201,149,42,0.08)', border: '1px solid rgba(201,149,42,0.2)', color: DK.gold }
+                : { background: '#F9FAFB', border: '1px solid #EDE3CE', color: '#1B2038' }}>
               <span>{p.label}</span>
               <span className="text-xs px-2 py-0.5 rounded-full"
                 style={existing
-                  ? { background: 'rgba(52,211,153,0.12)', color: '#34d399' }
-                  : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                  ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
+                  : { background: '#F9FAFB', color: DK.dimTxt }}>
                 {existing ? 'موجود' : 'جديد'}
               </span>
             </button>
@@ -105,13 +105,13 @@ function PagesTab() {
 
       <div className="col-span-2">
         {!selected ? (
-          <div className="text-center py-16 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,166,35,0.2)' }}>
+          <div className="text-center py-16 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
             <p className="text-sm" style={{ color: DK.dimTxt }}>اختر صفحة لتعديلها</p>
           </div>
         ) : (
           <form onSubmit={handleSave} className="p-5 rounded-2xl space-y-4" style={DK.card}>
-            {error   && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{error}</p>}
-            {success && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#34d399', background: 'rgba(52,211,153,0.1)' }}>{success}</p>}
+            {error   && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
+            {success && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#10B981', background: 'rgba(16,185,129,0.08)' }}>{success}</p>}
             <div>
               <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>عنوان الصفحة</label>
               <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -127,7 +127,7 @@ function PagesTab() {
                 dir="auto" />
             </div>
             <button type="submit" disabled={saving} className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
               {saving ? 'جاري الحفظ...' : 'حفظ الصفحة'}
             </button>
           </form>
@@ -186,11 +186,11 @@ function FaqsTab() {
     <div>
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
           <form onSubmit={handleSubmit} className="w-full max-w-lg p-6 rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
-            <h3 className="text-lg font-bold text-white mb-4">{editing ? 'تعديل السؤال' : 'سؤال جديد'}</h3>
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{error}</p>}
+            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>{editing ? 'تعديل السؤال' : 'سؤال جديد'}</h3>
+            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
             <div className="space-y-3">
               <div>
                 <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>السؤال</label>
@@ -213,12 +213,12 @@ function FaqsTab() {
             </div>
             <div className="flex gap-3 mt-5">
               <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
                 {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة السؤال')}
               </button>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
+                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
             </div>
           </form>
         </div>
@@ -226,19 +226,19 @@ function FaqsTab() {
 
       <div className="flex justify-end mb-4">
         <button onClick={openCreate} className="text-sm px-4 py-2 rounded-xl font-semibold"
-          style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+          style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
           + سؤال جديد
         </button>
       </div>
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
         </div>
       )}
 
       {!loading && faqs.length === 0 && (
-        <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,166,35,0.15)' }}>
+        <div className="text-center py-12 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
           <p className="text-sm" style={{ color: DK.dimTxt }}>لا توجد أسئلة شائعة بعد</p>
         </div>
       )}
@@ -251,26 +251,26 @@ function FaqsTab() {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs px-2 py-0.5 rounded-full"
                     style={faq.is_active
-                      ? { background: 'rgba(52,211,153,0.12)', color: '#34d399' }
-                      : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                      ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
+                      : { background: '#F9FAFB', color: DK.dimTxt }}>
                     {faq.is_active ? 'فعّال' : 'مخفي'}
                   </span>
                   <span className="text-xs" style={{ color: DK.dimTxt }}>ترتيب: {faq.sort_order}</span>
                 </div>
-                <p className="font-semibold text-white mb-1">{faq.question}</p>
+                <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>{faq.question}</p>
                 <p className="text-sm leading-relaxed" style={{ color: DK.dimTxt }}>{faq.answer}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={() => openEdit(faq)} className="text-xs px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(245,166,35,0.1)', color: DK.gold }}>تعديل</button>
+                  style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>تعديل</button>
                 <button onClick={() => handleToggle(faq)} className="text-xs px-3 py-1.5 rounded-lg"
                   style={faq.is_active
-                    ? { background: 'rgba(239,68,68,0.1)', color: '#f87171' }
-                    : { background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                    ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
+                    : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
                   {faq.is_active ? 'إخفاء' : 'إظهار'}
                 </button>
                 <button onClick={() => handleDelete(faq.id)} className="text-xs px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>حذف</button>
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
               </div>
             </div>
           </div>
@@ -328,18 +328,18 @@ function SocialTab() {
     <div>
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
           <form onSubmit={handleSubmit} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
-            <h3 className="text-lg font-bold text-white mb-4">إضافة / تحديث رابط</h3>
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{error}</p>}
+            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>إضافة / تحديث رابط</h3>
+            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
             <div className="space-y-3">
               <div>
                 <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>المنصة</label>
                 <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })}
                   onFocus={() => setFocusedInput('plat')} onBlur={() => setFocusedInput(null)}
                   style={{ ...inputFocusStyle(focusedInput === 'plat'), cursor: 'pointer' }}>
-                  {PLATFORMS.map((p) => <option key={p} value={p} style={{ background: '#070e22' }}>{platformLabel[p] ?? p}</option>)}
+                  {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel[p] ?? p}</option>)}
                 </select>
               </div>
               <div>
@@ -359,12 +359,12 @@ function SocialTab() {
             </div>
             <div className="flex gap-3 mt-5">
               <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
                 {saving ? 'جاري الحفظ...' : 'حفظ الرابط'}
               </button>
               <button type="button" onClick={() => { setShowForm(false); setError(null); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
+                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
             </div>
           </form>
         </div>
@@ -372,19 +372,19 @@ function SocialTab() {
 
       <div className="flex justify-end mb-4">
         <button onClick={() => { setShowForm(true); setError(null); }} className="text-sm px-4 py-2 rounded-xl font-semibold"
-          style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+          style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
           + إضافة / تحديث
         </button>
       </div>
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
         </div>
       )}
 
       {!loading && links.length === 0 && (
-        <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,166,35,0.15)' }}>
+        <div className="text-center py-12 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
           <p className="text-sm" style={{ color: DK.dimTxt }}>لا توجد روابط بعد</p>
         </div>
       )}
@@ -393,14 +393,14 @@ function SocialTab() {
         {links.map((link) => (
           <div key={link.id} className="p-4 rounded-xl flex items-center gap-4" style={DK.card}>
             <div className="flex-1">
-              <p className="font-semibold text-white capitalize">{platformLabel[link.platform] ?? link.platform}</p>
+              <p className="font-semibold capitalize" style={{ color: '#1B2038' }}>{platformLabel[link.platform] ?? link.platform}</p>
               <a href={link.url} target="_blank" rel="noopener noreferrer"
                 className="text-xs hover:underline" style={{ color: DK.gold }} dir="ltr">
                 {link.url}
               </a>
             </div>
             <button onClick={() => handleDelete(link.id)} className="text-xs px-3 py-1.5 rounded-lg"
-              style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>حذف</button>
+              style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
           </div>
         ))}
       </div>
@@ -421,11 +421,11 @@ export default function AdminCMSPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h2 className="text-xl font-bold text-white">إدارة المحتوى (CMS)</h2>
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>إدارة المحتوى (CMS)</h2>
           </div>
           <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>تحرير صفحات الموقع والأسئلة الشائعة وروابط التواصل</p>
         </div>
@@ -436,8 +436,8 @@ export default function AdminCMSPage() {
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className="px-5 py-2 text-sm font-semibold rounded-xl transition"
               style={activeTab === tab.key
-                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
-                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
+                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
               {tab.label}
             </button>
           ))}

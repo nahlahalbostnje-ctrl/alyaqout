@@ -40,12 +40,24 @@ export interface ActiveSubscription {
   status: string;
 }
 
+export interface StudentDashStats {
+  total_points:     number;
+  level:            number;
+  xp_in_level:      number;
+  xp_for_next:      number;
+  pending_homework: number;
+  upcoming_exams:   number;
+  attendance_count: number;
+  total_courses:    number;
+}
+
 interface StudentState {
   student: StudentInfo | null;
   courses: StudentCourse[];
   liveClasses: StudentLiveClass[];
   upcoming: StudentLiveClass[];
   subscription: ActiveSubscription | null;
+  dashStats: StudentDashStats | null;
   loading: boolean;
   error: string | null;
 }
@@ -56,6 +68,7 @@ const initialState: StudentState = {
   liveClasses: [],
   upcoming: [],
   subscription: null,
+  dashStats: null,
   loading: false,
   error: null,
 };
@@ -112,6 +125,7 @@ const studentSlice = createSlice({
         s.courses      = a.payload.courses;
         s.upcoming     = a.payload.upcoming;
         s.subscription = a.payload.subscription ?? null;
+        s.dashStats    = a.payload.stats ?? null;
       })
       .addCase(fetchStudentDashboard.rejected, (s, a) => {
         s.loading = false;

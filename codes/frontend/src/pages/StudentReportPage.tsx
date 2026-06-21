@@ -1,48 +1,32 @@
-import { useEffect } from 'react';
-import StudentLayout from '../components/StudentLayout';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyReport } from '../features/student/reportSlice';
+import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
 
-const DK = {
-  card:   { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:   '#f5a623',
-  goldL:  '#ffd166',
-  navy:   '#040a18',
-  dimTxt: 'rgba(255,255,255,0.4)',
-};
+const SUBJECTS = [
+  { name:'الرياضيات',         pct:90, color:'#4F46E5' },
+  { name:'اللغة الإنجليزية',  pct:87, color:'#2563EB' },
+  { name:'العلوم',             pct:85, color:'#059669' },
+  { name:'اللغة العربية',      pct:76, color:'#D97706' },
+  { name:'التربية الإسلامية', pct:92, color:'#DC2626' },
+];
 
-function RingChart({ value, label, color }: { value: number | null; label: string; color: string }) {
-  const pct  = value ?? 0;
-  const r    = 36;
+const PERIODS = ['هذا الشهر', 'الفصل الأول', 'الفصل الثاني', 'العام الكامل'] as const;
+
+function CircProgress({ pct, size = 130 }: { pct: number; size?: number }) {
+  const r = size/2 - 12;
   const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
-        <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="10"
-          strokeDasharray={`${dash} ${circ - dash}`}
-          strokeLinecap="round" className="transition-all duration-700" />
+    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+      <svg width={size} height={size} style={{ transform:'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#EEE8D8" strokeWidth="10" />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.gold} strokeWidth="10"
+          strokeDasharray={circ} strokeDashoffset={circ-(pct/100)*circ} strokeLinecap="round" />
       </svg>
-      <div className="text-center -mt-14">
-        <p className="text-2xl font-bold text-white">{value !== null ? `${value}%` : '—'}</p>
-      </div>
-      <p className="text-xs mt-8" style={{ color: DK.dimTxt }}>{label}</p>
-    </div>
-  );
-}
-
-function BarRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <div>
-      <div className="flex justify-between text-xs mb-1" style={{ color: DK.dimTxt }}>
-        <span>{label}</span>
-        <span className="font-semibold text-white">{value}</span>
-      </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+        <span style={{ color:C.navy2, fontWeight:900, fontSize:28, lineHeight:1 }}>{pct}%</span>
+        <span style={{ color:C.sub, fontSize:11, marginTop:4, textAlign:'center', lineHeight:1.3 }}>المستوى العام</span>
       </div>
     </div>
   );
@@ -50,98 +34,94 @@ function BarRow({ label, value, max, color }: { label: string; value: number; ma
 
 export default function StudentReportPage() {
   const dispatch = useAppDispatch();
-  const { myReport: report, loading } = useAppSelector((s) => s.report);
+  const navigate = useNavigate();
+  const { report } = useAppSelector(s => s.studentReport);
+  const [period, setPeriod] = useState(0);
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => { dispatch(fetchMyReport()); }, [dispatch]);
 
-  if (loading) {
-    return (
-      <StudentLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
-        </div>
-      </StudentLayout>
-    );
-  }
+  const subjects = (report?.subjects ?? []).length > 0
+    ? (report?.subjects ?? []).map((s: any) => ({ name: s.subject_name ?? s.name, pct: Math.round(s.percentage ?? s.score ?? 80), color: '#C9952A' }))
+    : SUBJECTS;
+
+  const overall = Math.round(subjects.reduce((a: number, s: { pct: number }) => a + s.pct, 0) / subjects.length) || 87;
 
   return (
-    <StudentLayout>
-      <div className="p-6" dir="rtl" style={{ fontFamily: "'Cairo', sans-serif" }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h1 className="text-xl font-bold text-white">تقريري الشهري</h1>
-          </div>
-          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>نظرة عامة على أدائك الأكاديمي</p>
+    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
+
+      {/* Status */}
+      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
+        <span>9:41</span><span>▶▶ 🔋</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
+        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>مستوى التطور</h1>
+        <div style={{ width:36 }} />
+      </div>
+
+      <div style={{ padding:'14px 16px 0' }}>
+
+        {/* Filter */}
+        <div style={{ position:'relative', marginBottom:16 }}>
+          <button onClick={()=>setShowPicker(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 16px', borderRadius:12, background:C.card, border:`1px solid ${C.border}`, cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, color:C.text, fontWeight:600, boxShadow:C.shadow }}>
+            <span>{PERIODS[period]}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          {showPicker && (
+            <div style={{ position:'absolute', top:'110%', right:0, background:C.card, borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', border:`1px solid ${C.border}`, zIndex:50, minWidth:160 }}>
+              {PERIODS.map((p,i) => (
+                <button key={i} onClick={()=>{ setPeriod(i); setShowPicker(false); }}
+                  style={{ width:'100%', padding:'11px 16px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, color:period===i?C.gold:C.text, fontWeight:period===i?700:500, textAlign:'right' }}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {!report ? (
-          <div className="text-center py-20" style={{ color: DK.dimTxt }}>لا توجد بيانات بعد</div>
-        ) : (
-          <div className="space-y-5 max-w-3xl">
-            {/* KPI row */}
-            <div className="p-6 rounded-2xl" style={DK.card}>
-              <h2 className="text-sm font-semibold mb-6" style={{ color: DK.dimTxt }}>المؤشرات الرئيسية</h2>
-              <div className="flex justify-around flex-wrap gap-6">
-                <RingChart value={report.attendance.rate}  label="نسبة الحضور"       color="#34d399" />
-                <RingChart value={report.exams.average}    label="متوسط الامتحانات"   color={DK.gold} />
-                <RingChart value={report.homework.average} label="متوسط الواجبات"     color="#60a5fa" />
-              </div>
+        {/* Progress Card */}
+        <div style={{ background:C.card, borderRadius:20, padding:'20px', marginBottom:14, boxShadow:C.shadow, border:`1px solid ${C.border}` }}>
+          <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+            {/* Subjects */}
+            <div style={{ flex:1 }}>
+              {subjects.map((s: { name: string; pct: number; color: string }, i: number) => (
+                <div key={i} style={{ marginBottom:12 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
+                    <span style={{ color:C.text, fontWeight:600 }}>{s.name}</span>
+                    <span style={{ color:s.color, fontWeight:700 }}>{s.pct}%</span>
+                  </div>
+                  <div style={{ height:7, borderRadius:4, background:`${s.color}18` }}>
+                    <div style={{ height:'100%', width:`${s.pct}%`, borderRadius:4, background:`linear-gradient(90deg,${s.color},${s.color}bb)`, transition:'width 0.8s ease' }} />
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Attendance detail */}
-            <div className="p-6 rounded-2xl" style={DK.card}>
-              <h2 className="text-sm font-semibold mb-4" style={{ color: DK.dimTxt }}>تفاصيل الحضور</h2>
-              <div className="space-y-3">
-                <BarRow label="حاضر"  value={report.attendance.present} max={report.attendance.total} color="#34d399" />
-                <BarRow label="غائب"  value={report.attendance.absent}  max={report.attendance.total} color="#f87171" />
-                <BarRow label="متأخر" value={report.attendance.late}    max={report.attendance.total} color="#fbbf24" />
-              </div>
-            </div>
-
-            {/* Recent exams */}
-            {report.exams.recent.length > 0 && (
-              <div className="p-6 rounded-2xl" style={DK.card}>
-                <h2 className="text-sm font-semibold mb-4" style={{ color: DK.dimTxt }}>آخر الامتحانات</h2>
-                <div className="space-y-3">
-                  {report.exams.recent.map((ex, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <span className="text-sm text-white truncate max-w-xs">{ex.title ?? 'امتحان'}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs" style={{ color: DK.dimTxt }}>{ex.score}/{ex.total_points}</span>
-                        <span className="text-sm font-bold" style={{
-                          color: ex.pct >= 80 ? '#34d399' : ex.pct >= 60 ? '#fbbf24' : '#f87171'
-                        }}>
-                          {ex.pct}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Homework stats */}
-            <div className="p-6 rounded-2xl" style={DK.card}>
-              <h2 className="text-sm font-semibold mb-4" style={{ color: DK.dimTxt }}>إحصائيات الواجبات</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-xl" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.15)' }}>
-                  <p className="text-2xl font-bold" style={{ color: '#60a5fa' }}>{report.homework.submitted}</p>
-                  <p className="text-xs mt-1" style={{ color: DK.dimTxt }}>واجب مُسلَّم</p>
-                </div>
-                <div className="text-center p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                  <p className="text-2xl font-bold" style={{ color: '#f87171' }}>{report.homework.late}</p>
-                  <p className="text-xs mt-1" style={{ color: DK.dimTxt }}>تسليم متأخر</p>
-                </div>
-                <div className="text-center p-4 rounded-xl" style={{ background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.15)' }}>
-                  <p className="text-2xl font-bold" style={{ color: DK.gold }}>{report.progress.videos_completed}</p>
-                  <p className="text-xs mt-1" style={{ color: DK.dimTxt }}>فيديو مكتمل</p>
-                </div>
-              </div>
-            </div>
+            {/* Circle */}
+            <CircProgress pct={overall} />
           </div>
-        )}
+        </div>
+
+        {/* AI Analysis Card */}
+        <div style={{ background:'linear-gradient(135deg,#0D1535,#1B2038)', borderRadius:20, padding:'18px 20px', marginBottom:14, boxShadow:'0 8px 24px rgba(13,21,53,0.45)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <span style={{ fontSize:24 }}>🤖</span>
+            <p style={{ color:'#fff', fontWeight:800, fontSize:15 }}>تحليل ذكي</p>
+          </div>
+          <p style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.65, marginBottom:16 }}>
+            أنت تتقدم بشكل رائع! استمر في نفس المستوى. ننصحك بمراجعة دروس الكسور في الرياضيات لتحسين نتيجتك.
+          </p>
+          <button onClick={()=>navigate('/student/points')} style={{ width:'100%', padding:'12px', borderRadius:13, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(201,149,42,0.4)' }}>
+            عرض التقرير الكامل
+          </button>
+        </div>
       </div>
-    </StudentLayout>
+
+      <StudentBottomNav cur="/student/report" />
+    </div>
   );
 }

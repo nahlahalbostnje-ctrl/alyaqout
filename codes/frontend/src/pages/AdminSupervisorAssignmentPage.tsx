@@ -3,20 +3,20 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '8px 12px',
     fontSize: '13px',
     width: '100%',
     outline: 'none',
-  }
+  } as React.CSSProperties
 };
 
 interface Supervisor {
@@ -108,11 +108,11 @@ export default function AdminSupervisorAssignmentPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h2 className="text-xl font-bold text-white">تعيين الطلاب للمشرفين</h2>
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>تعيين الطلاب للمشرفين</h2>
           </div>
           <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>كل مشرف يتابع 100–150 طالباً</p>
         </div>
@@ -124,7 +124,7 @@ export default function AdminSupervisorAssignmentPage() {
             <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>المشرفون</p>
             {loadingSupervisors && (
               <div className="flex justify-center py-8">
-                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
               </div>
             )}
             {!loadingSupervisors && supervisors.length === 0 && (
@@ -134,20 +134,20 @@ export default function AdminSupervisorAssignmentPage() {
               <button key={sup.id} onClick={() => selectSupervisor(sup)}
                 className="w-full text-right px-4 py-3 rounded-xl text-sm transition flex items-start gap-3"
                 style={selected?.id === sup.id
-                  ? { background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)' }
-                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  ? { background: 'rgba(201,149,42,0.08)', border: '1px solid rgba(201,149,42,0.2)' }
+                  : { background: '#F9FAFB', border: '1px solid #EDE3CE' }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                  style={{ background: 'rgba(245,166,35,0.15)', color: DK.gold }}>
+                  style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
                   {sup.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate" style={{ color: selected?.id === sup.id ? DK.gold : 'rgba(255,255,255,0.8)' }}>
+                  <p className="font-semibold truncate" style={{ color: selected?.id === sup.id ? DK.gold : '#1B2038' }}>
                     {sup.name}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>
                     {sup.student_count} طالب
                     {sup.student_count >= 150 && (
-                      <span className="mr-1 font-semibold" style={{ color: '#fbbf24' }}>• ممتلئ</span>
+                      <span className="mr-1 font-semibold" style={{ color: '#F59E0B' }}>• ممتلئ</span>
                     )}
                   </p>
                 </div>
@@ -159,15 +159,15 @@ export default function AdminSupervisorAssignmentPage() {
           <div className="col-span-2">
             {!selected ? (
               <div className="h-full flex items-center justify-center rounded-2xl"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,166,35,0.2)' }}>
+                style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
                 <div className="text-center">
                   <p className="text-sm" style={{ color: DK.dimTxt }}>اختر مشرفاً لعرض طلابه</p>
                 </div>
               </div>
             ) : (
               <div className="rounded-2xl overflow-hidden h-full flex flex-col" style={DK.card}>
-                <div className="p-4" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
-                  <p className="font-bold text-white">{selected.name}</p>
+                <div className="p-4" style={{ borderBottom: '1px solid #EDE3CE' }}>
+                  <p className="font-bold" style={{ color: '#1B2038' }}>{selected.name}</p>
                   <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>الطلاب المعيّنون ({assigned.length})</p>
                   <input value={searchAssigned} onChange={(e) => setSearchAssigned(e.target.value)}
                     placeholder="بحث..." className="mt-2"
@@ -176,7 +176,7 @@ export default function AdminSupervisorAssignmentPage() {
                 <div className="overflow-y-auto flex-1">
                   {loadingStudents && (
                     <div className="flex justify-center py-8">
-                      <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+                      <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
                     </div>
                   )}
                   {!loadingStudents && filteredAssigned.length === 0 && (
@@ -184,14 +184,14 @@ export default function AdminSupervisorAssignmentPage() {
                   )}
                   {filteredAssigned.map((student) => (
                     <div key={student.id} className="flex items-center justify-between px-4 py-2.5"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      style={{ borderBottom: '1px solid #EDE3CE' }}>
                       <div>
-                        <p className="text-sm font-medium text-white">{student.name}</p>
+                        <p className="text-sm font-medium" style={{ color: '#1B2038' }}>{student.name}</p>
                         <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'} • {student.phone}</p>
                       </div>
                       <button onClick={() => handleRemove(student)} disabled={removing === student.id}
                         className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40"
-                        style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                        style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
                         {removing === student.id ? '...' : 'إزالة'}
                       </button>
                     </div>
@@ -205,7 +205,7 @@ export default function AdminSupervisorAssignmentPage() {
           <div className="col-span-1">
             <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>طلاب بلا مشرف</p>
             <div className="rounded-2xl overflow-hidden" style={DK.card}>
-              <div className="p-3" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+              <div className="p-3" style={{ borderBottom: '1px solid #EDE3CE' }}>
                 <input value={searchFree} onChange={(e) => setSearchFree(e.target.value)}
                   placeholder="بحث..." style={DK.inputStyle} />
               </div>
@@ -215,7 +215,7 @@ export default function AdminSupervisorAssignmentPage() {
                 )}
                 {selected && loadingStudents && (
                   <div className="flex justify-center py-6">
-                    <div className="w-5 h-5 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+                    <div className="w-5 h-5 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
                   </div>
                 )}
                 {selected && !loadingStudents && filteredUnassigned.length === 0 && (
@@ -223,15 +223,15 @@ export default function AdminSupervisorAssignmentPage() {
                 )}
                 {selected && !loadingStudents && filteredUnassigned.map((student) => (
                   <div key={student.id} className="flex items-center justify-between px-3 py-2"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    style={{ borderBottom: '1px solid #EDE3CE' }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-white truncate">{student.name}</p>
+                      <p className="text-xs font-medium truncate" style={{ color: '#1B2038' }}>{student.name}</p>
                       <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'}</p>
                     </div>
                     <button onClick={() => handleAssign(student)}
                       disabled={assigning === student.id || assigned.length >= 150}
                       className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40 flex-shrink-0 mr-1"
-                      style={{ background: 'rgba(245,166,35,0.1)', color: DK.gold }}>
+                      style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
                       {assigning === student.id ? '...' : 'تعيين'}
                     </button>
                   </div>
@@ -239,7 +239,7 @@ export default function AdminSupervisorAssignmentPage() {
               </div>
             </div>
             {selected && assigned.length >= 150 && (
-              <p className="text-xs mt-2 text-center font-semibold" style={{ color: '#fbbf24' }}>
+              <p className="text-xs mt-2 text-center font-semibold" style={{ color: '#F59E0B' }}>
                 وصل المشرف للحد الأقصى (150 طالب)
               </p>
             )}

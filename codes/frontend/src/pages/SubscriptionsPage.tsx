@@ -9,15 +9,15 @@ import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -33,16 +33,16 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function statusStyle(s: string) {
-  if (s === 'active')    return { background: 'rgba(52,211,153,0.12)', color: '#34d399' };
-  if (s === 'cancelled') return { background: 'rgba(239,68,68,0.1)',   color: '#f87171' };
-  if (s === 'pending')   return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' };
-  return { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' };
+  if (s === 'active')    return { background: 'rgba(16,185,129,0.08)',  color: '#10B981' };
+  if (s === 'cancelled') return { background: 'rgba(239,68,68,0.08)',   color: '#EF4444' };
+  if (s === 'pending')   return { background: 'rgba(245,158,11,0.08)',  color: '#F59E0B' };
+  return { background: '#F9FAFB', color: '#6B7280' };
 }
 
 function paymentStyle(s: string) {
-  if (s === 'paid')     return { background: 'rgba(52,211,153,0.12)', color: '#34d399' };
-  if (s === 'pending')  return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' };
-  return { background: 'rgba(239,68,68,0.1)', color: '#f87171' };
+  if (s === 'paid')     return { background: 'rgba(16,185,129,0.08)', color: '#10B981' };
+  if (s === 'pending')  return { background: 'rgba(245,158,11,0.08)', color: '#F59E0B' };
+  return { background: 'rgba(239,68,68,0.08)', color: '#EF4444' };
 }
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -51,13 +51,13 @@ const PAYMENT_LABEL: Record<string, string> = {
 
 function DaysBar({ days, total }: { days: number; total: number }) {
   const pct = total > 0 ? Math.min(100, Math.round((days / total) * 100)) : 0;
-  const barColor = pct > 50 ? '#34d399' : pct > 20 ? '#fbbf24' : '#f87171';
+  const barColor = pct > 50 ? '#10B981' : pct > 20 ? '#F59E0B' : '#EF4444';
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#EDE3CE' }}>
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
       </div>
-      <span className="text-xs w-16 text-left" style={{ color: DK.dimTxt }}>{days} يوم</span>
+      <span className="text-xs w-16 text-left" style={{ color: '#6B7280' }}>{days} يوم</span>
     </div>
   );
 }
@@ -133,30 +133,30 @@ export default function SubscriptionsPage() {
 
   const inputStyle = (field: string) => ({
     ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
+    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
   });
 
   const statsCards = [
-    { label: 'فعّالة',  value: stats.active,    color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
-    { label: 'منتهية',  value: stats.expired,   color: DK.dimTxt, bg: 'rgba(255,255,255,0.04)' },
-    { label: 'ملغاة',   value: stats.cancelled, color: '#f87171', bg: 'rgba(239,68,68,0.08)' },
-    { label: 'معلّقة',  value: stats.pending,   color: '#fbbf24', bg: 'rgba(245,158,11,0.08)' },
+    { label: 'فعّالة',  value: stats.active,    color: '#10B981', bg: 'rgba(16,185,129,0.08)' },
+    { label: 'منتهية',  value: stats.expired,   color: DK.dimTxt, bg: '#F9FAFB' },
+    { label: 'ملغاة',   value: stats.cancelled, color: '#EF4444', bg: 'rgba(239,68,68,0.08)' },
+    { label: 'معلّقة',  value: stats.pending,   color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
   ];
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
             <div>
-              <h2 className="text-xl font-bold text-white">الاشتراكات</h2>
+              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>الاشتراكات</h2>
               <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة اشتراكات الطلاب والباقات المفعّلة</p>
             </div>
           </div>
           <button onClick={openModal} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
             + اشتراك جديد
           </button>
         </div>
@@ -164,7 +164,7 @@ export default function SubscriptionsPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {statsCards.map((s) => (
-            <div key={s.label} className="rounded-2xl p-4" style={{ background: s.bg, border: '1px solid rgba(245,166,35,0.08)' }}>
+            <div key={s.label} className="rounded-2xl p-4" style={{ background: s.bg, border: '1px solid #EDE3CE' }}>
               <p className="text-xs mb-1" style={{ color: DK.dimTxt }}>{s.label}</p>
               <p className="text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
             </div>
@@ -177,8 +177,8 @@ export default function SubscriptionsPage() {
             <button key={t.key} onClick={() => setFilter(t.key)}
               className="px-4 py-1.5 rounded-xl text-sm font-medium transition"
               style={filter === t.key
-                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
-                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
+                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
               {t.label} ({t.count})
             </button>
           ))}
@@ -186,38 +186,38 @@ export default function SubscriptionsPage() {
 
         {loading && (
           <div className="flex items-center justify-center py-16 gap-3">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
           </div>
         )}
 
         {error && (
-          <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{error}</div>
+          <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>{error}</div>
         )}
 
         {!loading && !error && (
           items.length > 0 ? (
             <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
               <table className="w-full text-sm">
-                <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
                   <tr>
                     {['الطالب', 'الباقة', 'البداية', 'الانتهاء', 'المتبقي', 'الحالة', 'الدفع', 'المبلغ', ''].map((h) => (
                       <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider whitespace-nowrap"
-                        style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                        style={{ color: DK.gold }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((sub) => (
                     <tr key={sub.id} className="transition"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      style={{ borderBottom: '1px solid #EDE3CE' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-white">{sub.student.name}</p>
+                        <p className="font-medium" style={{ color: '#1B2038' }}>{sub.student.name}</p>
                         <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.student.phone}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p style={{ color: 'rgba(255,255,255,0.7)' }}>{sub.package.name}</p>
+                        <p style={{ color: '#1B2038' }}>{sub.package.name}</p>
                         <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.package.duration_days} يوم</p>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap" style={{ color: DK.dimTxt }}>{sub.starts_at}</td>
@@ -244,7 +244,7 @@ export default function SubscriptionsPage() {
                         {sub.status === 'active' && (
                           <button onClick={() => handleCancel(sub)}
                             className="text-xs px-3 py-1.5 rounded-lg transition"
-                            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                            style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
                             إلغاء
                           </button>
                         )}
@@ -255,9 +255,9 @@ export default function SubscriptionsPage() {
               </table>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-24" style={{ color: DK.dimTxt }}>
-              <p className="font-medium text-white">لا توجد اشتراكات</p>
-              <p className="text-sm mt-1">أضف اشتراكاً جديداً للبدء</p>
+            <div className="flex flex-col items-center justify-center py-24 rounded-2xl" style={DK.card}>
+              <p className="font-medium" style={{ color: '#1B2038' }}>لا توجد اشتراكات</p>
+              <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>أضف اشتراكاً جديداً للبدء</p>
             </div>
           )
         )}
@@ -266,15 +266,15 @@ export default function SubscriptionsPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl"
-          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #EDE3CE' }}>
               <div>
-                <h3 className="text-lg font-bold text-white">اشتراك جديد</h3>
+                <h3 className="text-lg font-bold" style={{ color: '#1B2038' }}>اشتراك جديد</h3>
                 <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>تفعيل اشتراك يدوي لطالب</p>
               </div>
               <button onClick={closeModal} className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                style={{ background: '#F9FAFB', border: '1px solid #EDE3CE' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: DK.dimTxt }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -287,8 +287,8 @@ export default function SubscriptionsPage() {
                 <select value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}
                   onFocus={() => setFocusedInput('student')} onBlur={() => setFocusedInput(null)}
                   style={{ ...inputStyle('student'), cursor: 'pointer' }}>
-                  <option value="" style={{ background: '#070e22' }}>اختر الطالب...</option>
-                  {students.map((s) => <option key={s.id} value={s.id} style={{ background: '#070e22' }}>{s.name} — {s.phone}</option>)}
+                  <option value="">اختر الطالب...</option>
+                  {students.map((s) => <option key={s.id} value={s.id}>{s.name} — {s.phone}</option>)}
                 </select>
               </div>
               <div>
@@ -300,8 +300,8 @@ export default function SubscriptionsPage() {
                   }}
                   onFocus={() => setFocusedInput('pkg')} onBlur={() => setFocusedInput(null)}
                   style={{ ...inputStyle('pkg'), cursor: 'pointer' }}>
-                  <option value="" style={{ background: '#070e22' }}>اختر الباقة...</option>
-                  {packages.map((p) => <option key={p.id} value={p.id} style={{ background: '#070e22' }}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
+                  <option value="">اختر الباقة...</option>
+                  {packages.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -309,7 +309,7 @@ export default function SubscriptionsPage() {
                   <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>تاريخ البداية *</label>
                   <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
                     onFocus={() => setFocusedInput('date')} onBlur={() => setFocusedInput(null)}
-                    style={{ ...inputStyle('date'), colorScheme: 'dark' }} />
+                    style={inputStyle('date')} />
                 </div>
                 <div>
                   <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>المبلغ المدفوع</label>
@@ -326,8 +326,8 @@ export default function SubscriptionsPage() {
                     <button key={opt.v} type="button" onClick={() => setForm({ ...form, payment_status: opt.v })}
                       className="flex-1 py-2 rounded-xl text-sm font-medium transition"
                       style={form.payment_status === opt.v
-                        ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
-                        : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+                        ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
+                        : { background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                       {opt.l}
                     </button>
                   ))}
@@ -341,13 +341,13 @@ export default function SubscriptionsPage() {
                   style={{ ...inputStyle('notes'), resize: 'none' }} />
               </div>
               {formError && (
-                <p className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{formError}</p>
+                <p className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>{formError}</p>
               )}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
+                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
                 <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                  style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
                   {submitting ? 'جاري التفعيل...' : 'تفعيل الاشتراك'}
                 </button>
               </div>

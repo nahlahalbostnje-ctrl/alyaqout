@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\GradeController as AdminGradeController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\SuperAdmin\CountryController;
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\Live\AgoraController;
 use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
@@ -85,6 +86,8 @@ Route::middleware('auth:api')->prefix('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(function () {
+    Route::get('dashboard/stats', [SuperAdminDashboardController::class, 'stats']);
+
     Route::get('countries', [CountryController::class, 'index']);
     Route::post('countries', [CountryController::class, 'store']);
     Route::get('countries/{country}', [CountryController::class, 'show']);

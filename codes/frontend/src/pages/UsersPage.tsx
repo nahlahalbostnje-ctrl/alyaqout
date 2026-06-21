@@ -4,14 +4,14 @@ import { fetchUsers, addUser, toggleUser, deleteUser } from '../features/admin/u
 import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -69,7 +69,7 @@ export default function UsersPage() {
 
   const inputStyle = (field: string) => ({
     ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #f5a623' : '1px solid rgba(245,166,35,0.15)',
+    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
   });
 
   const tabs: { key: Role; label: string }[] = [
@@ -80,14 +80,14 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h2 className="text-xl font-bold text-white">المستخدمون</h2>
+            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>المستخدمون</h2>
           </div>
           <button onClick={openModal} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
             + إضافة مستخدم
           </button>
         </div>
@@ -98,8 +98,8 @@ export default function UsersPage() {
             <button key={t.key} onClick={() => setRole(t.key)}
               className="px-5 py-2 rounded-xl text-sm font-semibold transition"
               style={role === t.key
-                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
-                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
+                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
+                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
               {t.label}
             </button>
           ))}
@@ -108,33 +108,33 @@ export default function UsersPage() {
         <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
           {loading ? (
             <div className="flex items-center justify-center py-16 gap-3">
-              <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
+              <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center py-12" style={{ color: DK.dimTxt }}>لا يوجد مستخدمون من هذه الفئة بعد.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+              <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
                 <tr>
                   {['الاسم', 'رقم الهاتف', 'تاريخ التسجيل', 'الحالة', 'إجراءات'].map((h) => (
                     <th key={h} className="px-6 py-3 text-right font-semibold uppercase text-xs tracking-wider"
-                      style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                      style={{ color: DK.gold }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((user) => (
                   <tr key={user.id} className="transition"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                    style={{ borderBottom: '1px solid #EDE3CE' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: 'rgba(245,166,35,0.15)', color: DK.gold }}>
+                          style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
                           {user.name?.[0] ?? '?'}
                         </div>
-                        <span className="font-medium text-white">{user.name}</span>
+                        <span className="font-medium" style={{ color: '#1B2038' }}>{user.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4" style={{ color: DK.dimTxt }} dir="ltr">{user.phone}</td>
@@ -144,8 +144,8 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium"
                         style={user.is_active
-                          ? { background: 'rgba(52,211,153,0.12)', color: '#34d399' }
-                          : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
+                          ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
+                          : { background: '#F9FAFB', color: DK.dimTxt }}>
                         {user.is_active ? 'نشط' : 'معطّل'}
                       </span>
                     </td>
@@ -154,13 +154,13 @@ export default function UsersPage() {
                         <button onClick={() => handleToggle(user.id)} disabled={toggling === user.id}
                           className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
                           style={user.is_active
-                            ? { background: 'rgba(239,68,68,0.1)', color: '#f87171' }
-                            : { background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>
+                            ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
+                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
                           {toggling === user.id ? '...' : user.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
                           className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
                           {deleting === user.id ? '...' : 'حذف'}
                         </button>
                       </div>
@@ -176,18 +176,18 @@ export default function UsersPage() {
       {/* Add User Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(4,10,24,0.85)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-sm p-6 rounded-2xl" style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)' }}>
-            <h3 className="text-lg font-semibold mb-4 text-white">إضافة مستخدم</h3>
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-full max-w-sm p-6 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#1B2038' }}>إضافة مستخدم</h3>
             <form onSubmit={handleAdd} className="space-y-3">
               <div>
                 <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الدور</label>
                 <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
                   onFocus={() => setFocusedInput('role')} onBlur={() => setFocusedInput(null)}
                   style={{ ...inputStyle('role'), cursor: 'pointer' }}>
-                  <option value="teacher" style={{ background: '#070e22' }}>معلم</option>
-                  <option value="student" style={{ background: '#070e22' }}>طالب</option>
-                  <option value="parent"  style={{ background: '#070e22' }}>ولي أمر</option>
+                  <option value="teacher">معلم</option>
+                  <option value="student">طالب</option>
+                  <option value="parent">ولي أمر</option>
                 </select>
               </div>
               <div>
@@ -204,16 +204,16 @@ export default function UsersPage() {
                   onFocus={() => setFocusedInput('phone')} onBlur={() => setFocusedInput(null)}
                   style={inputStyle('phone')} />
               </div>
-              {addError && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>{addError}</p>}
+              {addError && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{addError}</p>}
               <div className="flex gap-3 pt-1">
                 <button type="submit" disabled={addLoading}
                   className="flex-1 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
+                  style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
                   {addLoading ? 'جاري الإضافة...' : 'إضافة'}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)}
                   className="flex-1 py-2 rounded-xl text-sm"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>إلغاء</button>
+                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
               </div>
             </form>
           </div>

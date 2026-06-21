@@ -1,182 +1,132 @@
 import { useEffect, useState } from 'react';
-import StudentLayout from '../components/StudentLayout';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentHomework, submitHomework } from '../features/student/examSlice';
+import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
 
-const DK = {
-  card:   { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:   '#f5a623',
-  navy:   '#040a18',
-  dimTxt: 'rgba(255,255,255,0.4)',
-};
+const TABS = ['الجديدة', 'المنتهية'] as const;
+type Tab = typeof TABS[number];
 
-const baseInput: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(245,166,35,0.15)',
-  color: '#fff',
-  borderRadius: '12px',
-  padding: '10px 14px',
-  fontSize: '13px',
-  width: '100%',
-  outline: 'none',
-};
+const MOCK_HW = [
+  { id:1, subject:'الرياضيات',         desc:'حل تمارين الوحدة 3',                  due:'25/05/2026', status:'new' },
+  { id:2, subject:'اللغة الإنجليزية',  desc:'كتابة فقرة عن هواياتك',               due:'26/05/2026', status:'new' },
+  { id:3, subject:'العلوم',             desc:'مشروع دورة حياة النبات',             due:'27/05/2026', status:'new' },
+];
 
-const statusConfig: Record<string, { label: string; style: React.CSSProperties }> = {
-  submitted: { label: 'مُسلَّم', style: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' } },
-  graded:    { label: 'مُصحَّح', style: { background: 'rgba(52,211,153,0.12)',  color: '#34d399' } },
-  late:      { label: 'متأخر',   style: { background: 'rgba(239,68,68,0.1)',    color: '#f87171' } },
+const HW_COLORS: Record<string, { bg:string; color:string }> = {
+  'الرياضيات':         { bg:'#EEF2FF', color:'#4F46E5' },
+  'اللغة الإنجليزية': { bg:'#DBEAFE', color:'#2563EB' },
+  'العلوم':            { bg:'#D1FAE5', color:'#059669' },
+  'اللغة العربية':     { bg:'#FEF3C7', color:'#D97706' },
+  'التربية الإسلامية':{ bg:'#FEE2E2', color:'#DC2626' },
 };
 
 export default function StudentHomeworkPage() {
-  const dispatch = useAppDispatch();
-  const { homeworks, loading, submitting } = useAppSelector((s) => s.studentExam);
-
-  const [activeHw, setActiveHw] = useState<number | null>(null);
-  const [form, setForm]         = useState({ file_url: '', notes: '' });
-  const [flash, setFlash]       = useState<number | null>(null);
+  const dispatch  = useAppDispatch();
+  const navigate  = useNavigate();
+  const { homeworks, loading, submitting } = useAppSelector(s => s.studentExam);
+  const [tab, setTab]     = useState<Tab>('الجديدة');
+  const [active, setActive] = useState<number|null>(null);
+  const [form, setForm]   = useState({ file_url:'', notes:'' });
+  const [flash, setFlash] = useState<number|null>(null);
 
   useEffect(() => { dispatch(fetchStudentHomework()); }, [dispatch]);
 
-  async function handleSubmit(hwId: number) {
+  const handleSubmit = async (hwId: number) => {
     if (!form.file_url.trim()) return;
-    await dispatch(submitHomework({ homeworkId: hwId, file_url: form.file_url, notes: form.notes || undefined }));
-    setFlash(hwId); setActiveHw(null); setForm({ file_url: '', notes: '' });
-    setTimeout(() => setFlash(null), 3000);
-  }
+    await dispatch(submitHomework({ homeworkId: hwId, fileUrl: form.file_url, notes: form.notes }));
+    setForm({ file_url:'', notes:'' }); setActive(null);
+    setFlash(hwId); setTimeout(()=>setFlash(null), 2500);
+  };
 
-  const now = new Date();
+  const newHw   = homeworks.filter(h => !h.student_submission);
+  const doneHw  = homeworks.filter(h => !!h.student_submission);
+  const display = tab === 'الجديدة' ? (newHw.length  > 0 ? newHw  : MOCK_HW) : (doneHw.length > 0 ? doneHw : []);
 
   return (
-    <StudentLayout>
-      <div className="p-6" dir="rtl" style={{ fontFamily: "'Cairo', sans-serif" }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #f5a623, #ffd166)' }} />
-            <h1 className="text-xl font-bold text-white">واجباتي</h1>
-          </div>
-          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>{homeworks.length} واجب</p>
-        </div>
+    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
-          </div>
-        ) : homeworks.length === 0 ? (
-          <div className="flex flex-col items-center py-24 gap-3" style={{ color: DK.dimTxt }}>
-            <svg className="w-14 h-14 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <p>لا توجد واجبات حالياً</p>
-          </div>
-        ) : (
-          <div className="space-y-4 max-w-2xl mx-auto">
-            {homeworks.map((hw) => {
-              const dueDate  = new Date(hw.due_date);
-              const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              const isOpen   = activeHw === hw.id;
-              const overdueBorder = hw.is_overdue && !hw.submitted ? 'rgba(239,68,68,0.3)' : 'rgba(245,166,35,0.1)';
-
-              return (
-                <div key={hw.id} className="rounded-2xl overflow-hidden"
-                  style={{ background: '#070e22', border: `1px solid ${overdueBorder}`, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h3 className="font-semibold text-white">{hw.title}</h3>
-                          {hw.submitted && hw.sub_status && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={statusConfig[hw.sub_status as keyof typeof statusConfig]?.style ?? { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}>
-                              {statusConfig[hw.sub_status as keyof typeof statusConfig]?.label ?? hw.sub_status}
-                            </span>
-                          )}
-                          {!hw.submitted && hw.is_overdue && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                              style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>منتهي</span>
-                          )}
-                        </div>
-                        <p className="text-xs" style={{ color: DK.dimTxt }}>{hw.course.title}</p>
-                        {hw.description && (
-                          <p className="text-sm mt-1.5 leading-relaxed" style={{ color: DK.dimTxt }}>{hw.description}</p>
-                        )}
-                      </div>
-
-                      <div className="flex-shrink-0 text-left">
-                        <p className="text-xs" style={{ color: DK.dimTxt }}>آخر موعد</p>
-                        <p className="text-sm font-bold" style={{
-                          color: hw.is_overdue ? '#f87171' : daysLeft <= 2 ? '#fbbf24' : 'rgba(255,255,255,0.8)'
-                        }}>
-                          {hw.due_date}
-                        </p>
-                        {!hw.submitted && !hw.is_overdue && (
-                          <p className="text-xs" style={{ color: DK.dimTxt }}>
-                            {daysLeft === 0 ? 'اليوم!' : `${daysLeft} يوم متبقي`}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Grade display */}
-                    {hw.grade !== undefined && hw.grade !== null && (
-                      <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl"
-                        style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#34d399' }}>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-sm font-bold" style={{ color: '#34d399' }}>الدرجة: {hw.grade}/100</span>
-                      </div>
-                    )}
-
-                    {/* Flash success */}
-                    {flash === hw.id && (
-                      <div className="mt-3 px-4 py-2 rounded-xl text-sm"
-                        style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399' }}>
-                        تم تسليم الواجب بنجاح
-                      </div>
-                    )}
-
-                    {!hw.submitted && !hw.is_overdue && (
-                      <button onClick={() => setActiveHw(isOpen ? null : hw.id)}
-                        className="mt-3 px-4 py-2 rounded-xl text-sm font-semibold"
-                        style={isOpen
-                          ? { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }
-                          : { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
-                        {isOpen ? 'إلغاء' : 'تسليم الواجب'}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Submit form */}
-                  {isOpen && (
-                    <div className="px-5 py-4 space-y-3" style={{ borderTop: '1px solid rgba(245,166,35,0.08)', background: 'rgba(255,255,255,0.02)' }}>
-                      <div>
-                        <label className="text-xs block mb-1" style={{ color: DK.dimTxt }}>رابط الملف / Google Drive</label>
-                        <input type="url" value={form.file_url}
-                          onChange={(e) => setForm({ ...form, file_url: e.target.value })}
-                          placeholder="https://drive.google.com/..." style={baseInput} />
-                      </div>
-                      <div>
-                        <label className="text-xs block mb-1" style={{ color: DK.dimTxt }}>ملاحظة للمعلم (اختياري)</label>
-                        <textarea rows={2} value={form.notes}
-                          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                          placeholder="أي تعليق تريد إرساله..."
-                          style={{ ...baseInput, resize: 'none' }} />
-                      </div>
-                      <button onClick={() => handleSubmit(hw.id)}
-                        disabled={submitting || !form.file_url.trim()}
-                        className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                        style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }}>
-                        {submitting ? 'جاري التسليم...' : 'إرسال'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* Status */}
+      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
+        <span>9:41</span><span>▶▶ 🔋</span>
       </div>
-    </StudentLayout>
+
+      {/* Header */}
+      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
+        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>الواجبات</h1>
+        <div style={{ width:36 }} />
+      </div>
+
+      {/* Tabs */}
+      <div style={{ background:C.card, padding:'0 16px', borderBottom:`1px solid ${C.border}`, display:'flex', gap:4 }}>
+        {TABS.map(t => (
+          <button key={t} onClick={()=>setTab(t)} style={{ padding:'12px 16px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:tab===t?700:500, color:tab===t?C.gold:C.sub, borderBottom:tab===t?`2.5px solid ${C.gold}`:'2.5px solid transparent', transition:'all 0.2s', display:'flex', alignItems:'center', gap:6 }}>
+            {t}
+            {t==='الجديدة' && (
+              <span style={{ width:20, height:20, borderRadius:'50%', background:C.goldGrad, color:'#1B2038', fontSize:9, fontWeight:800, display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+                {newHw.length || 5}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Cards */}
+      <div style={{ padding:'14px 16px' }}>
+        {loading && <p style={{ color:C.dim, textAlign:'center', padding:'40px 0', fontSize:14 }}>جاري التحميل...</p>}
+        {!loading && display.length === 0 && <p style={{ color:C.dim, textAlign:'center', padding:'40px 0', fontSize:14 }}>لا توجد واجبات</p>}
+        {display.map((hw: any, i: number) => {
+          const subj   = hw.subject ?? hw.subject_name ?? hw.title ?? 'واجب';
+          const style  = HW_COLORS[Object.keys(HW_COLORS).find(k=>subj.includes(k.split(' ')[0]))??''] ?? { bg:'#EEF2FF', color:'#4F46E5' };
+          const isOpen = active === (hw.id ?? i);
+          const done   = flash === (hw.id ?? i);
+          return (
+            <div key={i} style={{ background:C.card, borderRadius:18, padding:'16px 18px', marginBottom:12, boxShadow:done?`0 4px 20px rgba(22,163,74,0.3)`:C.shadow, border:`1px solid ${done?'#16A34A':C.border}`, transition:'all 0.3s' }}>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
+                <div style={{ width:50, height:50, borderRadius:14, background:style.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0 }}>📚</div>
+                <div style={{ flex:1 }}>
+                  <p style={{ color:C.navy2, fontWeight:800, fontSize:15, marginBottom:3 }}>{subj}</p>
+                  <p style={{ color:C.sub, fontSize:12.5, marginBottom:3, lineHeight:1.4 }}>{hw.description ?? hw.desc}</p>
+                  <p style={{ color:C.dim, fontSize:11.5 }}>آخر موعد: {hw.due_date ?? hw.due}</p>
+                </div>
+              </div>
+              {isOpen && (
+                <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
+                  <input
+                    value={form.file_url} onChange={e=>setForm(p=>({...p,file_url:e.target.value}))}
+                    placeholder="رابط الملف (URL)"
+                    style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:10, padding:'9px 12px', fontSize:13, color:C.text, background:C.bg, outline:'none', fontFamily:"'Cairo',sans-serif", marginBottom:8, boxSizing:'border-box' }} />
+                  <textarea
+                    value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))}
+                    rows={2} placeholder="ملاحظات (اختياري)"
+                    style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:10, padding:'9px 12px', fontSize:13, color:C.text, background:C.bg, outline:'none', fontFamily:"'Cairo',sans-serif", resize:'none', boxSizing:'border-box', marginBottom:10 }} />
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={()=>handleSubmit(hw.id??i)} disabled={submitting||!form.file_url.trim()} style={{ flex:1, padding:'10px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', opacity:submitting||!form.file_url.trim()?0.6:1 }}>
+                      {submitting?'جاري الإرسال...':'تسليم الواجب'}
+                    </button>
+                    <button onClick={()=>setActive(null)} style={{ padding:'10px 16px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, color:C.sub, fontSize:13, cursor:'pointer' }}>إلغاء</button>
+                  </div>
+                </div>
+              )}
+              {!isOpen && (
+                <button onClick={()=>setActive(hw.id??i)} style={{ width:'100%', marginTop:13, padding:'11px', borderRadius:13, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13.5, border:'none', cursor:'pointer', boxShadow:'0 3px 12px rgba(201,149,42,0.35)' }}>
+                  عرض الواجب
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom Button */}
+      <div style={{ padding:'0 16px 16px' }}>
+        <button style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'pointer' }}>
+          عرض كل الواجبات
+        </button>
+      </div>
+
+      <StudentBottomNav cur="/student/homework" />
+    </div>
   );
 }

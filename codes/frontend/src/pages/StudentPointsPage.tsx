@@ -1,202 +1,134 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyPoints, fetchLeaderboard } from '../features/student/gamificationSlice';
-import StudentLayout from '../components/StudentLayout';
+import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
 
-const DK = {
-  gold:   '#f5a623',
-  goldL:  '#ffd166',
-  navy:   '#040a18',
-  dimTxt: 'rgba(255,255,255,0.4)',
+const SEMESTERS = ['الفصل الدراسي الثاني', 'الفصل الدراسي الأول', 'العام الكامل'] as const;
+
+const MOCK_RESULTS = [
+  { subject:'الرياضيات',         pct:95, grade:'ممتاز',    color:'#16A34A' },
+  { subject:'اللغة الإنجليزية',  pct:88, grade:'جيد جداً', color:'#2563EB' },
+  { subject:'العلوم',             pct:92, grade:'ممتاز',    color:'#16A34A' },
+  { subject:'اللغة العربية',      pct:90, grade:'ممتاز',    color:'#16A34A' },
+  { subject:'التربية الإسلامية', pct:94, grade:'ممتاز',    color:'#16A34A' },
+];
+
+const GRADE_BADGE: Record<string, { bg:string; color:string }> = {
+  'ممتاز':    { bg:'rgba(22,163,74,0.1)',   color:'#16A34A' },
+  'جيد جداً': { bg:'rgba(37,99,235,0.1)',   color:'#2563EB' },
+  'جيد':      { bg:'rgba(217,119,6,0.1)',   color:'#D97706' },
+  'مقبول':    { bg:'rgba(220,38,38,0.1)',   color:'#DC2626' },
 };
 
-const font = { fontFamily: "'Cairo', sans-serif" };
-
-const ACTION_ICONS: Record<string, string> = {
-  attend_class:    '🎯',
-  submit_homework: '📝',
-  submit_exam:     '📋',
-  complete_video:  '▶️',
-};
-
-const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
-  attend_class:    { bg: 'rgba(52,211,153,0.1)',  color: '#34d399' },
-  submit_homework: { bg: 'rgba(96,165,250,0.1)',  color: '#60a5fa' },
-  submit_exam:     { bg: 'rgba(245,166,35,0.1)',  color: '#f5a623' },
-  complete_video:  { bg: 'rgba(251,191,36,0.1)',  color: '#fbbf24' },
-};
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1)  return 'الآن';
-  if (m < 60) return `منذ ${m} دقيقة`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `منذ ${h} ساعة`;
-  return `منذ ${Math.floor(h / 24)} يوم`;
+function gradeFromPct(pct: number) {
+  if (pct >= 90) return 'ممتاز';
+  if (pct >= 80) return 'جيد جداً';
+  if (pct >= 70) return 'جيد';
+  return 'مقبول';
 }
 
 export default function StudentPointsPage() {
   const dispatch = useAppDispatch();
-  const { totalPoints, pointsTable, history, leaderboard, myRank, loading } =
-    useAppSelector((s) => s.gamification);
+  const navigate = useNavigate();
+  const { totalPoints } = useAppSelector(s => s.gamification);
+  const [sem, setSem]     = useState(0);
+  const [picker, setPicker] = useState(false);
 
-  const [tab, setTab] = useState<'history' | 'leaderboard'>('history');
+  useEffect(() => { dispatch(fetchMyPoints()); dispatch(fetchLeaderboard()); }, [dispatch]);
 
-  useEffect(() => {
-    dispatch(fetchMyPoints());
-    dispatch(fetchLeaderboard());
-  }, [dispatch]);
-
-  const pointsGuide = [
-    { action: 'attend_class',    label: 'حضور حصة مباشرة', pts: pointsTable.attend_class    ?? 10 },
-    { action: 'submit_exam',     label: 'تسليم امتحان',     pts: pointsTable.submit_exam     ?? 15 },
-    { action: 'submit_homework', label: 'تسليم واجب',       pts: pointsTable.submit_homework ?? 5  },
-    { action: 'complete_video',  label: 'إتمام فيديو',      pts: pointsTable.complete_video  ?? 3  },
-  ];
+  const overall = Math.round(MOCK_RESULTS.reduce((a,s)=>a+s.pct,0)/MOCK_RESULTS.length);
 
   return (
-    <StudentLayout>
-      <div className="p-7 min-h-screen" style={{ ...font }}>
+    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: DK.gold }}>نقاطي</p>
-          <h1 className="font-black text-white" style={{ fontSize: '1.75rem' }}>نقاطي ومكافآتي</h1>
-          <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>اجمع النقاط وتصدّر قائمة الطلاب</p>
-        </div>
+      {/* Status */}
+      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
+        <span>9:41</span><span>▶▶ 🔋</span>
+      </div>
 
-        {/* Total Points Card */}
-        <div className="relative overflow-hidden rounded-3xl p-7 mb-7"
-          style={{ background: 'linear-gradient(135deg, #f5a623 0%, #d97706 60%, #b45309 100%)', boxShadow: '0 8px 32px rgba(245,166,35,0.25)' }}>
-          <div className="absolute -top-10 -left-10 w-48 h-48 rounded-full opacity-10 bg-white" />
-          <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full opacity-10 bg-white" />
-          <div className="relative flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.7)' }}>إجمالي نقاطك</p>
-              <p className="text-white font-black" style={{ fontSize: '3.5rem', lineHeight: 1 }}>{totalPoints}</p>
-              <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>نقطة مكتسبة</p>
+      {/* Header */}
+      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
+        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>النتائج</h1>
+        <div style={{ width:36 }} />
+      </div>
+
+      <div style={{ padding:'14px 16px 0' }}>
+
+        {/* Semester Picker */}
+        <div style={{ position:'relative', marginBottom:16 }}>
+          <button onClick={()=>setPicker(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 16px', borderRadius:12, background:C.card, border:`1px solid ${C.border}`, cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, color:C.text, fontWeight:600, boxShadow:C.shadow }}>
+            <span>{SEMESTERS[sem]}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          {picker && (
+            <div style={{ position:'absolute', top:'110%', right:0, background:C.card, borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', border:`1px solid ${C.border}`, zIndex:50, minWidth:200 }}>
+              {SEMESTERS.map((s,i) => (
+                <button key={i} onClick={()=>{ setSem(i); setPicker(false); }}
+                  style={{ width:'100%', padding:'11px 16px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, color:sem===i?C.gold:C.text, fontWeight:sem===i?700:500, textAlign:'right' }}>
+                  {s}
+                </button>
+              ))}
             </div>
-            {myRank && (
-              <div className="text-center rounded-2xl px-5 py-4" style={{ background: 'rgba(4,10,24,0.25)', backdropFilter: 'blur(4px)' }}>
-                <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>ترتيبك</p>
-                <p className="text-white font-black" style={{ fontSize: '2.5rem', lineHeight: 1 }}>#{myRank}</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>في دولتك</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Points Guide */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-          {pointsGuide.map((g) => {
-            const c = ACTION_COLORS[g.action] ?? { bg: 'rgba(255,255,255,0.05)', color: DK.dimTxt };
+        {/* Overall Grade */}
+        <div style={{ background:C.card, borderRadius:20, padding:'24px', marginBottom:14, boxShadow:C.shadow, border:`1px solid ${C.border}`, textAlign:'center' }}>
+          <div style={{ width:70, height:70, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', fontSize:36, boxShadow:'0 6px 18px rgba(201,149,42,0.4)' }}>🏅</div>
+          <p style={{ color:C.sub, fontSize:12.5, marginBottom:5 }}>المعدل العام</p>
+          <p style={{ color:C.navy2, fontWeight:900, fontSize:40, lineHeight:1, marginBottom:8 }}>{overall}%</p>
+          <span style={{ display:'inline-block', padding:'5px 18px', borderRadius:20, background:'rgba(22,163,74,0.1)', color:'#16A34A', fontSize:14, fontWeight:700 }}>ممتاز</span>
+        </div>
+
+        {/* Subject Results */}
+        <div style={{ background:C.card, borderRadius:20, overflow:'hidden', boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:16 }}>
+          {MOCK_RESULTS.map((s,i) => {
+            const badge = GRADE_BADGE[s.grade] ?? GRADE_BADGE['ممتاز'];
             return (
-              <div key={g.action} className="rounded-2xl p-4 text-center"
-                style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.1)' }}>
-                <p className="text-2xl mb-2">{ACTION_ICONS[g.action]}</p>
-                <p className="font-black text-xl" style={{ color: c.color }}>{g.pts}</p>
-                <p className="text-xs font-semibold mt-1" style={{ color: DK.dimTxt }}>{g.label}</p>
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:i<MOCK_RESULTS.length-1?`1px solid ${C.border}`:'none' }}>
+                <div style={{ width:38, height:38, borderRadius:12, background:C.goldBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div style={{ flex:1 }}>
+                  <p style={{ color:C.navy2, fontWeight:700, fontSize:14 }}>{s.subject}</p>
+                </div>
+                <div style={{ textAlign:'center', marginLeft:10 }}>
+                  <p style={{ color:C.navy2, fontWeight:800, fontSize:17, lineHeight:1, marginBottom:3 }}>{s.pct}%</p>
+                </div>
+                <span style={{ padding:'4px 12px', borderRadius:20, background:badge.bg, color:badge.color, fontSize:11.5, fontWeight:700 }}>{s.grade}</span>
               </div>
             );
           })}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-5">
-          {(['history', 'leaderboard'] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
-              style={tab === t
-                ? { background: 'linear-gradient(135deg, #f5a623, #ffd166)', color: '#040a18' }
-                : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(245,166,35,0.15)' }}>
-              {t === 'history' ? 'سجل النقاط' : 'لوحة الصدارة'}
-            </button>
-          ))}
+        {/* Download */}
+        <button style={{ width:'100%', padding:'14px', borderRadius:15, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 16px rgba(201,149,42,0.4)', marginBottom:16 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          تحميل التقرير
+        </button>
+
+        {/* Points summary */}
+        <div style={{ background:C.card, borderRadius:18, padding:'16px 18px', boxShadow:C.shadow, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:14 }}>
+          <span style={{ fontSize:32 }}>⭐</span>
+          <div>
+            <p style={{ color:C.sub, fontSize:12, marginBottom:2 }}>مجموع نقاطك</p>
+            <p style={{ color:C.navy2, fontWeight:900, fontSize:22 }}>{(totalPoints||5420).toLocaleString()} نقطة</p>
+          </div>
+          <button onClick={()=>{}} style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'pointer' }}>
+            متجر المكافآت
+          </button>
         </div>
-
-        {loading && (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid rgba(245,166,35,0.2)', borderTopColor: '#f5a623' }} />
-          </div>
-        )}
-
-        {/* History */}
-        {!loading && tab === 'history' && (
-          <div className="space-y-3">
-            {history.length === 0 && (
-              <div className="text-center py-12 rounded-2xl"
-                style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.1)' }}>
-                <p className="text-4xl mb-3">🏆</p>
-                <p className="font-semibold text-sm text-white">لم تكسب أي نقاط بعد</p>
-                <p className="text-xs mt-1" style={{ color: DK.dimTxt }}>احضر حصة أو سلّم واجب لتبدأ</p>
-              </div>
-            )}
-            {history.map((item, i) => {
-              const c = ACTION_COLORS[item.action] ?? { bg: 'rgba(255,255,255,0.05)', color: DK.dimTxt };
-              return (
-                <div key={i} className="flex items-center justify-between p-4 rounded-2xl"
-                  style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.08)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-                      style={{ background: c.bg }}>
-                      {ACTION_ICONS[item.action] ?? '⭐'}
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-white">{item.label}</p>
-                      {item.description && (
-                        <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>{item.description}</p>
-                      )}
-                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>{timeAgo(item.earned_at)}</p>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <span className="font-black text-lg" style={{ color: c.color }}>+{item.points}</span>
-                    <p className="text-xs" style={{ color: DK.dimTxt }}>نقطة</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Leaderboard */}
-        {!loading && tab === 'leaderboard' && (
-          <div className="space-y-2">
-            {leaderboard.length === 0 && (
-              <div className="text-center py-12 rounded-2xl"
-                style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.1)' }}>
-                <p className="font-semibold text-sm text-white">لا يوجد ترتيب بعد</p>
-              </div>
-            )}
-            {leaderboard.map((entry) => {
-              const medals: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
-              return (
-                <div key={entry.rank} className="flex items-center gap-4 p-4 rounded-2xl transition-all"
-                  style={entry.is_me
-                    ? { background: 'rgba(245,166,35,0.1)', border: '1.5px solid rgba(245,166,35,0.4)', boxShadow: '0 4px 16px rgba(245,166,35,0.1)' }
-                    : { background: '#070e22', border: '1px solid rgba(245,166,35,0.08)' }}>
-                  <div className="w-10 text-center flex-shrink-0">
-                    {medals[entry.rank]
-                      ? <span className="text-2xl">{medals[entry.rank]}</span>
-                      : <span className="font-black text-sm" style={{ color: DK.dimTxt }}>#{entry.rank}</span>}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm" style={{ color: entry.is_me ? DK.gold : 'rgba(255,255,255,0.9)' }}>
-                      {entry.name} {entry.is_me && <span className="text-xs" style={{ color: DK.dimTxt }}>(أنت)</span>}
-                    </p>
-                  </div>
-                  <div className="text-left">
-                    <p className="font-black text-base" style={{ color: entry.is_me ? DK.gold : 'rgba(255,255,255,0.8)' }}>{entry.points}</p>
-                    <p className="text-xs" style={{ color: DK.dimTxt }}>نقطة</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
       </div>
-    </StudentLayout>
+
+      <StudentBottomNav cur="/student/points" />
+    </div>
   );
 }

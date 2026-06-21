@@ -31,57 +31,42 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
     navigate('/login', { replace: true });
   };
 
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
   return (
     <div
       className="flex min-h-screen"
       dir="rtl"
-      style={{ background: '#060d1f', fontFamily: "'Cairo', sans-serif" }}
+      style={{ background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }}
     >
       {/* ── Sidebar ── */}
       <aside
         className="w-64 flex flex-col h-screen sticky top-0 flex-shrink-0"
-        style={{
-          background: 'linear-gradient(180deg, #040a18 0%, #060d1f 100%)',
-          borderLeft: '1px solid rgba(245,166,35,0.1)',
-        }}
+        style={{ background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)' }}
       >
         {/* Logo */}
-        <div className="px-5 pt-7 pb-5">
+        <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-3">
-            <div className="relative flex-shrink-0">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: 'rgba(245,166,35,0.25)',
-                  filter: 'blur(14px)',
-                  transform: 'scale(1.4)',
-                }}
-              />
-              <img src="/logo.png" alt="ياقوت" className="relative w-10 h-10 object-contain" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', boxShadow: '0 4px 14px rgba(201,149,42,0.35)' }}
+            >
+              <img src="/logo.png" alt="ياقوت" className="w-7 h-7 object-contain" />
             </div>
             <div>
-              <h1
-                className="text-white font-black text-base leading-tight"
-                style={{ letterSpacing: '-0.2px' }}
-              >
+              <h1 className="text-white font-black text-base leading-tight" style={{ letterSpacing: '-0.2px' }}>
                 منصة الياقوت
               </h1>
-              <p className="text-xs font-semibold mt-0.5" style={{ color: '#f5a623', opacity: 0.65 }}>
+              <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>
                 {roleLabel}
               </p>
             </div>
           </div>
-          <div
-            className="mt-4 h-px"
-            style={{
-              background:
-                'linear-gradient(to left, transparent, rgba(245,166,35,0.3), transparent)',
-            }}
-          />
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5" style={{ scrollbarWidth: 'none' }}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -89,39 +74,29 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
               end={item.end}
               className={({ isActive }) =>
                 `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive ? '' : 'hover:bg-white/5'
+                  isActive ? '' : ''
                 }`
               }
               style={({ isActive }) =>
                 isActive
                   ? {
-                      background: 'linear-gradient(135deg, #f5a623 0%, #ffd166 100%)',
-                      color: '#040a18',
-                      boxShadow: '0 4px 18px rgba(245,166,35,0.28)',
+                      background: 'linear-gradient(135deg, #C9952A 0%, #DDAD50 100%)',
+                      color: '#fff',
+                      boxShadow: '0 4px 14px rgba(201,149,42,0.3)',
                     }
-                  : { color: 'rgba(255,255,255,0.45)' }
+                  : { color: 'rgba(255,255,255,0.5)' }
               }
+              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; if (!el.className.includes('active')) el.style.background = 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; if (!el.style.boxShadow) el.style.background = 'transparent'; }}
             >
               {({ isActive }) => (
                 <>
-                  <span
-                    className="w-5 h-5 flex-shrink-0 transition-colors"
-                    style={{ color: isActive ? '#040a18' : 'rgba(255,255,255,0.3)' }}
-                  >
+                  <span className="w-5 h-5 flex-shrink-0" style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.35)' }}>
                     {item.icon}
                   </span>
-                  <span
-                    className="flex-1 transition-colors"
-                    style={isActive ? {} : { color: 'rgba(255,255,255,0.45)' }}
-                  >
+                  <span className="flex-1" style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}>
                     {item.label}
                   </span>
-                  {isActive && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ background: 'rgba(4,10,24,0.45)' }}
-                    />
-                  )}
                 </>
               )}
             </NavLink>
@@ -129,51 +104,31 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
         </nav>
 
         {/* User + Logout */}
-        <div
-          className="px-2.5 py-3 space-y-1"
-          style={{ borderTop: '1px solid rgba(245,166,35,0.08)' }}
-        >
+        <div className="px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <div
-            className="flex items-center gap-3 px-3 py-3 rounded-xl"
-            style={{
-              background: 'rgba(245,166,35,0.06)',
-              border: '1px solid rgba(245,166,35,0.1)',
-            }}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
           >
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, #f5a623, #ffd166)',
-                color: '#040a18',
-              }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}
             >
               {initials}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate leading-tight">{user?.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: '#f5a623', opacity: 0.55 }}>
-                {roleLabel}
-              </p>
+              <p className="text-xs mt-0.5" style={{ color: '#DDAD50' }}>{roleLabel}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 text-sm px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
-            style={{ color: 'rgba(255,255,255,0.3)' }}
+            className="w-full flex items-center gap-2 text-sm px-3 py-2.5 rounded-xl transition-all duration-200"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.4)'; }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 flex-shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             تسجيل الخروج
           </button>
@@ -184,39 +139,34 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
         <header
-          className="h-16 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-10"
+          className="h-14 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-10"
           style={{
-            background: 'rgba(7,14,34,0.95)',
-            borderBottom: '1px solid rgba(245,166,35,0.07)',
-            backdropFilter: 'blur(16px)',
+            background: '#FFFFFF',
+            borderBottom: '1px solid #EDE3CE',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
           }}
         >
-          <div className="flex-1" />
+          <p style={{ color: '#6B7280', fontSize: '13px' }}>{dateStr}</p>
           <div className="flex items-center gap-4">
             <NotificationBell />
-            <div className="h-8 w-px" style={{ background: 'rgba(245,166,35,0.12)' }} />
+            <div className="h-7 w-px" style={{ background: '#EDE3CE' }} />
             <div className="flex items-center gap-2.5">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs"
-                style={{
-                  background: 'linear-gradient(135deg, #f5a623, #ffd166)',
-                  color: '#040a18',
-                }}
+                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}
               >
                 {initials}
               </div>
               <div>
-                <p className="text-sm font-bold text-white leading-tight">{user?.name}</p>
-                <p className="text-xs" style={{ color: '#f5a623', opacity: 0.55 }}>
-                  {roleLabel}
-                </p>
+                <p className="text-sm font-bold leading-tight" style={{ color: '#1B2038' }}>{user?.name}</p>
+                <p className="text-xs" style={{ color: '#C9952A' }}>{roleLabel}</p>
               </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto" style={{ background: '#060d1f' }}>
+        <main className="flex-1 overflow-auto" style={{ background: '#F5EDD8' }}>
           {children}
         </main>
       </div>

@@ -4,11 +4,11 @@ import { fetchAdminStats } from '../features/admin/adminSlice';
 import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  card:   { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' },
-  gold:   '#f5a623',
-  goldL:  '#ffd166',
-  navy:   '#040a18',
-  dimTxt: 'rgba(255,255,255,0.4)',
+  card:   { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:   '#C9952A',
+  goldL:  '#DDAD50',
+  navy:   '#fff',
+  dimTxt: '#6B7280',
 };
 
 const STAT_DEFS: { key: string; label: string; icon: string; accent: string }[] = [
@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }}>
 
         {/* Page header */}
         <div className="mb-10">
@@ -41,25 +41,25 @@ export default function AdminDashboardPage() {
               لوحة التحكم
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white" style={{ letterSpacing: '-0.5px' }}>
+          <h1 className="text-3xl font-black" style={{ letterSpacing: '-0.5px', color: '#1B2038' }}>
             {dashboard?.country?.name ?? 'منصة الياقوت'}
           </h1>
           {dashboard && (
             <p className="mt-1.5 text-sm" style={{ color: DK.dimTxt }}>
               نظرة عامة على إحصائيات المنصة
-              <span className="mx-2" style={{ color: 'rgba(245,166,35,0.3)' }}>·</span>
+              <span className="mx-2" style={{ color: 'rgba(201,149,42,0.4)' }}>·</span>
               <span className="font-mono" style={{ color: DK.gold, opacity: 0.65 }}>{dashboard.country.code}</span>
             </p>
           )}
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.2), transparent)' }} />
+          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
         </div>
 
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-24">
             <div
-              className="w-12 h-12 rounded-full border-2 animate-spin"
-              style={{ borderColor: 'rgba(245,166,35,0.2)', borderTopColor: DK.gold }}
+              className="w-12 h-12 rounded-full animate-spin"
+              style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }}
             />
           </div>
         )}
@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
         {error && (
           <div
             className="rounded-2xl px-5 py-4 text-sm font-medium mb-6"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }}
           >
             {error}
           </div>
@@ -99,7 +99,7 @@ function StatCard({ label, value, iconPath, accent }: {
   return (
     <div
       className="relative rounded-2xl p-6 overflow-hidden group transition-transform duration-300 hover:-translate-y-1 cursor-default"
-      style={DK.card}
+      style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}
     >
       {/* Ambient glow */}
       <div
@@ -118,10 +118,10 @@ function StatCard({ label, value, iconPath, accent }: {
       </div>
 
       {/* Value */}
-      <p className="text-4xl font-black text-white mb-1" style={{ lineHeight: 1 }}>{value}</p>
+      <p className="text-4xl font-black mb-1" style={{ lineHeight: 1, color: '#1B2038' }}>{value}</p>
 
       {/* Label */}
-      <p className="text-xs font-semibold mt-2" style={{ color: DK.dimTxt }}>{label}</p>
+      <p className="text-xs font-semibold mt-2" style={{ color: '#6B7280' }}>{label}</p>
 
       {/* Gold bottom accent */}
       <div

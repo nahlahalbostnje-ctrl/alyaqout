@@ -5,12 +5,12 @@ import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
 
 const navItems = [
-  { to: '/teacher/dashboard',    label: 'الرئيسية',       icon: '🏠' },
-  { to: '/teacher/courses',      label: 'دوراتي',         icon: '🎬' },
-  { to: '/teacher/live-classes', label: 'حصصي المباشرة',  icon: '📡' },
-  { to: '/teacher/exams',        label: 'امتحاناتي',      icon: '📝' },
-  { to: '/teacher/homework',     label: 'واجباتي',        icon: '📚' },
-  { to: '/teacher/emergency',    label: 'طلبات الطوارئ',  icon: '🚨' },
+  { to: '/teacher/dashboard',    label: 'الرئيسية',       d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+  { to: '/teacher/courses',      label: 'دوراتي',          d: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { to: '/teacher/live-classes', label: 'حصصي المباشرة',  d: 'M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z' },
+  { to: '/teacher/exams',        label: 'امتحاناتي',      d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+  { to: '/teacher/homework',     label: 'واجباتي',        d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+  { to: '/teacher/emergency',    label: 'طلبات الطوارئ',  d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
 ];
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {
@@ -18,63 +18,100 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const user = useAppSelector((s) => s.auth.user);
 
+  const initials = user?.name?.split(' ').slice(0, 2).map((w) => w[0]).join('') ?? 'م';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login', { replace: true });
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50" dir="rtl">
-      <aside className="w-64 bg-white border-l border-gray-100 shadow-sm flex flex-col">
-        <div className="p-5 border-b border-gray-100">
+    <div className="flex min-h-screen" style={{ background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }} dir="rtl">
+
+      {/* ── Sidebar ── */}
+      <aside className="w-60 flex-shrink-0 flex flex-col h-screen sticky top-0"
+        style={{ background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
+
+        {/* Logo */}
+        <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="ياقوت" className="w-10 h-10 object-contain flex-shrink-0" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', boxShadow: '0 4px 14px rgba(201,149,42,0.35)' }}>
+              <img src="/logo.png" alt="ياقوت" className="w-7 h-7 object-contain" />
+            </div>
             <div>
-              <h1 className="text-lg font-black text-teal-800 leading-tight">منصة الياقوت</h1>
-              <p className="text-xs text-gray-400">بوابة المعلم</p>
+              <p className="text-white font-black text-base leading-tight">منصة الياقوت</p>
+              <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>بوابة المعلم</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`
-              }
-            >
-              <span>{item.icon}</span>
+            <NavLink key={item.to} to={item.to}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+              style={({ isActive }) => isActive
+                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff', boxShadow: '0 4px 14px rgba(201,149,42,0.3)' }
+                : { color: 'rgba(255,255,255,0.5)' }
+              }>
+              <svg className="w-[17px] h-[17px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={item.d} />
+              </svg>
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <div className="px-4 py-2 mb-2">
-            <p className="text-xs text-gray-400">مرحباً،</p>
-            <p className="text-sm font-semibold text-gray-700 truncate">{user?.name}</p>
+        {/* User */}
+        <div className="px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
+            style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate leading-tight">{user?.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#DDAD50' }}>معلم</p>
+            </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full text-sm text-red-500 hover:text-red-700 px-4 py-2 rounded-xl hover:bg-red-50 transition text-right"
-          >
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 text-sm px-3 py-2.5 rounded-xl transition-all"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.4)'; }}>
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
             تسجيل الخروج
           </button>
         </div>
       </aside>
 
+      {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 flex items-center justify-end px-6 gap-3 flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #0f766e 0%, #134e4a 100%)' }}>
-          <NotificationBell />
+        <header className="h-14 flex items-center justify-between px-6 flex-shrink-0"
+          style={{ background: '#FFFFFF', borderBottom: '1px solid #EDE3CE', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+          <p style={{ color: '#6B7280', fontSize: '13px' }}>{dateStr}</p>
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <button onClick={handleLogout}
+              title="تسجيل الخروج"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: 'rgba(239,68,68,0.07)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.18)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.14)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.07)'; }}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              خروج
+            </button>
+          </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto" style={{ background: '#F5EDD8' }}>{children}</main>
       </div>
     </div>
   );

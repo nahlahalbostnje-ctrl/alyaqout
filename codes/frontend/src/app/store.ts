@@ -22,6 +22,7 @@ import supervisorReducer    from '../features/supervisor/supervisorSlice';
 import gamificationReducer  from '../features/student/gamificationSlice';
 import leagueReducer        from '../features/student/leagueSlice';
 import agoraReducer         from '../features/live/agoraSlice';
+import superAdminReducer    from '../features/superAdmin/superAdminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -48,6 +49,7 @@ export const store = configureStore({
     gamification:   gamificationReducer,
     league:         leagueReducer,
     agora:          agoraReducer,
+    superAdmin:     superAdminReducer,
   },
 });
 

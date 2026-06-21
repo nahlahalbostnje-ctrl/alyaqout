@@ -26,6 +26,23 @@ export interface TeacherLiveClass {
   course: { id: number; title: string };
 }
 
+export interface TeacherStats {
+  total_courses:         number;
+  total_live_classes:    number;
+  pending_homework_subs: number;
+  pending_exam_subs:     number;
+  active_homeworks:      number;
+  active_exams:          number;
+  today_attendance:      number;
+}
+
+export interface RecentSubmission {
+  id: number;
+  student_name: string;
+  homework: string;
+  submitted_at: string;
+}
+
 interface TeacherInfo { id: number; name: string }
 
 interface TeacherState {
@@ -33,6 +50,9 @@ interface TeacherState {
   courses: TeacherCourse[];
   liveClasses: TeacherLiveClass[];
   upcoming: TeacherLiveClass[];
+  stats: TeacherStats | null;
+  liveNow: { id: number; title: string; agora_channel: string | null } | null;
+  recentSubmissions: RecentSubmission[];
   loading: boolean;
   error: string | null;
 }
@@ -42,6 +62,9 @@ const initialState: TeacherState = {
   courses: [],
   liveClasses: [],
   upcoming: [],
+  stats: null,
+  liveNow: null,
+  recentSubmissions: [],
   loading: false,
   error: null,
 };
@@ -106,10 +129,13 @@ const teacherSlice = createSlice({
     builder
       .addCase(fetchTeacherDashboard.pending,  (s) => { s.loading = true; s.error = null; })
       .addCase(fetchTeacherDashboard.fulfilled, (s, a) => {
-        s.loading  = false;
-        s.teacher  = a.payload.teacher;
-        s.courses  = a.payload.courses;
-        s.upcoming = a.payload.upcoming;
+        s.loading           = false;
+        s.teacher           = a.payload.teacher;
+        s.courses           = a.payload.courses;
+        s.upcoming          = a.payload.upcoming;
+        s.stats             = a.payload.stats ?? null;
+        s.liveNow           = a.payload.live_now ?? null;
+        s.recentSubmissions = a.payload.recent_submissions ?? [];
       })
       .addCase(fetchTeacherDashboard.rejected, (s, a) => {
         s.loading = false;

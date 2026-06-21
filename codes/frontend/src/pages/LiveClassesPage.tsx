@@ -14,15 +14,15 @@ import {
 import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  card:    { background: '#070e22', border: '1px solid rgba(245,166,35,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  gold:    '#f5a623',
-  goldL:   '#ffd166',
-  navy:    '#040a18',
-  dimTxt:  'rgba(255,255,255,0.4)',
+  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
+  gold:    '#C9952A',
+  goldL:   '#DDAD50',
+  navy:    '#fff',
+  dimTxt:  '#6B7280',
   inputStyle: {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(245,166,35,0.15)',
-    color: '#fff',
+    background: '#FFFFFF',
+    border: '1px solid #EDE3CE',
+    color: '#1B2038',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -38,9 +38,9 @@ const STATUS_LABELS: Record<ClassStatus, string> = {
 };
 
 const STATUS_STYLES: Record<ClassStatus, React.CSSProperties> = {
-  scheduled: { background: 'rgba(96,165,250,0.12)',  color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' },
-  live:      { background: 'rgba(52,211,153,0.12)',  color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' },
-  ended:     { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' },
+  scheduled: { background: 'rgba(59,130,246,0.08)',  color: '#3B82F6', border: '1px solid rgba(59,130,246,0.2)' },
+  live:      { background: 'rgba(16,185,129,0.08)',  color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' },
+  ended:     { background: '#F9FAFB', color: '#9CA3AF', border: '1px solid #EDE3CE' },
 };
 
 const TABS: { value: ClassStatus | null; label: string }[] = [
@@ -135,7 +135,7 @@ export default function LiveClassesPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }}>
 
         {/* Header */}
         <div className="mb-8">
@@ -145,12 +145,12 @@ export default function LiveClassesPage() {
                 <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
                 <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>البث المباشر</span>
               </div>
-              <h1 className="text-2xl font-black text-white">الحصص المباشرة</h1>
+              <h1 className="text-2xl font-black" style={{ color: '#1B2038' }}>الحصص المباشرة</h1>
             </div>
             <button
               onClick={openModal}
               className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 hover:-translate-y-0.5"
-              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy, boxShadow: '0 4px 18px rgba(245,166,35,0.3)' }}
+              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff', boxShadow: '0 4px 18px rgba(201,149,42,0.3)' }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -158,7 +158,7 @@ export default function LiveClassesPage() {
               جدولة حصة
             </button>
           </div>
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(245,166,35,0.2), transparent)' }} />
+          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
         </div>
 
         {/* Tabs */}
@@ -174,16 +174,16 @@ export default function LiveClassesPage() {
                 onClick={() => setActiveTab(tab.value)}
                 className="text-sm px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 font-semibold"
                 style={isActive
-                  ? { background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }
-                  : { background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(255,255,255,0.08)' }
+                  ? { background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }
+                  : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }
                 }
               >
                 {tab.label}
                 <span
                   className="text-xs px-1.5 py-0.5 rounded-full font-bold"
                   style={isActive
-                    ? { background: 'rgba(4,10,24,0.25)', color: DK.navy }
-                    : { background: 'rgba(255,255,255,0.08)', color: DK.dimTxt }
+                    ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
+                    : { background: '#F9FAFB', color: DK.dimTxt }
                   }
                 >
                   {count}
@@ -197,8 +197,8 @@ export default function LiveClassesPage() {
         <div className="rounded-2xl overflow-hidden" style={DK.card}>
           {loading ? (
             <div className="flex justify-center py-16">
-              <div className="w-10 h-10 rounded-full border-2 animate-spin"
-                style={{ borderColor: 'rgba(245,166,35,0.2)', borderTopColor: DK.gold }} />
+              <div className="w-10 h-10 rounded-full animate-spin"
+                style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
             </div>
           ) : classes.length === 0 ? (
             <p className="text-center py-16 text-sm font-semibold" style={{ color: DK.dimTxt }}>
@@ -207,10 +207,10 @@ export default function LiveClassesPage() {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ background: 'rgba(245,166,35,0.04)', borderBottom: '1px solid rgba(245,166,35,0.08)' }}>
+                <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
                   {['الحصة', 'الدورة', 'المعلم', 'الموعد', 'المدة', 'الحالة', 'إجراءات'].map((h) => (
                     <th key={h} className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wide"
-                      style={{ color: 'rgba(245,166,35,0.55)' }}>{h}</th>
+                      style={{ color: DK.gold }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -221,14 +221,14 @@ export default function LiveClassesPage() {
                     <tr
                       key={cls.id}
                       className="transition-colors"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,166,35,0.025)')}
+                      style={{ borderBottom: '1px solid #EDE3CE' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                     >
                       <td className="px-4 py-4">
-                        <p className="font-bold text-white">{cls.title}</p>
+                        <p className="font-bold" style={{ color: '#1B2038' }}>{cls.title}</p>
                         {cls.agora_channel && (
-                          <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#34d399' }}>
+                          <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#10B981' }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                             قناة Agora داخلية
                           </span>
@@ -254,8 +254,8 @@ export default function LiveClassesPage() {
                               disabled={updatingStatus === cls.id}
                               className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
                               style={next.value === 'live'
-                                ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
-                                : { background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }
+                                ? { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
+                                : { background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }
                               }
                             >
                               {updatingStatus === cls.id ? '...' : next.label}
@@ -265,7 +265,7 @@ export default function LiveClassesPage() {
                             <button
                               onClick={() => navigate(`/live/${cls.agora_channel}?classId=${cls.id}`)}
                               className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all hover:opacity-80"
-                              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                             >
                               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse inline-block" />
                               دخول مباشر
@@ -276,7 +276,7 @@ export default function LiveClassesPage() {
                               onClick={() => handleDelete(cls.id)}
                               disabled={deleting === cls.id}
                               className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
-                              style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt, border: '1px solid rgba(255,255,255,0.08)' }}
+                              style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
                             >
                               {deleting === cls.id ? '...' : 'حذف'}
                             </button>
@@ -296,55 +296,55 @@ export default function LiveClassesPage() {
       {showModal && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           onClick={() => setShowModal(false)}
         >
           <div
             className="w-full max-w-md p-6 max-h-[90vh] overflow-y-auto rounded-2xl"
-            style={{ background: '#070e22', border: '1px solid rgba(245,166,35,0.15)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-white">جدولة حصة مباشرة</h3>
+              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>جدولة حصة مباشرة</h3>
               <button onClick={() => setShowModal(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none hover:bg-white/10 transition"
+                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none hover:bg-black/5 transition"
                 style={{ color: DK.dimTxt }}>×</button>
             </div>
 
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>الدورة</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الدورة</label>
                 <select
                   value={form.course_id}
                   onChange={(e) => setForm({ ...form, course_id: Number(e.target.value) })}
-                  style={{ ...DK.inputStyle }}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                  style={{ ...DK.inputStyle, cursor: 'pointer' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 >
-                  <option value={0} style={{ background: '#070e22' }} disabled>اختر الدورة</option>
-                  {courses.map((c) => <option key={c.id} value={c.id} style={{ background: '#070e22' }}>{c.title}</option>)}
+                  <option value={0} disabled>اختر الدورة</option>
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>المعلم</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>المعلم</label>
                 <select
                   value={form.teacher_id}
                   onChange={(e) => setForm({ ...form, teacher_id: Number(e.target.value) })}
-                  style={{ ...DK.inputStyle }}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                  style={{ ...DK.inputStyle, cursor: 'pointer' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 >
-                  <option value={0} style={{ background: '#070e22' }} disabled>اختر المعلم</option>
-                  {teachers.map((t) => <option key={t.id} value={t.id} style={{ background: '#070e22' }}>{t.name}</option>)}
+                  <option value={0} disabled>اختر المعلم</option>
+                  {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
                 {teachers.length === 0 && (
-                  <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>أضف معلمين أولاً من صفحة المستخدمين.</p>
+                  <p className="text-xs mt-1" style={{ color: '#F59E0B' }}>أضف معلمين أولاً من صفحة المستخدمين.</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>عنوان الحصة</label>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>عنوان الحصة</label>
                 <input
                   type="text"
                   value={form.title}
@@ -353,27 +353,27 @@ export default function LiveClassesPage() {
                   required
                   autoFocus
                   style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>موعد الحصة</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>موعد الحصة</label>
                   <input
                     type="datetime-local"
                     required
                     value={form.scheduled_at ? toLocalInput(form.scheduled_at) : ''}
                     onChange={(e) => setForm({ ...form, scheduled_at: new Date(e.target.value).toISOString() })}
                     dir="ltr"
-                    style={{ ...DK.inputStyle, colorScheme: 'dark' }}
-                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                    style={DK.inputStyle}
+                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'rgba(245,166,35,0.6)' }}>المدة (دقيقة)</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>المدة (دقيقة)</label>
                   <input
                     type="number"
                     min={15}
@@ -382,23 +382,23 @@ export default function LiveClassesPage() {
                     onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
                     dir="ltr"
                     style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.4)')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(245,166,35,0.15)')}
+                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
+                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                   />
                 </div>
               </div>
 
               <div
                 className="flex items-center gap-2 py-3 px-4 rounded-xl"
-                style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}
+                style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                <p className="text-xs" style={{ color: '#34d399' }}>سيتم إنشاء قناة Agora داخلية تلقائياً للحصة.</p>
+                <p className="text-xs" style={{ color: '#10B981' }}>سيتم إنشاء قناة Agora داخلية تلقائياً للحصة.</p>
               </div>
 
               {addError && (
                 <p className="text-xs px-3 py-2 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.15)' }}>
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                   {addError}
                 </p>
               )}
@@ -408,7 +408,7 @@ export default function LiveClassesPage() {
                   type="submit"
                   disabled={addLoading}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: DK.navy }}
+                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                 >
                   {addLoading ? 'جاري الجدولة...' : 'جدولة'}
                 </button>
@@ -416,7 +416,7 @@ export default function LiveClassesPage() {
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: DK.dimTxt }}
+                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
                 >
                   إلغاء
                 </button>

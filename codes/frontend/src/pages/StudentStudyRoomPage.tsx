@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ref, push, onValue } from 'firebase/database';
 import { db } from '../services/firebase';
 import { useAppSelector } from '../app/hooks';
-import StudentLayout from '../components/StudentLayout';
+import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
 
 interface Message {
   id:        string;
@@ -13,155 +14,128 @@ interface Message {
   timestamp: number;
 }
 
-const DK = {
-  gold:   '#f5a623',
-  dimTxt: 'rgba(255,255,255,0.4)',
-};
-
-const font = { fontFamily: "'Cairo', sans-serif" };
+const QUICK_ACTIONS = [
+  { label:'شرح درس',       desc:'أشرح أي درس لك',           emoji:'✏️' },
+  { label:'حل سؤال',      desc:'ساعدني في حل سؤال',         emoji:'❓' },
+  { label:'تلخيص',         desc:'لخص لي هذا الموضوع',        emoji:'📋' },
+  { label:'تحضير امتحان', desc:'أسئلة تدريبية',             emoji:'📝' },
+];
 
 function formatTime(ts: number) {
-  return new Date(ts).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+  return new Date(ts).toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' });
 }
 
 export default function StudentStudyRoomPage() {
-  const user   = useAppSelector((s) => s.auth.user);
-  const roomId = `room_${user?.id}`;
-
+  const navigate  = useNavigate();
+  const user      = useAppSelector(s => s.auth.user);
+  const roomId    = `room_${user?.id}`;
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText]         = useState('');
   const [sending, setSending]   = useState(false);
-  const bottomRef               = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const msgsRef = ref(db, `studyRoom/${roomId}/messages`);
-    const unsubscribe = onValue(msgsRef, (snap) => {
+    const unsubscribe = onValue(msgsRef, snap => {
       const data = snap.val();
       if (!data) { setMessages([]); return; }
-      const list: Message[] = Object.entries(data).map(([id, v]) => {
-        const val = v as Omit<Message, 'id'>;
-        return { id, ...val };
-      });
-      list.sort((a, b) => a.timestamp - b.timestamp);
+      const list: Message[] = Object.entries(data).map(([id, v]) => ({ id, ...(v as Omit<Message,'id'>) }));
+      list.sort((a,b) => a.timestamp - b.timestamp);
       setMessages(list);
     });
     return () => unsubscribe();
   }, [roomId]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }); }, [messages]);
 
-  const send = async () => {
-    const trimmed = text.trim();
+  const send = async (customText?: string) => {
+    const trimmed = (customText ?? text).trim();
     if (!trimmed || sending || !user) return;
     setSending(true);
     await push(ref(db, `studyRoom/${roomId}/messages`), {
-      userId:    user.id,
-      userName:  user.name,
-      role:      user.role,
-      text:      trimmed,
-      timestamp: Date.now(),
+      userId: user.id, userName: user.name, role: user.role, text: trimmed, timestamp: Date.now(),
     });
     setText(''); setSending(false);
   };
 
   const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   };
 
+  const firstName = user?.name?.split(' ')[0] ?? 'محمد';
+
   return (
-    <StudentLayout>
-      <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)', background: '#040a18' }} dir="rtl">
+    <div dir="rtl" style={{ background:C.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:"'Cairo',sans-serif" }}>
 
-        {/* Header */}
-        <div className="flex-shrink-0 px-6 py-4" style={{ background: '#070e22', borderBottom: '1px solid rgba(245,166,35,0.1)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
-              style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)' }}>
-              📚
-            </div>
-            <div>
-              <h2 className="font-black text-white text-base" style={font}>غرفة الواجبات</h2>
-              <p className="text-xs" style={{ color: DK.dimTxt, ...font }}>اسأل مشرفك عن أي شيء — نرد بأسرع وقت</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-3">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-3 opacity-60">
-              <p className="text-5xl">💬</p>
-              <p className="font-semibold text-sm text-white" style={font}>لا توجد رسائل بعد</p>
-              <p className="text-xs" style={{ color: DK.dimTxt, ...font }}>ابدأ بسؤال مشرفك عن أي واجب أو درس</p>
-            </div>
-          )}
-
-          {messages.map((msg) => {
-            const isMe = msg.userId === user?.id;
-            return (
-              <div key={msg.id} className={`flex ${isMe ? 'justify-start' : 'justify-end'}`}>
-                <div className="max-w-xs lg:max-w-md">
-                  {!isMe && (
-                    <p className="text-xs font-bold mb-1 px-1" style={{ color: DK.gold, ...font }}>
-                      {msg.userName}
-                    </p>
-                  )}
-                  <div className="px-4 py-2.5 rounded-2xl text-sm"
-                    style={{
-                      background: isMe ? 'linear-gradient(135deg, #f5a623, #ffd166)' : 'rgba(255,255,255,0.06)',
-                      color:      isMe ? '#040a18' : '#fff',
-                      border:     isMe ? 'none' : '1px solid rgba(245,166,35,0.1)',
-                      borderTopRightRadius: isMe ? '4px' : '16px',
-                      borderTopLeftRadius:  isMe ? '16px' : '4px',
-                    }}>
-                    <p style={{ ...font, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.text}</p>
-                    <p className="text-xs mt-1 text-right" style={{ opacity: 0.6, ...font }}>
-                      {formatTime(msg.timestamp)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={bottomRef} />
-        </div>
-
-        {/* Input */}
-        <div className="flex-shrink-0 p-4 flex items-end gap-3"
-          style={{ background: '#070e22', borderTop: '1px solid rgba(245,166,35,0.08)' }}>
-          <textarea
-            value={text} onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="اكتب سؤالك هنا... (Enter للإرسال)"
-            rows={1}
-            className="flex-1 resize-none rounded-2xl px-4 py-3 text-sm focus:outline-none"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(245,166,35,0.15)',
-              color: '#fff',
-              maxHeight: '120px',
-              overflowY: 'auto',
-              ...font,
-            }}
-            onInput={(e) => {
-              const t = e.currentTarget;
-              t.style.height = 'auto';
-              t.style.height = `${Math.min(t.scrollHeight, 120)}px`;
-            }}
-          />
-          <button onClick={send} disabled={sending || !text.trim()}
-            className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-2xl transition disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #f5a623, #ffd166)' }}>
-            <svg className="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              style={{ color: '#040a18' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
-        </div>
-
+      {/* Status */}
+      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2, flexShrink:0 }}>
+        <span>9:41</span><span>▶▶ 🔋</span>
       </div>
-    </StudentLayout>
+
+      {/* Header */}
+      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)', flexShrink:0 }}>
+        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
+        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>معلمي الذكي</h1>
+        <div style={{ width:36 }} />
+      </div>
+
+      {/* Chat area */}
+      <div style={{ flex:1, overflowY:'auto', padding:'16px', paddingBottom:BH+80 }}>
+        {messages.length === 0 && (
+          <>
+            {/* Robot welcome */}
+            <div style={{ textAlign:'center', padding:'20px 0 24px' }}>
+              <div style={{ width:90, height:90, borderRadius:'50%', background:'linear-gradient(135deg,#0D1535,#1B2038)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontSize:46, boxShadow:'0 8px 24px rgba(13,21,53,0.4)', border:`3px solid ${C.gold}` }}>🤖</div>
+              <p style={{ color:C.navy2, fontWeight:800, fontSize:18, marginBottom:6 }}>مرحباً {firstName} 👋</p>
+              <p style={{ color:C.sub, fontSize:13.5 }}>كيف بإمكاني مساعدتك اليوم؟</p>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
+              {QUICK_ACTIONS.map((a,i) => (
+                <button key={i} onClick={()=>send(a.label)}
+                  style={{ background:C.card, borderRadius:16, padding:'14px 12px', display:'flex', flexDirection:'column', alignItems:'flex-start', gap:6, border:`1px solid ${C.border}`, boxShadow:C.shadow, cursor:'pointer', textAlign:'right', fontFamily:"'Cairo',sans-serif" }}>
+                  <span style={{ fontSize:24 }}>{a.emoji}</span>
+                  <p style={{ color:C.navy2, fontWeight:700, fontSize:13.5 }}>{a.label}</p>
+                  <p style={{ color:C.sub, fontSize:11 }}>{a.desc}</p>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {messages.map(msg => {
+          const isMe = msg.userId === user?.id;
+          return (
+            <div key={msg.id} style={{ display:'flex', justifyContent:isMe?'flex-start':'flex-end', marginBottom:10 }}>
+              <div style={{ maxWidth:'78%', padding:'10px 14px', borderRadius:isMe?'16px 16px 4px 16px':'16px 16px 16px 4px', background:isMe?C.navy2:C.card, color:isMe?'#fff':C.text, boxShadow:C.shadow, border:isMe?'none':`1px solid ${C.border}` }}>
+                {!isMe && <p style={{ color:C.gold, fontSize:10.5, fontWeight:700, marginBottom:4 }}>{msg.userName}</p>}
+                <p style={{ fontSize:13.5, lineHeight:1.5 }}>{msg.text}</p>
+                <p style={{ fontSize:10, color:isMe?'rgba(255,255,255,0.4)':C.dim, marginTop:4 }}>{formatTime(msg.timestamp)}</p>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{ position:'fixed', bottom:BH, left:0, right:0, background:C.card, borderTop:`1px solid ${C.border}`, padding:'10px 14px', display:'flex', gap:8, alignItems:'flex-end', zIndex:90 }}>
+        <button style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:17 }}>🎙️</button>
+        <textarea
+          value={text} onChange={e=>setText(e.target.value)} onKeyDown={handleKey}
+          rows={1} placeholder="اكتب سؤالك هنا..."
+          style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:14, padding:'10px 14px', fontSize:13.5, color:C.text, background:C.bg, outline:'none', resize:'none', fontFamily:"'Cairo',sans-serif", maxHeight:120, lineHeight:1.5 }}
+        />
+        <button onClick={()=>send()} disabled={sending||!text.trim()}
+          style={{ width:40, height:40, borderRadius:'50%', background:text.trim()?C.goldGrad:C.bg, border:`1px solid ${text.trim()?'transparent':C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:text.trim()?'pointer':'default', flexShrink:0, transition:'all 0.2s' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={text.trim()?'#1B2038':'#9CA3AF'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </div>
+
+      <StudentBottomNav cur="/student/study-room" />
+    </div>
   );
 }
