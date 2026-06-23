@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchCourses } from '../features/admin/coursesSlice';
@@ -14,22 +14,59 @@ import {
 import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  } as React.CSSProperties,
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?'#C59341': v==='danger'?'#EF4444':'#FFFFFF',
+  color: v==='outline'?'#1B2038':'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?'#C59341':'#EDE3CE'}`,
+  color:'#1B2038', borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+const TH: React.CSSProperties = {
+  padding:'11px 16px', textAlign:'right', color:'#6B7280', fontSize:12,
+  fontWeight:700, background:'#F8F5EE', borderBottom:'1px solid #EDE3CE',
+};
+const TD: React.CSSProperties = {
+  padding:'12px 16px', borderBottom:'1px solid #F3EDE0', fontSize:13, color:'#1B2038',
+};
+
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:500,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:'#1B2038',fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16,color:'#6B7280'}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, color, bg, pulse=false }: { label:string; color:string; bg:string; pulse?:boolean }) {
+  return (
+    <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:bg,color,display:'inline-flex',alignItems:'center',gap:5}}>
+      {pulse && (
+        <span style={{width:7,height:7,borderRadius:'50%',background:color,display:'inline-block',animation:'pulse 1.5s ease-in-out infinite'}} />
+      )}
+      {label}
+    </span>
+  );
+}
 
 const STATUS_LABELS: Record<ClassStatus, string> = {
   scheduled: 'مجدولة',
@@ -37,17 +74,17 @@ const STATUS_LABELS: Record<ClassStatus, string> = {
   ended:     'انتهت',
 };
 
-const STATUS_STYLES: Record<ClassStatus, React.CSSProperties> = {
-  scheduled: { background: 'rgba(59,130,246,0.08)',  color: '#3B82F6', border: '1px solid rgba(59,130,246,0.2)' },
-  live:      { background: 'rgba(16,185,129,0.08)',  color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' },
-  ended:     { background: '#F9FAFB', color: '#9CA3AF', border: '1px solid #EDE3CE' },
+const STATUS_COLORS: Record<ClassStatus, { color:string; bg:string }> = {
+  scheduled: { color:'#3B82F6', bg:'rgba(59,130,246,0.1)'  },
+  live:      { color:'#10B981', bg:'rgba(16,185,129,0.1)'  },
+  ended:     { color:'#9CA3AF', bg:'#F3F4F6'               },
 };
 
 const TABS: { value: ClassStatus | null; label: string }[] = [
-  { value: null,        label: 'الكل' },
-  { value: 'scheduled', label: 'مجدولة' },
-  { value: 'live',      label: 'جارية' },
-  { value: 'ended',     label: 'منتهية' },
+  { value: null,        label: 'الكل'     },
+  { value: 'scheduled', label: 'مجدولة'  },
+  { value: 'live',      label: 'جارية'   },
+  { value: 'ended',     label: 'منتهية'  },
 ];
 
 function toLocalInput(dateStr: string): string {
@@ -64,9 +101,9 @@ const emptyForm: LiveClassPayload = {
 export default function LiveClassesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { list: courses }           = useAppSelector((s) => s.courses);
-  const { list: allUsers }          = useAppSelector((s) => s.adminUsers);
-  const { list: classes, loading }  = useAppSelector((s) => s.liveClasses);
+  const { list: courses }          = useAppSelector((s) => s.courses);
+  const { list: allUsers }         = useAppSelector((s) => s.adminUsers);
+  const { list: classes, loading } = useAppSelector((s) => s.liveClasses);
 
   const teachers = allUsers.filter((u) => u.role === 'teacher');
 
@@ -77,6 +114,7 @@ export default function LiveClassesPage() {
   const [addLoading, setAddLoading] = useState(false);
   const [deleting, setDeleting]     = useState<number | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [focused, setFocused]       = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchCourses(null));
@@ -100,9 +138,9 @@ export default function LiveClassesPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.course_id)   { setAddError('اختر الدورة'); return; }
-    if (!form.teacher_id)  { setAddError('اختر المعلم'); return; }
-    if (!form.scheduled_at){ setAddError('حدد موعد الحصة'); return; }
+    if (!form.course_id)    { setAddError('اختر الدورة'); return; }
+    if (!form.teacher_id)   { setAddError('اختر المعلم'); return; }
+    if (!form.scheduled_at) { setAddError('حدد موعد الحصة'); return; }
     setAddLoading(true);
     setAddError(null);
     const result = await dispatch(addLiveClass(form));
@@ -127,158 +165,185 @@ export default function LiveClassesPage() {
     setDeleting(null);
   };
 
-  const nextStatus: Record<ClassStatus, { label: string; value: ClassStatus } | null> = {
-    scheduled: { label: 'بدء الحصة', value: 'live' },
-    live:      { label: 'إنهاء الحصة', value: 'ended' },
+  const nextStatus: Record<ClassStatus, { label: string; value: ClassStatus; color:string; bg:string } | null> = {
+    scheduled: { label:'بدء',   value:'live',  color:'#10B981', bg:'rgba(16,185,129,0.1)'  },
+    live:      { label:'إنهاء', value:'ended', color:'#EF4444', bg:'rgba(239,68,68,0.1)'    },
     ended:     null,
   };
 
+  const liveSessions = classes.filter(c => c.status === 'live');
+
   return (
     <AdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }}>
+      <div style={{ fontFamily:"'Cairo',sans-serif", background: DK.bg, minHeight:'100vh', padding:24 }}>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:4, height:28, borderRadius:4, background: DK.goldGrad }} />
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>البث المباشر</span>
-              </div>
-              <h1 className="text-2xl font-black" style={{ color: '#1B2038' }}>الحصص المباشرة</h1>
+              <h1 style={{ margin:0, fontSize:22, fontWeight:900, color: DK.text }}>الحصص المباشرة</h1>
+              <p style={{ margin:0, fontSize:12, color: DK.sub, marginTop:2 }}>مراقبة وإدارة جلسات البث الحي</p>
             </div>
-            <button
-              onClick={openModal}
-              className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 hover:-translate-y-0.5"
-              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff', boxShadow: '0 4px 18px rgba(201,149,42,0.3)' }}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              جدولة حصة
-            </button>
           </div>
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
+          <button onClick={openModal} style={{ ...btn('gold'), display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ fontSize:16, fontWeight:400 }}>+</span> إنشاء حصة جديدة
+          </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {TABS.map((tab) => {
-            const count = tab.value
-              ? classes.filter((c) => c.status === tab.value).length
-              : classes.length;
+        {/* Live sessions banner */}
+        {liveSessions.length > 0 && (
+          <div style={{ marginBottom:24 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+              <span style={{ width:10, height:10, borderRadius:'50%', background:'#10B981', display:'inline-block', animation:'pulse 1.5s ease-in-out infinite' }} />
+              <span style={{ fontSize:13, fontWeight:800, color: DK.green }}>مباشر الآن ({liveSessions.length})</span>
+            </div>
+            <div style={{ display:'flex', gap:14, flexWrap:'wrap' }}>
+              {liveSessions.map(cls => (
+                <div key={cls.id} style={{
+                  background:'#fff',
+                  border:'2px solid #10B981',
+                  boxShadow:'0 0 0 4px rgba(16,185,129,0.1), 0 4px 20px rgba(0,0,0,0.08)',
+                  borderRadius:16,
+                  padding:'16px 20px',
+                  minWidth:260,
+                  display:'flex',
+                  alignItems:'center',
+                  gap:14,
+                }}>
+                  <div style={{ width:44, height:44, borderRadius:12, background:'rgba(16,185,129,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>
+                    📡
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                      <span style={{ width:8, height:8, borderRadius:'50%', background:'#10B981', display:'inline-block', animation:'pulse 1.5s ease-in-out infinite' }} />
+                      <span style={{ fontSize:11, fontWeight:800, color:'#10B981' }}>مباشر الآن</span>
+                    </div>
+                    <p style={{ margin:0, fontWeight:800, color: DK.text, fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{cls.title}</p>
+                    <p style={{ margin:'2px 0 0', fontSize:11, color: DK.sub }}>{cls.teacher?.name ?? '—'}</p>
+                  </div>
+                  {cls.agora_channel && (
+                    <button onClick={() => navigate(`/live/${cls.agora_channel}?classId=${cls.id}`)}
+                      style={{ padding:'7px 14px', borderRadius:10, border:'none', background: DK.goldGrad, color:'#fff', fontWeight:800, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif", flexShrink:0 }}>
+                      دخول
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status filter tabs */}
+        <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
+          {TABS.map(tab => {
+            const count = tab.value ? classes.filter(c => c.status === tab.value).length : classes.length;
             const isActive = activeTab === tab.value;
             return (
-              <button
-                key={String(tab.value)}
-                onClick={() => setActiveTab(tab.value)}
-                className="text-sm px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 font-semibold"
-                style={isActive
-                  ? { background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }
-                  : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }
-                }
-              >
-                {tab.label}
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded-full font-bold"
-                  style={isActive
-                    ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
-                    : { background: '#F9FAFB', color: DK.dimTxt }
-                  }
-                >
-                  {count}
-                </span>
+              <button key={String(tab.value)} onClick={() => setActiveTab(tab.value)}
+                style={{
+                  borderRadius:10, padding:'8px 20px', border:'none', cursor:'pointer',
+                  fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:700,
+                  background: isActive ? DK.gold : 'transparent',
+                  color: isActive ? '#fff' : DK.sub,
+                  transition:'all 0.15s',
+                }}>
+                {tab.label} ({count})
               </button>
             );
           })}
         </div>
 
-        {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={DK.card}>
+        {/* Main table */}
+        <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
           {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-10 h-10 rounded-full animate-spin"
-                style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', padding:60 }}>
+              <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation:'spin 0.8s linear infinite' }} />
             </div>
           ) : classes.length === 0 ? (
-            <p className="text-center py-16 text-sm font-semibold" style={{ color: DK.dimTxt }}>
-              لا توجد حصص بعد.
-            </p>
+            <p style={{ textAlign:'center', padding:60, color: DK.sub, fontSize:14 }}>لا توجد حصص بعد.</p>
           ) : (
-            <table className="w-full text-sm">
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
-                <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
-                  {['الحصة', 'الدورة', 'المعلم', 'الموعد', 'المدة', 'الحالة', 'إجراءات'].map((h) => (
-                    <th key={h} className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wide"
-                      style={{ color: DK.gold }}>{h}</th>
+                <tr>
+                  {['#','العنوان','الدورة','المدرب','وقت البدء','الرابط','الحالة','إجراءات'].map(h => (
+                    <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {classes.map((cls) => {
+                {classes.map((cls, idx) => {
+                  const sc = STATUS_COLORS[cls.status];
                   const next = nextStatus[cls.status];
                   return (
-                    <tr
-                      key={cls.id}
-                      className="transition-colors"
-                      style={{ borderBottom: '1px solid #EDE3CE' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-                    >
-                      <td className="px-4 py-4">
-                        <p className="font-bold" style={{ color: '#1B2038' }}>{cls.title}</p>
+                    <tr key={cls.id}
+                      onMouseEnter={e => (e.currentTarget.style.background='rgba(197,147,65,0.04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
+                      <td style={{ ...TD, width:48, color: DK.dim, fontWeight:700 }}>{idx + 1}</td>
+                      <td style={TD}>
+                        <p style={{ margin:0, fontWeight:700, color: DK.text }}>{cls.title}</p>
                         {cls.agora_channel && (
-                          <span className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#10B981' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                          <p style={{ margin:'2px 0 0', fontSize:11, color: DK.green, display:'flex', alignItems:'center', gap:4 }}>
+                            <span style={{ width:6, height:6, borderRadius:'50%', background:'#10B981', display:'inline-block' }} />
                             قناة Agora داخلية
-                          </span>
+                          </p>
                         )}
                       </td>
-                      <td className="px-4 py-4" style={{ color: DK.dimTxt }}>{cls.course?.title ?? '—'}</td>
-                      <td className="px-4 py-4" style={{ color: DK.dimTxt }}>{cls.teacher?.name ?? '—'}</td>
-                      <td className="px-4 py-4 text-xs" dir="ltr" style={{ color: DK.dimTxt }}>
+                      <td style={{ ...TD, color: DK.sub }}>{cls.course?.title ?? '—'}</td>
+                      <td style={{ ...TD, color: DK.sub }}>{cls.teacher?.name ?? '—'}</td>
+                      <td style={{ ...TD, color: DK.sub, fontSize:12, direction:'ltr', unicodeBidi:'embed', whiteSpace:'nowrap' }}>
                         {new Date(cls.scheduled_at).toLocaleString('ar-EG')}
                       </td>
-                      <td className="px-4 py-4" style={{ color: DK.dimTxt }}>{cls.duration_minutes} د</td>
-                      <td className="px-4 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold" style={STATUS_STYLES[cls.status]}>
-                          {cls.status === 'live' && <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1" />}
-                          {STATUS_LABELS[cls.status]}
-                        </span>
+                      <td style={TD}>
+                        {(cls as any).link ? (
+                          <a href={(cls as any).link} target="_blank" rel="noreferrer"
+                            style={{ color: DK.blue, fontSize:12, textDecoration:'underline', wordBreak:'break-all' }}>
+                            {(cls as any).link}
+                          </a>
+                        ) : (
+                          <span style={{ color: DK.dim, fontSize:12 }}>—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="flex gap-1.5 flex-wrap items-center">
+                      <td style={TD}>
+                        <StatusBadge
+                          label={STATUS_LABELS[cls.status]}
+                          color={sc.color}
+                          bg={sc.bg}
+                          pulse={cls.status === 'live'}
+                        />
+                      </td>
+                      <td style={TD}>
+                        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
                           {next && (
-                            <button
-                              onClick={() => handleStatusChange(cls.id, next.value)}
+                            <button onClick={() => handleStatusChange(cls.id, next.value)}
                               disabled={updatingStatus === cls.id}
-                              className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
-                              style={next.value === 'live'
-                                ? { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                                : { background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }
-                              }
-                            >
+                              style={{
+                                padding:'5px 14px', borderRadius:8, border:'none',
+                                background: next.bg, color: next.color,
+                                fontWeight:800, fontSize:12, cursor:'pointer',
+                                fontFamily:"'Cairo',sans-serif",
+                                opacity: updatingStatus === cls.id ? 0.5 : 1,
+                              }}>
                               {updatingStatus === cls.id ? '...' : next.label}
                             </button>
                           )}
                           {cls.status === 'live' && cls.agora_channel && (
-                            <button
-                              onClick={() => navigate(`/live/${cls.agora_channel}?classId=${cls.id}`)}
-                              className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all hover:opacity-80"
-                              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse inline-block" />
+                            <button onClick={() => navigate(`/live/${cls.agora_channel}?classId=${cls.id}`)}
+                              style={{ padding:'5px 14px', borderRadius:8, border:'none', background: DK.goldGrad, color:'#fff', fontWeight:800, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif", display:'flex', alignItems:'center', gap:4 }}>
+                              <span style={{ width:6, height:6, borderRadius:'50%', background:'#EF4444', display:'inline-block', animation:'pulse 1.5s ease-in-out infinite' }} />
                               دخول مباشر
                             </button>
                           )}
-                          {cls.status === 'scheduled' && (
-                            <button
-                              onClick={() => handleDelete(cls.id)}
-                              disabled={deleting === cls.id}
-                              className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
-                              style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
-                            >
-                              {deleting === cls.id ? '...' : 'حذف'}
+                          {(cls.status === 'scheduled' || cls.status === 'ended') && (
+                            <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id}
+                              style={{
+                                padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE',
+                                background:'#fff', color: DK.sub,
+                                fontWeight:700, fontSize:12, cursor:'pointer',
+                                fontFamily:"'Cairo',sans-serif",
+                                opacity: deleting === cls.id ? 0.5 : 1,
+                              }}>
+                              {deleting === cls.id ? '...' : '🗑️'}
                             </button>
                           )}
                         </div>
@@ -292,139 +357,80 @@ export default function LiveClassesPage() {
         </div>
       </div>
 
-      {/* Schedule Modal */}
+      {/* Add Live Class Modal */}
       {showModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="w-full max-w-md p-6 max-h-[90vh] overflow-y-auto rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>جدولة حصة مباشرة</h3>
-              <button onClick={() => setShowModal(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none hover:bg-black/5 transition"
-                style={{ color: DK.dimTxt }}>×</button>
+        <Modal title="إنشاء حصة مباشرة جديدة" onClose={() => setShowModal(false)}>
+          <form onSubmit={handleAdd}>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدورة</label>
+              <select value={form.course_id} onChange={e => setForm({...form, course_id: Number(e.target.value)})}
+                style={{ ...inp(focused==='course'), cursor:'pointer' }}
+                onFocus={() => setFocused('course')} onBlur={() => setFocused(null)}>
+                <option value={0} disabled>اختر الدورة</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
             </div>
-
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الدورة</label>
-                <select
-                  value={form.course_id}
-                  onChange={(e) => setForm({ ...form, course_id: Number(e.target.value) })}
-                  style={{ ...DK.inputStyle, cursor: 'pointer' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                >
-                  <option value={0} disabled>اختر الدورة</option>
-                  {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>المعلم</label>
-                <select
-                  value={form.teacher_id}
-                  onChange={(e) => setForm({ ...form, teacher_id: Number(e.target.value) })}
-                  style={{ ...DK.inputStyle, cursor: 'pointer' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                >
-                  <option value={0} disabled>اختر المعلم</option>
-                  {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-                {teachers.length === 0 && (
-                  <p className="text-xs mt-1" style={{ color: '#F59E0B' }}>أضف معلمين أولاً من صفحة المستخدمين.</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>عنوان الحصة</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="مثال: الدرس الأول — المقدمة"
-                  required
-                  autoFocus
-                  style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>موعد الحصة</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={form.scheduled_at ? toLocalInput(form.scheduled_at) : ''}
-                    onChange={(e) => setForm({ ...form, scheduled_at: new Date(e.target.value).toISOString() })}
-                    dir="ltr"
-                    style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>المدة (دقيقة)</label>
-                  <input
-                    type="number"
-                    min={15}
-                    max={480}
-                    value={form.duration_minutes}
-                    onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
-                    dir="ltr"
-                    style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                  />
-                </div>
-              </div>
-
-              <div
-                className="flex items-center gap-2 py-3 px-4 rounded-xl"
-                style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                <p className="text-xs" style={{ color: '#10B981' }}>سيتم إنشاء قناة Agora داخلية تلقائياً للحصة.</p>
-              </div>
-
-              {addError && (
-                <p className="text-xs px-3 py-2 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  {addError}
-                </p>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدرب</label>
+              <select value={form.teacher_id} onChange={e => setForm({...form, teacher_id: Number(e.target.value)})}
+                style={{ ...inp(focused==='teacher'), cursor:'pointer' }}
+                onFocus={() => setFocused('teacher')} onBlur={() => setFocused(null)}>
+                <option value={0} disabled>اختر المدرب</option>
+                {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              {teachers.length === 0 && (
+                <p style={{ fontSize:11, color: DK.orange, marginTop:4 }}>أضف معلمين أولاً من صفحة المستخدمين.</p>
               )}
-
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={addLoading}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                >
-                  {addLoading ? 'جاري الجدولة...' : 'جدولة'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
-                >
-                  إلغاء
-                </button>
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>عنوان الحصة</label>
+              <input type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})}
+                placeholder="مثال: الدرس الأول — المقدمة" required autoFocus
+                style={inp(focused==='title')}
+                onFocus={() => setFocused('title')} onBlur={() => setFocused(null)} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>موعد الحصة</label>
+                <input type="datetime-local" required
+                  value={form.scheduled_at ? toLocalInput(form.scheduled_at) : ''}
+                  onChange={e => setForm({...form, scheduled_at: new Date(e.target.value).toISOString()})}
+                  dir="ltr"
+                  style={inp(focused==='scheduled')}
+                  onFocus={() => setFocused('scheduled')} onBlur={() => setFocused(null)} />
               </div>
-            </form>
-          </div>
-        </div>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدة (دقيقة)</label>
+                <input type="number" min={15} max={480} value={form.duration_minutes}
+                  onChange={e => setForm({...form, duration_minutes: Number(e.target.value)})}
+                  dir="ltr"
+                  style={inp(focused==='duration')}
+                  onFocus={() => setFocused('duration')} onBlur={() => setFocused(null)} />
+              </div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(16,185,129,0.06)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20 }}>
+              <span style={{ width:8, height:8, borderRadius:'50%', background:'#10B981', display:'inline-block', flexShrink:0 }} />
+              <p style={{ margin:0, fontSize:12, color:'#10B981' }}>سيتم إنشاء قناة Agora داخلية تلقائياً للحصة.</p>
+            </div>
+            {addError && (
+              <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{addError}</p>
+            )}
+            <div style={{ display:'flex', gap:10 }}>
+              <button type="submit" disabled={addLoading}
+                style={{ ...btn('gold'), flex:1, opacity: addLoading ? 0.7 : 1 }}>
+                {addLoading ? 'جاري الإنشاء...' : 'إنشاء الحصة'}
+              </button>
+              <button type="button" onClick={() => setShowModal(false)}
+                style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
       )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+      `}</style>
     </AdminLayout>
   );
 }

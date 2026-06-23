@@ -3,48 +3,71 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '8px 12px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  } as React.CSSProperties
+  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg: '#F5EDD8', card: '#FFFFFF', navy: '#0D1E3A',
+  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: '#EDE3CE',
+  shadow: '0 2px 16px rgba(0,0,0,0.06)',
+  green: '#10B981', red: '#EF4444', blue: '#3B82F6', orange: '#F59E0B', purple: '#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background: '#FFFFFF', borderRadius: 16, padding: 20,
+  boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #EDE3CE', ...e,
+});
+const btn = (v: 'gold' | 'outline' | 'danger' = 'gold'): React.CSSProperties => ({
+  padding: '9px 20px', borderRadius: 12, border: v === 'outline' ? '1px solid #EDE3CE' : 'none',
+  background: v === 'gold' ? '#C59341' : v === 'danger' ? '#EF4444' : '#FFFFFF',
+  color: v === 'outline' ? '#1B2038' : '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  fontFamily: "'Cairo',sans-serif",
+});
+const inp = (focused = false): React.CSSProperties => ({
+  background: '#FFFFFF', border: `1.5px solid ${focused ? '#C59341' : '#EDE3CE'}`,
+  color: '#1B2038', borderRadius: 12, padding: '10px 14px', fontSize: 13,
+  width: '100%', outline: 'none', fontFamily: "'Cairo',sans-serif",
+});
 
 interface Supervisor {
-  id:            number;
-  name:          string;
-  phone:         string;
+  id: number;
+  name: string;
+  phone: string;
   student_count: number;
 }
 
 interface Student {
-  id:       number;
-  name:     string;
-  phone:    string;
+  id: number;
+  name: string;
+  phone: string;
   grade_id: number | null;
-  grade?:   { id: number; name: string } | null;
+  grade?: { id: number; name: string } | null;
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: 20, padding: 28, width: 500, maxWidth: '95vw' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ color: '#1B2038', fontWeight: 900, fontSize: 17, margin: 0 }}>{title}</h2>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #EDE3CE', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminSupervisorAssignmentPage() {
-  const [supervisors, setSupervisors]       = useState<Supervisor[]>([]);
-  const [selected, setSelected]             = useState<Supervisor | null>(null);
-  const [assigned, setAssigned]             = useState<Student[]>([]);
-  const [unassigned, setUnassigned]         = useState<Student[]>([]);
+  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+  const [selected, setSelected] = useState<Supervisor | null>(null);
+  const [assigned, setAssigned] = useState<Student[]>([]);
+  const [unassigned, setUnassigned] = useState<Student[]>([]);
   const [loadingSupervisors, setLoadingSupervisors] = useState(true);
-  const [loadingStudents, setLoadingStudents]       = useState(false);
-  const [assigning, setAssigning]           = useState<number | null>(null);
-  const [removing, setRemoving]             = useState<number | null>(null);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [assigning, setAssigning] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<number | null>(null);
   const [searchAssigned, setSearchAssigned] = useState('');
-  const [searchFree, setSearchFree]         = useState('');
+  const [searchFree, setSearchFree] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchFocus, setSearchFocus] = useState(false);
+  const [freeFocus, setFreeFocus] = useState(false);
 
   const loadSupervisors = async () => {
     setLoadingSupervisors(true);
@@ -99,153 +122,280 @@ export default function AdminSupervisorAssignmentPage() {
     } finally { setRemoving(null); }
   };
 
-  const filteredAssigned  = assigned.filter((s) =>
+  const filteredAssigned = assigned.filter((s) =>
     s.name.includes(searchAssigned) || s.phone.includes(searchAssigned)
   );
   const filteredUnassigned = unassigned.filter((s) =>
     s.name.includes(searchFree) || s.phone.includes(searchFree)
   );
 
+  const TH: React.CSSProperties = {
+    padding: '11px 16px', textAlign: 'right', color: '#6B7280', fontSize: 12,
+    fontWeight: 700, background: '#F8F5EE', borderBottom: '1px solid #EDE3CE',
+  };
+  const TD: React.CSSProperties = {
+    padding: '12px 16px', borderBottom: '1px solid #F3EDE0', fontSize: 13, color: '#1B2038',
+  };
+
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
-            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>تعيين الطلاب للمشرفين</h2>
+      <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", background: DK.bg, minHeight: '100vh', padding: 24 }}>
+
+        {/* Page Header */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 4, height: 24, borderRadius: 4, background: DK.goldGrad }} />
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: DK.text, margin: 0 }}>المشرفون الأكاديميون</h1>
           </div>
-          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>كل مشرف يتابع 100–150 طالباً</p>
+          <p style={{ color: DK.sub, fontSize: 13, marginRight: 14 }}>تعيين الطلاب للمشرفين — كل مشرف يتابع 100–150 طالباً</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-6 min-h-[calc(100vh-200px)]">
+        {/* Two-column layout */}
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
-          {/* Supervisors Column */}
-          <div className="col-span-1 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>المشرفون</p>
+          {/* LEFT SIDEBAR — Supervisors list */}
+          <div style={{ width: 240, flexShrink: 0 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: DK.sub, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>المشرفون ({supervisors.length})</p>
+
             {loadingSupervisors && (
-              <div className="flex justify-center py-8">
-                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation: 'spin 0.8s linear infinite' }} />
               </div>
             )}
             {!loadingSupervisors && supervisors.length === 0 && (
-              <p className="text-sm text-center py-8" style={{ color: DK.dimTxt }}>لا يوجد مشرفون</p>
+              <div style={card({ padding: 20, textAlign: 'center' })}>
+                <p style={{ color: DK.sub, fontSize: 13 }}>لا يوجد مشرفون</p>
+              </div>
             )}
-            {supervisors.map((sup) => (
-              <button key={sup.id} onClick={() => selectSupervisor(sup)}
-                className="w-full text-right px-4 py-3 rounded-xl text-sm transition flex items-start gap-3"
-                style={selected?.id === sup.id
-                  ? { background: 'rgba(201,149,42,0.08)', border: '1px solid rgba(201,149,42,0.2)' }
-                  : { background: '#F9FAFB', border: '1px solid #EDE3CE' }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                  style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
-                  {sup.name[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate" style={{ color: selected?.id === sup.id ? DK.gold : '#1B2038' }}>
-                    {sup.name}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>
-                    {sup.student_count} طالب
-                    {sup.student_count >= 150 && (
-                      <span className="mr-1 font-semibold" style={{ color: '#F59E0B' }}>• ممتلئ</span>
-                    )}
-                  </p>
-                </div>
-              </button>
-            ))}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {supervisors.map((sup) => {
+                const isSelected = selected?.id === sup.id;
+                return (
+                  <button key={sup.id} onClick={() => selectSupervisor(sup)}
+                    style={{
+                      width: '100%', textAlign: 'right', padding: '12px 14px', borderRadius: 14,
+                      border: isSelected ? `1.5px solid ${DK.gold}` : '1.5px solid #EDE3CE',
+                      background: isSelected ? 'rgba(197,147,65,0.06)' : '#FFFFFF',
+                      cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 10,
+                      boxShadow: isSelected ? '0 2px 12px rgba(197,147,65,0.15)' : '0 1px 4px rgba(0,0,0,0.04)',
+                    }}>
+                    {/* Avatar */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                      background: isSelected ? DK.goldGrad : '#F5EDD8',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14, fontWeight: 800, color: isSelected ? '#fff' : DK.gold,
+                    }}>
+                      {sup.name[0]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 700, fontSize: 13, color: isSelected ? DK.gold : DK.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {sup.name}
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20,
+                          background: sup.student_count >= 150 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                          color: sup.student_count >= 150 ? DK.red : DK.green,
+                        }}>
+                          {sup.student_count} طالب
+                        </span>
+                        {sup.student_count >= 150 && (
+                          <span style={{ fontSize: 10, color: DK.red, fontWeight: 700 }}>ممتلئ</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Assigned Students Column */}
-          <div className="col-span-2">
+          {/* RIGHT MAIN */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             {!selected ? (
-              <div className="h-full flex items-center justify-center rounded-2xl"
-                style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
-                <div className="text-center">
-                  <p className="text-sm" style={{ color: DK.dimTxt }}>اختر مشرفاً لعرض طلابه</p>
-                </div>
+              <div style={{
+                ...card({ padding: 60, textAlign: 'center', border: '2px dashed #EDE3CE', background: '#FAFAF8' }),
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F5EDD8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👨‍🏫</div>
+                <p style={{ color: DK.sub, fontSize: 14, fontWeight: 600 }}>اختر مشرفاً من القائمة لعرض طلابه</p>
               </div>
             ) : (
-              <div className="rounded-2xl overflow-hidden h-full flex flex-col" style={DK.card}>
-                <div className="p-4" style={{ borderBottom: '1px solid #EDE3CE' }}>
-                  <p className="font-bold" style={{ color: '#1B2038' }}>{selected.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>الطلاب المعيّنون ({assigned.length})</p>
-                  <input value={searchAssigned} onChange={(e) => setSearchAssigned(e.target.value)}
-                    placeholder="بحث..." className="mt-2"
-                    style={DK.inputStyle} />
-                </div>
-                <div className="overflow-y-auto flex-1">
-                  {loadingStudents && (
-                    <div className="flex justify-center py-8">
-                      <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+              <div>
+                {/* Supervisor Header Card */}
+                <div style={card({ padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' })}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 14, background: DK.goldGrad,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, fontWeight: 800, color: '#fff',
+                    }}>
+                      {selected.name[0]}
                     </div>
-                  )}
-                  {!loadingStudents && filteredAssigned.length === 0 && (
-                    <p className="text-sm text-center py-8" style={{ color: DK.dimTxt }}>لا يوجد طلاب معيّنون</p>
-                  )}
-                  {filteredAssigned.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between px-4 py-2.5"
-                      style={{ borderBottom: '1px solid #EDE3CE' }}>
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: '#1B2038' }}>{student.name}</p>
-                        <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'} • {student.phone}</p>
-                      </div>
-                      <button onClick={() => handleRemove(student)} disabled={removing === student.id}
-                        className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                        {removing === student.id ? '...' : 'إزالة'}
-                      </button>
+                    <div>
+                      <p style={{ fontSize: 16, fontWeight: 900, color: DK.text, margin: 0 }}>{selected.name}</p>
+                      <p style={{ fontSize: 12, color: DK.sub, margin: '3px 0 0' }}>{selected.phone}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Unassigned Students Column */}
-          <div className="col-span-1">
-            <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: DK.dimTxt }}>طلاب بلا مشرف</p>
-            <div className="rounded-2xl overflow-hidden" style={DK.card}>
-              <div className="p-3" style={{ borderBottom: '1px solid #EDE3CE' }}>
-                <input value={searchFree} onChange={(e) => setSearchFree(e.target.value)}
-                  placeholder="بحث..." style={DK.inputStyle} />
-              </div>
-              <div className="overflow-y-auto max-h-[calc(100vh-320px)]">
-                {!selected && (
-                  <p className="text-xs text-center py-6" style={{ color: DK.dimTxt }}>اختر مشرفاً أولاً</p>
-                )}
-                {selected && loadingStudents && (
-                  <div className="flex justify-center py-6">
-                    <div className="w-5 h-5 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
                   </div>
-                )}
-                {selected && !loadingStudents && filteredUnassigned.length === 0 && (
-                  <p className="text-xs text-center py-6" style={{ color: DK.dimTxt }}>لا يوجد طلاب بلا مشرف</p>
-                )}
-                {selected && !loadingStudents && filteredUnassigned.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between px-3 py-2"
-                    style={{ borderBottom: '1px solid #EDE3CE' }}>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate" style={{ color: '#1B2038' }}>{student.name}</p>
-                      <p className="text-xs" style={{ color: DK.dimTxt }}>{student.grade?.name ?? '—'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ textAlign: 'center', padding: '8px 16px', borderRadius: 12, background: 'rgba(197,147,65,0.08)', border: '1px solid rgba(197,147,65,0.2)' }}>
+                      <p style={{ fontSize: 20, fontWeight: 900, color: DK.gold, margin: 0 }}>{assigned.length}</p>
+                      <p style={{ fontSize: 11, color: DK.sub, margin: 0 }}>طالب مسجّل</p>
                     </div>
-                    <button onClick={() => handleAssign(student)}
-                      disabled={assigning === student.id || assigned.length >= 150}
-                      className="text-xs px-2 py-1 rounded-lg transition disabled:opacity-40 flex-shrink-0 mr-1"
-                      style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
-                      {assigning === student.id ? '...' : 'تعيين'}
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      style={{ ...btn('gold'), display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> إضافة طالب
                     </button>
                   </div>
-                ))}
+                </div>
+
+                {/* Assigned Students Table */}
+                <div style={card({ padding: 0, overflow: 'hidden' })}>
+                  {/* Search bar */}
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid #EDE3CE', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 15, color: DK.sub }}>🔍</span>
+                    <input
+                      value={searchAssigned}
+                      onChange={(e) => setSearchAssigned(e.target.value)}
+                      onFocus={() => setSearchFocus(true)}
+                      onBlur={() => setSearchFocus(false)}
+                      placeholder="بحث في الطلاب المعيّنين..."
+                      style={{ ...inp(searchFocus), border: 'none', boxShadow: 'none', padding: '4px 0', fontSize: 13 }}
+                    />
+                  </div>
+
+                  {loadingStudents ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation: 'spin 0.8s linear infinite' }} />
+                    </div>
+                  ) : filteredAssigned.length === 0 ? (
+                    <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                      <p style={{ fontSize: 14, color: DK.sub }}>لا يوجد طلاب معيّنون لهذا المشرف</p>
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={TH}>اسم الطالب</th>
+                          <th style={TH}>الصف</th>
+                          <th style={TH}>رقم الهاتف</th>
+                          <th style={{ ...TH, textAlign: 'center' }}>إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAssigned.map((student) => (
+                          <tr key={student.id}>
+                            <td style={TD}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{
+                                  width: 30, height: 30, borderRadius: 8, background: '#F5EDD8',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 12, fontWeight: 800, color: DK.gold, flexShrink: 0,
+                                }}>
+                                  {student.name[0]}
+                                </div>
+                                <span style={{ fontWeight: 600 }}>{student.name}</span>
+                              </div>
+                            </td>
+                            <td style={{ ...TD, color: DK.sub }}>{student.grade?.name ?? '—'}</td>
+                            <td style={{ ...TD, color: DK.sub, direction: 'ltr', textAlign: 'right' }}>{student.phone}</td>
+                            <td style={{ ...TD, textAlign: 'center' }}>
+                              <button
+                                onClick={() => handleRemove(student)}
+                                disabled={removing === student.id}
+                                style={{
+                                  padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                  background: 'rgba(239,68,68,0.08)', color: DK.red,
+                                  fontSize: 12, fontWeight: 700, fontFamily: "'Cairo',sans-serif",
+                                  opacity: removing === student.id ? 0.5 : 1,
+                                }}>
+                                {removing === student.id ? '...' : 'إزالة'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {selected && assigned.length >= 150 && (
+                  <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', textAlign: 'center' }}>
+                    <span style={{ fontSize: 12, color: DK.orange, fontWeight: 700 }}>وصل المشرف للحد الأقصى (150 طالب)</span>
+                  </div>
+                )}
               </div>
-            </div>
-            {selected && assigned.length >= 150 && (
-              <p className="text-xs mt-2 text-center font-semibold" style={{ color: '#F59E0B' }}>
-                وصل المشرف للحد الأقصى (150 طالب)
-              </p>
             )}
           </div>
         </div>
       </div>
+
+      {/* Add Student Modal */}
+      {showAddModal && selected && (
+        <Modal title="إضافة طالب للمشرف" onClose={() => { setShowAddModal(false); setSearchFree(''); }}>
+          <div>
+            <p style={{ fontSize: 12, color: DK.sub, marginBottom: 12 }}>
+              اختر طالباً من القائمة لتعيينه للمشرف <strong style={{ color: DK.gold }}>{selected.name}</strong>
+            </p>
+            <input
+              value={searchFree}
+              onChange={(e) => setSearchFree(e.target.value)}
+              onFocus={() => setFreeFocus(true)}
+              onBlur={() => setFreeFocus(false)}
+              placeholder="بحث في الطلاب غير المعيّنين..."
+              style={{ ...inp(freeFocus), marginBottom: 12 }}
+            />
+            <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #EDE3CE', borderRadius: 12 }}>
+              {loadingStudents ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', border: `3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation: 'spin 0.8s linear infinite' }} />
+                </div>
+              ) : filteredUnassigned.length === 0 ? (
+                <p style={{ textAlign: 'center', color: DK.sub, padding: '20px 0', fontSize: 13 }}>
+                  لا يوجد طلاب بلا مشرف
+                </p>
+              ) : (
+                filteredUnassigned.map((student) => (
+                  <div key={student.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', borderBottom: '1px solid #F3EDE0',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8, background: '#F5EDD8',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 800, color: DK.gold,
+                      }}>
+                        {student.name[0]}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: DK.text }}>{student.name}</p>
+                        <p style={{ fontSize: 11, color: DK.sub, margin: 0 }}>{student.grade?.name ?? '—'}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { handleAssign(student); }}
+                      disabled={assigning === student.id || assigned.length >= 150}
+                      style={{
+                        padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: DK.goldGrad, color: '#fff',
+                        fontSize: 12, fontWeight: 700, fontFamily: "'Cairo',sans-serif",
+                        opacity: (assigning === student.id || assigned.length >= 150) ? 0.5 : 1,
+                      }}>
+                      {assigning === student.id ? '...' : 'تعيين'}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </AdminLayout>
   );
 }

@@ -3,22 +3,41 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  }
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?DK.gold: v==='danger'?DK.red:'#FFFFFF',
+  color: v==='outline'?DK.text:'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?DK.gold:DK.border}`,
+  color:DK.text, borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:React.ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:500,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:DK.text,fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 interface Banner {
   id:         number;
@@ -53,7 +72,7 @@ export default function AdminBannersPage() {
   const [form, setForm]         = useState(emptyForm);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [focused, setFocused]   = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -135,163 +154,223 @@ export default function AdminBannersPage() {
     }
   };
 
-  const inputStyle = (field: string) => ({
-    ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-  });
+  const isActive = (banner: Banner) => {
+    const now = new Date();
+    if (!banner.is_active) return false;
+    if (banner.starts_at && new Date(banner.starts_at) > now) return false;
+    if (banner.ends_at && new Date(banner.ends_at) < now) return false;
+    return true;
+  };
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+      <div style={{ fontFamily:"'Cairo',sans-serif", background:DK.bg, minHeight:'100vh', padding:24 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:4, height:28, borderRadius:4, background:DK.goldGrad }} />
             <div>
-              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>البانرات</h2>
-              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة بانرات الصفحة الرئيسية</p>
+              <h1 style={{ color:DK.text, fontWeight:900, fontSize:20, margin:0 }}>البانرات الإعلانية</h1>
+              <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>تحكم في سلايدر الصفحة الرئيسية</p>
             </div>
           </div>
-          <button onClick={openCreate} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-            + بانر جديد
+          <button style={btn('gold')} onClick={openCreate}>
+            + رفع بانر جديد
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+        {/* Loading */}
+        {loading && (
+          <div style={{ display:'flex', justifyContent:'center', padding:'64px 0' }}>
+            <div style={{ width:32, height:32, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor:DK.gold, animation:'spin 0.8s linear infinite' }} />
           </div>
-        ) : banners.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl" style={DK.card}>
-            <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>لا توجد بانرات بعد</p>
-            <p className="text-sm" style={{ color: DK.dimTxt }}>أضف أول بانر للصفحة الرئيسية</p>
+        )}
+
+        {/* Empty */}
+        {!loading && banners.length === 0 && (
+          <div style={{ ...card(), textAlign:'center', padding:'64px 20px' }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🖼️</div>
+            <p style={{ color:DK.text, fontWeight:700, fontSize:15, margin:'0 0 6px' }}>لا توجد بانرات بعد</p>
+            <p style={{ color:DK.sub, fontSize:13, margin:'0 0 20px' }}>أضف أول بانر إعلاني للصفحة الرئيسية</p>
+            <button style={btn('gold')} onClick={openCreate}>+ رفع بانر جديد</button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {banners.map((banner) => (
-              <div key={banner.id} className="p-4 rounded-xl flex items-start gap-4"
-                style={{ ...DK.card, borderRadius: '12px' }}>
-                {/* Thumbnail */}
-                <div className="w-24 h-16 rounded-lg overflow-hidden flex-shrink-0"
-                  style={{ background: '#F9FAFB' }}>
-                  <img src={banner.image_url} alt={banner.title ?? 'بانر'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                </div>
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                      style={banner.is_active
-                        ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
-                        : { background: '#F9FAFB', color: DK.dimTxt }}>
-                      {banner.is_active ? 'فعّال' : 'معطّل'}
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#F9FAFB', color: DK.dimTxt }}>
-                      ترتيب: {banner.sort_order}
-                    </span>
-                    {banner.title && <span className="font-bold truncate" style={{ color: '#1B2038' }}>{banner.title}</span>}
+        )}
+
+        {/* Banners Grid */}
+        {!loading && banners.length > 0 && (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+            {banners.map(banner => {
+              const active = isActive(banner);
+              return (
+                <div key={banner.id} style={{ background:'#FFFFFF', borderRadius:16, overflow:'hidden', boxShadow:DK.shadow, border:'1px solid #EDE3CE' }}>
+                  {/* Image */}
+                  <div style={{ height:140, background:'#F8F5EE', position:'relative', overflow:'hidden' }}>
+                    {banner.image_url ? (
+                      <img
+                        src={banner.image_url}
+                        alt={banner.title ?? 'بانر'}
+                        style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display='none'; }}
+                      />
+                    ) : (
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:32, color:DK.dim }}>🖼️</div>
+                    )}
+                    {/* Active badge overlay */}
+                    <div style={{ position:'absolute', top:8, right:8 }}>
+                      <span style={{
+                        display:'inline-block', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                        background: active?'rgba(16,185,129,0.9)':'rgba(156,163,175,0.9)', color:'#fff',
+                      }}>
+                        {active ? 'نشط' : 'غير نشط'}
+                      </span>
+                    </div>
+                    {/* Sort order badge */}
+                    <div style={{ position:'absolute', top:8, left:8 }}>
+                      <span style={{ display:'inline-block', padding:'3px 8px', borderRadius:20, fontSize:10, fontWeight:700, background:'rgba(0,0,0,0.5)', color:'#fff' }}>
+                        #{banner.sort_order}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-3 text-xs mt-1" style={{ color: DK.dimTxt }}>
-                    <span>{formatDate(banner.starts_at)} — {formatDate(banner.ends_at)}</span>
+
+                  {/* Card Body */}
+                  <div style={{ padding:14 }}>
+                    <p style={{ color:DK.text, fontWeight:800, fontSize:14, margin:'0 0 6px', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>
+                      {banner.title ?? 'بدون عنوان'}
+                    </p>
+
                     {banner.link_url && (
-                      <a href={banner.link_url} target="_blank" rel="noopener noreferrer"
-                        className="hover:underline truncate max-w-xs" style={{ color: DK.gold }} dir="ltr">
+                      <a
+                        href={banner.link_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color:DK.gold, fontSize:11, display:'block', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', marginBottom:8 }}
+                        dir="ltr"
+                      >
                         {banner.link_url}
                       </a>
                     )}
+
+                    {/* Date Range */}
+                    <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:12 }}>
+                      <span style={{ fontSize:10, color:DK.dim }}>📅</span>
+                      <span style={{ fontSize:11, color:DK.dim }}>
+                        {formatDate(banner.starts_at)} — {formatDate(banner.ends_at)}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      <button
+                        onClick={() => openEdit(banner)}
+                        style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(197,147,65,0.1)', color:DK.gold }}
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        onClick={() => handleToggle(banner)}
+                        style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif",
+                          background: banner.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
+                          color: banner.is_active?DK.red:DK.green,
+                        }}
+                      >
+                        {banner.is_active ? 'تعطيل' : 'تفعيل'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(banner.id)}
+                        style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}
+                      >
+                        حذف
+                      </button>
+                    </div>
                   </div>
                 </div>
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button onClick={() => openEdit(banner)} className="text-xs px-3 py-1.5 rounded-lg transition font-semibold"
-                    style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>تعديل</button>
-                  <button onClick={() => handleToggle(banner)} className="text-xs px-3 py-1.5 rounded-lg transition font-semibold"
-                    style={banner.is_active
-                      ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
-                      : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
-                    {banner.is_active ? 'تعطيل' : 'تفعيل'}
-                  </button>
-                  <button onClick={() => handleDelete(banner.id)} className="text-xs px-3 py-1.5 rounded-lg transition"
-                    style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create / Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={handleSubmit} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>{editing ? 'تعديل البانر' : 'بانر جديد'}</h3>
+        <Modal title={editing ? 'تعديل البانر' : 'رفع بانر جديد'} onClose={() => { setShowForm(false); setEditing(null); setError(null); }}>
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>
+                {error}
+              </div>
+            )}
 
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
+            {/* Image preview */}
+            {form.image_url && (
+              <div style={{ marginBottom:14, borderRadius:12, overflow:'hidden', border:'1px solid #EDE3CE' }}>
+                <img
+                  src={form.image_url}
+                  alt="معاينة"
+                  style={{ width:'100%', height:120, objectFit:'cover', display:'block' }}
+                  onError={e => { (e.target as HTMLImageElement).style.display='none'; }}
+                />
+              </div>
+            )}
 
-            <div className="space-y-3">
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>العنوان (اختياري)</label>
-                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>العنوان (اختياري)</label>
+                <input value={form.title} onChange={e => setForm({...form, title: e.target.value})}
                   placeholder="عرض الصيف 2026"
-                  onFocus={() => setFocusedInput('title')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('title')} />
+                  onFocus={() => setFocused('title')} onBlur={() => setFocused(null)}
+                  style={inp(focused==='title')} />
               </div>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>رابط الصورة</label>
-                <input required value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>رابط الصورة</label>
+                <input required value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})}
                   placeholder="https://..." dir="ltr"
-                  onFocus={() => setFocusedInput('img')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('img')} />
+                  onFocus={() => setFocused('img')} onBlur={() => setFocused(null)}
+                  style={inp(focused==='img')} />
               </div>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>رابط الوجهة (اختياري)</label>
-                <input value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>رابط الوجهة (اختياري)</label>
+                <input value={form.link_url} onChange={e => setForm({...form, link_url: e.target.value})}
                   placeholder="https://..." dir="ltr"
-                  onFocus={() => setFocusedInput('link')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('link')} />
+                  onFocus={() => setFocused('link')} onBlur={() => setFocused(null)}
+                  style={inp(focused==='link')} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>يبدأ من</label>
-                  <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                    onFocus={() => setFocusedInput('start')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('start')} />
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>يبدأ من</label>
+                  <input type="date" value={form.starts_at} onChange={e => setForm({...form, starts_at: e.target.value})}
+                    onFocus={() => setFocused('start')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='start')} />
                 </div>
                 <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>ينتهي في</label>
-                  <input type="date" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-                    onFocus={() => setFocusedInput('end')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('end')} />
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>ينتهي في</label>
+                  <input type="date" value={form.ends_at} onChange={e => setForm({...form, ends_at: e.target.value})}
+                    onFocus={() => setFocused('end')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='end')} />
                 </div>
               </div>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>ترتيب العرض</label>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>ترتيب العرض</label>
                 <input type="number" min="0" value={form.sort_order}
-                  onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
+                  onChange={e => setForm({...form, sort_order: e.target.value})}
                   dir="ltr"
-                  onFocus={() => setFocusedInput('sort')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('sort')} />
+                  onFocus={() => setFocused('sort')} onBlur={() => setFocused(null)}
+                  style={inp(focused==='sort')} />
               </div>
             </div>
 
-            <div className="flex gap-3 mt-5">
-              <button type="submit" disabled={saving}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة البانر')}
+            <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
+                {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'رفع البانر')}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
+              <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
                 إلغاء
               </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </AdminLayout>
   );
 }

@@ -3,44 +3,62 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  }
+  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg: '#F5EDD8', card: '#FFFFFF', navy: '#0D1E3A',
+  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: '#EDE3CE',
+  shadow: '0 2px 16px rgba(0,0,0,0.06)',
+  green: '#10B981', red: '#EF4444', blue: '#3B82F6', orange: '#F59E0B', purple: '#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background: '#FFFFFF', borderRadius: 16, padding: 20,
+  boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #EDE3CE', ...e,
+});
+const btn = (v: 'gold' | 'outline' | 'danger' = 'gold'): React.CSSProperties => ({
+  padding: '9px 20px', borderRadius: 12, border: v === 'outline' ? '1px solid #EDE3CE' : 'none',
+  background: v === 'gold' ? '#C59341' : v === 'danger' ? '#EF4444' : '#FFFFFF',
+  color: v === 'outline' ? '#1B2038' : '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  fontFamily: "'Cairo',sans-serif",
+});
+const inp = (focused = false): React.CSSProperties => ({
+  background: '#FFFFFF', border: `1.5px solid ${focused ? '#C59341' : '#EDE3CE'}`,
+  color: '#1B2038', borderRadius: 12, padding: '10px 14px', fontSize: 13,
+  width: '100%', outline: 'none', fontFamily: "'Cairo',sans-serif",
+});
 
 interface League {
-  id:                  number;
-  name:                string;
-  type:                '1v1' | 'group';
-  status:              'pending' | 'active' | 'ended';
+  id: number;
+  name: string;
+  type: '1v1' | 'group';
+  status: 'pending' | 'active' | 'ended';
   participants_count?: number;
-  max_participants:    number | null;
-  starts_at:           string | null;
-  ends_at:             string | null;
+  max_participants: number | null;
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+interface LeaderboardEntry {
+  rank: number;
+  student_id: number;
+  student_name: string;
+  score: number;
+  avatar?: string | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'قريباً',
-  active:  'جارٍ الآن',
-  ended:   'منتهٍ',
+  active: 'جارٍ الآن',
+  ended: 'منتهٍ',
 };
 
-function leagueStatusStyle(s: string): React.CSSProperties {
-  if (s === 'active')  return { background: 'rgba(16,185,129,0.08)',  color: '#10B981' };
-  if (s === 'pending') return { background: 'rgba(245,158,11,0.08)', color: '#F59E0B' };
-  return { background: '#F9FAFB', color: '#6B7280' };
+function statusStyle(s: string): React.CSSProperties {
+  if (s === 'active') return { background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' };
+  if (s === 'pending') return { background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' };
+  return { background: '#F5F5F5', color: '#9CA3AF', border: '1px solid #E5E7EB' };
+}
+
+function typeStyle(t: string): React.CSSProperties {
+  if (t === '1v1') return { background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' };
+  return { background: 'rgba(59,130,246,0.08)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.15)' };
 }
 
 function formatDate(iso: string | null) {
@@ -48,16 +66,42 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function rankEmoji(rank: number) {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return `#${rank}`;
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: 20, padding: 28, width: 500, maxWidth: '95vw' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ color: '#1B2038', fontWeight: 900, fontSize: 17, margin: 0 }}>{title}</h2>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #EDE3CE', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 const emptyForm = { name: '', type: '1v1' as '1v1' | 'group', max_participants: '', starts_at: '', ends_at: '' };
 
 export default function AdminLeaguePage() {
-  const [leagues, setLeagues]   = useState<League[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [leagues, setLeagues] = useState<League[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm]         = useState(emptyForm);
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  // Leaderboard state
+  const [leaderboardLeague, setLeaderboardLeague] = useState<League | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -76,11 +120,11 @@ export default function AdminLeaguePage() {
     setSaving(true); setError(null);
     try {
       await api.post('/admin/leagues', {
-        name:             form.name,
-        type:             form.type,
+        name: form.name,
+        type: form.type,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
-        starts_at:        form.starts_at || null,
-        ends_at:          form.ends_at   || null,
+        starts_at: form.starts_at || null,
+        ends_at: form.ends_at || null,
       });
       setForm(emptyForm); setShowForm(false); await load();
     } catch (err: unknown) {
@@ -102,80 +146,156 @@ export default function AdminLeaguePage() {
     }
   };
 
-  const inputStyle = (field: string) => ({
-    ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-  });
+  const openLeaderboard = async (league: League) => {
+    setLeaderboardLeague(league);
+    setLoadingLeaderboard(true);
+    try {
+      const { data } = await api.get(`/admin/leagues/${league.id}/leaderboard`);
+      setLeaderboard(data.leaderboard ?? []);
+    } finally { setLoadingLeaderboard(false); }
+  };
+
+  const inputStyle = (field: string) => inp(focusedInput === field);
+
+  // Stats
+  const active = leagues.filter(l => l.status === 'active').length;
+  const pending = leagues.filter(l => l.status === 'pending').length;
+  const ended = leagues.filter(l => l.status === 'ended').length;
+  const totalParticipants = leagues.reduce((s, l) => s + (l.participants_count ?? 0), 0);
+
+  const statCards = [
+    { label: 'دوري نشط', value: active, icon: '🏆', color: DK.green, bg: 'rgba(16,185,129,0.08)' },
+    { label: 'قيد الانتظار', value: pending, icon: '⏳', color: DK.orange, bg: 'rgba(245,158,11,0.08)' },
+    { label: 'منتهٍ', value: ended, icon: '🏁', color: DK.dim, bg: '#F5F5F5' },
+    { label: 'إجمالي المشاركين', value: totalParticipants, icon: '👥', color: DK.blue, bg: 'rgba(59,130,246,0.08)' },
+  ];
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
-            <div>
-              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>دوري ياقوت</h2>
-              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة الدوريات التنافسية للطلاب</p>
+      <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", background: DK.bg, minHeight: '100vh', padding: 24 }}>
+
+        {/* Page Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <div style={{ width: 4, height: 24, borderRadius: 4, background: DK.goldGrad }} />
+              <h1 style={{ fontSize: 22, fontWeight: 900, color: DK.text, margin: 0 }}>🏆 دوري الياقوت</h1>
             </div>
+            <p style={{ color: DK.sub, fontSize: 13, marginRight: 14 }}>إدارة الدوريات التنافسية للطلاب</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-            + دوري جديد
+          <button onClick={() => setShowForm(true)}
+            style={{ ...btn('gold'), display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 14, boxShadow: '0 4px 14px rgba(197,147,65,0.3)' }}>
+            <span style={{ fontSize: 16 }}>+</span> إنشاء بطولة جديدة
           </button>
         </div>
 
+        {/* Stats Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+          {statCards.map((s) => (
+            <div key={s.label} style={card({ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 })}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12, background: s.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0,
+              }}>
+                {s.icon}
+              </div>
+              <div>
+                <p style={{ fontSize: 22, fontWeight: 900, color: s.color, margin: 0, lineHeight: 1 }}>{s.value}</p>
+                <p style={{ fontSize: 12, color: DK.sub, margin: '3px 0 0' }}>{s.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Leagues Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', border: `3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation: 'spin 0.8s linear infinite' }} />
           </div>
         ) : leagues.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl" style={DK.card}>
-            <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>لا توجد دوريات بعد</p>
-            <p className="text-sm" style={{ color: DK.dimTxt }}>أضف أول دوري للطلاب</p>
+          <div style={card({ padding: '60px 0', textAlign: 'center' })}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+            <p style={{ fontWeight: 700, fontSize: 16, color: DK.text, margin: '0 0 6px' }}>لا توجد دوريات بعد</p>
+            <p style={{ color: DK.sub, fontSize: 13 }}>أضف أول بطولة للطلاب</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {leagues.map((league) => (
-              <div key={league.id} className="p-4 rounded-xl" style={DK.card}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                        style={leagueStatusStyle(league.status)}>
-                        {STATUS_LABELS[league.status]}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: '#F9FAFB', color: DK.dimTxt }}>
-                        {league.type === '1v1' ? '⚔️ 1v1' : '👥 جماعي'}
-                      </span>
-                      <span className="font-bold" style={{ color: '#1B2038' }}>{league.name}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-3 text-xs mt-1" style={{ color: DK.dimTxt }}>
-                      <span>👥 {league.participants_count ?? 0} مشارك</span>
-                      {league.max_participants && <span>الحد الأقصى: {league.max_participants}</span>}
-                      <span>{formatDate(league.starts_at)} — {formatDate(league.ends_at)}</span>
-                    </div>
+              <div key={league.id} style={card({ padding: 0, overflow: 'hidden' })}>
+                {/* Card top accent */}
+                <div style={{
+                  height: 4,
+                  background: league.status === 'active' ? 'linear-gradient(90deg,#10B981,#34D399)'
+                    : league.status === 'pending' ? 'linear-gradient(90deg,#F59E0B,#FBBF24)'
+                      : '#E5E7EB',
+                }} />
+
+                <div style={{ padding: 18 }}>
+                  {/* Badges row */}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, ...statusStyle(league.status) }}>
+                      {STATUS_LABELS[league.status]}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, ...typeStyle(league.type) }}>
+                      {league.type === '1v1' ? '⚔️ فردي' : '👥 جماعي'}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+
+                  {/* Name */}
+                  <p style={{ fontSize: 16, fontWeight: 900, color: DK.text, margin: '0 0 8px', lineHeight: 1.3 }}>
+                    {league.name}
+                  </p>
+
+                  {/* Info */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+                    <span style={{ fontSize: 12, color: DK.sub }}>
+                      👥 {league.participants_count ?? 0} مشارك
+                      {league.max_participants ? ` / ${league.max_participants}` : ''}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: DK.dim, marginBottom: 16 }}>
+                    📅 {formatDate(league.starts_at)} — {formatDate(league.ends_at)}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => openLeaderboard(league)}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: 'rgba(197,147,65,0.1)', color: DK.gold, fontSize: 12, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif",
+                      }}>
+                      🏅 المتصدرون
+                    </button>
                     {league.status === 'pending' && (
                       <button onClick={() => handleStatus(league.id, 'active')}
-                        className="text-xs px-3 py-1.5 rounded-lg transition"
-                        style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
-                        بدء الدوري
+                        style={{
+                          flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                          background: 'rgba(16,185,129,0.1)', color: DK.green, fontSize: 12, fontWeight: 700,
+                          fontFamily: "'Cairo',sans-serif",
+                        }}>
+                        تفعيل
                       </button>
                     )}
                     {league.status === 'active' && (
                       <button onClick={() => handleStatus(league.id, 'ended')}
-                        className="text-xs px-3 py-1.5 rounded-lg transition"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                        إنهاء الدوري
+                        style={{
+                          flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                          background: 'rgba(239,68,68,0.08)', color: DK.red, fontSize: 12, fontWeight: 700,
+                          fontFamily: "'Cairo',sans-serif",
+                        }}>
+                        إنهاء
                       </button>
                     )}
                     {league.status === 'pending' && (
                       <button onClick={() => handleDelete(league.id)}
-                        className="text-xs px-3 py-1.5 rounded-lg transition"
-                        style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                        حذف
+                        style={{
+                          padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                          background: 'rgba(239,68,68,0.06)', color: DK.red, fontSize: 12, fontWeight: 700,
+                          fontFamily: "'Cairo',sans-serif",
+                        }}>
+                        🗑
                       </button>
                     )}
                   </div>
@@ -186,68 +306,133 @@ export default function AdminLeaguePage() {
         )}
       </div>
 
-      {/* Create Modal */}
+      {/* Leaderboard Modal */}
+      {leaderboardLeague && (
+        <Modal title={`🏅 متصدرو: ${leaderboardLeague.name}`} onClose={() => { setLeaderboardLeague(null); setLeaderboard([]); }}>
+          {loadingLeaderboard ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: `3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: DK.sub }}>
+              <p style={{ fontSize: 32 }}>🏆</p>
+              <p style={{ fontSize: 14 }}>لا توجد نتائج بعد</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
+              {leaderboard.map((entry) => (
+                <div key={entry.student_id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12,
+                  background: entry.rank <= 3 ? 'rgba(197,147,65,0.06)' : '#F8F5EE',
+                  border: entry.rank <= 3 ? '1px solid rgba(197,147,65,0.2)' : '1px solid #EDE3CE',
+                }}>
+                  {/* Rank */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: entry.rank <= 3 ? DK.goldGrad : '#F0EBE0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: entry.rank <= 3 ? 18 : 13, fontWeight: 800, color: entry.rank <= 3 ? '#fff' : DK.sub,
+                  }}>
+                    {rankEmoji(entry.rank)}
+                  </div>
+                  {/* Avatar */}
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 10, background: 'rgba(197,147,65,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 800, color: DK.gold, flexShrink: 0,
+                  }}>
+                    {entry.student_name[0]}
+                  </div>
+                  {/* Name */}
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: DK.text }}>{entry.student_name}</span>
+                  {/* Score */}
+                  <span style={{
+                    fontSize: 14, fontWeight: 900, color: DK.gold,
+                    background: 'rgba(197,147,65,0.1)', padding: '4px 10px', borderRadius: 8,
+                  }}>
+                    {entry.score} نقطة
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {/* Create League Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={handleCreate} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>دوري جديد</h3>
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
-            <div className="space-y-3">
+        <Modal title="إنشاء بطولة جديدة" onClose={() => { setShowForm(false); setError(null); setForm(emptyForm); }}>
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {error && (
+              <div style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: DK.red, fontSize: 13 }}>
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>اسم البطولة</label>
+              <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="دوري رمضان 2026"
+                onFocus={() => setFocusedInput('name')} onBlur={() => setFocusedInput(null)}
+                style={inputStyle('name')} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>نوع البطولة</label>
+              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as '1v1' | 'group' })}
+                onFocus={() => setFocusedInput('type')} onBlur={() => setFocusedInput(null)}
+                style={{ ...inputStyle('type'), cursor: 'pointer' }}>
+                <option value="1v1">⚔️ منازلة فردية (1v1)</option>
+                <option value="group">👥 دوري جماعي</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>
+                أقصى عدد مشاركين <span style={{ fontWeight: 400, color: DK.dim }}>(اختياري)</span>
+              </label>
+              <input type="number" min="2" value={form.max_participants}
+                onChange={(e) => setForm({ ...form, max_participants: e.target.value })}
+                placeholder="بلا حد" dir="ltr"
+                onFocus={() => setFocusedInput('max')} onBlur={() => setFocusedInput(null)}
+                style={inputStyle('max')} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>اسم الدوري</label>
-                <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="دوري رمضان 2026"
-                  onFocus={() => setFocusedInput('name')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('name')} />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>تاريخ البداية</label>
+                <input type="datetime-local" value={form.starts_at}
+                  onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                  onFocus={() => setFocusedInput('start')} onBlur={() => setFocusedInput(null)}
+                  style={inputStyle('start')} />
               </div>
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>النوع</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as '1v1' | 'group' })}
-                  onFocus={() => setFocusedInput('type')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('type'), cursor: 'pointer' }}>
-                  <option value="1v1">⚔️ منازلة فردية (1v1)</option>
-                  <option value="group">👥 دوري جماعي</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>أقصى عدد مشاركين (اختياري)</label>
-                <input type="number" min="2" value={form.max_participants}
-                  onChange={(e) => setForm({ ...form, max_participants: e.target.value })}
-                  placeholder="بلا حد" dir="ltr"
-                  onFocus={() => setFocusedInput('max')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('max')} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>تاريخ البداية</label>
-                  <input type="datetime-local" value={form.starts_at}
-                    onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                    onFocus={() => setFocusedInput('start')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('start')} />
-                </div>
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>تاريخ النهاية</label>
-                  <input type="datetime-local" value={form.ends_at}
-                    onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-                    onFocus={() => setFocusedInput('end')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('end')} />
-                </div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>تاريخ النهاية</label>
+                <input type="datetime-local" value={form.ends_at}
+                  onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                  onFocus={() => setFocusedInput('end')} onBlur={() => setFocusedInput(null)}
+                  style={inputStyle('end')} />
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                {saving ? 'جاري الحفظ...' : 'إنشاء الدوري'}
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <button type="submit" disabled={saving}
+                style={{
+                  ...btn('gold'), flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14,
+                  boxShadow: '0 4px 14px rgba(197,147,65,0.25)', opacity: saving ? 0.6 : 1,
+                }}>
+                {saving ? 'جاري الإنشاء...' : 'إنشاء البطولة'}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(null); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
+              <button type="button" onClick={() => { setShowForm(false); setError(null); setForm(emptyForm); }}
+                style={{ ...btn('outline'), flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14 }}>
+                إلغاء
+              </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </AdminLayout>
   );
 }

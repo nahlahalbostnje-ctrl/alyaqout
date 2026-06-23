@@ -3,22 +3,48 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  }
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?DK.gold: v==='danger'?DK.red:'#FFFFFF',
+  color: v==='outline'?DK.text:'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?DK.gold:DK.border}`,
+  color:DK.text, borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+const TH: React.CSSProperties = {
+  padding:'11px 16px', textAlign:'right', color:DK.sub, fontSize:12,
+  fontWeight:700, background:'#F8F5EE', borderBottom:'1px solid #EDE3CE',
+};
+const TD: React.CSSProperties = {
+  padding:'12px 16px', borderBottom:'1px solid #F3EDE0', fontSize:13, color:DK.text,
+};
+
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:React.ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:500,maxWidth:'95vw'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:DK.text,fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 interface Coupon {
   id:             number;
@@ -49,6 +75,10 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function generateCode() {
+  return Array.from({length:6}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join('');
+}
+
 export default function AdminCouponsPage() {
   const [coupons, setCoupons]   = useState<Coupon[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -56,7 +86,7 @@ export default function AdminCouponsPage() {
   const [form, setForm]         = useState(emptyForm);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [focused, setFocused]   = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -118,194 +148,354 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const inputStyle = (field: string) => ({
-    ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-  });
+  const isExpired = (expires_at: string | null) => {
+    if (!expires_at) return false;
+    return new Date(expires_at) < new Date();
+  };
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+      <div style={{ fontFamily:"'Cairo',sans-serif", background:DK.bg, minHeight:'100vh', padding:24 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:4, height:28, borderRadius:4, background:DK.goldGrad }} />
             <div>
-              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>الكوبونات</h2>
-              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة كوبونات الخصم للاشتراكات</p>
+              <h1 style={{ color:DK.text, fontWeight:900, fontSize:20, margin:0 }}>الكوبونات</h1>
+              <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>مولّد كوبونات الخصم للاشتراكات</p>
             </div>
           </div>
-          <button onClick={() => { setShowForm(true); setError(null); }}
-            className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-            + كوبون جديد
+          <button style={btn('gold')} onClick={() => { setShowForm(true); setError(null); setForm(emptyForm); }}>
+            + إنشاء كوبون جديد
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+        {/* Generator Form Card */}
+        <div style={card({ marginBottom:24 })}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:18 }}>
+            <span style={{ fontSize:18 }}>🎟️</span>
+            <h2 style={{ color:DK.text, fontWeight:800, fontSize:15, margin:0 }}>مولّد الكوبون</h2>
           </div>
-        ) : coupons.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl" style={DK.card}>
-            <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>لا توجد كوبونات بعد</p>
-            <p className="text-sm" style={{ color: DK.dimTxt }}>أنشئ أول كوبون خصم للطلاب</p>
-          </div>
-        ) : (
-          <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
-            <table className="w-full text-sm">
-              <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
-                <tr>
-                  {['الكود', 'الخصم', 'الاستخدام', 'ينتهي', 'الحالة', ''].map((h) => (
-                    <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider"
-                      style={{ color: DK.gold }}>{h}</th>
+          <form onSubmit={handleCreate}>
+            {error && (
+              <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>
+                {error}
+              </div>
+            )}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+              {/* Code */}
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>كود الكوبون</label>
+                <div style={{ display:'flex', gap:8 }}>
+                  <input
+                    required
+                    value={form.code}
+                    onChange={e => setForm({...form, code: e.target.value.toUpperCase()})}
+                    placeholder="SAVE20"
+                    onFocus={() => setFocused('code')}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...inp(focused==='code'), fontFamily:'monospace', fontWeight:700, letterSpacing:2, flex:1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm({...form, code: generateCode()})}
+                    style={{ ...btn('outline'), padding:'9px 12px', fontSize:12, whiteSpace:'nowrap', flexShrink:0 }}
+                  >
+                    🔀 عشوائي
+                  </button>
+                </div>
+              </div>
+              {/* Discount Value */}
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>
+                  قيمة الخصم {form.discount_type === 'percentage' ? '(%)' : '(ر.س)'}
+                </label>
+                <input
+                  required type="number" min="0.01" step="0.01"
+                  max={form.discount_type === 'percentage' ? 100 : undefined}
+                  value={form.discount_value}
+                  onChange={e => setForm({...form, discount_value: e.target.value})}
+                  placeholder="20" dir="ltr"
+                  onFocus={() => setFocused('dval')}
+                  onBlur={() => setFocused(null)}
+                  style={inp(focused==='dval')}
+                />
+              </div>
+              {/* Discount Type */}
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>نوع الخصم</label>
+                <div style={{ display:'flex', gap:10 }}>
+                  {(['percentage','fixed'] as const).map(t => (
+                    <label key={t} style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, color:form.discount_type===t?DK.gold:DK.text }}>
+                      <input
+                        type="radio" name="discount_type" value={t}
+                        checked={form.discount_type===t}
+                        onChange={() => setForm({...form, discount_type:t})}
+                        style={{ accentColor:DK.gold }}
+                      />
+                      {t==='percentage' ? 'نسبة مئوية (%)' : 'مبلغ ثابت'}
+                    </label>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {coupons.map((coupon) => (
-                  <tr key={coupon.id} className="transition"
-                    style={{ borderBottom: '1px solid #EDE3CE' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <td className="px-4 py-3 font-mono font-bold tracking-widest" style={{ color: DK.gold }}>
-                      {coupon.code}
-                    </td>
-                    <td className="px-4 py-3 font-semibold" style={{ color: '#1B2038' }}>
-                      {coupon.discount_type === 'percentage'
-                        ? `${coupon.discount_value}%`
-                        : `${coupon.discount_value} ر.س`}
-                    </td>
-                    <td className="px-4 py-3" style={{ color: DK.dimTxt }}>
-                      {coupon.used_count} / {coupon.max_uses ?? '∞'}
-                    </td>
-                    <td className="px-4 py-3" style={{ color: DK.dimTxt }}>{formatDate(coupon.expires_at)}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                        style={coupon.is_active
-                          ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
-                          : { background: '#F9FAFB', color: DK.dimTxt }}>
-                        {coupon.is_active ? 'فعّال' : 'معطّل'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 justify-end">
-                        <button onClick={() => handleToggle(coupon)}
-                          className="text-xs px-3 py-1.5 rounded-lg transition font-semibold"
-                          style={coupon.is_active
-                            ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
-                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
-                          {coupon.is_active ? 'تعطيل' : 'تفعيل'}
-                        </button>
-                        <button onClick={() => handleDelete(coupon.id)}
-                          className="text-xs px-3 py-1.5 rounded-lg transition"
-                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                          حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Create Coupon Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={handleCreate} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>إنشاء كوبون جديد</h3>
-
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
-
-            <div className="space-y-3">
+                </div>
+              </div>
+              {/* Max Uses */}
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>كود الكوبون</label>
-                <input required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
-                  placeholder="SAVE20" className="uppercase tracking-widest"
-                  onFocus={() => setFocusedInput('code')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('code')} />
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>أقصى استخدامات</label>
+                <input
+                  type="number" min="1"
+                  value={form.max_uses}
+                  onChange={e => setForm({...form, max_uses: e.target.value})}
+                  placeholder="بلا حد" dir="ltr"
+                  onFocus={() => setFocused('maxuses')}
+                  onBlur={() => setFocused(null)}
+                  style={inp(focused==='maxuses')}
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>نوع الخصم</label>
-                  <select value={form.discount_type}
-                    onChange={(e) => setForm({ ...form, discount_type: e.target.value as 'percentage' | 'fixed' })}
-                    onFocus={() => setFocusedInput('dtype')} onBlur={() => setFocusedInput(null)}
-                    style={{ ...inputStyle('dtype'), cursor: 'pointer' }}>
-                    <option value="percentage">نسبة مئوية (%)</option>
-                    <option value="fixed">مبلغ ثابت</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>
-                    قيمة الخصم {form.discount_type === 'percentage' ? '(%)' : ''}
-                  </label>
-                  <input required type="number" min="0.01" step="0.01"
-                    max={form.discount_type === 'percentage' ? 100 : undefined}
-                    value={form.discount_value} onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
-                    placeholder="20" dir="ltr"
-                    onFocus={() => setFocusedInput('dval')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('dval')} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>أقصى استخدامات</label>
-                  <input type="number" min="1" value={form.max_uses}
-                    onChange={(e) => setForm({ ...form, max_uses: e.target.value })}
-                    placeholder="بلا حد" dir="ltr"
-                    onFocus={() => setFocusedInput('maxuses')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('maxuses')} />
-                </div>
-                <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>تاريخ الانتهاء</label>
-                  <input type="date" value={form.expires_at}
-                    onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-                    onFocus={() => setFocusedInput('exp')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('exp')} />
-                </div>
-              </div>
+              {/* Expiry */}
               <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>النطاق</label>
-                <select value={form.scope}
-                  onChange={(e) => setForm({ ...form, scope: e.target.value as 'all' | 'specific_course' })}
-                  onFocus={() => setFocusedInput('scope')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('scope'), cursor: 'pointer' }}>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>تاريخ الانتهاء</label>
+                <input
+                  type="date"
+                  value={form.expires_at}
+                  onChange={e => setForm({...form, expires_at: e.target.value})}
+                  onFocus={() => setFocused('exp')}
+                  onBlur={() => setFocused(null)}
+                  style={inp(focused==='exp')}
+                />
+              </div>
+              {/* Scope */}
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>النطاق</label>
+                <select
+                  value={form.scope}
+                  onChange={e => setForm({...form, scope: e.target.value as 'all'|'specific_course'})}
+                  onFocus={() => setFocused('scope')}
+                  onBlur={() => setFocused(null)}
+                  style={{ ...inp(focused==='scope'), cursor:'pointer' }}
+                >
                   <option value="all">جميع الدورات</option>
                   <option value="specific_course">دورة محددة</option>
                 </select>
               </div>
               {form.scope === 'specific_course' && (
                 <div>
-                  <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>رقم الدورة (ID)</label>
-                  <input type="number" value={form.course_id}
-                    onChange={(e) => setForm({ ...form, course_id: e.target.value })}
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>رقم الدورة (ID)</label>
+                  <input
+                    type="number"
+                    value={form.course_id}
+                    onChange={e => setForm({...form, course_id: e.target.value})}
                     placeholder="1" dir="ltr"
-                    onFocus={() => setFocusedInput('cid')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('cid')} />
+                    onFocus={() => setFocused('cid')}
+                    onBlur={() => setFocused(null)}
+                    style={inp(focused==='cid')}
+                  />
                 </div>
               )}
             </div>
+            <button type="submit" disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>
+              {saving ? 'جاري الإنشاء...' : '✓ إنشاء الكوبون'}
+            </button>
+          </form>
+        </div>
 
-            <div className="flex gap-3 mt-5">
-              <button type="submit" disabled={saving}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                {saving ? 'جاري الحفظ...' : 'إنشاء الكوبون'}
+        {/* Table */}
+        {loading ? (
+          <div style={{ display:'flex', justifyContent:'center', padding:'64px 0' }}>
+            <div style={{ width:32, height:32, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor:DK.gold, animation:'spin 0.8s linear infinite' }} />
+          </div>
+        ) : coupons.length === 0 ? (
+          <div style={{ ...card(), textAlign:'center', padding:'48px 20px' }}>
+            <div style={{ fontSize:40, marginBottom:12 }}>🎟️</div>
+            <p style={{ color:DK.text, fontWeight:700, fontSize:15, margin:'0 0 6px' }}>لا توجد كوبونات بعد</p>
+            <p style={{ color:DK.sub, fontSize:13, margin:0 }}>أنشئ أول كوبون خصم للطلاب من النموذج أعلاه</p>
+          </div>
+        ) : (
+          <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
+            <div style={{ padding:'16px 20px', borderBottom:'1px solid #EDE3CE', display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:15 }}>📋</span>
+              <span style={{ color:DK.text, fontWeight:800, fontSize:14 }}>الكوبونات النشطة ({coupons.length})</span>
+            </div>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead>
+                <tr>
+                  {['#','الكود','نوع الخصم','القيمة','الاستخدامات','تاريخ الانتهاء','الحالة','إجراءات'].map(h => (
+                    <th key={h} style={TH}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {coupons.map((coupon, i) => {
+                  const expired = isExpired(coupon.expires_at);
+                  const usePct = coupon.max_uses ? (coupon.used_count / coupon.max_uses) * 100 : 0;
+                  return (
+                    <tr key={coupon.id}
+                      onMouseEnter={e => (e.currentTarget.style.background='rgba(197,147,65,0.04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background='transparent')}
+                    >
+                      <td style={{ ...TD, color:DK.dim, width:40 }}>{i+1}</td>
+                      <td style={TD}>
+                        <span style={{ fontFamily:'monospace', fontWeight:800, color:DK.gold, fontSize:14, letterSpacing:2 }}>
+                          {coupon.code}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <span style={{
+                          display:'inline-block', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                          background: coupon.discount_type==='percentage'?'rgba(16,185,129,0.1)':'rgba(59,130,246,0.1)',
+                          color: coupon.discount_type==='percentage'?DK.green:DK.blue,
+                        }}>
+                          {coupon.discount_type==='percentage' ? 'نسبة مئوية' : 'مبلغ ثابت'}
+                        </span>
+                      </td>
+                      <td style={{ ...TD, fontWeight:700 }}>
+                        {coupon.discount_type==='percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} ر.س`}
+                      </td>
+                      <td style={TD}>
+                        <div>
+                          <span style={{ fontSize:12, color:DK.sub }}>{coupon.used_count} / {coupon.max_uses ?? '∞'}</span>
+                          {coupon.max_uses && (
+                            <div style={{ height:4, background:'#F3EDE0', borderRadius:4, marginTop:4, overflow:'hidden' }}>
+                              <div style={{ height:'100%', width:`${Math.min(usePct,100)}%`, background:usePct>=90?DK.red:DK.gold, borderRadius:4, transition:'width 0.3s' }} />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={TD}>
+                        <span style={{ color: expired ? DK.red : DK.green, fontSize:12 }}>
+                          {expired ? '⚠ ' : ''}{formatDate(coupon.expires_at)}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <span style={{
+                          display:'inline-block', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                          background: coupon.is_active?'rgba(16,185,129,0.1)':'rgba(156,163,175,0.1)',
+                          color: coupon.is_active?DK.green:DK.dim,
+                        }}>
+                          {coupon.is_active ? 'فعّال' : 'معطّل'}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <div style={{ display:'flex', gap:6 }}>
+                          <button
+                            onClick={() => handleToggle(coupon)}
+                            style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif",
+                              background: coupon.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
+                              color: coupon.is_active?DK.red:DK.green,
+                            }}
+                          >
+                            {coupon.is_active ? 'تعطيل' : 'تفعيل'}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(coupon.id)}
+                            style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      {showForm && (
+        <Modal title="إنشاء كوبون جديد" onClose={() => { setShowForm(false); setError(null); }}>
+          <form onSubmit={handleCreate}>
+            {error && (
+              <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>
+                {error}
+              </div>
+            )}
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>كود الكوبون</label>
+                <div style={{ display:'flex', gap:8 }}>
+                  <input
+                    required value={form.code}
+                    onChange={e => setForm({...form, code: e.target.value.toUpperCase()})}
+                    placeholder="SAVE20"
+                    onFocus={() => setFocused('mcode')} onBlur={() => setFocused(null)}
+                    style={{ ...inp(focused==='mcode'), fontFamily:'monospace', fontWeight:700, letterSpacing:2, flex:1 }}
+                  />
+                  <button type="button" onClick={() => setForm({...form, code: generateCode()})}
+                    style={{ ...btn('outline'), padding:'9px 12px', fontSize:12, flexShrink:0 }}>
+                    🔀
+                  </button>
+                </div>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                <div>
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>نوع الخصم</label>
+                  <select value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value as 'percentage'|'fixed'})}
+                    onFocus={() => setFocused('mdtype')} onBlur={() => setFocused(null)}
+                    style={{ ...inp(focused==='mdtype'), cursor:'pointer' }}>
+                    <option value="percentage">نسبة مئوية (%)</option>
+                    <option value="fixed">مبلغ ثابت</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>القيمة</label>
+                  <input required type="number" min="0.01" step="0.01"
+                    max={form.discount_type==='percentage'?100:undefined}
+                    value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})}
+                    placeholder="20" dir="ltr"
+                    onFocus={() => setFocused('mdval')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='mdval')} />
+                </div>
+                <div>
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>أقصى استخدامات</label>
+                  <input type="number" min="1" value={form.max_uses}
+                    onChange={e => setForm({...form, max_uses: e.target.value})}
+                    placeholder="بلا حد" dir="ltr"
+                    onFocus={() => setFocused('mmaxuses')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='mmaxuses')} />
+                </div>
+                <div>
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>تاريخ الانتهاء</label>
+                  <input type="date" value={form.expires_at}
+                    onChange={e => setForm({...form, expires_at: e.target.value})}
+                    onFocus={() => setFocused('mexp')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='mexp')} />
+                </div>
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>النطاق</label>
+                <select value={form.scope} onChange={e => setForm({...form, scope: e.target.value as 'all'|'specific_course'})}
+                  onFocus={() => setFocused('mscope')} onBlur={() => setFocused(null)}
+                  style={{ ...inp(focused==='mscope'), cursor:'pointer' }}>
+                  <option value="all">جميع الدورات</option>
+                  <option value="specific_course">دورة محددة</option>
+                </select>
+              </div>
+              {form.scope === 'specific_course' && (
+                <div>
+                  <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>رقم الدورة (ID)</label>
+                  <input type="number" value={form.course_id}
+                    onChange={e => setForm({...form, course_id: e.target.value})}
+                    placeholder="1" dir="ltr"
+                    onFocus={() => setFocused('mcid')} onBlur={() => setFocused(null)}
+                    style={inp(focused==='mcid')} />
+                </div>
+              )}
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
+                {saving ? 'جاري الإنشاء...' : 'إنشاء الكوبون'}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(null); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
+              <button type="button" onClick={() => { setShowForm(false); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
                 إلغاء
               </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </AdminLayout>
   );
 }

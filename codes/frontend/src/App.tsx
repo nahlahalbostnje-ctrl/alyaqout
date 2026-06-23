@@ -43,9 +43,33 @@ import TeacherHomeworkPage        from './pages/TeacherHomeworkPage';
 import ParentDashboardPage        from './pages/ParentDashboardPage';
 import ParentChildrenPage         from './pages/ParentChildrenPage';
 import ParentReportPage           from './pages/ParentReportPage';
+import ParentAcademicProgressPage from './pages/ParentAcademicProgressPage';
+import ParentAttendancePage       from './pages/ParentAttendancePage';
+import ParentCommunicationPage    from './pages/ParentCommunicationPage';
+import ParentCounselingPage       from './pages/ParentCounselingPage';
+import ParentBillingPage          from './pages/ParentBillingPage';
+import ParentLeaguePage           from './pages/ParentLeaguePage';
+import ParentAcademyPage          from './pages/ParentAcademyPage';
+import ParentAchievementsPage     from './pages/ParentAchievementsPage';
+import ParentReportsPage          from './pages/ParentReportsPage';
+import ParentAIAssistantPage      from './pages/ParentAIAssistantPage';
+import ParentSettingsPage         from './pages/ParentSettingsPage';
 import SupervisorStudentsPage     from './pages/SupervisorStudentsPage';
 import CountryAdminsPage          from './pages/CountryAdminsPage';
 import SuperAdminProfilePage      from './pages/SuperAdminProfilePage';
+import SAAnalyticsPage            from './pages/SAAnalyticsPage';
+import SAStaffPage                from './pages/SAStaffPage';
+import SAStudentsPage             from './pages/SAStudentsPage';
+import SAContentApprovalsPage     from './pages/SAContentApprovalsPage';
+import SABillingPage              from './pages/SABillingPage';
+import SAPlansPage                from './pages/SAPlansPage';
+import SAReportsPage              from './pages/SAReportsPage';
+import SANotificationsPage        from './pages/SANotificationsPage';
+import SASettingsPage             from './pages/SASettingsPage';
+import SARolesPage                from './pages/SARolesPage';
+import SAActivityLogPage          from './pages/SAActivityLogPage';
+import SASupportPage              from './pages/SASupportPage';
+import SADevCenterPage            from './pages/SADevCenterPage';
 import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
@@ -83,6 +107,45 @@ export default function App() {
         } />
         <Route path="/super-admin/profile" element={
           <PrivateRoute roles={['super_admin']}><SuperAdminProfilePage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/analytics" element={
+          <PrivateRoute roles={['super_admin']}><SAAnalyticsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/staff" element={
+          <PrivateRoute roles={['super_admin']}><SAStaffPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/students" element={
+          <PrivateRoute roles={['super_admin']}><SAStudentsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/content-approvals" element={
+          <PrivateRoute roles={['super_admin']}><SAContentApprovalsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/billing" element={
+          <PrivateRoute roles={['super_admin']}><SABillingPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/plans" element={
+          <PrivateRoute roles={['super_admin']}><SAPlansPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/reports" element={
+          <PrivateRoute roles={['super_admin']}><SAReportsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/notifications" element={
+          <PrivateRoute roles={['super_admin']}><SANotificationsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/settings" element={
+          <PrivateRoute roles={['super_admin']}><SASettingsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/roles" element={
+          <PrivateRoute roles={['super_admin']}><SARolesPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/activity-log" element={
+          <PrivateRoute roles={['super_admin']}><SAActivityLogPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/support" element={
+          <PrivateRoute roles={['super_admin']}><SASupportPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/dev-center" element={
+          <PrivateRoute roles={['super_admin']}><SADevCenterPage /></PrivateRoute>
         } />
 
         {/* Admin */}
@@ -202,6 +265,40 @@ export default function App() {
         } />
         <Route path="/parent/children/:studentId/report" element={
           <PrivateRoute roles={['parent']}><ParentReportPage /></PrivateRoute>
+        } />
+
+        <Route path="/parent/academic-progress" element={
+          <PrivateRoute roles={['parent']}><ParentAcademicProgressPage /></PrivateRoute>
+        } />
+        <Route path="/parent/attendance" element={
+          <PrivateRoute roles={['parent']}><ParentAttendancePage /></PrivateRoute>
+        } />
+        <Route path="/parent/communication" element={
+          <PrivateRoute roles={['parent']}><ParentCommunicationPage /></PrivateRoute>
+        } />
+        <Route path="/parent/counseling" element={
+          <PrivateRoute roles={['parent']}><ParentCounselingPage /></PrivateRoute>
+        } />
+        <Route path="/parent/billing" element={
+          <PrivateRoute roles={['parent']}><ParentBillingPage /></PrivateRoute>
+        } />
+        <Route path="/parent/league" element={
+          <PrivateRoute roles={['parent']}><ParentLeaguePage /></PrivateRoute>
+        } />
+        <Route path="/parent/academy" element={
+          <PrivateRoute roles={['parent']}><ParentAcademyPage /></PrivateRoute>
+        } />
+        <Route path="/parent/achievements" element={
+          <PrivateRoute roles={['parent']}><ParentAchievementsPage /></PrivateRoute>
+        } />
+        <Route path="/parent/reports" element={
+          <PrivateRoute roles={['parent']}><ParentReportsPage /></PrivateRoute>
+        } />
+        <Route path="/parent/ai-assistant" element={
+          <PrivateRoute roles={['parent']}><ParentAIAssistantPage /></PrivateRoute>
+        } />
+        <Route path="/parent/settings" element={
+          <PrivateRoute roles={['parent']}><ParentSettingsPage /></PrivateRoute>
         } />
 
         {/* Supervisor */}

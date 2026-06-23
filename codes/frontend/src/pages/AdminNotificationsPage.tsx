@@ -4,34 +4,45 @@ import {
   fetchBroadcastHistory,
   sendBroadcast,
 } from '../features/notifications/notificationsSlice';
+import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  gold:   '#C9952A',
-  goldL:  '#DDAD50',
-  navy:   '#fff',
-  dimTxt: '#6B7280',
+  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg: '#F5EDD8', card: '#FFFFFF', navy: '#0D1E3A',
+  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: '#EDE3CE',
+  shadow: '0 2px 16px rgba(0,0,0,0.06)',
+  green: '#10B981', red: '#EF4444', blue: '#3B82F6', orange: '#F59E0B', purple: '#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background: '#FFFFFF', borderRadius: 16, padding: 20,
+  boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #EDE3CE', ...e,
+});
+const inp = (focused = false): React.CSSProperties => ({
+  background: '#FFFFFF', border: `1.5px solid ${focused ? '#C59341' : '#EDE3CE'}`,
+  color: '#1B2038', borderRadius: 12, padding: '10px 14px', fontSize: 13,
+  width: '100%', outline: 'none', fontFamily: "'Cairo',sans-serif",
+});
 
 const TARGET_TYPES = [
-  { value: 'all',  label: 'الجميع (طلاب + معلمون + أولياء)' },
+  { value: 'all', label: 'الجميع (طلاب + معلمون + أولياء)' },
   { value: 'role', label: 'دور محدد' },
 ];
 
 const ROLE_OPTIONS = [
   { value: 'student', label: 'الطلاب' },
   { value: 'teacher', label: 'المعلمون' },
-  { value: 'parent',  label: 'أولياء الأمور' },
+  { value: 'parent', label: 'أولياء الأمور' },
 ];
 
 function TargetBadge({ type, value }: { type: string; value: string | null }) {
   const map: Record<string, { label: string; style: React.CSSProperties }> = {
-    all:   { label: 'الجميع',     style: { background: 'rgba(201,149,42,0.08)', color: '#C9952A' } },
-    role:  { label: value ?? '-', style: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' } },
-    grade: { label: value ?? '-', style: { background: 'rgba(245,158,11,0.12)', color: '#F59E0B' } },
+    all: { label: 'الجميع', style: { background: 'rgba(197,147,65,0.1)', color: '#C59341' } },
+    role: { label: value ?? '-', style: { background: 'rgba(59,130,246,0.1)', color: '#3B82F6' } },
+    grade: { label: value ?? '-', style: { background: 'rgba(245,158,11,0.1)', color: '#F59E0B' } },
   };
-  const meta = map[type] ?? { label: type, style: { background: '#F9FAFB', color: DK.dimTxt } };
+  const meta = map[type] ?? { label: type, style: { background: '#F9FAFB', color: DK.sub } };
   return (
-    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={meta.style}>
+    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 700, ...meta.style }}>
       {meta.label}
     </span>
   );
@@ -48,11 +59,11 @@ export default function AdminNotificationsPage() {
   const dispatch = useAppDispatch();
   const { broadcasts, broadcastMeta, broadcastSending } = useAppSelector((s) => s.notifications);
 
-  const [title, setTitle]             = useState('');
-  const [body, setBody]               = useState('');
-  const [targetType, setTargetType]   = useState('all');
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [targetType, setTargetType] = useState('all');
   const [targetValue, setTargetValue] = useState('');
-  const [sent, setSent]               = useState(false);
+  const [sent, setSent] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   useEffect(() => { dispatch(fetchBroadcastHistory()); }, [dispatch]);
@@ -71,189 +82,212 @@ export default function AdminNotificationsPage() {
     setTimeout(() => setSent(false), 3000);
   }
 
-  const inputStyle = (field: string): React.CSSProperties => ({
-    background: '#FFFFFF',
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  });
-
   return (
-    <div className="p-6 space-y-6" dir="rtl" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
+    <AdminLayout>
+      <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", background: DK.bg, minHeight: '100vh', padding: 24 }}>
 
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: '#1B2038' }}>مركز الإشعارات</h1>
-          <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إرسال إشعارات جماعية للمستخدمين</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-        {/* Send form */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #EDE3CE' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)' }}>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: '#fff' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="font-semibold" style={{ color: '#1B2038' }}>إرسال إشعار</h2>
-                <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>يصل فوراً لجميع المستهدفين</p>
-              </div>
-            </div>
+        {/* Page Header */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 4, height: 24, borderRadius: 4, background: DK.goldGrad }} />
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: DK.text, margin: 0 }}>مركز الإشعارات</h1>
           </div>
-
-          <form onSubmit={handleSend} className="p-6 space-y-4">
-            {sent && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: '#10B981' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-sm" style={{ color: '#10B981' }}>تم إرسال الإشعار بنجاح!</span>
-              </div>
-            )}
-
-            {/* Target type */}
-            <div>
-              <label className="block text-xs mb-1.5" style={{ color: DK.dimTxt }}>المستهدفون</label>
-              <div className="grid grid-cols-2 gap-2">
-                {TARGET_TYPES.map((t) => (
-                  <button key={t.value} type="button"
-                    onClick={() => { setTargetType(t.value); setTargetValue(''); }}
-                    className="text-sm py-2.5 px-3 rounded-xl transition-all text-center"
-                    style={targetType === t.value
-                      ? { background: 'rgba(201,149,42,0.08)', border: '1px solid rgba(201,149,42,0.2)', color: DK.gold }
-                      : { background: '#F9FAFB', border: '1px solid #EDE3CE', color: DK.dimTxt }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Role picker */}
-            {targetType === 'role' && (
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: DK.dimTxt }}>الدور</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {ROLE_OPTIONS.map((r) => (
-                    <button key={r.value} type="button" onClick={() => setTargetValue(r.value)}
-                      className="text-sm py-2 px-2 rounded-xl transition-all"
-                      style={targetValue === r.value
-                        ? { background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.3)', color: '#60a5fa' }
-                        : { background: '#F9FAFB', border: '1px solid #EDE3CE', color: DK.dimTxt }}>
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Title */}
-            <div>
-              <label className="block text-xs mb-1.5" style={{ color: DK.dimTxt }}>عنوان الإشعار</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)}
-                placeholder="مثال: إعلان هام" maxLength={200} required
-                onFocus={() => setFocusedInput('title')} onBlur={() => setFocusedInput(null)}
-                style={inputStyle('title')} />
-            </div>
-
-            {/* Body */}
-            <div>
-              <label className="block text-xs mb-1.5" style={{ color: DK.dimTxt }}>نص الإشعار</label>
-              <textarea value={body} onChange={(e) => setBody(e.target.value)}
-                placeholder="اكتب رسالة الإشعار هنا..." maxLength={2000} rows={4} required
-                onFocus={() => setFocusedInput('body')} onBlur={() => setFocusedInput(null)}
-                style={{ ...inputStyle('body'), resize: 'none' }} />
-              <p className="text-xs mt-1 text-left" style={{ color: '#9CA3AF' }}>{body.length}/2000</p>
-            </div>
-
-            <button type="submit" disabled={broadcastSending || !title.trim() || !body.trim()}
-              className="w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-              {broadcastSending ? (
-                <>
-                  <div className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#fff' }} />
-                  جاري الإرسال...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  إرسال الإشعار
-                </>
-              )}
-            </button>
-          </form>
+          <p style={{ color: DK.sub, fontSize: 13, marginRight: 14 }}>إرسال إشعارات جماعية فورية للمستخدمين</p>
         </div>
 
-        {/* Broadcast history */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-          <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #EDE3CE' }}>
-            <div>
-              <h2 className="font-semibold" style={{ color: '#1B2038' }}>سجل الإشعارات المرسلة</h2>
-              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>{broadcastMeta.total} إشعار مرسل</p>
-            </div>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(201,149,42,0.08)' }}>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: DK.gold }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
+        {/* Two-column layout */}
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
-          <div className="max-h-[520px] overflow-y-auto">
-            {broadcasts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#F9FAFB' }}>
-                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#9CA3AF' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
+          {/* LEFT — Send Form */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={card({ padding: 0, overflow: 'hidden' })}>
+              {/* Card header */}
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #EDE3CE', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, background: DK.goldGrad,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                }}>
+                  🔔
                 </div>
-                <p className="text-sm" style={{ color: DK.dimTxt }}>لا توجد إشعارات مرسلة بعد</p>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: DK.text, margin: 0 }}>إرسال إشعار جديد</p>
+                  <p style={{ fontSize: 12, color: DK.sub, margin: '2px 0 0' }}>يصل فوراً لجميع المستهدفين</p>
+                </div>
               </div>
-            ) : (
-              broadcasts.map((b) => (
-                <div key={b.id} className="px-6 py-4 transition-colors"
-                  style={{ borderBottom: '1px solid #EDE3CE' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm" style={{ color: '#1B2038' }}>{b.title}</span>
-                      <TargetBadge type={b.target_type} value={b.target_value} />
-                    </div>
-                    <p className="text-xs mt-1 line-clamp-2" style={{ color: DK.dimTxt }}>{b.body}</p>
-                    <div className="flex items-center gap-3 mt-2 flex-wrap">
-                      <span className="text-xs" style={{ color: DK.dimTxt }}>{formatDate(b.sent_at)}</span>
-                      {b.sent_by && (
-                        <span className="text-xs" style={{ color: DK.dimTxt }}>بواسطة: {b.sent_by.name}</span>
-                      )}
-                      <span className="flex items-center gap-1 text-xs" style={{ color: '#10B981' }}>
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {b.recipients_count} مستلم
-                      </span>
-                    </div>
+
+              <form onSubmit={handleSend} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Success banner */}
+                {sent && (
+                  <div style={{
+                    padding: '10px 16px', borderRadius: 12,
+                    background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span style={{ fontSize: 16 }}>✅</span>
+                    <span style={{ fontSize: 13, color: DK.green, fontWeight: 700 }}>تم إرسال الإشعار بنجاح!</span>
+                  </div>
+                )}
+
+                {/* Title */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>
+                    عنوان الإشعار <span style={{ color: DK.red }}>*</span>
+                  </label>
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="مثال: إعلان هام لجميع الطلاب"
+                    maxLength={200} required
+                    onFocus={() => setFocusedInput('title')}
+                    onBlur={() => setFocusedInput(null)}
+                    style={inp(focusedInput === 'title')}
+                  />
+                </div>
+
+                {/* Body */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>
+                    نص الرسالة <span style={{ color: DK.red }}>*</span>
+                  </label>
+                  <textarea
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="اكتب نص الإشعار هنا..."
+                    maxLength={2000} rows={4} required
+                    onFocus={() => setFocusedInput('body')}
+                    onBlur={() => setFocusedInput(null)}
+                    style={{ ...inp(focusedInput === 'body'), resize: 'none' }}
+                  />
+                  <p style={{ fontSize: 11, color: DK.dim, marginTop: 4, textAlign: 'left' }}>{body.length}/2000</p>
+                </div>
+
+                {/* Target type */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 8 }}>المستهدفون</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {TARGET_TYPES.map((t) => {
+                      const active = targetType === t.value;
+                      return (
+                        <button key={t.value} type="button"
+                          onClick={() => { setTargetType(t.value); setTargetValue(''); }}
+                          style={{
+                            flex: 1, padding: '9px 12px', borderRadius: 12, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif", fontSize: 12, fontWeight: 700,
+                            background: active ? 'rgba(197,147,65,0.08)' : '#F8F5EE',
+                            border: active ? `1.5px solid ${DK.gold}` : '1.5px solid #EDE3CE',
+                            color: active ? DK.gold : DK.sub, transition: 'all 0.15s',
+                          }}>
+                          {t.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              ))
-            )}
+
+                {/* Role picker (conditional) */}
+                {targetType === 'role' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 8 }}>الدور المستهدف</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {ROLE_OPTIONS.map((r) => {
+                        const active = targetValue === r.value;
+                        return (
+                          <button key={r.value} type="button" onClick={() => setTargetValue(r.value)}
+                            style={{
+                              flex: 1, padding: '9px 8px', borderRadius: 12, cursor: 'pointer',
+                              fontFamily: "'Cairo',sans-serif", fontSize: 12, fontWeight: 700,
+                              background: active ? 'rgba(59,130,246,0.08)' : '#F8F5EE',
+                              border: active ? `1.5px solid ${DK.blue}` : '1.5px solid #EDE3CE',
+                              color: active ? DK.blue : DK.sub, transition: 'all 0.15s',
+                            }}>
+                            {r.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={broadcastSending || !title.trim() || !body.trim()}
+                  style={{
+                    width: '100%', padding: '12px 0', borderRadius: 14, border: 'none', cursor: 'pointer',
+                    background: DK.goldGrad, color: '#fff', fontSize: 14, fontWeight: 800,
+                    fontFamily: "'Cairo',sans-serif", boxShadow: '0 4px 14px rgba(197,147,65,0.3)',
+                    opacity: (broadcastSending || !title.trim() || !body.trim()) ? 0.6 : 1,
+                    transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}>
+                  {broadcastSending ? (
+                    <>
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', animation: 'spin 0.8s linear infinite' }} />
+                      جاري الإرسال...
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 16 }}>📤</span>
+                      إرسال الإشعار
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* RIGHT — Broadcast History */}
+          <div style={{ width: 340, flexShrink: 0 }}>
+            <div style={card({ padding: 0, overflow: 'hidden' })}>
+              {/* Card header */}
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #EDE3CE', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: DK.text, margin: 0 }}>سجل الإشعارات</p>
+                  <p style={{ fontSize: 12, color: DK.sub, margin: '2px 0 0' }}>{broadcastMeta.total} إشعار مرسل</p>
+                </div>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 10, background: 'rgba(197,147,65,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                }}>
+                  📋
+                </div>
+              </div>
+
+              <div style={{ maxHeight: 520, overflowY: 'auto' }}>
+                {broadcasts.length === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', gap: 12 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: '#F5EDD8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🔕</div>
+                    <p style={{ color: DK.sub, fontSize: 13, textAlign: 'center' }}>لا توجد إشعارات مرسلة بعد</p>
+                  </div>
+                ) : (
+                  broadcasts.map((b) => (
+                    <div key={b.id} style={{ padding: '14px 20px', borderBottom: '1px solid #F3EDE0' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: DK.text, lineHeight: 1.4 }}>{b.title}</span>
+                        <TargetBadge type={b.target_type} value={b.target_value} />
+                      </div>
+                      <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 8px', lineHeight: 1.5 }}
+                        className="line-clamp-2">
+                        {b.body}
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: DK.dim }}>{formatDate(b.sent_at)}</span>
+                        {b.sent_by && (
+                          <span style={{ fontSize: 11, color: DK.dim }}>· {b.sent_by.name}</span>
+                        )}
+                        <span style={{ fontSize: 11, color: DK.green, fontWeight: 700 }}>
+                          👥 {b.recipients_count} مستلم
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </AdminLayout>
   );
 }

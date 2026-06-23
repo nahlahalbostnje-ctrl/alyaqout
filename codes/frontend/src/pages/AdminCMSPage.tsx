@@ -3,22 +3,41 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  } as React.CSSProperties
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?DK.gold: v==='danger'?DK.red:'#FFFFFF',
+  color: v==='outline'?DK.text:'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?DK.gold:DK.border}`,
+  color:DK.text, borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:React.ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:500,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:DK.text,fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 interface Page     { id: number; slug: string; title: string; content: string; updated_at: string | null; }
 interface Faq      { id: number; question: string; answer: string; sort_order: number; is_active: boolean; }
@@ -26,25 +45,25 @@ interface SocialLink { id: number; platform: string; url: string; icon: string |
 type Tab = 'pages' | 'faqs' | 'social';
 
 const PREDEFINED_SLUGS = [
-  { slug: 'about',   label: 'من نحن'          },
-  { slug: 'privacy', label: 'سياسة الخصوصية' },
-  { slug: 'terms',   label: 'الشروط والأحكام' },
+  { slug: 'about',   label: 'من نحن',           icon: 'ℹ️' },
+  { slug: 'privacy', label: 'سياسة الخصوصية',   icon: '🔒' },
+  { slug: 'terms',   label: 'الشروط والأحكام',   icon: '📜' },
 ];
 
-function inputFocusStyle(focused: boolean) {
-  return { ...DK.inputStyle, border: focused ? '1px solid #C9952A' : '1px solid #EDE3CE' };
+function inputFocusStyle(focused: boolean): React.CSSProperties {
+  return inp(focused);
 }
 
 // ─── Pages Tab ────────────────────────────────────────────────────────────────
 
 function PagesTab() {
-  const [pages, setPages]       = useState<Page[]>([]);
-  const [selected, setSelected] = useState<Page | null>(null);
-  const [form, setForm]         = useState({ title: '', content: '' });
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState<string | null>(null);
-  const [success, setSuccess]   = useState<string | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [pages, setPages]           = useState<Page[]>([]);
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const [form, setForm]             = useState({ title: '', content: '' });
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  const [success, setSuccess]       = useState<string | null>(null);
+  const [focused, setFocused]       = useState<string | null>(null);
 
   const load = async () => {
     const { data } = await api.get('/admin/cms/pages');
@@ -57,21 +76,22 @@ function PagesTab() {
     setError(null); setSuccess(null);
     try {
       const { data } = await api.get(`/admin/cms/pages/${slug}`);
-      setSelected(data.page);
+      setEditingPage(data.page);
       setForm({ title: data.page.title, content: data.page.content });
     } catch {
-      setSelected({ id: 0, slug, title: label, content: '', updated_at: null });
+      setEditingPage({ id: 0, slug, title: label, content: '', updated_at: null });
       setForm({ title: label, content: '' });
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected) return;
+    if (!editingPage) return;
     setSaving(true); setError(null); setSuccess(null);
     try {
-      await api.put(`/admin/cms/pages/${selected.slug}`, form);
+      await api.put(`/admin/cms/pages/${editingPage.slug}`, form);
       setSuccess('تم الحفظ بنجاح');
+      setEditingPage(null);
       await load();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
@@ -80,59 +100,77 @@ function PagesTab() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      <div className="col-span-1 space-y-2">
-        {PREDEFINED_SLUGS.map((p) => {
-          const existing = pages.find((pg) => pg.slug === p.slug);
-          const isActive = selected?.slug === p.slug;
+    <div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+        {PREDEFINED_SLUGS.map(p => {
+          const existing = pages.find(pg => pg.slug === p.slug);
           return (
-            <button key={p.slug} onClick={() => openPage(p.slug, p.label)}
-              className="w-full text-right px-4 py-3 rounded-xl text-sm font-medium transition flex items-center justify-between"
-              style={isActive
-                ? { background: 'rgba(201,149,42,0.08)', border: '1px solid rgba(201,149,42,0.2)', color: DK.gold }
-                : { background: '#F9FAFB', border: '1px solid #EDE3CE', color: '#1B2038' }}>
-              <span>{p.label}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full"
-                style={existing
-                  ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
-                  : { background: '#F9FAFB', color: DK.dimTxt }}>
-                {existing ? 'موجود' : 'جديد'}
-              </span>
-            </button>
+            <div key={p.slug} style={card({ padding:18 })}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+                <span style={{ fontSize:22 }}>{p.icon}</span>
+                <div>
+                  <p style={{ color:DK.text, fontWeight:800, fontSize:14, margin:0 }}>{p.label}</p>
+                  <p style={{ color:DK.dim, fontSize:11, margin:0 }}>/{p.slug}</p>
+                </div>
+              </div>
+              {existing?.updated_at && (
+                <p style={{ color:DK.dim, fontSize:11, margin:'0 0 12px' }}>
+                  آخر تحديث: {new Date(existing.updated_at).toLocaleDateString('ar-EG')}
+                </p>
+              )}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <span style={{
+                  display:'inline-block', padding:'2px 10px', borderRadius:20, fontSize:10, fontWeight:700,
+                  background: existing ? 'rgba(16,185,129,0.1)' : 'rgba(156,163,175,0.1)',
+                  color: existing ? DK.green : DK.dim,
+                }}>
+                  {existing ? 'موجود' : 'جديد'}
+                </span>
+                <button
+                  onClick={() => openPage(p.slug, p.label)}
+                  style={btn('outline')}
+                >
+                  تعديل
+                </button>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      <div className="col-span-2">
-        {!selected ? (
-          <div className="text-center py-16 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
-            <p className="text-sm" style={{ color: DK.dimTxt }}>اختر صفحة لتعديلها</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSave} className="p-5 rounded-2xl space-y-4" style={DK.card}>
-            {error   && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
-            {success && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#10B981', background: 'rgba(16,185,129,0.08)' }}>{success}</p>}
-            <div>
-              <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>عنوان الصفحة</label>
-              <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                onFocus={() => setFocusedInput('title')} onBlur={() => setFocusedInput(null)}
-                style={inputFocusStyle(focusedInput === 'title')} />
+      {/* Edit Modal */}
+      {editingPage && (
+        <Modal title={`تعديل: ${editingPage.title}`} onClose={() => { setEditingPage(null); setError(null); setSuccess(null); }}>
+          <form onSubmit={handleSave}>
+            {error   && <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>{error}</div>}
+            {success && <div style={{ background:'rgba(16,185,129,0.07)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:10, padding:'10px 14px', color:DK.green, fontSize:13, marginBottom:14 }}>{success}</div>}
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>عنوان الصفحة</label>
+                <input required value={form.title} onChange={e => setForm({...form, title: e.target.value})}
+                  onFocus={() => setFocused('ptitle')} onBlur={() => setFocused(null)}
+                  style={inputFocusStyle(focused==='ptitle')} />
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>المحتوى (HTML أو نص)</label>
+                <textarea required rows={12} value={form.content}
+                  onChange={e => setForm({...form, content: e.target.value})}
+                  onFocus={() => setFocused('pcontent')} onBlur={() => setFocused(null)}
+                  style={{ ...inputFocusStyle(focused==='pcontent'), resize:'vertical', fontFamily:'monospace', minHeight:200 }}
+                  dir="auto" />
+              </div>
             </div>
-            <div>
-              <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>المحتوى (HTML أو نص)</label>
-              <textarea required rows={12} value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                onFocus={() => setFocusedInput('content')} onBlur={() => setFocusedInput(null)}
-                style={{ ...inputFocusStyle(focusedInput === 'content'), resize: 'vertical', fontFamily: 'monospace' }}
-                dir="auto" />
+            <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
+                {saving ? 'جاري الحفظ...' : 'حفظ الصفحة'}
+              </button>
+              <button type="button" onClick={() => { setEditingPage(null); setError(null); setSuccess(null); }} style={{ ...btn('outline'), flex:1 }}>
+                إلغاء
+              </button>
             </div>
-            <button type="submit" disabled={saving} className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-              {saving ? 'جاري الحفظ...' : 'حفظ الصفحة'}
-            </button>
           </form>
-        )}
-      </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -147,7 +185,8 @@ function FaqsTab() {
   const [form, setForm]         = useState({ question: '', answer: '', sort_order: '0' });
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [focused, setFocused]   = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -184,98 +223,106 @@ function FaqsTab() {
 
   return (
     <div>
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={handleSubmit} className="w-full max-w-lg p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>{editing ? 'تعديل السؤال' : 'سؤال جديد'}</h3>
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>السؤال</label>
-                <input required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })}
-                  onFocus={() => setFocusedInput('q')} onBlur={() => setFocusedInput(null)}
-                  style={inputFocusStyle(focusedInput === 'q')} />
-              </div>
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>الجواب</label>
-                <textarea required rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })}
-                  onFocus={() => setFocusedInput('a')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputFocusStyle(focusedInput === 'a'), resize: 'none' }} />
-              </div>
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>ترتيب العرض</label>
-                <input type="number" min="0" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
-                  onFocus={() => setFocusedInput('sort')} onBlur={() => setFocusedInput(null)}
-                  style={inputFocusStyle(focusedInput === 'sort')} dir="ltr" />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة السؤال')}
-              </button>
-              <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="flex justify-end mb-4">
-        <button onClick={openCreate} className="text-sm px-4 py-2 rounded-xl font-semibold"
-          style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-          + سؤال جديد
-        </button>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}>
+        <button onClick={openCreate} style={btn('gold')}>+ إضافة سؤال جديد</button>
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+        <div style={{ display:'flex', justifyContent:'center', padding:'40px 0' }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor:DK.gold, animation:'spin 0.8s linear infinite' }} />
         </div>
       )}
 
       {!loading && faqs.length === 0 && (
-        <div className="text-center py-12 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
-          <p className="text-sm" style={{ color: DK.dimTxt }}>لا توجد أسئلة شائعة بعد</p>
+        <div style={{ ...card(), textAlign:'center', padding:'40px 20px' }}>
+          <div style={{ fontSize:36, marginBottom:10 }}>❓</div>
+          <p style={{ color:DK.sub, fontSize:13, margin:0 }}>لا توجد أسئلة شائعة بعد</p>
         </div>
       )}
 
-      <div className="space-y-3">
-        {faqs.map((faq) => (
-          <div key={faq.id} className="p-4 rounded-xl" style={DK.card}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs px-2 py-0.5 rounded-full"
-                    style={faq.is_active
-                      ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
-                      : { background: '#F9FAFB', color: DK.dimTxt }}>
-                    {faq.is_active ? 'فعّال' : 'مخفي'}
-                  </span>
-                  <span className="text-xs" style={{ color: DK.dimTxt }}>ترتيب: {faq.sort_order}</span>
-                </div>
-                <p className="font-semibold mb-1" style={{ color: '#1B2038' }}>{faq.question}</p>
-                <p className="text-sm leading-relaxed" style={{ color: DK.dimTxt }}>{faq.answer}</p>
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {faqs.map(faq => (
+          <div key={faq.id} style={card({ padding:0, overflow:'hidden' })}>
+            {/* Question header - clickable to expand */}
+            <div
+              onClick={() => setExpanded(expanded===faq.id ? null : faq.id)}
+              style={{ padding:'14px 18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}
+            >
+              <div style={{ display:'flex', alignItems:'center', gap:10, flex:1 }}>
+                <span style={{ color:DK.gold, fontWeight:900, fontSize:16 }}>{expanded===faq.id ? '▲' : '▼'}</span>
+                <p style={{ color:DK.text, fontWeight:700, fontSize:13, margin:0 }}>{faq.question}</p>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => openEdit(faq)} className="text-xs px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>تعديل</button>
-                <button onClick={() => handleToggle(faq)} className="text-xs px-3 py-1.5 rounded-lg"
-                  style={faq.is_active
-                    ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
-                    : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                <span style={{
+                  padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700,
+                  background: faq.is_active?'rgba(16,185,129,0.1)':'rgba(156,163,175,0.1)',
+                  color: faq.is_active?DK.green:DK.dim,
+                }}>
+                  {faq.is_active ? 'فعّال' : 'مخفي'}
+                </span>
+                <button onClick={e => { e.stopPropagation(); openEdit(faq); }}
+                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(197,147,65,0.1)', color:DK.gold }}>
+                  تعديل
+                </button>
+                <button onClick={e => { e.stopPropagation(); handleToggle(faq); }}
+                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif",
+                    background: faq.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
+                    color: faq.is_active?DK.red:DK.green }}>
                   {faq.is_active ? 'إخفاء' : 'إظهار'}
                 </button>
-                <button onClick={() => handleDelete(faq.id)} className="text-xs px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
+                <button onClick={e => { e.stopPropagation(); handleDelete(faq.id); }}
+                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}>
+                  حذف
+                </button>
               </div>
             </div>
+            {/* Answer - expanded */}
+            {expanded === faq.id && (
+              <div style={{ padding:'0 18px 14px 18px', borderTop:'1px solid #F3EDE0' }}>
+                <p style={{ color:DK.sub, fontSize:13, lineHeight:1.7, margin:'12px 0 0' }}>{faq.answer}</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
+
+      {/* Add/Edit FAQ Modal */}
+      {showForm && (
+        <Modal title={editing ? 'تعديل السؤال' : 'سؤال جديد'} onClose={() => { setShowForm(false); setEditing(null); setError(null); }}>
+          <form onSubmit={handleSubmit}>
+            {error && <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>{error}</div>}
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>السؤال</label>
+                <input required value={form.question} onChange={e => setForm({...form, question: e.target.value})}
+                  onFocus={() => setFocused('fq')} onBlur={() => setFocused(null)}
+                  style={inputFocusStyle(focused==='fq')} />
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>الجواب</label>
+                <textarea required rows={5} value={form.answer} onChange={e => setForm({...form, answer: e.target.value})}
+                  onFocus={() => setFocused('fa')} onBlur={() => setFocused(null)}
+                  style={{ ...inputFocusStyle(focused==='fa'), resize:'none' }} />
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>ترتيب العرض</label>
+                <input type="number" min="0" value={form.sort_order}
+                  onChange={e => setForm({...form, sort_order: e.target.value})}
+                  onFocus={() => setFocused('fsort')} onBlur={() => setFocused(null)}
+                  style={inputFocusStyle(focused==='fsort')} dir="ltr" />
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
+                {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة السؤال')}
+              </button>
+              <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -284,6 +331,23 @@ function FaqsTab() {
 
 const PLATFORMS = ['whatsapp', 'facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'telegram', 'snapchat'];
 
+const PLATFORM_EMOJIS: Record<string, string> = {
+  whatsapp:  '💬',
+  facebook:  '📘',
+  instagram: '📸',
+  twitter:   '🐦',
+  youtube:   '▶️',
+  tiktok:    '🎵',
+  telegram:  '✈️',
+  snapchat:  '👻',
+};
+
+const PLATFORM_LABELS: Record<string, string> = {
+  whatsapp: 'واتساب', facebook: 'فيسبوك', instagram: 'انستجرام',
+  twitter: 'تويتر / X', youtube: 'يوتيوب', tiktok: 'تيك توك',
+  telegram: 'تيليجرام', snapchat: 'سناب شات',
+};
+
 function SocialTab() {
   const [links, setLinks]       = useState<SocialLink[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -291,12 +355,17 @@ function SocialTab() {
   const [form, setForm]         = useState({ platform: 'whatsapp', url: '', icon: '' });
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [focused, setFocused]   = useState<string | null>(null);
+  // Local URL edits per existing link
+  const [editUrls, setEditUrls] = useState<Record<number, string>>({});
+  const [savingId, setSavingId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
-    try { const { data } = await api.get('/admin/cms/social'); setLinks(data.links); }
-    finally { setLoading(false); }
+    try {
+      const { data } = await api.get('/admin/cms/social');
+      setLinks(data.links);
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -318,92 +387,140 @@ function SocialTab() {
     try { await api.delete(`/admin/cms/social/${id}`); await load(); } catch { /* ignore */ }
   };
 
-  const platformLabel: Record<string, string> = {
-    whatsapp: 'واتساب', facebook: 'فيسبوك', instagram: 'انستجرام',
-    twitter: 'تويتر / X', youtube: 'يوتيوب', tiktok: 'تيك توك',
-    telegram: 'تيليجرام', snapchat: 'سناب شات',
+  const handleSaveUrl = async (link: SocialLink) => {
+    const url = editUrls[link.id] ?? link.url;
+    setSavingId(link.id);
+    try {
+      await api.put(`/admin/cms/social/${link.id}`, { url, is_active: link.is_active });
+      await load();
+    } finally { setSavingId(null); }
+  };
+
+  const handleToggleActive = async (link: SocialLink) => {
+    try {
+      await api.put(`/admin/cms/social/${link.id}`, { url: link.url, is_active: !link.is_active });
+      await load();
+    } catch { /* ignore */ }
   };
 
   return (
     <div>
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={handleSubmit} className="w-full max-w-md p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#1B2038' }}>إضافة / تحديث رابط</h3>
-            {error && <p className="text-sm mb-3 px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>المنصة</label>
-                <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })}
-                  onFocus={() => setFocusedInput('plat')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputFocusStyle(focusedInput === 'plat'), cursor: 'pointer' }}>
-                  {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel[p] ?? p}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>الرابط</label>
-                <input required value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })}
-                  placeholder="https://..." dir="ltr"
-                  onFocus={() => setFocusedInput('url')} onBlur={() => setFocusedInput(null)}
-                  style={inputFocusStyle(focusedInput === 'url')} />
-              </div>
-              <div>
-                <label className="text-sm mb-1 block" style={{ color: DK.dimTxt }}>أيقونة (اختياري)</label>
-                <input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                  placeholder="fa-brands fa-whatsapp" dir="ltr"
-                  onFocus={() => setFocusedInput('icon')} onBlur={() => setFocusedInput(null)}
-                  style={inputFocusStyle(focusedInput === 'icon')} />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                {saving ? 'جاري الحفظ...' : 'حفظ الرابط'}
-              </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(null); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="flex justify-end mb-4">
-        <button onClick={() => { setShowForm(true); setError(null); }} className="text-sm px-4 py-2 rounded-xl font-semibold"
-          style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-          + إضافة / تحديث
-        </button>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}>
+        <button onClick={() => { setShowForm(true); setError(null); }} style={btn('gold')}>+ إضافة رابط</button>
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-7 h-7 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+        <div style={{ display:'flex', justifyContent:'center', padding:'40px 0' }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor:DK.gold, animation:'spin 0.8s linear infinite' }} />
         </div>
       )}
 
       {!loading && links.length === 0 && (
-        <div className="text-center py-12 rounded-2xl" style={{ background: '#F9FAFB', border: '1px dashed #EDE3CE' }}>
-          <p className="text-sm" style={{ color: DK.dimTxt }}>لا توجد روابط بعد</p>
+        <div style={{ ...card(), textAlign:'center', padding:'40px 20px' }}>
+          <div style={{ fontSize:36, marginBottom:10 }}>🔗</div>
+          <p style={{ color:DK.sub, fontSize:13, margin:0 }}>لا توجد روابط بعد</p>
         </div>
       )}
 
-      <div className="space-y-3">
-        {links.map((link) => (
-          <div key={link.id} className="p-4 rounded-xl flex items-center gap-4" style={DK.card}>
-            <div className="flex-1">
-              <p className="font-semibold capitalize" style={{ color: '#1B2038' }}>{platformLabel[link.platform] ?? link.platform}</p>
-              <a href={link.url} target="_blank" rel="noopener noreferrer"
-                className="text-xs hover:underline" style={{ color: DK.gold }} dir="ltr">
-                {link.url}
-              </a>
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {links.map(link => (
+          <div key={link.id} style={card({ padding:14, display:'flex', alignItems:'center', gap:14 })}>
+            {/* Icon + Platform */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:120 }}>
+              <span style={{ fontSize:24 }}>{PLATFORM_EMOJIS[link.platform] ?? '🔗'}</span>
+              <div>
+                <p style={{ color:DK.text, fontWeight:700, fontSize:13, margin:0 }}>{PLATFORM_LABELS[link.platform] ?? link.platform}</p>
+                <span style={{
+                  display:'inline-block', padding:'1px 8px', borderRadius:20, fontSize:10, fontWeight:700, marginTop:2,
+                  background: link.is_active?'rgba(16,185,129,0.1)':'rgba(156,163,175,0.1)',
+                  color: link.is_active?DK.green:DK.dim,
+                }}>
+                  {link.is_active ? 'نشط' : 'مخفي'}
+                </span>
+              </div>
             </div>
-            <button onClick={() => handleDelete(link.id)} className="text-xs px-3 py-1.5 rounded-lg"
-              style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>حذف</button>
+
+            {/* URL input */}
+            <input
+              value={editUrls[link.id] ?? link.url}
+              onChange={e => setEditUrls({...editUrls, [link.id]: e.target.value})}
+              dir="ltr"
+              placeholder="https://..."
+              onFocus={() => setFocused(`url-${link.id}`)} onBlur={() => setFocused(null)}
+              style={{ ...inp(focused===`url-${link.id}`), flex:1 }}
+            />
+
+            {/* Actions */}
+            <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+              <button
+                onClick={() => handleSaveUrl(link)}
+                disabled={savingId===link.id}
+                style={{ padding:'7px 14px', borderRadius:10, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:DK.gold, color:'#fff', opacity:savingId===link.id?0.6:1 }}
+              >
+                {savingId===link.id ? '...' : 'حفظ'}
+              </button>
+              <button
+                onClick={() => handleToggleActive(link)}
+                style={{ padding:'7px 10px', borderRadius:10, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif",
+                  background: link.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
+                  color: link.is_active?DK.red:DK.green,
+                }}
+              >
+                {link.is_active ? 'إخفاء' : 'إظهار'}
+              </button>
+              <button
+                onClick={() => handleDelete(link.id)}
+                style={{ padding:'7px 10px', borderRadius:10, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}
+              >
+                حذف
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Add Social Modal */}
+      {showForm && (
+        <Modal title="إضافة رابط تواصل" onClose={() => { setShowForm(false); setError(null); }}>
+          <form onSubmit={handleSubmit}>
+            {error && <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>{error}</div>}
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>المنصة</label>
+                <select value={form.platform} onChange={e => setForm({...form, platform: e.target.value})}
+                  onFocus={() => setFocused('splat')} onBlur={() => setFocused(null)}
+                  style={{ ...inputFocusStyle(focused==='splat'), cursor:'pointer' }}>
+                  {PLATFORMS.map(p => (
+                    <option key={p} value={p}>{PLATFORM_EMOJIS[p]} {PLATFORM_LABELS[p] ?? p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>الرابط</label>
+                <input required value={form.url} onChange={e => setForm({...form, url: e.target.value})}
+                  placeholder="https://..." dir="ltr"
+                  onFocus={() => setFocused('surl')} onBlur={() => setFocused(null)}
+                  style={inputFocusStyle(focused==='surl')} />
+              </div>
+              <div>
+                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>أيقونة (اختياري)</label>
+                <input value={form.icon} onChange={e => setForm({...form, icon: e.target.value})}
+                  placeholder="fa-brands fa-whatsapp" dir="ltr"
+                  onFocus={() => setFocused('sicon')} onBlur={() => setFocused(null)}
+                  style={inputFocusStyle(focused==='sicon')} />
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
+                {saving ? 'جاري الحفظ...' : 'حفظ الرابط'}
+              </button>
+              <button type="button" onClick={() => { setShowForm(false); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -413,32 +530,39 @@ function SocialTab() {
 export default function AdminCMSPage() {
   const [activeTab, setActiveTab] = useState<Tab>('pages');
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'pages',  label: 'الصفحات'         },
-    { key: 'faqs',   label: 'الأسئلة الشائعة' },
-    { key: 'social', label: 'روابط التواصل'   },
+  const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: 'pages',  label: 'الصفحات',          icon: '📄' },
+    { key: 'faqs',   label: 'الأسئلة الشائعة',  icon: '❓' },
+    { key: 'social', label: 'روابط التواصل',    icon: '🔗' },
   ];
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
-            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>إدارة المحتوى (CMS)</h2>
+      <div style={{ fontFamily:"'Cairo',sans-serif", background:DK.bg, minHeight:'100vh', padding:24 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
+          <div style={{ width:4, height:28, borderRadius:4, background:DK.goldGrad }} />
+          <div>
+            <h1 style={{ color:DK.text, fontWeight:900, fontSize:20, margin:0 }}>إدارة المحتوى</h1>
+            <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>تحرير صفحات الموقع والأسئلة الشائعة وروابط التواصل</p>
           </div>
-          <p className="text-xs mr-4" style={{ color: DK.dimTxt }}>تحرير صفحات الموقع والأسئلة الشائعة وروابط التواصل</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {tabs.map((tab) => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className="px-5 py-2 text-sm font-semibold rounded-xl transition"
-              style={activeTab === tab.key
-                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
-                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
-              {tab.label}
+        <div style={{ display:'flex', gap:8, marginBottom:24 }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                padding:'9px 20px', borderRadius:24, fontSize:13, fontWeight:700,
+                cursor:'pointer', fontFamily:"'Cairo',sans-serif", border:'none',
+                background: activeTab===tab.key ? DK.gold : '#FFFFFF',
+                color: activeTab===tab.key ? '#fff' : DK.sub,
+                boxShadow: activeTab===tab.key ? '0 2px 10px rgba(197,147,65,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
+              }}
+            >
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
@@ -447,6 +571,8 @@ export default function AdminCMSPage() {
         {activeTab === 'faqs'   && <FaqsTab />}
         {activeTab === 'social' && <SocialTab />}
       </div>
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </AdminLayout>
   );
 }

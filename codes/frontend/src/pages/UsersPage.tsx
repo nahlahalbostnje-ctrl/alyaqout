@@ -1,46 +1,99 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, addUser, toggleUser, deleteUser } from '../features/admin/usersSlice';
 import AdminLayout from '../components/AdminLayout';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  }
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
+};
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?'#C59341': v==='danger'?'#EF4444':'#FFFFFF',
+  color: v==='outline'?'#1B2038':'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?'#C59341':'#EDE3CE'}`,
+  color:'#1B2038', borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+const TH: React.CSSProperties = {
+  padding:'11px 16px', textAlign:'right', color:'#6B7280', fontSize:12,
+  fontWeight:700, background:'#F8F5EE', borderBottom:'1px solid #EDE3CE',
+};
+const TD: React.CSSProperties = {
+  padding:'12px 16px', borderBottom:'1px solid #F3EDE0', fontSize:13, color:'#1B2038',
 };
 
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:480,maxWidth:'95vw'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:'#1B2038',fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16,color:'#6B7280'}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, color, bg }: { label:string; color:string; bg:string }) {
+  return <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:bg,color}}>{label}</span>;
+}
+
+function Toggle({ on, onToggle, loading=false }: { on:boolean; onToggle:()=>void; loading?:boolean }) {
+  return (
+    <div onClick={!loading?onToggle:undefined} style={{width:42,height:24,borderRadius:12,background:on?'#10B981':'rgba(0,0,0,0.15)',position:'relative',cursor:loading?'wait':'pointer',transition:'background 0.2s',flexShrink:0}}>
+      <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:3,right:on?20:4,transition:'right 0.2s',boxShadow:'0 1px 4px rgba(0,0,0,0.2)'}}/>
+    </div>
+  );
+}
+
 type Role = 'teacher' | 'student' | 'parent';
+type TabKey = 'all' | Role;
+
+const ROLE_LABEL: Record<Role, string> = { teacher:'معلم', student:'طالب', parent:'ولي أمر' };
+const ROLE_COLOR: Record<Role, { color:string; bg:string }> = {
+  teacher: { color: DK.blue,   bg: 'rgba(59,130,246,0.1)'  },
+  student: { color: DK.green,  bg: 'rgba(16,185,129,0.1)'  },
+  parent:  { color: DK.purple, bg: 'rgba(139,92,246,0.1)'  },
+};
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
   const { list: users, loading } = useAppSelector((s) => s.adminUsers);
 
-  const [role, setRole]           = useState<Role>('teacher');
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm]           = useState({ name: '', phone: '', role: 'teacher' as Role });
-  const [addError, setAddError]   = useState<string | null>(null);
+  const [activeTab, setActiveTab]   = useState<TabKey>('all');
+  const [search, setSearch]         = useState('');
+  const [showModal, setShowModal]   = useState(false);
+  const [form, setForm]             = useState({ name: '', phone: '', role: 'teacher' as Role });
+  const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
-  const [toggling, setToggling]   = useState<number | null>(null);
-  const [deleting, setDeleting]   = useState<number | null>(null);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [toggling, setToggling]     = useState<number | null>(null);
+  const [deleting, setDeleting]     = useState<number | null>(null);
+  const [focused, setFocused]       = useState<string | null>(null);
 
   useEffect(() => { dispatch(fetchUsers(null)); }, [dispatch]);
 
-  const filtered = users.filter((u) => u.role === role);
+  const filtered = users.filter((u) => {
+    const matchTab = activeTab === 'all' || u.role === activeTab;
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q || u.name.toLowerCase().includes(q) || (u.phone ?? '').toLowerCase().includes(q);
+    return matchTab && matchSearch;
+  });
 
   const openModal = () => {
-    setForm({ name: '', phone: '', role });
+    setForm({ name: '', phone: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher' });
     setAddError(null);
     setShowModal(true);
   };
@@ -67,106 +120,115 @@ export default function UsersPage() {
     setDeleting(null);
   };
 
-  const inputStyle = (field: string) => ({
-    ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-  });
-
-  const tabs: { key: Role; label: string }[] = [
-    { key: 'teacher', label: 'المعلمون' },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'all',     label: 'الكل' },
+    { key: 'teacher', label: 'المدربون' },
     { key: 'student', label: 'الطلاب' },
     { key: 'parent',  label: 'أولياء الأمور' },
   ];
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
-            <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>المستخدمون</h2>
+      <div style={{ fontFamily:"'Cairo',sans-serif", background: DK.bg, minHeight:'100vh', padding:24 }}>
+
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:4, height:28, borderRadius:4, background: DK.goldGrad }} />
+            <h1 style={{ margin:0, fontSize:22, fontWeight:900, color: DK.text }}>المستخدمون</h1>
           </div>
-          <button onClick={openModal} className="text-sm px-4 py-2 rounded-xl font-semibold transition"
-            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-            + إضافة مستخدم
+          <button onClick={openModal} style={{ ...btn('gold'), display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ fontSize:16, fontWeight:400 }}>+</span> إضافة مستخدم
           </button>
         </div>
 
-        {/* Role Tabs */}
-        <div className="flex gap-2 mb-5">
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
           {tabs.map((t) => (
-            <button key={t.key} onClick={() => setRole(t.key)}
-              className="px-5 py-2 rounded-xl text-sm font-semibold transition"
-              style={role === t.key
-                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
-                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
+            <button key={t.key} onClick={() => setActiveTab(t.key)}
+              style={{
+                borderRadius:10, padding:'8px 20px', border:'none', cursor:'pointer',
+                fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:700,
+                background: activeTab === t.key ? DK.gold : 'transparent',
+                color: activeTab === t.key ? '#fff' : DK.sub,
+                transition:'all 0.15s',
+              }}>
               {t.label}
             </button>
           ))}
         </div>
 
-        <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
+        {/* Search */}
+        <div style={{ position:'relative', marginBottom:20, maxWidth:360 }}>
+          <span style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', color: DK.dim, fontSize:15, pointerEvents:'none' }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="بحث بالاسم أو رقم الهاتف..."
+            style={{ ...inp(focused==='search'), paddingRight:40 }}
+            onFocus={() => setFocused('search')}
+            onBlur={() => setFocused(null)}
+          />
+        </div>
+
+        {/* Table card */}
+        <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
           {loading ? (
-            <div className="flex items-center justify-center py-16 gap-3">
-              <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', padding:60 }}>
+              <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation:'spin 0.8s linear infinite' }} />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-center py-12" style={{ color: DK.dimTxt }}>لا يوجد مستخدمون من هذه الفئة بعد.</p>
+            <p style={{ textAlign:'center', padding:48, color: DK.sub, fontSize:14 }}>
+              {search ? 'لا توجد نتائج مطابقة للبحث.' : 'لا يوجد مستخدمون في هذه الفئة بعد.'}
+            </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+              <thead>
                 <tr>
-                  {['الاسم', 'رقم الهاتف', 'تاريخ التسجيل', 'الحالة', 'إجراءات'].map((h) => (
-                    <th key={h} className="px-6 py-3 text-right font-semibold uppercase text-xs tracking-wider"
-                      style={{ color: DK.gold }}>{h}</th>
+                  {['#','الاسم','رقم الهاتف','الدور','الحالة','إجراءات'].map(h => (
+                    <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((user) => (
-                  <tr key={user.id} className="transition"
-                    style={{ borderBottom: '1px solid #EDE3CE' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>
-                          {user.name?.[0] ?? '?'}
+                {filtered.map((user, idx) => {
+                  const rc = ROLE_COLOR[user.role as Role] ?? { color: DK.sub, bg: '#F3F4F6' };
+                  return (
+                    <tr key={user.id}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(197,147,65,0.04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={{ ...TD, width:48, color: DK.dim, fontWeight:700 }}>{idx + 1}</td>
+                      <td style={TD}>
+                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                          <div style={{ width:34, height:34, borderRadius:'50%', background:`rgba(197,147,65,0.1)`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:13, color: DK.gold, flexShrink:0 }}>
+                            {(user.name?.[0] ?? '?').toUpperCase()}
+                          </div>
+                          <span style={{ fontWeight:700 }}>{user.name}</span>
                         </div>
-                        <span className="font-medium" style={{ color: '#1B2038' }}>{user.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4" style={{ color: DK.dimTxt }} dir="ltr">{user.phone}</td>
-                    <td className="px-6 py-4 text-xs" style={{ color: DK.dimTxt }}>
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG') : '—'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium"
-                        style={user.is_active
-                          ? { background: 'rgba(16,185,129,0.08)', color: '#10B981' }
-                          : { background: '#F9FAFB', color: DK.dimTxt }}>
-                        {user.is_active ? 'نشط' : 'معطّل'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button onClick={() => handleToggle(user.id)} disabled={toggling === user.id}
-                          className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-                          style={user.is_active
-                            ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444' }
-                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>
-                          {toggling === user.id ? '...' : user.is_active ? 'تعطيل' : 'تفعيل'}
-                        </button>
-                        <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
-                          className="text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                          {deleting === user.id ? '...' : 'حذف'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ ...TD, color: DK.sub, direction:'ltr', unicodeBidi:'embed' }}>{user.phone ?? '—'}</td>
+                      <td style={TD}>
+                        <StatusBadge label={ROLE_LABEL[user.role as Role] ?? user.role} color={rc.color} bg={rc.bg} />
+                      </td>
+                      <td style={TD}>
+                        <Toggle on={!!user.is_active} onToggle={() => handleToggle(user.id)} loading={toggling === user.id} />
+                      </td>
+                      <td style={TD}>
+                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                          {/* Edit pencil — placeholder, no handler yet */}
+                          <button title="تعديل"
+                            style={{ width:30, height:30, borderRadius:8, border:'1px solid #EDE3CE', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
+                            ✏️
+                          </button>
+                          <button title="حذف" onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
+                            style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, opacity: deleting === user.id ? 0.5 : 1 }}>
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -175,50 +237,48 @@ export default function UsersPage() {
 
       {/* Add User Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-sm p-6 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <h3 className="text-lg font-semibold mb-4" style={{ color: '#1B2038' }}>إضافة مستخدم</h3>
-            <form onSubmit={handleAdd} className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الدور</label>
-                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
-                  onFocus={() => setFocusedInput('role')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('role'), cursor: 'pointer' }}>
-                  <option value="teacher">معلم</option>
-                  <option value="student">طالب</option>
-                  <option value="parent">ولي أمر</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الاسم</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="الاسم الكامل" required autoFocus
-                  onFocus={() => setFocusedInput('name')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('name')} />
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>رقم الهاتف (واتساب)</label>
-                <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="مثال: 9665xxxxxxxx+" required dir="ltr"
-                  onFocus={() => setFocusedInput('phone')} onBlur={() => setFocusedInput(null)}
-                  style={inputStyle('phone')} />
-              </div>
-              {addError && <p className="text-sm px-3 py-2 rounded-lg" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{addError}</p>}
-              <div className="flex gap-3 pt-1">
-                <button type="submit" disabled={addLoading}
-                  className="flex-1 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                  {addLoading ? 'جاري الإضافة...' : 'إضافة'}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 py-2 rounded-xl text-sm"
-                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal title="إضافة مستخدم" onClose={() => setShowModal(false)}>
+          <form onSubmit={handleAdd}>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الاسم الكامل</label>
+              <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                placeholder="الاسم الكامل" required autoFocus
+                style={inp(focused==='name')}
+                onFocus={() => setFocused('name')} onBlur={() => setFocused(null)} />
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>رقم الهاتف (واتساب)</label>
+              <input type="text" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                placeholder="+9665xxxxxxxx" required dir="ltr"
+                style={inp(focused==='phone')}
+                onFocus={() => setFocused('phone')} onBlur={() => setFocused(null)} />
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدور</label>
+              <select value={form.role} onChange={e => setForm({...form, role: e.target.value as Role})}
+                style={{ ...inp(focused==='role'), cursor:'pointer' }}
+                onFocus={() => setFocused('role')} onBlur={() => setFocused(null)}>
+                <option value="teacher">معلم</option>
+                <option value="student">طالب</option>
+                <option value="parent">ولي أمر</option>
+              </select>
+            </div>
+            {addError && (
+              <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{addError}</p>
+            )}
+            <div style={{ display:'flex', gap:10 }}>
+              <button type="submit" disabled={addLoading}
+                style={{ ...btn('gold'), flex:1, opacity: addLoading ? 0.7 : 1 }}>
+                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+              </button>
+              <button type="button" onClick={() => setShowModal(false)}
+                style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </AdminLayout>
   );
 }

@@ -17,21 +17,20 @@ const SW = 222;
 
 // ─── Sidebar nav ──────────────────────────────────────────────────────────────
 const NAV = [
-  { label:'الرئيسية',                to:'/dashboard',     icon:'🏠' },
-  { label:'مؤشرات المنصة',           to:null,             icon:'📊' },
-  { label:'إدارة المدارس',            to:null,             icon:'🏫' },
-  { label:'المعلمون والموظفون',       to:null,             icon:'👨‍🏫' },
-  { label:'الطلاب وأولياء الأمور',   to:null,             icon:'👥' },
-  { label:'المحتوى والاعتمادات',      to:null,             icon:'✅' },
-  { label:'المالية والفواتير',        to:null,             icon:'💰' },
-  { label:'الخطط والاشتراكات',        to:null,             icon:'📋' },
-  { label:'التقارير والتحليلات',      to:null,             icon:'📈' },
-  { label:'نظام التنبيهات',           to:null,             icon:'🔔' },
-  { label:'الإعدادات العامة',         to:null,             icon:'⚙️' },
-  { label:'الصلاحيات والأدوار',       to:null,             icon:'🔑' },
-  { label:'سجل العمليات',            to:null,             icon:'📝' },
-  { label:'الدعم الفني',             to:null,             icon:'🎧' },
-  { label:'مركز التطوير',            to:null,             icon:'🛠️' },
+  { label:'الرئيسية',                to:'/dashboard',                    icon:'🏠', end:true  },
+  { label:'مؤشرات المنصة',           to:'/dashboard/analytics',          icon:'📊', end:false },
+  { label:'المعلمون والموظفون',       to:'/dashboard/staff',              icon:'👨‍🏫', end:false },
+  { label:'الطلاب وأولياء الأمور',   to:'/dashboard/students',           icon:'👥', end:false },
+  { label:'المحتوى والاعتمادات',      to:'/dashboard/content-approvals',  icon:'✅', end:false },
+  { label:'المالية والفواتير',        to:'/dashboard/billing',            icon:'💰', end:false },
+  { label:'الخطط والاشتراكات',        to:'/dashboard/plans',              icon:'📋', end:false },
+  { label:'التقارير والتحليلات',      to:'/dashboard/reports',            icon:'📈', end:false },
+  { label:'نظام التنبيهات',           to:'/dashboard/notifications',      icon:'🔔', end:false },
+  { label:'الإعدادات العامة',         to:'/dashboard/settings',           icon:'⚙️', end:false },
+  { label:'الصلاحيات والأدوار',       to:'/dashboard/roles',              icon:'🔑', end:false },
+  { label:'سجل العمليات',            to:'/dashboard/activity-log',       icon:'📝', end:false },
+  { label:'الدعم الفني',             to:'/dashboard/support',            icon:'🎧', end:false },
+  { label:'مركز التطوير',            to:'/dashboard/dev-center',         icon:'🛠️', end:false },
 ];
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -229,12 +228,11 @@ export default function DashboardPage() {
                 <span>{item.label}</span>
               </div>
             );
-            if(item.to) return (
-              <NavLink key={i} to={item.to} end style={{ textDecoration:'none' }}>
+            return (
+              <NavLink key={i} to={item.to} end={item.end} style={{ textDecoration:'none' }}>
                 {({ isActive })=>inner(isActive)}
               </NavLink>
             );
-            return <div key={i}>{inner(false)}</div>;
           })}
           <div onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 10px', borderRadius:10, fontSize:12, fontWeight:500, color:'rgba(239,68,68,0.75)', cursor:'pointer', marginTop:4 }}>
             <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج

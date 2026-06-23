@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchGrades,
@@ -8,35 +8,131 @@ import {
 } from '../features/admin/gradesSlice';
 import AdminLayout from '../components/AdminLayout';
 
+/* ─── Design tokens ─────────────────────────────────────────── */
 const DK = {
-  card:   { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:   '#C9952A',
-  goldL:  '#DDAD50',
-  navy:   '#fff',
-  dimTxt: '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  } as React.CSSProperties,
+  gold: '#C59341',
+  goldL: '#D4A65A',
+  goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg: '#F5EDD8',
+  card: '#FFFFFF',
+  navy: '#0D1E3A',
+  text: '#1B2038',
+  sub: '#6B7280',
+  dim: '#9CA3AF',
+  border: '#EDE3CE',
+  shadow: '0 2px 16px rgba(0,0,0,0.06)',
+  green: '#10B981',
+  red: '#EF4444',
 };
 
+const cardStyle = (extra: React.CSSProperties = {}): React.CSSProperties => ({
+  background: '#FFFFFF',
+  borderRadius: 16,
+  padding: 20,
+  boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+  border: '1px solid #EDE3CE',
+  ...extra,
+});
+
+const TH: React.CSSProperties = {
+  padding: '11px 16px',
+  textAlign: 'right',
+  color: '#6B7280',
+  fontSize: 12,
+  fontWeight: 700,
+  background: '#F8F5EE',
+  borderBottom: '1px solid #EDE3CE',
+  whiteSpace: 'nowrap',
+};
+
+const TD: React.CSSProperties = {
+  padding: '12px 16px',
+  borderBottom: '1px solid #F3EDE0',
+  fontSize: 13,
+  color: '#1B2038',
+};
+
+/* ─── Shared helpers ─────────────────────────────────────────── */
+function PageHeader({ title, sub, action }: { title: string; sub: string; action?: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{ width: 4, height: 20, borderRadius: 2, background: '#C59341' }} />
+          <h1 style={{ color: '#1B2038', fontWeight: 900, fontSize: 20, margin: 0 }}>{title}</h1>
+        </div>
+        <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>{sub}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: '#fff', borderRadius: 20, padding: 28, width: 460, maxWidth: '95vw' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ color: '#1B2038', fontWeight: 900, fontSize: 17, margin: 0 }}>{title}</h2>
+          <button
+            onClick={onClose}
+            style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #EDE3CE', background: 'transparent', cursor: 'pointer', fontSize: 16, color: '#6B7280' }}
+          >✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Toggle Switch component ───────────────────────────────── */
+function ToggleSwitch({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
+  return (
+    <div
+      onClick={disabled ? undefined : onClick}
+      style={{
+        width: 44, height: 24, borderRadius: 12,
+        background: on ? '#10B981' : '#D1D5DB',
+        position: 'relative',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'background 0.2s',
+        opacity: disabled ? 0.5 : 1,
+        flexShrink: 0,
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: 3, left: on ? 23 : 3,
+        width: 18, height: 18,
+        borderRadius: '50%',
+        background: '#fff',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+        transition: 'left 0.2s',
+      }} />
+    </div>
+  );
+}
+
+/* ─── Main page ─────────────────────────────────────────────── */
 export default function GradesPage() {
   const dispatch = useAppDispatch();
   const { list: grades, loading } = useAppSelector((s) => s.grades);
 
-  const [showModal, setShowModal]   = useState(false);
-  const [name, setName]             = useState('');
-  const [sortOrder, setSortOrder]   = useState(0);
-  const [addError, setAddError]     = useState<string | null>(null);
-  const [addLoading, setAddLoading] = useState(false);
-  const [toggling, setToggling]     = useState<number | null>(null);
-  const [deleting, setDeleting]     = useState<number | null>(null);
+  const [showModal, setShowModal]     = useState(false);
+  const [name, setName]               = useState('');
+  const [sortOrder, setSortOrder]     = useState(0);
+  const [addError, setAddError]       = useState<string | null>(null);
+  const [addLoading, setAddLoading]   = useState(false);
+  const [toggling, setToggling]       = useState<number | null>(null);
+  const [deleting, setDeleting]       = useState<number | null>(null);
+  const [nameF, setNameF]             = useState(false);
+  const [sortF, setSortF]             = useState(false);
 
   useEffect(() => { dispatch(fetchGrades()); }, [dispatch]);
 
@@ -68,102 +164,201 @@ export default function GradesPage() {
     setDeleting(null);
   };
 
+  const inp = (focused: boolean): React.CSSProperties => ({
+    background: '#FFFFFF',
+    border: `1.5px solid ${focused ? '#C59341' : '#EDE3CE'}`,
+    color: '#1B2038',
+    borderRadius: 12,
+    padding: '10px 14px',
+    fontSize: 13,
+    width: '100%',
+    outline: 'none',
+    fontFamily: "'Cairo',sans-serif",
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box' as const,
+  });
+
   return (
     <AdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }}>
+      <div style={{ fontFamily: "'Cairo',sans-serif", background: '#F5EDD8', minHeight: '100vh', padding: 24 }}>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>إدارة المحتوى</span>
-              </div>
-              <h1 className="text-2xl font-black" style={{ color: '#1B2038' }}>الصفوف الدراسية</h1>
-            </div>
+        <PageHeader
+          title="الصفوف الدراسية"
+          sub="إدارة الصفوف الدراسية وترتيبها"
+          action={
             <button
               onClick={() => { setShowModal(true); setAddError(null); }}
-              className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 hover:-translate-y-0.5"
-              style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff', boxShadow: '0 4px 18px rgba(201,149,42,0.3)' }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: 12,
+                border: 'none',
+                background: 'linear-gradient(135deg,#C59341,#D4A65A)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontFamily: "'Cairo',sans-serif",
+                boxShadow: '0 4px 14px rgba(197,147,65,0.3)',
+              }}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              إضافة صف
+              + إضافة صف جديد
             </button>
+          }
+        />
+
+        {/* Grade Cards Grid */}
+        {!loading && grades.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+            {grades.map((grade) => (
+              <div key={grade.id} style={cardStyle({ padding: 16 })}>
+                {/* Icon + sort badge row */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: 'rgba(16,185,129,0.10)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 22,
+                  }}>
+                    📚
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, color: DK.gold,
+                    background: 'rgba(197,147,65,0.10)',
+                    borderRadius: 20, padding: '2px 8px',
+                  }}>
+                    #{grade.sort_order}
+                  </span>
+                </div>
+
+                {/* Grade name */}
+                <div style={{ fontWeight: 800, fontSize: 15, color: DK.text, marginBottom: 14, lineHeight: 1.3 }}>
+                  {grade.name}
+                </div>
+
+                {/* Toggle + Delete row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ToggleSwitch
+                      on={grade.is_active}
+                      onClick={() => handleToggle(grade.id)}
+                      disabled={toggling === grade.id}
+                    />
+                    <span style={{ fontSize: 12, color: grade.is_active ? DK.green : DK.sub, fontWeight: 600 }}>
+                      {toggling === grade.id ? '...' : grade.is_active ? 'نشط' : 'معطّل'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(grade.id)}
+                    disabled={deleting === grade.id}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8, border: 'none',
+                      background: 'rgba(239,68,68,0.08)', color: '#EF4444',
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      fontFamily: "'Cairo',sans-serif",
+                      opacity: deleting === grade.id ? 0.5 : 1,
+                    }}
+                  >
+                    {deleting === grade.id ? '...' : 'حذف'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
-        </div>
+        )}
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={DK.card}>
+        <div style={cardStyle({ padding: 0, overflow: 'hidden' })}>
           {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-10 h-10 rounded-full animate-spin"
-                style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: '3px solid rgba(197,147,65,0.15)',
+                borderTopColor: '#C59341',
+                animation: 'spin 0.8s linear infinite',
+              }} />
             </div>
           ) : grades.length === 0 ? (
-            <div className="py-20 text-center">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: 'rgba(201,149,42,0.08)', border: '1px solid #EDE3CE' }}>
-                <svg className="w-7 h-7" fill="none" stroke="rgba(201,149,42,0.4)" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold" style={{ color: DK.dimTxt }}>لا توجد صفوف بعد. أضف أول صف!</p>
+            <div style={{ padding: '60px 0', textAlign: 'center' }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: 'rgba(197,147,65,0.08)',
+                border: '1px solid #EDE3CE',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, margin: '0 auto 16px',
+              }}>📚</div>
+              <p style={{ color: DK.sub, fontSize: 14, fontWeight: 600, margin: 0 }}>
+                لا توجد صفوف بعد. أضف أول صف!
+              </p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
-                  {['اسم الصف', 'الترتيب', 'الحالة', 'إجراءات'].map((h) => (
-                    <th key={h} className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wide"
-                      style={{ color: DK.gold }}>{h}</th>
+                <tr>
+                  {['الترتيب', 'اسم الصف', 'الحالة', 'إجراءات'].map((h) => (
+                    <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {grades.map((grade) => (
-                  <tr
-                    key={grade.id}
-                    className="transition-colors"
-                    style={{ borderBottom: '1px solid #EDE3CE' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
+                  <tr key={grade.id}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(197,147,65,0.04)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                    style={{ transition: 'background 0.15s' }}
                   >
-                    <td className="px-6 py-4 font-bold" style={{ color: '#1B2038' }}>{grade.name}</td>
-                    <td className="px-6 py-4" style={{ color: DK.dimTxt }}>{grade.sort_order}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className="px-2.5 py-1 rounded-full text-xs font-bold"
-                        style={grade.is_active
-                          ? { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                          : { background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }
-                        }
-                      >
-                        {grade.is_active ? 'نشط' : 'معطّل'}
+                    <td style={TD}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '2px 10px', borderRadius: 20,
+                        background: 'rgba(197,147,65,0.10)',
+                        color: DK.gold, fontWeight: 700, fontSize: 12,
+                      }}>
+                        {grade.sort_order}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
+                    <td style={{ ...TD, fontWeight: 700 }}>{grade.name}</td>
+                    <td style={TD}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <ToggleSwitch
+                          on={grade.is_active}
+                          onClick={() => handleToggle(grade.id)}
+                          disabled={toggling === grade.id}
+                        />
+                        <span style={{
+                          padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                          background: grade.is_active ? 'rgba(16,185,129,0.10)' : 'rgba(239,68,68,0.08)',
+                          color: grade.is_active ? '#10B981' : '#EF4444',
+                        }}>
+                          {toggling === grade.id ? '...' : grade.is_active ? 'نشط' : 'معطّل'}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={TD}>
+                      <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => handleToggle(grade.id)}
                           disabled={toggling === grade.id}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
-                          style={grade.is_active
-                            ? { background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }
-                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                          }
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, border: 'none',
+                            background: grade.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)',
+                            color: grade.is_active ? '#EF4444' : '#10B981',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif",
+                            opacity: toggling === grade.id ? 0.5 : 1,
+                          }}
                         >
                           {toggling === grade.id ? '...' : grade.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button
                           onClick={() => handleDelete(grade.id)}
                           disabled={deleting === grade.id}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
-                          style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
+                            background: '#fff', color: '#EF4444',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif",
+                            opacity: deleting === grade.id ? 0.5 : 1,
+                          }}
                         >
                           {deleting === grade.id ? '...' : 'حذف'}
                         </button>
@@ -179,76 +374,76 @@ export default function GradesPage() {
 
       {/* Add Grade Modal */}
       {showModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="w-full max-w-sm p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>إضافة صف دراسي</h3>
-              <button onClick={() => setShowModal(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
-                style={{ color: DK.dimTxt }}>×</button>
+        <Modal title="إضافة صف دراسي" onClose={() => setShowModal(false)}>
+          <form onSubmit={handleAdd}>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
+                اسم الصف
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="مثال: الصف الأول"
+                required
+                autoFocus
+                style={inp(nameF)}
+                onFocus={() => setNameF(true)}
+                onBlur={() => setNameF(false)}
+              />
             </div>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>اسم الصف</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="مثال: الصف الأول"
-                  required
-                  autoFocus
-                  style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                />
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
+                الترتيب
+              </label>
+              <input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                min={0}
+                dir="ltr"
+                style={inp(sortF)}
+                onFocus={() => setSortF(true)}
+                onBlur={() => setSortF(false)}
+              />
+            </div>
+            {addError && (
+              <div style={{
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                color: '#EF4444', borderRadius: 10, padding: '8px 12px', fontSize: 12, marginBottom: 14,
+              }}>
+                {addError}
               </div>
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الترتيب</label>
-                <input
-                  type="number"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(Number(e.target.value))}
-                  min={0}
-                  dir="ltr"
-                  style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                />
-              </div>
-              {addError && (
-                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  {addError}
-                </p>
-              )}
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={addLoading}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                >
-                  {addLoading ? 'جاري الإضافة...' : 'إضافة'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            )}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="submit"
+                disabled={addLoading}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 12, border: 'none',
+                  background: 'linear-gradient(135deg,#C59341,#D4A65A)', color: '#fff',
+                  fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  fontFamily: "'Cairo',sans-serif",
+                  opacity: addLoading ? 0.6 : 1,
+                }}
+              >
+                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 12,
+                  border: '1px solid #EDE3CE', background: '#fff', color: '#6B7280',
+                  fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  fontFamily: "'Cairo',sans-serif",
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </AdminLayout>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchSubscriptions, addSubscription, cancelSubscription,
@@ -9,22 +9,52 @@ import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
-  navy:    '#fff',
-  dimTxt:  '#6B7280',
-  inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  }
+  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
+  shadow:'0 2px 16px rgba(0,0,0,0.06)',
+  green:'#10B981', red:'#EF4444', blue:'#3B82F6', orange:'#F59E0B', purple:'#8B5CF6',
 };
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background:'#FFFFFF', borderRadius:16, padding:20,
+  boxShadow:'0 2px 16px rgba(0,0,0,0.06)', border:'1px solid #EDE3CE', ...e,
+});
+const btn = (v:'gold'|'outline'|'danger'='gold'): React.CSSProperties => ({
+  padding:'9px 20px', borderRadius:12, border: v==='outline'?'1px solid #EDE3CE':'none',
+  background: v==='gold'?'#C59341': v==='danger'?'#EF4444':'#FFFFFF',
+  color: v==='outline'?'#1B2038':'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
+  fontFamily:"'Cairo',sans-serif",
+});
+const inp = (focused=false): React.CSSProperties => ({
+  background:'#FFFFFF', border:`1.5px solid ${focused?'#C59341':'#EDE3CE'}`,
+  color:'#1B2038', borderRadius:12, padding:'10px 14px', fontSize:13,
+  width:'100%', outline:'none', fontFamily:"'Cairo',sans-serif",
+});
+const TH: React.CSSProperties = {
+  padding:'11px 16px', textAlign:'right', color:'#6B7280', fontSize:12,
+  fontWeight:700, background:'#F8F5EE', borderBottom:'1px solid #EDE3CE',
+};
+const TD: React.CSSProperties = {
+  padding:'12px 16px', borderBottom:'1px solid #F3EDE0', fontSize:13, color:'#1B2038',
+};
+
+function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:ReactNode }) {
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width:520,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{color:'#1B2038',fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16,color:'#6B7280'}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, color, bg }: { label:string; color:string; bg:string }) {
+  return <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:bg,color}}>{label}</span>;
+}
 
 type FilterStatus = 'all' | 'active' | 'expired' | 'cancelled' | 'pending';
 
@@ -32,17 +62,17 @@ const STATUS_LABEL: Record<string, string> = {
   active: 'فعّال', expired: 'منتهي', cancelled: 'ملغى', pending: 'معلّق',
 };
 
-function statusStyle(s: string) {
-  if (s === 'active')    return { background: 'rgba(16,185,129,0.08)',  color: '#10B981' };
-  if (s === 'cancelled') return { background: 'rgba(239,68,68,0.08)',   color: '#EF4444' };
-  if (s === 'pending')   return { background: 'rgba(245,158,11,0.08)',  color: '#F59E0B' };
-  return { background: '#F9FAFB', color: '#6B7280' };
+function statusStyle(s: string): { color:string; bg:string } {
+  if (s === 'active')    return { bg:'rgba(16,185,129,0.1)',  color:'#10B981' };
+  if (s === 'cancelled') return { bg:'rgba(239,68,68,0.1)',   color:'#EF4444' };
+  if (s === 'pending')   return { bg:'rgba(245,158,11,0.1)',  color:'#F59E0B' };
+  return { bg:'#F3F4F6', color:'#6B7280' };
 }
 
-function paymentStyle(s: string) {
-  if (s === 'paid')     return { background: 'rgba(16,185,129,0.08)', color: '#10B981' };
-  if (s === 'pending')  return { background: 'rgba(245,158,11,0.08)', color: '#F59E0B' };
-  return { background: 'rgba(239,68,68,0.08)', color: '#EF4444' };
+function paymentStyle(s: string): { color:string; bg:string } {
+  if (s === 'paid')    return { bg:'rgba(16,185,129,0.1)', color:'#10B981' };
+  if (s === 'pending') return { bg:'rgba(245,158,11,0.1)', color:'#F59E0B' };
+  return { bg:'rgba(239,68,68,0.1)', color:'#EF4444' };
 }
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -53,11 +83,11 @@ function DaysBar({ days, total }: { days: number; total: number }) {
   const pct = total > 0 ? Math.min(100, Math.round((days / total) * 100)) : 0;
   const barColor = pct > 50 ? '#10B981' : pct > 20 ? '#F59E0B' : '#EF4444';
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#EDE3CE' }}>
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ flex:1, height:6, borderRadius:3, overflow:'hidden', background:'#EDE3CE' }}>
+        <div style={{ width:`${pct}%`, height:'100%', borderRadius:3, background:barColor, transition:'width 0.5s' }} />
       </div>
-      <span className="text-xs w-16 text-left" style={{ color: '#6B7280' }}>{days} يوم</span>
+      <span style={{ fontSize:11, color:'#6B7280', whiteSpace:'nowrap' }}>{days} يوم</span>
     </div>
   );
 }
@@ -68,11 +98,11 @@ export default function SubscriptionsPage() {
   const students = useAppSelector((s) => s.adminUsers.list.filter((u) => u.role === 'student'));
   const packages = useAppSelector((s) => s.packages.list.filter((p) => p.is_active));
 
-  const [filter, setFilter]   = useState<FilterStatus>('all');
-  const [showModal, setModal] = useState(false);
+  const [filter, setFilter]       = useState<FilterStatus>('all');
+  const [showModal, setModal]     = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [focused, setFocused]     = useState<string | null>(null);
 
   const [form, setForm] = useState({
     student_id: '',
@@ -124,237 +154,218 @@ export default function SubscriptionsPage() {
   };
 
   const filterTabs: { key: FilterStatus; label: string; count: number }[] = [
-    { key: 'all',       label: 'الكل',     count: stats.total     },
-    { key: 'active',    label: 'فعّالة',   count: stats.active    },
-    { key: 'expired',   label: 'منتهية',   count: stats.expired   },
-    { key: 'cancelled', label: 'ملغاة',    count: stats.cancelled },
-    { key: 'pending',   label: 'معلّقة',   count: stats.pending   },
+    { key: 'all',       label: 'الكل',          count: stats.total     },
+    { key: 'active',    label: 'فعّال',          count: stats.active    },
+    { key: 'expired',   label: 'منتهي',          count: stats.expired   },
+    { key: 'cancelled', label: 'ملغى',           count: stats.cancelled },
+    { key: 'pending',   label: 'بانتظار الدفع',  count: stats.pending   },
   ];
 
-  const inputStyle = (field: string) => ({
-    ...DK.inputStyle,
-    border: focusedInput === field ? '1px solid #C9952A' : '1px solid #EDE3CE',
-  });
-
   const statsCards = [
-    { label: 'فعّالة',  value: stats.active,    color: '#10B981', bg: 'rgba(16,185,129,0.08)' },
-    { label: 'منتهية',  value: stats.expired,   color: DK.dimTxt, bg: '#F9FAFB' },
-    { label: 'ملغاة',   value: stats.cancelled, color: '#EF4444', bg: 'rgba(239,68,68,0.08)' },
-    { label: 'معلّقة',  value: stats.pending,   color: '#F59E0B', bg: 'rgba(245,158,11,0.08)' },
+    { label:'فعّال',          value: stats.active,    color: DK.green,  bg:'rgba(16,185,129,0.08)'  },
+    { label:'منتهي',          value: stats.expired,   color: DK.dim,    bg:'#F3F4F6'                },
+    { label:'ملغى',           value: stats.cancelled, color: DK.red,    bg:'rgba(239,68,68,0.08)'   },
+    { label:'بانتظار الدفع',  value: stats.pending,   color: DK.orange, bg:'rgba(245,158,11,0.08)'  },
   ];
 
   return (
     <AdminLayout>
-      <div className="p-6" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8', minHeight: '100vh' }}>
+      <div style={{ fontFamily:"'Cairo',sans-serif", background: DK.bg, minHeight:'100vh', padding:24 }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #C9952A, #DDAD50)' }} />
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:4, height:28, borderRadius:4, background: DK.goldGrad }} />
             <div>
-              <h2 className="text-xl font-bold" style={{ color: '#1B2038' }}>الاشتراكات</h2>
-              <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>إدارة اشتراكات الطلاب والباقات المفعّلة</p>
+              <h1 style={{ margin:0, fontSize:22, fontWeight:900, color: DK.text }}>الاشتراكات</h1>
+              <p style={{ margin:0, fontSize:12, color: DK.sub, marginTop:2 }}>إدارة اشتراكات الطلاب والباقات المفعّلة</p>
             </div>
           </div>
-          <button onClick={openModal} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-            + اشتراك جديد
+          <button onClick={openModal} style={{ ...btn('gold'), display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ fontSize:16, fontWeight:400 }}>+</span> اشتراك جديد
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {/* Summary stats */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
           {statsCards.map((s) => (
-            <div key={s.label} className="rounded-2xl p-4" style={{ background: s.bg, border: '1px solid #EDE3CE' }}>
-              <p className="text-xs mb-1" style={{ color: DK.dimTxt }}>{s.label}</p>
-              <p className="text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
+            <div key={s.label} style={{ ...card({ padding:'16px 20px' }), background: s.bg, border:'1px solid #EDE3CE' }}>
+              <p style={{ margin:'0 0 4px', fontSize:12, color: DK.sub, fontWeight:600 }}>{s.label}</p>
+              <p style={{ margin:0, fontSize:28, fontWeight:900, color: s.color }}>{s.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mb-5 flex-wrap">
+        {/* Filter tabs */}
+        <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
           {filterTabs.map((t) => (
             <button key={t.key} onClick={() => setFilter(t.key)}
-              className="px-4 py-1.5 rounded-xl text-sm font-medium transition"
-              style={filter === t.key
-                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
-                : { background: '#FFFFFF', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
+              style={{
+                borderRadius:10, padding:'8px 20px', border:'none', cursor:'pointer',
+                fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:700,
+                background: filter === t.key ? DK.gold : 'transparent',
+                color: filter === t.key ? '#fff' : DK.sub,
+                transition:'all 0.15s',
+              }}>
               {t.label} ({t.count})
             </button>
           ))}
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-16 gap-3">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
+          <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+            <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation:'spin 0.8s linear infinite' }} />
           </div>
         )}
 
         {error && (
-          <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>{error}</div>
+          <div style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:12, padding:'12px 16px', marginBottom:16, fontSize:13 }}>{error}</div>
         )}
 
         {!loading && !error && (
           items.length > 0 ? (
-            <div style={{ ...DK.card, borderRadius: '16px', overflow: 'hidden' }}>
-              <table className="w-full text-sm">
-                <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #EDE3CE' }}>
+            <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+                <thead>
                   <tr>
-                    {['الطالب', 'الباقة', 'البداية', 'الانتهاء', 'المتبقي', 'الحالة', 'الدفع', 'المبلغ', ''].map((h) => (
-                      <th key={h} className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wider whitespace-nowrap"
-                        style={{ color: DK.gold }}>{h}</th>
+                    {['#','الطالب','الباقة','تاريخ البدء','تاريخ الانتهاء','الدفع','الحالة','إجراءات'].map(h => (
+                      <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((sub) => (
-                    <tr key={sub.id} className="transition"
-                      style={{ borderBottom: '1px solid #EDE3CE' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                      <td className="px-4 py-3">
-                        <p className="font-medium" style={{ color: '#1B2038' }}>{sub.student.name}</p>
-                        <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.student.phone}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p style={{ color: '#1B2038' }}>{sub.package.name}</p>
-                        <p className="text-xs" style={{ color: DK.dimTxt }}>{sub.package.duration_days} يوم</p>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: DK.dimTxt }}>{sub.starts_at}</td>
-                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: DK.dimTxt }}>{sub.ends_at}</td>
-                      <td className="px-4 py-3 min-w-[130px]">
-                        {sub.status === 'active'
-                          ? <DaysBar days={sub.days_remaining} total={sub.package.duration_days} />
-                          : <span className="text-xs" style={{ color: DK.dimTxt }}>—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-1 rounded-full font-medium" style={statusStyle(sub.status)}>
-                          {STATUS_LABEL[sub.status]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-1 rounded-full font-medium" style={paymentStyle(sub.payment_status)}>
-                          {PAYMENT_LABEL[sub.payment_status]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-bold whitespace-nowrap" style={{ color: DK.gold }}>
-                        {Number(sub.amount_paid).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {sub.status === 'active' && (
-                          <button onClick={() => handleCancel(sub)}
-                            className="text-xs px-3 py-1.5 rounded-lg transition"
-                            style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>
-                            إلغاء
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {items.map((sub, idx) => {
+                    const ss = statusStyle(sub.status);
+                    const ps = paymentStyle(sub.payment_status);
+                    return (
+                      <tr key={sub.id}
+                        onMouseEnter={e => (e.currentTarget.style.background='rgba(197,147,65,0.04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
+                        <td style={{ ...TD, color: DK.dim, fontWeight:700, width:48 }}>{idx + 1}</td>
+                        <td style={TD}>
+                          <p style={{ margin:0, fontWeight:700, color: DK.text }}>{sub.student.name}</p>
+                          <p style={{ margin:0, fontSize:11, color: DK.sub }}>{sub.student.phone}</p>
+                        </td>
+                        <td style={TD}>
+                          <p style={{ margin:0, color: DK.text }}>{sub.package.name}</p>
+                          <p style={{ margin:0, fontSize:11, color: DK.sub }}>{sub.package.duration_days} يوم</p>
+                        </td>
+                        <td style={{ ...TD, color: DK.sub, whiteSpace:'nowrap', fontSize:12 }}>{sub.starts_at}</td>
+                        <td style={{ ...TD, whiteSpace:'nowrap', fontSize:12 }}>
+                          {sub.status === 'active'
+                            ? <DaysBar days={sub.days_remaining} total={sub.package.duration_days} />
+                            : <span style={{ color: DK.sub }}>{sub.ends_at}</span>}
+                        </td>
+                        <td style={TD}>
+                          <StatusBadge label={PAYMENT_LABEL[sub.payment_status] ?? sub.payment_status} color={ps.color} bg={ps.bg} />
+                        </td>
+                        <td style={TD}>
+                          <StatusBadge label={STATUS_LABEL[sub.status] ?? sub.status} color={ss.color} bg={ss.bg} />
+                        </td>
+                        <td style={TD}>
+                          {sub.status === 'active' && (
+                            <button onClick={() => handleCancel(sub)}
+                              style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                              إلغاء
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 rounded-2xl" style={DK.card}>
-              <p className="font-medium" style={{ color: '#1B2038' }}>لا توجد اشتراكات</p>
-              <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>أضف اشتراكاً جديداً للبدء</p>
+            <div style={{ ...card(), textAlign:'center', padding:60 }}>
+              <p style={{ color: DK.text, fontWeight:700, fontSize:15, margin:'0 0 6px' }}>لا توجد اشتراكات</p>
+              <p style={{ color: DK.sub, fontSize:13, margin:0 }}>أضف اشتراكاً جديداً للبدء</p>
             </div>
           )
         )}
       </div>
 
-      {/* Modal */}
+      {/* Add Subscription Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #EDE3CE' }}>
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #EDE3CE' }}>
-              <div>
-                <h3 className="text-lg font-bold" style={{ color: '#1B2038' }}>اشتراك جديد</h3>
-                <p className="text-xs mt-0.5" style={{ color: DK.dimTxt }}>تفعيل اشتراك يدوي لطالب</p>
-              </div>
-              <button onClick={closeModal} className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: '#F9FAFB', border: '1px solid #EDE3CE' }}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: DK.dimTxt }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <Modal title="اشتراك جديد" onClose={closeModal}>
+          <form onSubmit={handleSubmit} dir="rtl">
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الطالب *</label>
+              <select value={form.student_id} onChange={e => setForm({...form, student_id: e.target.value})}
+                style={{ ...inp(focused==='student'), cursor:'pointer' }}
+                onFocus={() => setFocused('student')} onBlur={() => setFocused(null)}>
+                <option value="">اختر الطالب...</option>
+                {students.map(s => <option key={s.id} value={s.id}>{s.name} — {s.phone}</option>)}
+              </select>
             </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الباقة *</label>
+              <select value={form.package_id}
+                onChange={e => {
+                  const pkg = packages.find(p => p.id === Number(e.target.value));
+                  setForm({...form, package_id: e.target.value, amount_paid: pkg ? String(pkg.price) : ''});
+                }}
+                style={{ ...inp(focused==='pkg'), cursor:'pointer' }}
+                onFocus={() => setFocused('pkg')} onBlur={() => setFocused(null)}>
+                <option value="">اختر الباقة...</option>
+                {packages.map(p => <option key={p.id} value={p.id}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
               <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الطالب *</label>
-                <select value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}
-                  onFocus={() => setFocusedInput('student')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('student'), cursor: 'pointer' }}>
-                  <option value="">اختر الطالب...</option>
-                  {students.map((s) => <option key={s.id} value={s.id}>{s.name} — {s.phone}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>الباقة *</label>
-                <select value={form.package_id}
-                  onChange={(e) => {
-                    const pkg = packages.find((p) => p.id === Number(e.target.value));
-                    setForm({ ...form, package_id: e.target.value, amount_paid: pkg ? String(pkg.price) : '' });
-                  }}
-                  onFocus={() => setFocusedInput('pkg')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('pkg'), cursor: 'pointer' }}>
-                  <option value="">اختر الباقة...</option>
-                  {packages.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>تاريخ البداية *</label>
-                  <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-                    onFocus={() => setFocusedInput('date')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('date')} />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>المبلغ المدفوع</label>
-                  <input type="number" value={form.amount_paid} onChange={(e) => setForm({ ...form, amount_paid: e.target.value })}
-                    placeholder="0.00" dir="ltr"
-                    onFocus={() => setFocusedInput('amount')} onBlur={() => setFocusedInput(null)}
-                    style={inputStyle('amount')} />
-                </div>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>تاريخ البداية *</label>
+                <input type="date" value={form.starts_at} onChange={e => setForm({...form, starts_at: e.target.value})}
+                  style={inp(focused==='date')}
+                  onFocus={() => setFocused('date')} onBlur={() => setFocused(null)} />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>حالة الدفع</label>
-                <div className="flex gap-2">
-                  {[{ v: 'paid', l: 'مدفوع' }, { v: 'pending', l: 'بانتظار الدفع' }].map((opt) => (
-                    <button key={opt.v} type="button" onClick={() => setForm({ ...form, payment_status: opt.v })}
-                      className="flex-1 py-2 rounded-xl text-sm font-medium transition"
-                      style={form.payment_status === opt.v
-                        ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }
-                        : { background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
-                      {opt.l}
-                    </button>
-                  ))}
-                </div>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المبلغ المدفوع</label>
+                <input type="number" value={form.amount_paid} onChange={e => setForm({...form, amount_paid: e.target.value})}
+                  placeholder="0.00" dir="ltr"
+                  style={inp(focused==='amount')}
+                  onFocus={() => setFocused('amount')} onBlur={() => setFocused(null)} />
               </div>
-              <div>
-                <label className="block text-sm mb-1" style={{ color: DK.dimTxt }}>ملاحظات</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  rows={2} placeholder="مثلاً: حوالة بنكية رقم #..."
-                  onFocus={() => setFocusedInput('notes')} onBlur={() => setFocusedInput(null)}
-                  style={{ ...inputStyle('notes'), resize: 'none' }} />
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:8 }}>حالة الدفع</label>
+              <div style={{ display:'flex', gap:8 }}>
+                {[{ v:'paid', l:'مدفوع' }, { v:'pending', l:'بانتظار الدفع' }].map(opt => (
+                  <button key={opt.v} type="button" onClick={() => setForm({...form, payment_status: opt.v})}
+                    style={{
+                      flex:1, padding:'9px 12px', borderRadius:10, border:'none', cursor:'pointer',
+                      fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:700,
+                      background: form.payment_status === opt.v ? DK.gold : '#F3F4F6',
+                      color: form.payment_status === opt.v ? '#fff' : DK.sub,
+                      transition:'all 0.15s',
+                    }}>
+                    {opt.l}
+                  </button>
+                ))}
               </div>
-              {formError && (
-                <p className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>{formError}</p>
-              )}
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>إلغاء</button>
-                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                  {submitting ? 'جاري التفعيل...' : 'تفعيل الاشتراك'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>ملاحظات</label>
+              <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})}
+                rows={2} placeholder="مثلاً: حوالة بنكية رقم #..."
+                style={{ ...inp(focused==='notes'), resize:'none' }}
+                onFocus={() => setFocused('notes')} onBlur={() => setFocused(null)} />
+            </div>
+            {formError && (
+              <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{formError}</p>
+            )}
+            <div style={{ display:'flex', gap:10 }}>
+              <button type="submit" disabled={submitting}
+                style={{ ...btn('gold'), flex:1, opacity: submitting ? 0.7 : 1 }}>
+                {submitting ? 'جاري التفعيل...' : 'تفعيل الاشتراك'}
+              </button>
+              <button type="button" onClick={closeModal}
+                style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </AdminLayout>
   );
 }
