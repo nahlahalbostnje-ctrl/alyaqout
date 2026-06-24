@@ -505,7 +505,7 @@ function AIScreen({ teacher }: { teacher: { name: string } | null }) {
     setLoading(true);
     try {
       const { default: api } = await import('../services/axios');
-      const { data } = await api.post('/student/chatbot', { message: userMsg, history: [] });
+      const { data } = await api.post('/teacher/chatbot', { message: userMsg, history: [] });
       setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
     } catch {
       setMessages(prev => [...prev, { role: 'ai', text: 'عذراً، لم أتمكن من الرد الآن. تأكد من تفعيل المساعد في الإعدادات.' }]);

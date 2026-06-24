@@ -18,6 +18,7 @@ const navItems = [
   { to: '/admin/approvals',     label: 'موافقات المعلمين',   icon: Icons.clipboard      },
   { to: '/admin/notifications', label: 'الإشعارات',          icon: Icons.bell           },
   { to: '/admin/leagues',       label: 'دوري ياقوت',          icon: Icons.trophy         },
+  { to: '/admin/my-items',      label: 'مهامي ومذكراتي',     icon: Icons.clipboard      },
   { to: '/admin/settings',      label: 'الإعدادات',           icon: Icons.settings       },
 ];
 
