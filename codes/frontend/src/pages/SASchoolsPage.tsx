@@ -120,9 +120,9 @@ export default function SASchoolsPage() {
                 </td>
                 <td style={{ padding:'12px 14px' }}>
                   <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={()=>openEdit(b)} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✏️</button>
-                    <button style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🔒</button>
-                    <button style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
+                    <button onClick={()=>openEdit(b)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✏️</button>
+                    <button onClick={()=>alert(`تم ${b.status==='نشط'?'تعليق':'تفعيل'} فرع ${b.country}`)} title={b.status==='نشط'?'تعليق':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🔒</button>
+                    <button onClick={()=>{ if(confirm(`هل تريد حذف فرع ${b.country}؟`)) alert('تم الحذف — سيُطبّق عند ربط API الفعلي'); }} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -160,7 +160,7 @@ export default function SASchoolsPage() {
               <textarea rows={3} placeholder="أي ملاحظات إضافية عن هذا الفرع..." style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', resize:'none', fontFamily:"'Cairo',sans-serif" }}/>
             </div>
             <div style={{ display:'flex', gap:10, marginTop:20 }}>
-              <button style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer' }}>
+              <button onClick={()=>{ alert(editTarget?'تم حفظ التعديلات — سيُطبّق عند ربط API الفعلي':'تمت إضافة الفرع — سيُطبّق عند ربط API الفعلي'); setShowModal(false); }} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer' }}>
                 {editTarget ? 'حفظ التعديلات' : 'إضافة الفرع'}
               </button>
               <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
