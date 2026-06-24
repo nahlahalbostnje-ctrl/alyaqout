@@ -1,221 +1,431 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchLeagues, joinLeague, fetchLeagueDetail, clearActiveLeague,
   type League,
 } from '../features/student/leagueSlice';
-import StudentLayout from '../components/StudentLayout';
 
-const DK = {
-  card:   { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:   '#C9952A',
-  goldL:  '#DDAD50',
-  dimTxt: '#9CA3AF',
+// ── Design tokens (same as StudentDashboardPage) ─────────────────────────────
+const C = {
+  bg: '#F2EDE4', card: '#FFFFFF', navy: '#0D1535', navy2: '#1B2038',
+  gold: '#C9952A', goldL: '#DDAD50', goldGrad: 'linear-gradient(135deg,#C9952A 0%,#DDAD50 100%)',
+  goldBg: 'rgba(201,149,42,0.09)', goldBdr: 'rgba(201,149,42,0.25)',
+  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: 'rgba(0,0,0,0.07)',
+  shadow: '0 2px 14px rgba(0,0,0,0.07)',
+  red: '#EF4444', blue: '#2563EB', green: '#16A34A', purple: '#7C3AED',
 };
-
+const SW = 195;
+const BH = 60;
 const font = { fontFamily: "'Cairo', sans-serif" };
 
-function StatusBadge({ status }: { status: League['status'] }) {
-  if (status === 'active')  return <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981' }}>جارٍ الآن</span>;
-  if (status === 'pending') return <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(245,158,11,0.08)', color: '#F59E0B' }}>قريباً</span>;
-  return <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>منتهٍ</span>;
-}
+// ── Static mock data (fallback when API returns empty) ──────────────────────
+const MOCK_LEAGUES: League[] = [
+  { id:1, name:'دوري الرياضيات المتقدم', type:'group', status:'active',  i_joined:true,  participants_count:248, max_participants:500, starts_at:'2026-06-01', ends_at:'2026-06-30' },
+  { id:2, name:'تحدي اللغة الإنجليزية', type:'1v1',   status:'active',  i_joined:false, participants_count:86,  max_participants:100, starts_at:'2026-06-15', ends_at:'2026-06-25' },
+  { id:3, name:'بطولة العلوم الفصلية',   type:'group', status:'pending', i_joined:false, participants_count:12,  max_participants:200, starts_at:'2026-07-01', ends_at:'2026-07-31' },
+  { id:4, name:'دوري الياقوت الكبير',    type:'group', status:'ended',   i_joined:true,  participants_count:500, max_participants:500, starts_at:'2026-05-01', ends_at:'2026-05-31' },
+];
 
-function TypeBadge({ type }: { type: League['type'] }) {
-  if (type === '1v1') return <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}>⚔️ 1v1</span>;
-  return <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>👥 جماعي</span>;
-}
+const MOCK_LEADERBOARD = [
+  { rank:1, name:'أحمد سالم',     score:5820, is_me:false, student_id:1 },
+  { rank:2, name:'سارة محمد',     score:5210, is_me:false, student_id:2 },
+  { rank:3, name:'محمد خالد',     score:4980, is_me:false, student_id:3 },
+  { rank:4, name:'نورة العتيبي',  score:4760, is_me:false, student_id:4 },
+  { rank:5, name:'أنت',           score:4450, is_me:true,  student_id:5 },
+  { rank:6, name:'عمر الشمري',    score:4200, is_me:false, student_id:6 },
+  { rank:7, name:'ريم الزهراني',  score:3980, is_me:false, student_id:7 },
+  { rank:8, name:'فهد الغامدي',   score:3720, is_me:false, student_id:8 },
+];
 
-function formatDate(iso: string | null) {
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const medal: Record<number,string> = { 1:'🥇', 2:'🥈', 3:'🥉' };
+const medalColor: Record<number,string> = { 1:'#F0D060', 2:'#B0BEC5', 3:'#CD7F32' };
+
+function fDate(iso: string | null) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('ar-EG', { day:'numeric', month:'long' });
 }
 
-const medals: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+function StatusBadge({ s }: { s: League['status'] }) {
+  const map = { active:['جارٍ الآن','#10B981'], pending:['قريباً','#F59E0B'], ended:['منتهٍ','#9CA3AF'] };
+  const [label, color] = map[s] ?? ['—','#9CA3AF'];
+  return <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:`${color}18`, color, border:`1px solid ${color}30` }}>{label}</span>;
+}
 
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentLeaguePage() {
-  const dispatch = useAppDispatch();
-  const { leagues, activeLeague, loading, error } = useAppSelector((s) => s.league);
-  const [joiningId, setJoiningId] = useState<number | null>(null);
-  const [joinError, setJoinError] = useState<string | null>(null);
+  const dispatch  = useAppDispatch();
+  const navigate  = useNavigate();
+  const { leagues, activeLeague, loading } = useAppSelector(s => s.league);
+  const [joiningId, setJoiningId] = useState<number|null>(null);
+  const [joinError, setJoinError] = useState<string|null>(null);
+  const [tab, setTab]             = useState<'leagues'|'board'>('leagues');
 
   useEffect(() => {
     dispatch(fetchLeagues());
     return () => { dispatch(clearActiveLeague()); };
   }, [dispatch]);
 
-  const handleJoin = async (leagueId: number) => {
+  const displayLeagues = leagues.length > 0 ? leagues : MOCK_LEAGUES;
+
+  const handleJoin = async (leagueId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     setJoiningId(leagueId); setJoinError(null);
     const res = await dispatch(joinLeague(leagueId));
-    if (joinLeague.rejected.match(res)) setJoinError(res.payload as string);
+    if (joinLeague.rejected.match(res)) setJoinError(res.payload as string ?? 'تعذّر الانضمام');
     setJoiningId(null);
   };
 
-  const handleOpen = (leagueId: number) => { dispatch(fetchLeagueDetail(leagueId)); };
+  const handleOpen = (leagueId: number) => dispatch(fetchLeagueDetail(leagueId));
+
+  const myEntry  = MOCK_LEADERBOARD.find(e => e.is_me);
+  const top3     = MOCK_LEADERBOARD.slice(0,3);
+  const rest     = MOCK_LEADERBOARD.slice(3);
+  const cardS    = { background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}` } as React.CSSProperties;
 
   return (
-    <StudentLayout>
-      <div className="p-7 min-h-screen" style={{ ...font, background: '#F5EDD8' }}>
+    <div style={{ display:'flex', minHeight:'100vh', background:C.bg, ...font, direction:'rtl' }}>
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: DK.gold }}>دوري ياقوت</p>
-          <h1 className="font-black" style={{ fontSize: '1.75rem', color: '#1B2038' }}>دوري ياقوت</h1>
-          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>تنافس مع طلاب بلدك واكسب نقاطاً أكثر</p>
+      {/* ── Sidebar ── */}
+      <aside style={{ width:SW, flexShrink:0, background:C.card, borderLeft:`1px solid ${C.border}`, height:'100vh', position:'sticky', top:0, overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', paddingBottom:BH+10 }}>
+        {/* Back */}
+        <div style={{ padding:'16px 14px 0' }}>
+          <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderRadius:12, background:'linear-gradient(160deg,#162144,#0D1535)', border:`1px solid ${C.goldBdr}`, color:C.goldL, fontWeight:700, fontSize:12, cursor:'pointer', width:'100%', ...font }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            العودة للرئيسية
+          </button>
         </div>
 
-        {joinError && (
-          <div className="mb-4 text-sm px-4 py-3 rounded-xl" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            {joinError}
+        {/* My Stats */}
+        <div style={{ margin:'14px 10px 0', padding:'16px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:16, border:'1px solid rgba(201,149,42,0.3)', textAlign:'center' }}>
+          <div style={{ fontSize:40, marginBottom:6 }}>🏆</div>
+          <p style={{ color:'#fff', fontWeight:800, fontSize:13 }}>مركزك الحالي</p>
+          <p style={{ color:C.goldL, fontWeight:900, fontSize:28, lineHeight:1.2, marginTop:4 }}>#{myEntry?.rank ?? 5}</p>
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:11 }}>من {MOCK_LEADERBOARD.length} مشارك</p>
+          <div style={{ marginTop:12, padding:'8px', borderRadius:10, background:'rgba(201,149,42,0.15)', border:'1px solid rgba(201,149,42,0.25)' }}>
+            <p style={{ color:C.goldL, fontWeight:900, fontSize:18 }}>{myEntry?.score?.toLocaleString() ?? '4,450'}</p>
+            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>نقطة</p>
           </div>
-        )}
-        {error && (
-          <div className="text-sm px-4 py-3 rounded-xl" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)' }}>{error}</div>
-        )}
+        </div>
 
-        {loading && !activeLeague && (
-          <div className="flex justify-center py-16">
-            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: '#C9952A' }} />
-          </div>
-        )}
+        {/* Nav Links */}
+        <nav style={{ flex:1, padding:'14px 10px', display:'flex', flexDirection:'column', gap:4 }}>
+          {[
+            { tab:'leagues' as const, icon:'🎯', label:'الدوريات المتاحة' },
+            { tab:'board'   as const, icon:'🏅', label:'ترتيب المتنافسين' },
+          ].map(item => (
+            <button key={item.tab} onClick={()=>setTab(item.tab)}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'none', cursor:'pointer', textAlign:'right', fontSize:12, fontWeight:600, transition:'all 0.15s', ...font,
+                background: tab===item.tab ? C.goldGrad : 'transparent',
+                color:      tab===item.tab ? '#1B2038'  : C.sub,
+              }}>
+              <span style={{ fontSize:16 }}>{item.icon}</span>{item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-        {/* League Detail Modal */}
-        {activeLeague && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(27,32,56,0.6)', backdropFilter: 'blur(8px)' }}>
-            <div className="w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col rounded-3xl"
-              style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
-              {/* Modal Header */}
-              <div className="p-6" style={{ borderBottom: '1px solid #EDE3CE' }}>
-                <div className="flex items-start justify-between gap-4">
+      {/* ── Main Content ── */}
+      <main style={{ flex:1, overflowY:'auto', paddingBottom:BH+20 }}>
+
+        {/* Hero Banner */}
+        <div style={{ background:'linear-gradient(135deg,#0D1535 0%,#1B2038 60%,#162144 100%)', padding:'28px 24px 32px', position:'relative', overflow:'hidden' }}>
+          {/* Decorative circles */}
+          {[...Array(4)].map((_,i)=>(
+            <div key={i} style={{ position:'absolute', borderRadius:'50%', border:`1px solid rgba(201,149,42,${0.08-i*0.015})`,
+              width:120+i*80, height:120+i*80, top:'50%', right:'-20px',
+              transform:'translateY(-50%)', pointerEvents:'none' }} />
+          ))}
+          <div style={{ position:'relative', zIndex:1 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+              <div style={{ width:48, height:48, borderRadius:14, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, boxShadow:'0 4px 16px rgba(201,149,42,0.4)' }}>🏆</div>
+              <div>
+                <p style={{ color:'rgba(255,255,255,0.55)', fontSize:12, fontWeight:600, marginBottom:2 }}>منصة الياقوت</p>
+                <h1 style={{ color:'#fff', fontWeight:900, fontSize:22, lineHeight:1 }}>دوري الياقوت</h1>
+              </div>
+            </div>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:13, maxWidth:380 }}>تنافس مع أفضل الطلاب واكسب نقاط XP لترقية مستواك في الدوري</p>
+
+            {/* Quick Stats */}
+            <div style={{ display:'flex', gap:12, marginTop:18, flexWrap:'wrap' }}>
+              {[
+                { icon:'👥', val:'248', label:'مشارك' },
+                { icon:'🎯', val:String(displayLeagues.filter(l=>l.status==='active').length), label:'دوري نشط' },
+                { icon:'⭐', val:`#${myEntry?.rank ?? 5}`, label:'مركزك' },
+              ].map((s,i)=>(
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px', borderRadius:12, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)' }}>
+                  <span style={{ fontSize:18 }}>{s.icon}</span>
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <StatusBadge status={activeLeague.league.status} />
-                      <TypeBadge type={activeLeague.league.type} />
-                    </div>
-                    <h2 className="text-xl font-black mt-2" style={{ color: '#1B2038' }}>{activeLeague.league.name}</h2>
-                    <p className="text-xs mt-1" style={{ color: DK.dimTxt }}>
-                      {formatDate(activeLeague.league.starts_at)} — {formatDate(activeLeague.league.ends_at)}
-                    </p>
+                    <p style={{ color:'#fff', fontWeight:900, fontSize:16, lineHeight:1 }}>{s.val}</p>
+                    <p style={{ color:'rgba(255,255,255,0.45)', fontSize:10 }}>{s.label}</p>
                   </div>
-                  <button onClick={() => dispatch(clearActiveLeague())}
-                    className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 transition"
-                    style={{ background: '#F9FAFB', color: '#6B7280', border: '1px solid #EDE3CE' }}>
-                    ✕
-                  </button>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                <div className="flex items-center gap-4 mt-4">
-                  <span className="text-xs" style={{ color: DK.dimTxt }}>
-                    👥 {activeLeague.league.participants_count} مشارك
-                    {activeLeague.league.max_participants && ` / ${activeLeague.league.max_participants}`}
-                  </span>
-                  {!activeLeague.league.i_joined && activeLeague.league.status !== 'ended' && (
-                    <button onClick={() => handleJoin(activeLeague.league.id)} disabled={!!joiningId}
-                      className="mr-auto text-sm px-4 py-1.5 rounded-lg transition disabled:opacity-50 font-semibold"
-                      style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                      {joiningId === activeLeague.league.id ? 'جاري...' : 'انضم للدوري'}
-                    </button>
-                  )}
-                  {activeLeague.league.i_joined && (
-                    <span className="mr-auto text-xs font-semibold px-3 py-1 rounded-lg"
-                      style={{ color: '#10B981', background: 'rgba(16,185,129,0.08)' }}>✓ مشارك</span>
-                  )}
-                </div>
+        <div style={{ padding:'20px 20px 0' }}>
+
+          {/* Error */}
+          {joinError && (
+            <div style={{ marginBottom:12, padding:'10px 14px', borderRadius:12, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', color:C.red, fontSize:13 }}>
+              {joinError}
+              <button onClick={()=>setJoinError(null)} style={{ marginRight:10, background:'none', border:'none', cursor:'pointer', color:C.red, fontSize:16 }}>×</button>
+            </div>
+          )}
+
+          {/* ── TAB: Leagues ── */}
+          {tab==='leagues' && (
+            <>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                <h2 style={{ color:C.text, fontWeight:900, fontSize:16 }}>الدوريات المتاحة</h2>
+                <span style={{ color:C.gold, fontSize:12, fontWeight:600 }}>{displayLeagues.length} دوري</span>
               </div>
 
-              {/* Leaderboard */}
-              <div className="overflow-y-auto flex-1 p-4">
-                {activeLeague.leaderboard.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-4xl mb-2">🏁</p>
-                    <p className="text-sm" style={{ color: DK.dimTxt }}>لا يوجد مشاركون بعد</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {activeLeague.leaderboard.map((entry) => (
-                      <div key={entry.student_id} className="flex items-center gap-3 p-3 rounded-2xl transition"
-                        style={entry.is_me
-                          ? { background: 'rgba(201,149,42,0.08)', border: '1.5px solid rgba(201,149,42,0.3)' }
-                          : { background: '#F9FAFB', border: '1px solid #EDE3CE' }}>
-                        <div className="w-9 text-center flex-shrink-0">
-                          {medals[entry.rank]
-                            ? <span className="text-xl">{medals[entry.rank]}</span>
-                            : <span className="font-black text-sm" style={{ color: DK.dimTxt }}>#{entry.rank}</span>}
+              {loading && (
+                <div style={{ textAlign:'center', padding:40 }}>
+                  <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid ${C.goldBg}`, borderTopColor:C.gold, animation:'spin 0.8s linear infinite', margin:'0 auto' }}/>
+                </div>
+              )}
+
+              <div style={{ display:'grid', gap:12 }}>
+                {displayLeagues.map(lg => (
+                  <div key={lg.id}
+                    onClick={()=>handleOpen(lg.id)}
+                    style={{ ...cardS, cursor:'pointer', borderRight: lg.i_joined ? `4px solid ${C.gold}` : `4px solid transparent`,
+                      transition:'box-shadow 0.15s, transform 0.15s' }}
+                    onMouseEnter={e=>(e.currentTarget.style.transform='translateY(-2px)')}
+                    onMouseLeave={e=>(e.currentTarget.style.transform='translateY(0)')}>
+
+                    <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:10 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+                          <StatusBadge s={lg.status} />
+                          <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                            background: lg.type==='1v1' ? 'rgba(239,68,68,0.1)' : C.goldBg,
+                            color:      lg.type==='1v1' ? C.red : C.gold }}>
+                            {lg.type==='1v1' ? '⚔️ 1v1' : '👥 جماعي'}
+                          </span>
+                          {lg.i_joined && <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:'rgba(16,185,129,0.1)', color:'#10B981' }}>✓ مشارك</span>}
                         </div>
-                        <p className="flex-1 font-bold text-sm truncate" style={{ color: entry.is_me ? DK.gold : '#1B2038' }}>
-                          {entry.name}
-                          {entry.is_me && <span className="text-xs mr-1" style={{ color: DK.dimTxt }}>(أنت)</span>}
-                        </p>
-                        <div className="text-left">
-                          <p className="font-black text-base" style={{ color: entry.is_me ? DK.gold : '#1B2038' }}>{entry.score}</p>
-                          <p className="text-xs" style={{ color: DK.dimTxt }}>نقطة</p>
+                        <h3 style={{ color:C.text, fontWeight:800, fontSize:15, marginBottom:6 }}>{lg.name}</h3>
+                        <div style={{ display:'flex', gap:14, flexWrap:'wrap' }}>
+                          <span style={{ color:C.sub, fontSize:12 }}>👥 {lg.participants_count}{lg.max_participants ? ` / ${lg.max_participants}` : ''} مشارك</span>
+                          {lg.starts_at && <span style={{ color:C.sub, fontSize:12 }}>📅 {fDate(lg.starts_at)}</span>}
+                          {lg.ends_at   && <span style={{ color:C.sub, fontSize:12 }}>🏁 {fDate(lg.ends_at)}</span>}
                         </div>
                       </div>
-                    ))}
+
+                      {/* Progress bar if joined */}
+                      {lg.max_participants && (
+                        <div style={{ width:56, textAlign:'center', flexShrink:0 }}>
+                          <div style={{ fontSize:10, color:C.sub, marginBottom:4 }}>
+                            {Math.round(lg.participants_count/lg.max_participants*100)}%
+                          </div>
+                          <div style={{ height:4, borderRadius:2, background:'rgba(0,0,0,0.07)' }}>
+                            <div style={{ width:`${Math.min(lg.participants_count/lg.max_participants*100,100)}%`, height:'100%', borderRadius:2, background:C.goldGrad }}/>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:14, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
+                      <button onClick={e=>{e.stopPropagation();handleOpen(lg.id);}}
+                        style={{ fontSize:12, fontWeight:700, color:C.gold, background:'none', border:'none', cursor:'pointer', ...font, display:'flex', alignItems:'center', gap:4 }}>
+                        <span>عرض الترتيب</span>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                      </button>
+
+                      {!lg.i_joined && lg.status !== 'ended' ? (
+                        <button onClick={e=>handleJoin(lg.id,e)} disabled={joiningId===lg.id}
+                          style={{ padding:'8px 20px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:12, border:'none', cursor:'pointer', boxShadow:`0 3px 12px rgba(201,149,42,0.35)`, opacity:joiningId===lg.id?0.7:1, ...font }}>
+                          {joiningId===lg.id ? '⏳ جاري...' : '⚡ انضم الآن'}
+                        </button>
+                      ) : lg.i_joined ? (
+                        <span style={{ fontSize:12, fontWeight:700, color:'#10B981', display:'flex', alignItems:'center', gap:4 }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                          مسجّل
+                        </span>
+                      ) : (
+                        <span style={{ fontSize:12, color:C.dim }}>منتهٍ</span>
+                      )}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
 
-        {/* Leagues List */}
-        {!loading && leagues.length === 0 && (
-          <div className="text-center py-16 rounded-3xl" style={DK.card}>
-            <p className="text-5xl mb-4">🏆</p>
-            <p className="font-bold text-base" style={{ color: '#1B2038' }}>لا توجد دوريات متاحة حالياً</p>
-            <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>تابع الإعلانات لمعرفة الدوريات القادمة</p>
-          </div>
-        )}
+          {/* ── TAB: Leaderboard ── */}
+          {tab==='board' && (
+            <>
+              <h2 style={{ color:C.text, fontWeight:900, fontSize:16, marginBottom:14 }}>ترتيب المتنافسين</h2>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {leagues.map((league) => (
-            <div key={league.id} className="rounded-2xl p-5 cursor-pointer transition-all hover:scale-[1.01]"
-              style={league.i_joined
-                ? { background: '#FFFFFF', border: '1.5px solid rgba(201,149,42,0.4)', boxShadow: '0 4px 20px rgba(201,149,42,0.08)' }
-                : { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}
-              onClick={() => handleOpen(league.id)}>
-
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="flex flex-wrap gap-1.5">
-                  <StatusBadge status={league.status} />
-                  <TypeBadge type={league.type} />
-                  {league.i_joined && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: 'rgba(201,149,42,0.08)', color: DK.gold }}>مشارك ✓</span>
-                  )}
+              {/* Podium Top 3 */}
+              <div style={{ ...cardS, marginBottom:14, padding:'20px', background:'linear-gradient(160deg,#0D1535,#1B2038)' }}>
+                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, textAlign:'center', marginBottom:16 }}>المراكز الثلاثة الأولى</p>
+                <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'center', gap:12 }}>
+                  {/* 2nd */}
+                  <div style={{ textAlign:'center', flex:1 }}>
+                    <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(176,190,197,0.15)', border:`2px solid ${medalColor[2]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, margin:'0 auto 6px' }}>👤</div>
+                    <p style={{ color:'#B0BEC5', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[1]?.name}</p>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[1]?.score?.toLocaleString()} نقطة</p>
+                    <div style={{ height:40, background:'rgba(176,190,197,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>🥈</div>
+                  </div>
+                  {/* 1st */}
+                  <div style={{ textAlign:'center', flex:1, marginBottom:12 }}>
+                    <div style={{ width:62, height:62, borderRadius:'50%', background:'rgba(240,208,96,0.15)', border:`2px solid ${medalColor[1]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 6px', boxShadow:'0 0 20px rgba(240,208,96,0.3)' }}>👤</div>
+                    <p style={{ color:'#F0D060', fontWeight:900, fontSize:13, marginBottom:2, lineHeight:1.3 }}>{top3[0]?.name}</p>
+                    <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>{top3[0]?.score?.toLocaleString()} نقطة</p>
+                    <div style={{ height:56, background:'rgba(240,208,96,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>🥇</div>
+                  </div>
+                  {/* 3rd */}
+                  <div style={{ textAlign:'center', flex:1 }}>
+                    <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(205,127,50,0.15)', border:`2px solid ${medalColor[3]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, margin:'0 auto 6px' }}>👤</div>
+                    <p style={{ color:'#CD7F32', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[2]?.name}</p>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[2]?.score?.toLocaleString()} نقطة</p>
+                    <div style={{ height:28, background:'rgba(205,127,50,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🥉</div>
+                  </div>
                 </div>
               </div>
 
-              <h3 className="font-black text-base mb-2" style={{ color: '#1B2038' }}>{league.name}</h3>
+              {/* Full list */}
+              <div style={cardS}>
+                <p style={{ color:C.sub, fontSize:12, fontWeight:600, marginBottom:12 }}>الترتيب الكامل</p>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {rest.map(entry => (
+                    <div key={entry.student_id} style={{
+                      display:'flex', alignItems:'center', gap:12, padding:'10px 14px', borderRadius:14,
+                      background: entry.is_me ? C.goldBg : '#F9FAFB',
+                      border: entry.is_me ? `1.5px solid ${C.goldBdr}` : `1px solid ${C.border}`,
+                    }}>
+                      <div style={{ width:32, height:32, borderRadius:10, background: entry.is_me ? C.goldGrad : 'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <span style={{ fontWeight:900, fontSize:13, color: entry.is_me ? '#1B2038' : C.sub }}>#{entry.rank}</span>
+                      </div>
+                      <p style={{ flex:1, fontWeight:700, fontSize:13, color: entry.is_me ? C.gold : C.text }}>
+                        {entry.name}
+                        {entry.is_me && <span style={{ fontSize:10, color:C.sub, marginRight:6 }}>(أنت)</span>}
+                      </p>
+                      <div style={{ textAlign:'left' }}>
+                        <p style={{ fontWeight:900, fontSize:14, color: entry.is_me ? C.gold : C.text }}>{entry.score.toLocaleString()}</p>
+                        <p style={{ fontSize:10, color:C.dim }}>نقطة</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
-              <div className="flex flex-wrap gap-3 text-xs" style={{ color: DK.dimTxt }}>
-                <span>👥 {league.participants_count} مشارك{league.max_participants ? ` / ${league.max_participants}` : ''}</span>
-                {league.starts_at && <span>📅 {formatDate(league.starts_at)}</span>}
-                {league.ends_at   && <span>🏁 {formatDate(league.ends_at)}</span>}
+        </div>
+      </main>
+
+      {/* ── Detail Modal ── */}
+      {activeLeague && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(13,21,53,0.7)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(6px)' }}
+          onClick={()=>dispatch(clearActiveLeague())}>
+          <div style={{ width:'100%', maxWidth:500, maxHeight:'85vh', borderRadius:24, background:C.card, border:`1px solid ${C.border}`, boxShadow:'0 8px 40px rgba(0,0,0,0.15)', display:'flex', flexDirection:'column', overflow:'hidden' }}
+            onClick={e=>e.stopPropagation()}>
+
+            {/* Modal header */}
+            <div style={{ padding:'20px 22px', borderBottom:`1px solid ${C.border}`, background:'linear-gradient(135deg,#0D1535,#1B2038)' }}>
+              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:10 }}>
+                <div>
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+                    <StatusBadge s={activeLeague.league.status} />
+                    <span style={{ padding:'2px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                      background: activeLeague.league.type==='1v1' ? 'rgba(239,68,68,0.15)' : 'rgba(201,149,42,0.15)',
+                      color:      activeLeague.league.type==='1v1' ? C.red : C.goldL }}>
+                      {activeLeague.league.type==='1v1' ? '⚔️ 1v1' : '👥 جماعي'}
+                    </span>
+                  </div>
+                  <h2 style={{ color:'#fff', fontWeight:900, fontSize:17 }}>{activeLeague.league.name}</h2>
+                  <p style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginTop:4 }}>
+                    {fDate(activeLeague.league.starts_at)} — {fDate(activeLeague.league.ends_at)}
+                  </p>
+                </div>
+                <button onClick={()=>dispatch(clearActiveLeague())}
+                  style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.1)', border:'none', color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>✕</button>
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <button onClick={(e) => { e.stopPropagation(); handleOpen(league.id); }}
-                  className="text-xs font-bold transition" style={{ color: DK.gold }}>
-                  عرض الترتيب ←
-                </button>
-
-                {!league.i_joined && league.status !== 'ended' && (
-                  <button onClick={(e) => { e.stopPropagation(); handleJoin(league.id); }}
-                    disabled={joiningId === league.id}
-                    className="text-xs px-4 py-1.5 rounded-lg transition disabled:opacity-50 font-semibold"
-                    style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff' }}>
-                    {joiningId === league.id ? '...' : 'انضم'}
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:14 }}>
+                <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>👥 {activeLeague.league.participants_count} مشارك{activeLeague.league.max_participants ? ` / ${activeLeague.league.max_participants}` : ''}</span>
+                {!activeLeague.league.i_joined && activeLeague.league.status !== 'ended' && (
+                  <button onClick={()=>handleJoin(activeLeague.league.id, { stopPropagation:()=>{} } as any)}
+                    disabled={joiningId===activeLeague.league.id}
+                    style={{ marginRight:'auto', padding:'8px 18px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:12, border:'none', cursor:'pointer', ...font, opacity:joiningId===activeLeague.league.id?0.7:1 }}>
+                    {joiningId===activeLeague.league.id ? '⏳ جاري...' : '⚡ انضم الآن'}
                   </button>
+                )}
+                {activeLeague.league.i_joined && (
+                  <span style={{ marginRight:'auto', fontSize:12, fontWeight:700, color:'#10B981', padding:'6px 14px', borderRadius:10, background:'rgba(16,185,129,0.1)' }}>✓ مشارك</span>
                 )}
               </div>
             </div>
-          ))}
-        </div>
 
+            {/* Leaderboard */}
+            <div style={{ overflowY:'auto', flex:1, padding:'14px 18px' }}>
+              {activeLeague.leaderboard.length === 0 ? (
+                <div style={{ textAlign:'center', padding:40 }}>
+                  <div style={{ fontSize:40, marginBottom:10 }}>🏁</div>
+                  <p style={{ color:C.sub, fontSize:14 }}>لا يوجد مشاركون بعد</p>
+                </div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {activeLeague.leaderboard.map(entry => (
+                    <div key={entry.student_id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:14,
+                      background: entry.is_me ? C.goldBg : '#F9FAFB',
+                      border: entry.is_me ? `1.5px solid ${C.goldBdr}` : `1px solid ${C.border}` }}>
+                      <div style={{ width:32, textAlign:'center', flexShrink:0 }}>
+                        {medal[entry.rank] ? <span style={{ fontSize:20 }}>{medal[entry.rank]}</span>
+                          : <span style={{ fontWeight:900, fontSize:12, color:C.dim }}>#{entry.rank}</span>}
+                      </div>
+                      <p style={{ flex:1, fontWeight:700, fontSize:13, color: entry.is_me ? C.gold : C.text }}>
+                        {entry.name}
+                        {entry.is_me && <span style={{ fontSize:10, color:C.sub, marginRight:6 }}>(أنت)</span>}
+                      </p>
+                      <div style={{ textAlign:'left' }}>
+                        <p style={{ fontWeight:900, fontSize:14, color: entry.is_me ? C.gold : C.text }}>{entry.score}</p>
+                        <p style={{ fontSize:10, color:C.dim }}>نقطة</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bottom Nav ── */}
+      <div dir="rtl" style={{ position:'fixed', bottom:0, left:0, right:0, height:BH, background:C.card, borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-around', zIndex:100, boxShadow:'0 -4px 20px rgba(0,0,0,0.08)' }}>
+        <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>الرئيسية</span>
+        </button>
+        <button onClick={()=>navigate('/student/exams')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>الامتحانات</span>
+        </button>
+        {/* Center Diamond — active */}
+        <div style={{ position:'relative', top:-12 }}>
+          <button style={{ width:54, height:54, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6), 0 0 0 1px ${C.gold}44`, outline:'none' }}>
+            💎
+          </button>
+        </div>
+        <button onClick={()=>navigate('/student/homework')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>المكتبة</span>
+        </button>
+        <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>المزيد</span>
+        </button>
       </div>
-    </StudentLayout>
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
   );
 }

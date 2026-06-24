@@ -82,6 +82,11 @@ import AdminPersonalItemsPage     from './pages/AdminPersonalItemsPage';
 import TeacherPersonalItemsPage   from './pages/TeacherPersonalItemsPage';
 import ParentPersonalItemsPage    from './pages/ParentPersonalItemsPage';
 import SupervisorPersonalItemsPage from './pages/SupervisorPersonalItemsPage';
+import StudentEmergencyPage       from './pages/StudentEmergencyPage';
+import StudentPeerLeaguePage      from './pages/StudentPeerLeaguePage';
+import StudentStudy24Page         from './pages/StudentStudy24Page';
+import StudentMessagesPage        from './pages/StudentMessagesPage';
+import StudentTeacherContactPage  from './pages/StudentTeacherContactPage';
 import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
@@ -252,6 +257,21 @@ export default function App() {
         } />
         <Route path="/student/study-room" element={
           <PrivateRoute roles={['student']}><StudentStudyRoomPage /></PrivateRoute>
+        } />
+        <Route path="/student/emergency" element={
+          <PrivateRoute roles={['student']}><StudentEmergencyPage /></PrivateRoute>
+        } />
+        <Route path="/student/peer-league" element={
+          <PrivateRoute roles={['student']}><StudentPeerLeaguePage /></PrivateRoute>
+        } />
+        <Route path="/student/study-24" element={
+          <PrivateRoute roles={['student']}><StudentStudy24Page /></PrivateRoute>
+        } />
+        <Route path="/student/messages" element={
+          <PrivateRoute roles={['student']}><StudentMessagesPage /></PrivateRoute>
+        } />
+        <Route path="/student/teacher-contact" element={
+          <PrivateRoute roles={['student']}><StudentTeacherContactPage /></PrivateRoute>
         } />
 
         {/* Teacher */}

@@ -32,19 +32,19 @@ const BH = 60;    // bottom nav height
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
-  { to:'/student/dashboard',    label:'الرئيسية',           emoji:'🏠' },
-  { to:'/student/exams',        label:'الامتحانات',          emoji:'📝' },
-  { to:'/student/homework',     label:'الواجبات',            emoji:'📚' },
-  { to:'/student/live-classes', label:'جدول الحصص',         emoji:'📅' },
-  { to:'/student/league',       label:'دوري الياقوت',        emoji:'🏆' },
-  { to:'/student/report',       label:'مستوى التطور',        emoji:'📊' },
-  { to:null,                    label:'غرفة الطوارئ',        emoji:'🚨' },
-  { to:'/student/study-room',   label:'معلمي الذكي',         emoji:'🤖' },
-  { to:null,                    label:'دوري الزملاء',        emoji:'⚔️' },
-  { to:null,                    label:'غرفة الدراسة 24/7',  emoji:'🎧' },
-  { to:null,                    label:'الرسائل',             emoji:'✉️' },
-  { to:'/student/points',       label:'النتائج',             emoji:'🏅' },
-  { to:null,                    label:'تواصل مع المعلم',     emoji:'👨‍🏫' },
+  { to:'/student/dashboard',       label:'الرئيسية',           emoji:'🏠' },
+  { to:'/student/exams',           label:'الامتحانات',          emoji:'📝' },
+  { to:'/student/homework',        label:'الواجبات',            emoji:'📚' },
+  { to:'/student/live-classes',    label:'جدول الحصص',         emoji:'📅' },
+  { to:'/student/league',          label:'دوري الياقوت',        emoji:'🏆' },
+  { to:'/student/report',          label:'مستوى التطور',        emoji:'📊' },
+  { to:'/student/emergency',       label:'غرفة الطوارئ',        emoji:'🚨' },
+  { to:'/student/study-room',      label:'معلمي الذكي',         emoji:'🤖' },
+  { to:'/student/peer-league',     label:'دوري الزملاء',        emoji:'⚔️' },
+  { to:'/student/study-24',        label:'غرفة الدراسة 24/7',  emoji:'🎧' },
+  { to:'/student/messages',        label:'الرسائل',             emoji:'✉️' },
+  { to:'/student/points',          label:'النتائج',             emoji:'🏅' },
+  { to:'/student/teacher-contact', label:'تواصل مع المعلم',     emoji:'👨‍🏫' },
 ];
 
 // ─── Quick Actions (static template — badges computed in-component) ───────────
@@ -57,9 +57,9 @@ const ACTIONS_TEMPLATE = [
   { label:'مستوى التطور',      desc:'تابع تقدمك',                 emoji:'📈', bg:'linear-gradient(135deg,#C9952A,#DDAD50)', badgeKey:null,       to:'/student/report',      highlight:false },
   { label:'غرفة الطوارئ',      desc:'مساعدة فورية',               emoji:'🚨', bg:'linear-gradient(135deg,#DC2626,#EF4444)', badgeKey:'lock',     to:'/student/emergency',   highlight:false },
   { label:'معلمي الذكي',       desc:'اسأل الذكاء الاصطناعي',     emoji:'🤖', bg:'linear-gradient(135deg,#374151,#4B5563)', badgeKey:null,       to:'/student/study-room',  highlight:false },
-  { label:'دوري الزملاء',      desc:'تحدى أصدقاءك',              emoji:'⚔️', bg:'linear-gradient(135deg,#1E40AF,#3B82F6)', badgeKey:null,       to:'/student/league',      highlight:false },
-  { label:'غرفة الدراسة 24/7', desc:'دعم مباشر على مدار الساعة', emoji:'🎧', bg:'linear-gradient(135deg,#111827,#1F2937)', badgeKey:'always',   to:'/student/study-room',  highlight:false },
-  { label:'الرسائل',            desc:'للمعلم والمدير',             emoji:'✉️', bg:'linear-gradient(135deg,#0369A1,#2563EB)', badgeKey:null,       to:null,                   highlight:false },
+  { label:'دوري الزملاء',      desc:'تحدى أصدقاءك',              emoji:'⚔️', bg:'linear-gradient(135deg,#1E40AF,#3B82F6)', badgeKey:null,       to:'/student/peer-league', highlight:false },
+  { label:'غرفة الدراسة 24/7', desc:'دعم مباشر على مدار الساعة', emoji:'🎧', bg:'linear-gradient(135deg,#111827,#1F2937)', badgeKey:'always',   to:'/student/study-24',    highlight:false },
+  { label:'الرسائل',            desc:'للمعلم والمدير',             emoji:'✉️', bg:'linear-gradient(135deg,#0369A1,#2563EB)', badgeKey:null,       to:'/student/messages',    highlight:false },
   { label:'النتائج',            desc:'نتائجك وتقاريرك',            emoji:'📊', bg:'linear-gradient(135deg,#C9952A,#F59E0B)', badgeKey:null,       to:'/student/points',      highlight:false },
 ];
 
@@ -562,11 +562,11 @@ export default function StudentDashboardPage() {
 
         {/* الإشعارات */}
         <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", position:'relative' }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
           </svg>
-          <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(4px)', width:16, height:16, borderRadius:'50%', background:C.red, color:'#fff', fontSize:8, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>3</div>
-          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub, marginTop:2 }}>الإشعارات</span>
+          <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(8px)', width:20, height:20, borderRadius:'50%', background:C.red, color:'#fff', fontSize:10, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(239,68,68,0.5)' }}>3</div>
+          <span style={{ fontSize:10, fontWeight:600, color:C.sub, marginTop:2 }}>الإشعارات</span>
         </button>
 
         {/* Center Diamond */}

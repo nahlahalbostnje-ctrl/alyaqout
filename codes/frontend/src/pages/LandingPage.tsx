@@ -283,12 +283,12 @@ export default function LandingPage() {
           {/* Logo + Country selector (right side) */}
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:46, height:46, borderRadius:12, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', boxShadow:`0 4px 16px rgba(197,147,65,0.4)` }}>
-                <img src="/logo.png" alt="ياقوت" style={{ width:42, height:42, objectFit:'contain' }} />
+              <div style={{ width:64, height:64, borderRadius:16, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', boxShadow:`0 4px 20px rgba(197,147,65,0.5)` }}>
+                <img src="/logo.png" alt="ياقوت" style={{ width:60, height:60, objectFit:'contain' }} />
               </div>
               <div>
-                <p style={{ fontSize:17, fontWeight:900, color:'#fff', lineHeight:1.1, letterSpacing:'-0.02em' }}>منصة الياقوت</p>
-                <p style={{ fontSize:10.5, color:C.gold, fontWeight:700, letterSpacing:'0.1em' }}>لخدمات التعليم</p>
+                <p style={{ fontSize:18, fontWeight:900, color:'#fff', lineHeight:1.1, letterSpacing:'-0.02em' }}>منصة الياقوت</p>
+                <p style={{ fontSize:11, color:C.gold, fontWeight:700, letterSpacing:'0.1em' }}>لخدمات التعليم</p>
               </div>
             </div>
 
@@ -404,24 +404,24 @@ export default function LandingPage() {
           <motion.div initial={{ scale:0.5,opacity:0 }} animate={{ scale:1,opacity:1 }} transition={{ duration:1.1, ease:POP, delay:0.45 }}
             style={{ marginBottom:40, display:'inline-block', position:'relative' }}>
             {/* Circular glow disc behind the logo — decorative only, does NOT clip the image */}
-            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:260, height:260, borderRadius:'50%',
-              background:'radial-gradient(circle, rgba(197,147,65,0.20) 0%, rgba(197,147,65,0.07) 55%, transparent 78%)',
-              boxShadow:'0 0 80px rgba(197,147,65,0.55), 0 0 160px rgba(197,147,65,0.2), 0 20px 60px rgba(0,0,0,0.35)',
+            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:380, height:380, borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(197,147,65,0.22) 0%, rgba(197,147,65,0.08) 55%, transparent 78%)',
+              boxShadow:'0 0 110px rgba(197,147,65,0.65), 0 0 220px rgba(197,147,65,0.25), 0 20px 60px rgba(0,0,0,0.35)',
               pointerEvents:'none', zIndex:0 }} />
             {/* Outer animated ring */}
             <motion.div animate={{ scale:[1,1.08,1], opacity:[0.38,0.12,0.38] }} transition={{ duration:3.2, repeat:Infinity, ease:'easeInOut' }}
-              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:300, height:300, borderRadius:'50%', border:'2px solid rgba(197,147,65,0.5)', pointerEvents:'none', zIndex:0 }} />
+              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:430, height:430, borderRadius:'50%', border:'2px solid rgba(197,147,65,0.5)', pointerEvents:'none', zIndex:0 }} />
             {/* Inner ring */}
             <motion.div animate={{ scale:[1,1.05,1], opacity:[0.25,0.07,0.25] }} transition={{ duration:3.2, repeat:Infinity, ease:'easeInOut', delay:0.6 }}
-              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:260, height:260, borderRadius:'50%', border:'1.5px solid rgba(197,147,65,0.35)', pointerEvents:'none', zIndex:0 }} />
+              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:380, height:380, borderRadius:'50%', border:'1.5px solid rgba(197,147,65,0.35)', pointerEvents:'none', zIndex:0 }} />
             {/* Logo image — no circular clip, shown complete with contain */}
             <img src="/logo.png" alt="ياقوت" style={{
               position:'relative', zIndex:1,
               display:'block',
-              width:300,
+              width:420,
               height:'auto',
               objectFit:'contain',
-              filter:'drop-shadow(0 0 36px rgba(197,147,65,0.55)) drop-shadow(0 0 80px rgba(197,147,65,0.22)) drop-shadow(0 14px 28px rgba(0,0,0,0.32))',
+              filter:'drop-shadow(0 0 50px rgba(197,147,65,0.65)) drop-shadow(0 0 110px rgba(197,147,65,0.28)) drop-shadow(0 16px 32px rgba(0,0,0,0.35))',
             }} />
           </motion.div>
 
