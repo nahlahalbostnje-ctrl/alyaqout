@@ -6,28 +6,28 @@ const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', bo
 const PLANS = [
   {
     id:'basic', name:'الأساسية', nameEn:'Basic', icon:'🌱', color:C.teal,
-    price:'299', period:'شهرياً', schools:1, users:100, storage:'5 GB',
+    price:'299', period:'شهرياً', branches:1, users:100, storage:'5 GB',
     features:['لوحة تحكم أساسية','5 دورات تدريبية','دعم بالبريد الإلكتروني','تقارير شهرية','تطبيق الجوال'],
     disabled:['الحصص المباشرة','مركز التطوير','API متقدمة','دعم مخصص'],
     active:5, badge:null, vip:false,
   },
   {
     id:'standard', name:'المتميزة', nameEn:'Standard', icon:'⭐', color:C.blue,
-    price:'699', period:'شهرياً', schools:3, users:500, storage:'25 GB',
+    price:'699', period:'شهرياً', branches:3, users:500, storage:'25 GB',
     features:['لوحة تحكم متكاملة','50 دورة تدريبية','حصص مباشرة','دعم فوري 24/7','تقارير تفصيلية','تطبيق الجوال','إشعارات ذكية'],
     disabled:['مركز التطوير','API متقدمة'],
     active:18, badge:'الأكثر طلباً', vip:false,
   },
   {
     id:'premium', name:'الاحترافية', nameEn:'Premium', icon:'🚀', color:C.purple,
-    price:'1,299', period:'شهرياً', schools:10, users:2000, storage:'100 GB',
+    price:'1,299', period:'شهرياً', branches:10, users:2000, storage:'100 GB',
     features:['لوحة قيادة متقدمة','دورات غير محدودة','حصص مباشرة HD','دعم مخصص','تقارير وتحليلات AI','تطبيق الجوال المخصص','API أساسية','تخصيص الهوية البصرية'],
     disabled:['مركز التطوير الكامل'],
     active:12, badge:null, vip:false,
   },
   {
     id:'vip', name:'الياقوت VIP', nameEn:'Yaqoot VIP', icon:'💎', color:C.gold,
-    price:'2,999', period:'شهرياً', schools:999, users:999999, storage:'غير محدود',
+    price:'2,999', period:'شهرياً', branches:999, users:999999, storage:'غير محدود',
     features:['وصول كامل لكل الميزات','دورات ومحتوى غير محدود','خادم مخصص (Dedicated)','مدير حساب شخصي','تقارير وتحليلات متقدمة','تطبيق جوال مخصص بالكامل','API كاملة + Webhooks','مركز التطوير الكامل','SLA 99.99%','تدريب مجاني للكوادر'],
     disabled:[], active:7, badge:'الأفضل قيمة', vip:true,
   },
@@ -92,7 +92,7 @@ export default function SAPlansPage() {
               <span style={{color:C.sub,fontSize:12}}> ر.س / {billingCycle==='monthly'?'شهر':'سنة'}</span>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:14,fontSize:11,color:C.sub}}>
-              <span>🏫 {plan.schools===999?'غير محدود':plan.schools} مدرسة</span>
+              <span>🌍 {plan.branches===999?'غير محدود':plan.branches} فرع</span>
               <span>👥 {plan.users===999999?'غير محدود':plan.users.toLocaleString()}</span>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:7,marginBottom:18}}>
@@ -128,19 +128,19 @@ export default function SAPlansPage() {
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
-              {['المدرسة','الخطة','تاريخ الاشتراك','تاريخ التجديد','الحالة'].map((h,i)=>(
+              {['الفرع / الدولة','الخطة','تاريخ الاشتراك','تاريخ التجديد','الحالة'].map((h,i)=>(
                 <th key={i} style={{padding:'10px 12px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`}}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {[
-              {school:'مدارس الياقوت العالمية',plan:'الياقوت VIP',planColor:C.gold,start:'2026-01-01',end:'2027-01-01',status:'نشط'},
-              {school:'مدارس الياقوت الأهلية', plan:'الاحترافية',planColor:C.purple,start:'2026-02-15',end:'2027-02-15',status:'نشط'},
-              {school:'مدارس الياقوت النموذجية',plan:'المتميزة',planColor:C.blue,start:'2026-03-01',end:'2027-03-01',status:'نشط'},
+              {branch:'🇵🇸 فرع فلسطين',plan:'الياقوت VIP',planColor:C.gold,start:'2026-01-01',end:'2027-01-01',status:'نشط'},
+              {branch:'🇸🇦 فرع السعودية',plan:'الاحترافية',planColor:C.purple,start:'2026-02-15',end:'2027-02-15',status:'نشط'},
+              {branch:'🇪🇬 فرع مصر',    plan:'المتميزة',  planColor:C.blue,  start:'2026-03-01',end:'2027-03-01',status:'نشط'},
             ].map((s,i)=>(
               <tr key={i} style={{borderBottom:`1px solid ${C.border}`}}>
-                <td style={{padding:'11px 12px',color:C.text,fontWeight:700,fontSize:13}}>{s.school}</td>
+                <td style={{padding:'11px 12px',color:C.text,fontWeight:700,fontSize:13}}>{s.branch}</td>
                 <td style={{padding:'11px 12px'}}><span style={{color:s.planColor,fontWeight:700,fontSize:12}}>{s.plan}</span></td>
                 <td style={{padding:'11px 12px',color:C.sub,fontSize:12}}>{s.start}</td>
                 <td style={{padding:'11px 12px',color:C.sub,fontSize:12}}>{s.end}</td>

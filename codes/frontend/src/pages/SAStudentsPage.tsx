@@ -4,14 +4,14 @@ import SuperAdminShell, { C } from '../components/SuperAdminShell';
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
 const STUDENTS = [
-  { id:1,  name:'علي حسن محمد',      avatar:'👦', grade:'الصف العاشر',         school:'الياقوت العالمية',  progress:87, status:'نشط',    parent:'حسن محمد' },
-  { id:2,  name:'مريم سعد الأحمدي',  avatar:'👧', grade:'الصف الثامن',          school:'الياقوت الأهلية',   progress:92, status:'نشط',    parent:'سعد الأحمدي' },
-  { id:3,  name:'فهد عبدالله الشمري',avatar:'👦', grade:'الصف الثاني عشر',      school:'الياقوت النموذجية', progress:78, status:'نشط',    parent:'عبدالله الشمري' },
-  { id:4,  name:'سارة خالد البلوي',  avatar:'👧', grade:'الصف السابع',          school:'الياقوت الابتدائية',progress:95, status:'متميز',  parent:'خالد البلوي' },
-  { id:5,  name:'محمد أحمد الغامدي', avatar:'👦', grade:'الصف الحادي عشر',      school:'الياقوت المتوسطة',  progress:65, status:'يحتاج متابعة',parent:'أحمد الغامدي' },
-  { id:6,  name:'نورة فهد القحطاني', avatar:'👧', grade:'الصف التاسع',           school:'الياقوت العالمية',  progress:88, status:'نشط',    parent:'فهد القحطاني' },
-  { id:7,  name:'ريم سالم الحربي',   avatar:'👧', grade:'الصف السادس',          school:'الياقوت الأهلية',   progress:91, status:'نشط',    parent:'سالم الحربي' },
-  { id:8,  name:'عمر يوسف الزهراني', avatar:'👦', grade:'الصف العاشر',          school:'الياقوت التقنية',   progress:73, status:'نشط',    parent:'يوسف الزهراني' },
+  { id:1,  name:'علي حسن محمد',      avatar:'👦', grade:'الصف العاشر',         branch:'🇵🇸 فلسطين',  progress:87, status:'نشط',    parent:'حسن محمد' },
+  { id:2,  name:'مريم سعد الأحمدي',  avatar:'👧', grade:'الصف الثامن',          branch:'🇯🇴 الأردن',   progress:92, status:'نشط',    parent:'سعد الأحمدي' },
+  { id:3,  name:'فهد عبدالله الشمري',avatar:'👦', grade:'الصف الثاني عشر',      branch:'🇸🇦 السعودية', progress:78, status:'نشط',    parent:'عبدالله الشمري' },
+  { id:4,  name:'سارة خالد البلوي',  avatar:'👧', grade:'الصف السابع',          branch:'🇪🇬 مصر',progress:95, status:'متميز',  parent:'خالد البلوي' },
+  { id:5,  name:'محمد أحمد الغامدي', avatar:'👦', grade:'الصف الحادي عشر',      branch:'🇦🇪 الإمارات',  progress:65, status:'يحتاج متابعة',parent:'أحمد الغامدي' },
+  { id:6,  name:'نورة فهد القحطاني', avatar:'👧', grade:'الصف التاسع',           branch:'🇵🇸 فلسطين',  progress:88, status:'نشط',    parent:'فهد القحطاني' },
+  { id:7,  name:'ريم سالم الحربي',   avatar:'👧', grade:'الصف السادس',          branch:'🇯🇴 الأردن',   progress:91, status:'نشط',    parent:'سالم الحربي' },
+  { id:8,  name:'عمر يوسف الزهراني', avatar:'👦', grade:'الصف العاشر',          branch:'🇰🇼 الكويت',   progress:73, status:'نشط',    parent:'يوسف الزهراني' },
 ];
 
 const statusColor = (s:string) => s==='متميز'?C.gold:s==='يحتاج متابعة'?C.orange:C.green;
@@ -22,7 +22,7 @@ export default function SAStudentsPage() {
   const [statusFilter, setStatusFilter] = useState('الكل');
 
   const filtered = STUDENTS.filter(s=>
-    (search===''||s.name.includes(search)||s.grade.includes(search)||s.school.includes(search))&&
+    (search===''||s.name.includes(search)||s.grade.includes(search)||s.branch.includes(search))&&
     (statusFilter==='الكل'||s.status===statusFilter)
   );
 
@@ -62,7 +62,7 @@ export default function SAStudentsPage() {
       <div style={card({marginBottom:14,padding:'12px 16px',display:'flex',alignItems:'center',gap:12})}>
         <div style={{flex:1,position:'relative'}}>
           <span style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',fontSize:14}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="بحث باسم الطالب أو المدرسة أو الصف..." style={{width:'100%',padding:'8px 38px 8px 12px',borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,outline:'none',boxSizing:'border-box'}}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="بحث باسم الطالب أو الفرع أو الصف..." style={{width:'100%',padding:'8px 38px 8px 12px',borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,outline:'none',boxSizing:'border-box'}}/>
         </div>
         <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{padding:'8px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,outline:'none',cursor:'pointer'}}>
           {['الكل','نشط','متميز','يحتاج متابعة'].map(s=><option key={s}>{s}</option>)}
@@ -74,7 +74,7 @@ export default function SAStudentsPage() {
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
-              {['الطالب','الصف / المسار','المدرسة','ولي الأمر','التقدم الدراسي','الحالة','إجراءات'].map((h,i)=>(
+              {['الطالب','الصف / المسار','الفرع / الدولة','ولي الأمر','التقدم الدراسي','الحالة','إجراءات'].map((h,i)=>(
                 <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
               ))}
             </tr>
@@ -89,7 +89,7 @@ export default function SAStudentsPage() {
                   </div>
                 </td>
                 <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{s.grade}</td>
-                <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{s.school}</td>
+                <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{s.branch}</td>
                 <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{s.parent}</td>
                 <td style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>

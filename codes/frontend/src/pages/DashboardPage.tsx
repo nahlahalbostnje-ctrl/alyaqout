@@ -35,7 +35,7 @@ const NAV = [
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 const STATS = [
-  { label:'إجمالي المدارس',         value:'48',       sub:'+4 هذا الشهر',             icon:'🏫', color:C.blue   },
+  { label:'إجمالي الأفرع',           value:'8',        sub:'+1 هذا الشهر',             icon:'🌍', color:C.blue   },
   { label:'إجمالي الطلاب',           value:'12,842',   sub:'+1,250 هذا الشهر',         icon:'🎓', color:C.purple },
   { label:'إجمالي المعلمين',         value:'936',      sub:'+82 هذا الشهر',            icon:'👨‍🏫', color:C.teal  },
   { label:'المحتوى المعتمد',          value:'2,451',    sub:'+215 هذا الشهر',           icon:'✅', color:C.green  },
@@ -74,12 +74,12 @@ const ALERTS_DATA = [
   { text:'تحديث النظام',                    sub:'تم تحديث النظام بنجاح',             color:C.green,  bg:'rgba(22,163,74,0.07)',    icon:'✅', time:'منذ يوم'       },
 ];
 
-const TOP_SCHOOLS = [
-  { rank:1, name:'مدارس الياقوت العالمية',    loc:'الرياض',         pct:98.7 },
-  { rank:2, name:'مدارس الياقوت الأهلية',     loc:'جدة',            pct:96.2 },
-  { rank:3, name:'مدارس الياقوت النموذجية',   loc:'الدمام',         pct:94.8 },
-  { rank:4, name:'مدارس الياقوت الابتدائية',  loc:'مكة المكرمة',    pct:93.1 },
-  { rank:5, name:'مدارس الياقوت المتوسطة',    loc:'المدينة المنورة', pct:92.4 },
+const TOP_BRANCHES = [
+  { rank:1, flag:'🇸🇦', name:'فرع السعودية',  loc:'3,410 طالب', pct:97.1 },
+  { rank:2, flag:'🇵🇸', name:'فرع فلسطين',    loc:'2,840 طالب', pct:98.7 },
+  { rank:3, flag:'🇪🇬', name:'فرع مصر',       loc:'2,980 طالب', pct:94.8 },
+  { rank:4, flag:'🇯🇴', name:'فرع الأردن',    loc:'2,120 طالب', pct:96.2 },
+  { rank:5, flag:'🇦🇪', name:'فرع الإمارات',  loc:'1,620 طالب', pct:95.3 },
 ];
 
 const ACTIVITY = [
@@ -413,13 +413,14 @@ export default function DashboardPage() {
           {/* ── ROW 3: Top Schools | Activity | Servers+Revenue ── */}
           <div style={{ display:'grid', gridTemplateColumns:'215px 1fr 295px', gap:12, marginBottom:14 }}>
 
-            {/* Top Schools */}
+            {/* Top Branches */}
             <div style={card()}>
-              {sH('أعلى المدارس أداءً', 'عرض الكل')}
+              {sH('أعلى الأفرع أداءً', 'عرض الكل')}
               <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-                {TOP_SCHOOLS.map((s,i)=>(
+                {TOP_BRANCHES.map((s,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:9, padding:'9px 11px', borderRadius:12, background:i<3?`${medalColor(s.rank)}09`:'transparent', border:`1px solid ${i<3?`${medalColor(s.rank)}22`:C.border}` }}>
                     <span style={{ fontSize:18, flexShrink:0 }}>{medalEmoji(s.rank)}</span>
+                    <span style={{ fontSize:20, flexShrink:0 }}>{s.flag}</span>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ color:C.text, fontWeight:700, fontSize:11.5, lineHeight:1.3 }}>{s.name}</p>
                       <p style={{ color:C.sub, fontSize:10 }}>{s.loc}</p>
@@ -523,7 +524,7 @@ export default function DashboardPage() {
             <div style={card()}>
               {sH('أدوات الإدارة السريعة')}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
-                {[{e:'🏫',l:'إضافة مدرسة'},{e:'👨‍🏫',l:'إضافة معلم'},{e:'🎓',l:'إضافة طالب'},{e:'🔔',l:'إرسال إشعار'},{e:'📄',l:'إنشاء محتوى'}].map((t,i)=>(
+                {[{e:'🌍',l:'إضافة فرع'},{e:'👨‍🏫',l:'إضافة معلم'},{e:'🎓',l:'إضافة طالب'},{e:'🔔',l:'إرسال إشعار'},{e:'📄',l:'إنشاء محتوى'}].map((t,i)=>(
                   <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{t.e}</span>
                     <span style={{ color:C.text, fontSize:9.5, fontWeight:600, textAlign:'center', lineHeight:1.3 }}>{t.l}</span>

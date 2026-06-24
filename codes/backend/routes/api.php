@@ -29,12 +29,20 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\GradeController as AdminGradeController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SuperAdmin\AdminController;
+use App\Http\Controllers\SuperAdmin\BranchController as SuperAdminBranchController;
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\Admin\PersonalItemController as AdminPersonalItemController;
+use App\Http\Controllers\Teacher\PersonalItemController as TeacherPersonalItemController;
+use App\Http\Controllers\ParentPortal\PersonalItemController as ParentPersonalItemController;
+use App\Http\Controllers\Supervisor\PersonalItemController as SupervisorPersonalItemController;
 use App\Http\Controllers\Live\AgoraController;
 use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
+use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotController;
+use App\Http\Controllers\Supervisor\ChatbotController as SupervisorChatbotController;
+use App\Http\Controllers\Teacher\ChatbotController as TeacherChatbotController;
 use App\Http\Controllers\Teacher\EmergencyController as TeacherEmergencyController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\LeagueController as AdminLeagueController;
@@ -100,6 +108,13 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     Route::put('countries/{country}/admins/{admin}',            [AdminController::class, 'update']);
     Route::patch('countries/{country}/admins/{admin}/toggle',   [AdminController::class, 'toggle']);
     Route::delete('countries/{country}/admins/{admin}',         [AdminController::class, 'destroy']);
+
+    // Branches (country-level branches of the platform)
+    Route::get('branches',                          [SuperAdminBranchController::class, 'index']);
+    Route::post('branches',                         [SuperAdminBranchController::class, 'store']);
+    Route::put('branches/{branch}',                 [SuperAdminBranchController::class, 'update']);
+    Route::patch('branches/{branch}/toggle',        [SuperAdminBranchController::class, 'toggle']);
+    Route::delete('branches/{branch}',              [SuperAdminBranchController::class, 'destroy']);
 });
 
 /*
@@ -225,6 +240,12 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('supervisors/{supervisor}/students',                        [AdminSupervisorAssignmentController::class, 'assign']);
     Route::delete('supervisors/{supervisor}/students/{studentId}',          [AdminSupervisorAssignmentController::class, 'unassign']);
     Route::get('supervisors/unassigned-students',                           [AdminSupervisorAssignmentController::class, 'unassignedStudents']);
+
+    // Personal items (admin)
+    Route::get('my-items',                                                  [AdminPersonalItemController::class, 'index']);
+    Route::post('my-items',                                                 [AdminPersonalItemController::class, 'store']);
+    Route::put('my-items/{item}',                                           [AdminPersonalItemController::class, 'update']);
+    Route::delete('my-items/{item}',                                        [AdminPersonalItemController::class, 'destroy']);
 });
 
 /*
@@ -286,8 +307,9 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::post('emergency',                        [StudentEmergencyController::class, 'request']);
     Route::get('emergency',                         [StudentEmergencyController::class, 'myRequests']);
 
-    // Chatbot
+    // Chatbot (student)
     Route::post('chatbot',                          [StudentChatbotController::class, 'chat']);
+
 });
 
 /*
@@ -320,6 +342,15 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::get('emergency',                         [TeacherEmergencyController::class, 'index']);
     Route::post('emergency/{id}/accept',            [TeacherEmergencyController::class, 'accept']);
     Route::post('emergency/{id}/resolve',           [TeacherEmergencyController::class, 'resolve']);
+
+    // Chatbot (teacher)
+    Route::post('chatbot',                          [TeacherChatbotController::class, 'chat']);
+
+    // Personal items (teacher)
+    Route::get('my-items',                          [TeacherPersonalItemController::class, 'index']);
+    Route::post('my-items',                         [TeacherPersonalItemController::class, 'store']);
+    Route::put('my-items/{item}',                   [TeacherPersonalItemController::class, 'update']);
+    Route::delete('my-items/{item}',                [TeacherPersonalItemController::class, 'destroy']);
 });
 
 /*
@@ -332,6 +363,15 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::get('children',                           [ParentHomeController::class, 'listChildren']);
     Route::get('children/{student}/live-classes',    [ParentHomeController::class, 'childLiveClasses']);
     Route::get('children/{student}/report',          [ParentReportController::class, 'childReport']);
+
+    // Chatbot (parent)
+    Route::post('chatbot',                           [ParentChatbotController::class, 'chat']);
+
+    // Personal items (parent)
+    Route::get('my-items',                           [ParentPersonalItemController::class, 'index']);
+    Route::post('my-items',                          [ParentPersonalItemController::class, 'store']);
+    Route::put('my-items/{item}',                    [ParentPersonalItemController::class, 'update']);
+    Route::delete('my-items/{item}',                 [ParentPersonalItemController::class, 'destroy']);
 });
 
 /*
@@ -345,6 +385,15 @@ Route::middleware(['auth:api', 'supervisor'])->prefix('supervisor')->group(funct
     Route::delete('students/{studentId}',            [SupervisorDashboardController::class, 'removeStudent']);
     Route::get('students/{studentId}/performance',   [SupervisorDashboardController::class, 'studentPerformance']);
     Route::post('attendance',                        [SupervisorDashboardController::class, 'recordAttendance']);
+
+    // Chatbot (supervisor)
+    Route::post('chatbot',                           [SupervisorChatbotController::class, 'chat']);
+
+    // Personal items (supervisor)
+    Route::get('my-items',                           [SupervisorPersonalItemController::class, 'index']);
+    Route::post('my-items',                          [SupervisorPersonalItemController::class, 'store']);
+    Route::put('my-items/{item}',                    [SupervisorPersonalItemController::class, 'update']);
+    Route::delete('my-items/{item}',                 [SupervisorPersonalItemController::class, 'destroy']);
 });
 
 /*

@@ -5,19 +5,19 @@ const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', bo
 
 type InvoiceStatus = 'مدفوعة'|'معلقة'|'متأخرة';
 interface Invoice {
-  id:string; student:string; school:string; method:string; date:string;
+  id:string; student:string; branch:string; method:string; date:string;
   amount:number; status:InvoiceStatus;
 }
 
 const INVOICES:Invoice[] = [
-  {id:'INV-2026-001',student:'علي حسن محمد',    school:'الياقوت العالمية', method:'visa',   date:'2026-06-23',amount:1200,status:'مدفوعة'},
-  {id:'INV-2026-002',student:'مريم سعد الأحمدي',school:'الياقوت الأهلية',  method:'master',date:'2026-06-22',amount:800, status:'مدفوعة'},
-  {id:'INV-2026-003',student:'فهد عبدالله الشمري',school:'الياقوت النموذجية',method:'cash',date:'2026-06-22',amount:950, status:'معلقة'},
-  {id:'INV-2026-004',student:'سارة خالد البلوي', school:'الياقوت الابتدائية',method:'visa', date:'2026-06-21',amount:1500,status:'مدفوعة'},
-  {id:'INV-2026-005',student:'محمد أحمد الغامدي',school:'الياقوت المتوسطة',method:'master',date:'2026-06-20',amount:700, status:'متأخرة'},
-  {id:'INV-2026-006',student:'نورة فهد القحطاني',school:'الياقوت العالمية', method:'visa',  date:'2026-06-19',amount:1100,status:'مدفوعة'},
-  {id:'INV-2026-007',student:'ريم سالم الحربي',  school:'الياقوت الأهلية', method:'cash',  date:'2026-06-18',amount:600, status:'معلقة'},
-  {id:'INV-2026-008',student:'عمر يوسف الزهراني',school:'الياقوت التقنية',  method:'master',date:'2026-06-17',amount:850, status:'متأخرة'},
+  {id:'INV-2026-001',student:'علي حسن محمد',    branch:'🇵🇸 فلسطين', method:'visa',   date:'2026-06-23',amount:1200,status:'مدفوعة'},
+  {id:'INV-2026-002',student:'مريم سعد الأحمدي',branch:'🇯🇴 الأردن',  method:'master',date:'2026-06-22',amount:800, status:'مدفوعة'},
+  {id:'INV-2026-003',student:'فهد عبدالله الشمري',branch:'🇸🇦 السعودية',method:'cash',date:'2026-06-22',amount:950, status:'معلقة'},
+  {id:'INV-2026-004',student:'سارة خالد البلوي', branch:'🇪🇬 مصر',method:'visa', date:'2026-06-21',amount:1500,status:'مدفوعة'},
+  {id:'INV-2026-005',student:'محمد أحمد الغامدي',branch:'🇦🇪 الإمارات',method:'master',date:'2026-06-20',amount:700, status:'متأخرة'},
+  {id:'INV-2026-006',student:'نورة فهد القحطاني',branch:'🇵🇸 فلسطين', method:'visa',  date:'2026-06-19',amount:1100,status:'مدفوعة'},
+  {id:'INV-2026-007',student:'ريم سالم الحربي',  branch:'🇯🇴 الأردن', method:'cash',  date:'2026-06-18',amount:600, status:'معلقة'},
+  {id:'INV-2026-008',student:'عمر يوسف الزهراني',branch:'🇰🇼 الكويت',  method:'master',date:'2026-06-17',amount:850, status:'متأخرة'},
 ];
 
 const METHOD_ICON = {visa:'💳',master:'🔶',cash:'💵'} as Record<string,string>;
@@ -86,7 +86,7 @@ export default function SABillingPage() {
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
-              {['رقم الفاتورة','الطالب','المدرسة','طريقة الدفع','التاريخ','المبلغ','الحالة','إجراءات'].map((h,i)=>(
+              {['رقم الفاتورة','الطالب','الفرع / الدولة','طريقة الدفع','التاريخ','المبلغ','الحالة','إجراءات'].map((h,i)=>(
                 <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
               ))}
             </tr>
@@ -96,7 +96,7 @@ export default function SABillingPage() {
               <tr key={inv.id} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?'transparent':'rgba(0,0,0,0.015)'}}>
                 <td style={{padding:'12px 14px',color:C.gold,fontWeight:700,fontSize:12}}>{inv.id}</td>
                 <td style={{padding:'12px 14px',color:C.text,fontWeight:700,fontSize:13}}>{inv.student}</td>
-                <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{inv.school}</td>
+                <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{inv.branch}</td>
                 <td style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:6}}>
                     <span style={{fontSize:16}}>{METHOD_ICON[inv.method]}</span>

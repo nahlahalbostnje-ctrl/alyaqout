@@ -4,12 +4,12 @@ import SuperAdminShell, { C } from '../components/SuperAdminShell';
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
 const TEACHERS = [
-  { id:1, name:'أ. محمد السالم',     avatar:'👨‍🏫', specialty:'الرياضيات',       phone:'0501234567', email:'m.salem@yaqoot.sa',    school:'الياقوت العالمية', status:'نشط',   courses:8, rating:4.9 },
-  { id:2, name:'أ. سارة العمر',      avatar:'👩‍🏫', specialty:'الفيزياء',         phone:'0512345678', email:'s.omar@yaqoot.sa',     school:'الياقوت الأهلية',  status:'نشط',   courses:6, rating:4.8 },
-  { id:3, name:'أ. خالد المنصور',    avatar:'👨‍🏫', specialty:'اللغة الإنجليزية', phone:'0523456789', email:'k.mansour@yaqoot.sa',  school:'الياقوت النموذجية',status:'نشط',   courses:10,rating:4.7 },
-  { id:4, name:'أ. نورة الزهراني',   avatar:'👩‍🏫', specialty:'علم الأحياء',      phone:'0534567890', email:'n.zahrani@yaqoot.sa',  school:'الياقوت الابتدائية',status:'إجازة',courses:5, rating:4.6 },
-  { id:5, name:'أ. عبدالله القحطاني',avatar:'👨‍🏫', specialty:'الكيمياء',          phone:'0545678901', email:'a.qahtani@yaqoot.sa',  school:'الياقوت المتوسطة', status:'نشط',   courses:7, rating:4.5 },
-  { id:6, name:'أ. ريم الحربي',      avatar:'👩‍🏫', specialty:'اللغة العربية',     phone:'0556789012', email:'r.harbi@yaqoot.sa',    school:'الياقوت العالمية', status:'نشط',   courses:9, rating:4.8 },
+  { id:1, name:'أ. محمد السالم',     avatar:'👨‍🏫', specialty:'الرياضيات',       phone:'0501234567', email:'m.salem@yaqoot.sa',    branch:'🇵🇸 فلسطين', status:'نشط',   courses:8, rating:4.9 },
+  { id:2, name:'أ. سارة العمر',      avatar:'👩‍🏫', specialty:'الفيزياء',         phone:'0512345678', email:'s.omar@yaqoot.sa',     branch:'🇯🇴 الأردن',  status:'نشط',   courses:6, rating:4.8 },
+  { id:3, name:'أ. خالد المنصور',    avatar:'👨‍🏫', specialty:'اللغة الإنجليزية', phone:'0523456789', email:'k.mansour@yaqoot.sa',  branch:'🇸🇦 السعودية',status:'نشط',   courses:10,rating:4.7 },
+  { id:4, name:'أ. نورة الزهراني',   avatar:'👩‍🏫', specialty:'علم الأحياء',      phone:'0534567890', email:'n.zahrani@yaqoot.sa',  branch:'🇪🇬 مصر',status:'إجازة',courses:5, rating:4.6 },
+  { id:5, name:'أ. عبدالله القحطاني',avatar:'👨‍🏫', specialty:'الكيمياء',          phone:'0545678901', email:'a.qahtani@yaqoot.sa',  branch:'🇦🇪 الإمارات', status:'نشط',   courses:7, rating:4.5 },
+  { id:6, name:'أ. ريم الحربي',      avatar:'👩‍🏫', specialty:'اللغة العربية',     phone:'0556789012', email:'r.harbi@yaqoot.sa',    branch:'🇵🇸 فلسطين', status:'نشط',   courses:9, rating:4.8 },
 ];
 
 const STAFF = [
@@ -77,7 +77,7 @@ export default function SAStaffPage() {
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead>
               <tr style={{background:'rgba(0,0,0,0.03)'}}>
-                {['المدرب','التخصص','رقم الهاتف','البريد الإلكتروني','المدرسة','الدورات','التقييم','الحالة','إجراءات'].map((h,i)=>(
+                {['المدرب','التخصص','رقم الهاتف','البريد الإلكتروني','الفرع / الدولة','الدورات','التقييم','الحالة','إجراءات'].map((h,i)=>(
                   <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
                 ))}
               </tr>
@@ -94,7 +94,7 @@ export default function SAStaffPage() {
                   <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{t.specialty}</td>
                   <td style={{padding:'12px 14px',color:C.sub,fontSize:12,direction:'ltr',textAlign:'right'}}>{t.phone}</td>
                   <td style={{padding:'12px 14px',color:C.sub,fontSize:11}}>{t.email}</td>
-                  <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{t.school}</td>
+                  <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{t.branch}</td>
                   <td style={{padding:'12px 14px',color:C.text,fontWeight:700,fontSize:13,textAlign:'center'}}>{t.courses}</td>
                   <td style={{padding:'12px 14px',color:C.gold,fontWeight:700,fontSize:12}}>⭐ {t.rating}</td>
                   <td style={{padding:'12px 14px'}}>

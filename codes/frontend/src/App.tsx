@@ -25,6 +25,12 @@ import StudentPointsPage          from './pages/StudentPointsPage';
 import StudentLeaguePage          from './pages/StudentLeaguePage';
 import StudentStudyRoomPage       from './pages/StudentStudyRoomPage';
 import SupervisorStudyRoomPage    from './pages/SupervisorStudyRoomPage';
+import SupervisorAssignmentsPage  from './pages/SupervisorAssignmentsPage';
+import SupervisorQuizMonitoringPage from './pages/SupervisorQuizMonitoringPage';
+import SupervisorPerformancePage  from './pages/SupervisorPerformancePage';
+import SupervisorCounselingPage   from './pages/SupervisorCounselingPage';
+import SupervisorChatPage         from './pages/SupervisorChatPage';
+import SupervisorSettingsPage     from './pages/SupervisorSettingsPage';
 import TeacherEmergencyPage       from './pages/TeacherEmergencyPage';
 import AdminSettingsPage          from './pages/AdminSettingsPage';
 import AdminLeaguePage            from './pages/AdminLeaguePage';
@@ -55,9 +61,11 @@ import ParentReportsPage          from './pages/ParentReportsPage';
 import ParentAIAssistantPage      from './pages/ParentAIAssistantPage';
 import ParentSettingsPage         from './pages/ParentSettingsPage';
 import SupervisorStudentsPage     from './pages/SupervisorStudentsPage';
+import SupervisorAIAssistantPage  from './pages/SupervisorAIAssistantPage';
 import CountryAdminsPage          from './pages/CountryAdminsPage';
 import SuperAdminProfilePage      from './pages/SuperAdminProfilePage';
 import SAAnalyticsPage            from './pages/SAAnalyticsPage';
+import SASchoolsPage              from './pages/SASchoolsPage';
 import SAStaffPage                from './pages/SAStaffPage';
 import SAStudentsPage             from './pages/SAStudentsPage';
 import SAContentApprovalsPage     from './pages/SAContentApprovalsPage';
@@ -70,6 +78,10 @@ import SARolesPage                from './pages/SARolesPage';
 import SAActivityLogPage          from './pages/SAActivityLogPage';
 import SASupportPage              from './pages/SASupportPage';
 import SADevCenterPage            from './pages/SADevCenterPage';
+import AdminPersonalItemsPage     from './pages/AdminPersonalItemsPage';
+import TeacherPersonalItemsPage   from './pages/TeacherPersonalItemsPage';
+import ParentPersonalItemsPage    from './pages/ParentPersonalItemsPage';
+import SupervisorPersonalItemsPage from './pages/SupervisorPersonalItemsPage';
 import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
@@ -110,6 +122,9 @@ export default function App() {
         } />
         <Route path="/dashboard/analytics" element={
           <PrivateRoute roles={['super_admin']}><SAAnalyticsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/schools" element={
+          <PrivateRoute roles={['super_admin']}><SASchoolsPage /></PrivateRoute>
         } />
         <Route path="/dashboard/staff" element={
           <PrivateRoute roles={['super_admin']}><SAStaffPage /></PrivateRoute>
@@ -203,6 +218,9 @@ export default function App() {
         <Route path="/admin/settings" element={
           <PrivateRoute roles={['admin']}><AdminSettingsPage /></PrivateRoute>
         } />
+        <Route path="/admin/my-items" element={
+          <PrivateRoute roles={['admin']}><AdminPersonalItemsPage /></PrivateRoute>
+        } />
 
         {/* Student */}
         <Route path="/student/dashboard" element={
@@ -255,6 +273,9 @@ export default function App() {
         <Route path="/teacher/emergency" element={
           <PrivateRoute roles={['teacher']}><TeacherEmergencyPage /></PrivateRoute>
         } />
+        <Route path="/teacher/my-items" element={
+          <PrivateRoute roles={['teacher']}><TeacherPersonalItemsPage /></PrivateRoute>
+        } />
 
         {/* Parent */}
         <Route path="/parent/dashboard" element={
@@ -300,6 +321,9 @@ export default function App() {
         <Route path="/parent/settings" element={
           <PrivateRoute roles={['parent']}><ParentSettingsPage /></PrivateRoute>
         } />
+        <Route path="/parent/my-items" element={
+          <PrivateRoute roles={['parent']}><ParentPersonalItemsPage /></PrivateRoute>
+        } />
 
         {/* Supervisor */}
         <Route path="/supervisor/dashboard" element={
@@ -310,6 +334,30 @@ export default function App() {
         } />
         <Route path="/supervisor/study-room" element={
           <PrivateRoute roles={['supervisor']}><SupervisorStudyRoomPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/assignments-rooms" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorAssignmentsPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/quiz-monitoring" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorQuizMonitoringPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/performance-tracking" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorPerformancePage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/counseling-sessions" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorCounselingPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/chat-center" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorChatPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/ai-assistant" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorAIAssistantPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/settings" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorSettingsPage /></PrivateRoute>
+        } />
+        <Route path="/supervisor/my-items" element={
+          <PrivateRoute roles={['supervisor']}><SupervisorPersonalItemsPage /></PrivateRoute>
         } />
 
         {/* Live Room — accessible to teacher, student, and admin (observer) */}

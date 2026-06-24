@@ -17,8 +17,8 @@ const WEBHOOKS = [
 ];
 
 const ENDPOINTS = [
-  {method:'GET',  path:'/api/v1/schools',       desc:'جلب قائمة المدارس'},
-  {method:'POST', path:'/api/v1/schools',       desc:'إنشاء مدرسة جديدة'},
+  {method:'GET',  path:'/api/v1/branches',      desc:'جلب قائمة الأفرع'},
+  {method:'POST', path:'/api/v1/branches',      desc:'إنشاء فرع جديد'},
   {method:'GET',  path:'/api/v1/users',         desc:'جلب المستخدمين مع فلترة'},
   {method:'GET',  path:'/api/v1/analytics',     desc:'بيانات التحليلات'},
   {method:'POST', path:'/api/v1/content/approve',desc:'اعتماد قطعة محتوى'},
@@ -153,8 +153,8 @@ export default function SADevCenterPage() {
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div style={card()}>
-              <p style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:12}}>مثال: جلب قائمة المدارس</p>
-              <CodeBlock lang="HTTP Request" code={`GET /api/v1/schools HTTP/1.1
+              <p style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:12}}>مثال: جلب قائمة الأفرع</p>
+              <CodeBlock lang="HTTP Request" code={`GET /api/v1/branches HTTP/1.1
 Host: api.yaqoot.sa
 Authorization: Bearer ya_live_sk_xK9mP2nQrTs4vW8zA1bD...
 Content-Type: application/json`}/>
@@ -163,17 +163,17 @@ Content-Type: application/json`}/>
                 <CodeBlock lang="JSON Response" code={`{
   "success": true,
   "data": {
-    "schools": [
+    "branches": [
       {
         "id": 1,
-        "name": "مدارس الياقوت العالمية",
-        "city": "الرياض",
+        "country": "فلسطين",
+        "flag": "🇵🇸",
         "students_count": 2840,
         "status": "active"
       }
     ],
     "pagination": {
-      "total": 48,
+      "total": 8,
       "per_page": 15,
       "current_page": 1
     }
@@ -195,8 +195,7 @@ const client = new YaqootClient({
   apiKey: process.env.YAQOOT_API_KEY
 });
 
-const schools = await client.schools.list({
-  city: 'الرياض',
+const branches = await client.branches.list({
   status: 'active'
 });`},
             {lang:'Python', icon:'🐍', install:'pip install yaqoot-sdk',usage:`from yaqoot import YaqootClient
@@ -205,8 +204,7 @@ client = YaqootClient(
     api_key=os.environ['YAQOOT_API_KEY']
 )
 
-schools = client.schools.list(
-    city='الرياض',
+branches = client.branches.list(
     status='active'
 )`},
           ].map((sdk,i)=>(
