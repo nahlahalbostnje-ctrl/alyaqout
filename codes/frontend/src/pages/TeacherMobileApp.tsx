@@ -644,7 +644,7 @@ function LiveRoomScreen({ liveNow, onEnd }: { liveNow: { id: number; title: stri
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
         {/* Video */}
         <div style={{ borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0A1E45,#071220)', position: 'relative', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
-          <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', items: 'center', gap: 8 }}>
+          <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.red }}/>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{fmt(elapsed)}</span>

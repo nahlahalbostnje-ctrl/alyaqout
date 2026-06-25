@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
+import BrandLogo from './BrandLogo';
 
 const SB = '#0D1E3A';
 const GOLD = '#C59341';
@@ -62,18 +63,8 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         {/* Brand */}
         <div style={{ padding: '20px 14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 13, flexShrink: 0,
-              background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
-              boxShadow: `0 4px 14px rgba(197,147,65,0.4)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <img src="/logo.png" alt="ياقوت" style={{ width: 27, height: 27, objectFit: 'contain' }} />
-            </div>
-            <div>
-              <p style={{ color: '#fff', fontWeight: 900, fontSize: 14.5, lineHeight: 1.2 }}>منصة الياقوت</p>
-              <p style={{ color: GOLD_L, fontSize: 10.5, marginTop: 2, fontWeight: 600 }}>بوابة ولي الأمر</p>
-            </div>
+            <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
+            <p style={{ color: GOLD_L, fontSize: 10.5, fontWeight: 600 }}>بوابة ولي الأمر</p>
           </div>
         </div>
 

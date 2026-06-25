@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
+import BrandLogo from './BrandLogo';
 
 export const C = {
   bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -49,7 +50,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
       {/* ══ SIDEBAR ══ */}
       <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100vh', position:'sticky', top:0, display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none' }}>
         <div style={{ padding:'18px 12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', textAlign:'center' }}>
-          <div style={{ width:52, height:52, borderRadius:16, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px', fontSize:26, boxShadow:'0 4px 16px rgba(201,149,42,0.4)' }}>🛡️</div>
+          <BrandLogo size={52} style={{ margin:'0 auto 10px', borderRadius:12 }} />
           <p style={{ color:'#fff', fontWeight:900, fontSize:14, lineHeight:1.3 }}>مركز القيادة</p>
           <p style={{ color:'rgba(255,255,255,0.45)', fontSize:10, marginTop:3 }}>الإدارة العليا للمنصة</p>
         </div>
@@ -69,8 +70,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div style={{ margin:'0 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
-          <div style={{ fontSize:28, marginBottom:6 }}>💎</div>
-          <p style={{ color:'#fff', fontWeight:800, fontSize:12.5, lineHeight:1.4 }}>منصة الياقوت</p>
+          <BrandLogo size={40} style={{ margin:'0 auto 8px', borderRadius:8 }} />
           <p style={{ color:C.goldL, fontSize:10, marginBottom:10 }}>التميز في التعليم</p>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
             <div style={{ width:7, height:7, borderRadius:'50%', background:C.green }}/>
@@ -84,11 +84,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
       <div style={{ flex:1, overflowY:'auto', minWidth:0 }}>
         <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:50, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
-            <div style={{ width:38, height:38, borderRadius:11, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🎓</div>
-            <div>
-              <p style={{ color:C.navy2, fontWeight:900, fontSize:13.5, lineHeight:1.2 }}>منصة الياقوت</p>
-              <p style={{ color:C.sub, fontSize:10 }}>لخدمات التعليم</p>
-            </div>
+            <BrandLogo size={38} style={{ borderRadius:10 }} />
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             {[{e:'🔔',n:12},{e:'✉️',n:7},{e:'🚩',n:5}].map((ic,i)=>(

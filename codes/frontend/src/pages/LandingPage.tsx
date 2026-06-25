@@ -6,6 +6,7 @@ import {
 } from 'framer-motion';
 import api from '../services/axios';
 import { useLenis } from '../hooks/useLenis';
+import BrandLogo from '../components/BrandLogo';
 
 /* ── Types ──────────────────────────────────── */
 interface Country    { id: number; name: string; }
@@ -283,13 +284,7 @@ export default function LandingPage() {
           {/* Logo + Country selector (right side) */}
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ width:64, height:64, borderRadius:16, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', boxShadow:`0 4px 20px rgba(197,147,65,0.5)` }}>
-                <img src="/logo.png" alt="ياقوت" style={{ width:60, height:60, objectFit:'contain' }} />
-              </div>
-              <div>
-                <p style={{ fontSize:18, fontWeight:900, color:'#fff', lineHeight:1.1, letterSpacing:'-0.02em' }}>منصة الياقوت</p>
-                <p style={{ fontSize:11, color:C.gold, fontWeight:700, letterSpacing:'0.1em' }}>لخدمات التعليم</p>
-              </div>
+              <BrandLogo size={56} style={{ borderRadius:12 }} />
             </div>
 
             {/* Country indicator — right side, next to logo */}
@@ -415,14 +410,7 @@ export default function LandingPage() {
             <motion.div animate={{ scale:[1,1.05,1], opacity:[0.25,0.07,0.25] }} transition={{ duration:3.2, repeat:Infinity, ease:'easeInOut', delay:0.6 }}
               style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:380, height:380, borderRadius:'50%', border:'1.5px solid rgba(197,147,65,0.35)', pointerEvents:'none', zIndex:0 }} />
             {/* Logo image — no circular clip, shown complete with contain */}
-            <img src="/logo.png" alt="ياقوت" style={{
-              position:'relative', zIndex:1,
-              display:'block',
-              width:420,
-              height:'auto',
-              objectFit:'contain',
-              filter:'drop-shadow(0 0 50px rgba(197,147,65,0.65)) drop-shadow(0 0 110px rgba(197,147,65,0.28)) drop-shadow(0 16px 32px rgba(0,0,0,0.35))',
-            }} />
+            <BrandLogo style={{ position:'relative', zIndex:1, display:'block', width:420, height:'auto', filter:'drop-shadow(0 0 50px rgba(197,147,65,0.65)) drop-shadow(0 0 110px rgba(197,147,65,0.28)) drop-shadow(0 16px 32px rgba(0,0,0,0.35))' }} size={420} />
           </motion.div>
 
           {/* Heading */}
@@ -623,13 +611,7 @@ export default function LandingPage() {
           <motion.div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:28, marginBottom:36 }}
             variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once:true }}>
             <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ width:46, height:46, borderRadius:12, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-                <img src="/logo.png" alt="ياقوت" style={{ width:42, height:42, objectFit:'contain' }} />
-              </div>
-              <div>
-                <p style={{ fontSize:17, fontWeight:900, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.1 }}>منصة الياقوت</p>
-                <p style={{ fontSize:11, color:C.gold, fontWeight:700, letterSpacing:'0.12em', marginTop:2 }}>لخدمات التعليم</p>
-              </div>
+              <BrandLogo size={46} style={{ borderRadius:12 }} />
             </div>
             {social.length>0 && (
               <div style={{ display:'flex', gap:10 }}>

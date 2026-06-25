@@ -13,5 +13,6 @@ Thumbs.db
 *.jpg
 *.jpeg
 *.png
+!codes/frontend/public/logo.png
 *.gif
 *.mp4

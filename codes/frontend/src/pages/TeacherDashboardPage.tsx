@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchTeacherDashboard } from '../features/teacher/teacherSlice';
 import { logout } from '../features/auth/authSlice';
+import BrandLogo from '../components/BrandLogo';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -31,12 +32,6 @@ const NAV = [
 ];
 
 // ─── Static data ──────────────────────────────────────────────────────────────
-const ALERTS = [
-  { name:'محمد أحمد',  issue:'انخفض حضوره 30%',            level:'مرتفع', dot:'#EF4444', avatar:'👦', note:'آخر دخول قبل 5 أيام' },
-  { name:'سارة خالد',  issue:'لم تسلم الواجب الأخير',       level:'متوسط', dot:'#D97706', avatar:'👩', note:'متابعة مطلوبة' },
-  { name:'علي حسن',    issue:'انخفاض في التفاعل',           level:'متوسط', dot:'#D97706', avatar:'👦', note:'متابعة مطلوبة' },
-];
-
 const SCHEDULE = [
   { time:'06:00 م', subject:'اللغة الإنجليزية', cls:'الصف الخامس A', live:true  },
   { time:'07:00 م', subject:'اللغة الإنجليزية', cls:'الصف الخامس B', live:false },
@@ -130,9 +125,9 @@ export default function TeacherDashboardPage() {
   const dispatch  = useAppDispatch();
   const navigate  = useNavigate();
   const user      = useAppSelector(s => s.auth.user);
-  const { teacher, upcoming, stats, liveNow, recentSubmissions, courses } = useAppSelector(s => s.teacher);
+  const { teacher, upcoming, stats, recentSubmissions, courses } = useAppSelector(s => s.teacher);
   const [aiInput, setAiInput] = useState('');
-  const [timer, setTimer]     = useState('00:35:42');
+  const [timer] = useState('00:35:42');
 
   useEffect(() => { dispatch(fetchTeacherDashboard()); }, [dispatch]);
 
@@ -151,11 +146,7 @@ export default function TeacherDashboardPage() {
         {/* Sidebar title */}
         <div style={{ padding:'20px 14px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:9 }}>
-            <div style={{ width:36, height:36, borderRadius:10, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 3px 10px rgba(201,149,42,0.35)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B2038" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
+            <BrandLogo size={36} style={{ flexShrink:0, borderRadius:10 }} />
             <div>
               <p style={{ color:'#fff', fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مركز قيادة المعلم</p>
               <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10, marginTop:2 }}>بوابة المعلم</p>
@@ -228,11 +219,7 @@ export default function TeacherDashboardPage() {
 
           {/* Logo (right in RTL) */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:40, height:40, borderRadius:12, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 3px 12px rgba(201,149,42,0.35)', flexShrink:0 }}>🎓</div>
-            <div>
-              <p style={{ color:C.navy2, fontWeight:900, fontSize:14.5, lineHeight:1.2 }}>منصة الياقوت</p>
-              <p style={{ color:C.sub, fontSize:10.5 }}>لخدمات التعليم</p>
-            </div>
+            <BrandLogo size={40} style={{ borderRadius:12 }} />
           </div>
 
           {/* Center actions */}

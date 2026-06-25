@@ -6,6 +6,7 @@ import {
   motion, AnimatePresence,
   useMotionValue, useSpring,
 } from 'framer-motion';
+import BrandLogo from '../components/BrandLogo';
 
 /* ── Constants ─────────────────────────────── */
 const ROLE_ROUTES: Record<string, string> = {
@@ -425,38 +426,18 @@ export default function LoginPage() {
                 animation: 'yq-spin-slow 9s linear infinite',
                 pointerEvents: 'none',
               }} />
-              <motion.img
-                src="/logo.png" alt="منصة الياقوت"
+              <motion.div
                 initial={{ scale: 0.3, opacity: 0, rotate: -15 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
                 transition={{ duration: 0.9, ease: POP, delay: 0.35 }}
                 whileHover={{ scale: 1.08 }}
                 style={{
-                  width: 110, height: 110, objectFit: 'contain',
                   position: 'relative', zIndex: 1,
                   filter: 'drop-shadow(0 0 28px rgba(245,166,35,0.6))',
-                }} />
+                }}>
+                <BrandLogo size={150} style={{ width: 150, height: 'auto' }} />
+              </motion.div>
             </div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: SP, delay: 0.5 }}
-              style={{
-                fontSize: 26, fontWeight: 900, color: '#fff',
-                fontFamily: "'Cairo','Tajawal',sans-serif",
-                letterSpacing: '-0.025em', lineHeight: 1.1, marginBottom: 6,
-              }}>
-              منصة الياقوت
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.62 }}
-              style={{ fontSize: 13, fontWeight: 700, color: '#f5a623', letterSpacing: '0.1em' }}>
-              لخدمات التعليم
-            </motion.p>
           </motion.div>
 
           {/* Divider */}

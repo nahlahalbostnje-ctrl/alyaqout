@@ -10,6 +10,7 @@ export interface StudentExam {
   questions_count: number;
   submitted: boolean;
   submitted_at?: string;
+  status?: 'scheduled' | 'ended' | 'submitted' | 'trial';
 }
 
 export interface ExamQuestionItem {

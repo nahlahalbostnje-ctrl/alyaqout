@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
+import BrandLogo from './BrandLogo';
 
 const navItems = [
   { to: '/teacher/dashboard',    label: 'الرئيسية',       d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -38,14 +39,8 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #C9952A, #DDAD50)', boxShadow: '0 4px 14px rgba(201,149,42,0.35)' }}>
-              <img src="/logo.png" alt="ياقوت" className="w-7 h-7 object-contain" />
-            </div>
-            <div>
-              <p className="text-white font-black text-base leading-tight">منصة الياقوت</p>
-              <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>بوابة المعلم</p>
-            </div>
+            <BrandLogo size={44} className="flex-shrink-0 rounded-xl" />
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>بوابة المعلم</p>
           </div>
         </div>
 
