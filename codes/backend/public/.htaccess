@@ -18,8 +18,16 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # Laravel API + health check
+    RewriteCond %{REQUEST_URI} ^/api [OR]
+    RewriteCond %{REQUEST_URI} ^/up$
     RewriteRule ^ index.php [L]
+
+    # Existing files and directories (assets, storage, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # React SPA fallback
+    RewriteRule ^ index.html [L]
 </IfModule>
