@@ -24,8 +24,8 @@ function QCard({ q, idx, answer, onChange }: { q: ExamQuestionItem; idx: number;
   return (
     <div style={{ background:C.card, borderRadius:16, padding:'16px 18px', marginBottom:12, boxShadow:C.shadow, border:`1px solid ${C.border}` }}>
       <p style={{ color:C.sub, fontSize:11, marginBottom:6 }}>السؤال {idx+1}</p>
-      <p style={{ color:C.text, fontWeight:700, fontSize:14, marginBottom:12, lineHeight:1.55 }}>{q.question_text}</p>
-      {q.type === 'mcq' && q.choices?.map((ch,ci) => (
+      <p style={{ color:C.text, fontWeight:700, fontSize:14, marginBottom:12, lineHeight:1.55 }}>{q.question}</p>
+      {q.type === 'mcq' && q.options?.map((ch: string, ci: number) => (
         <label key={ci} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:11, marginBottom:7, cursor:'pointer', background:answer===ch?C.goldBg:C.bg, border:`1.5px solid ${answer===ch?C.gold:C.border}`, transition:'all 0.15s' }}>
           <input type="radio" name={`q${idx}`} value={ch} checked={answer===ch} onChange={()=>onChange(ch)} style={{ accentColor:C.gold }} />
           <span style={{ color:C.text, fontSize:13 }}>{ch}</span>
@@ -37,7 +37,7 @@ function QCard({ q, idx, answer, onChange }: { q: ExamQuestionItem; idx: number;
           <span style={{ color:C.text, fontSize:13 }}>{v}</span>
         </label>
       ))}
-      {q.type === 'essay' && (
+      {q.type === 'short' && (
         <textarea value={answer} onChange={e=>onChange(e.target.value)} rows={4}
           style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:11, padding:'10px 14px', fontSize:13, color:C.text, background:C.bg, resize:'none', outline:'none', fontFamily:"'Cairo',sans-serif", boxSizing:'border-box' }}
           placeholder="اكتب إجابتك هنا..." />
@@ -73,8 +73,9 @@ export default function StudentExamsPage() {
 
   const handleSubmit = async () => {
     if (!activeExam) return;
-    const formatted = (activeExam.questions ?? []).map((q, i) => ({ question_id: q.id ?? i, answer: answers[i] ?? '' }));
-    await dispatch(submitExam({ examId: activeExam.exam_id, answers: formatted }));
+    const formatted: Record<number, string> = {};
+    (activeExam.questions ?? []).forEach((q, i) => { formatted[q.id ?? i] = answers[i] ?? ''; });
+    await dispatch(submitExam({ examId: activeExam.id, answers: formatted }));
     setAnswers({});
   };
 
@@ -83,9 +84,9 @@ export default function StudentExamsPage() {
     return (
       <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif" }}>
         <div style={{ background:C.navy2, padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:50 }}>
-          <p style={{ color:'#fff', fontWeight:700, fontSize:15 }}>{activeExam.exam_title}</p>
+          <p style={{ color:'#fff', fontWeight:700, fontSize:15 }}>{activeExam.title}</p>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <Countdown minutes={activeExam.duration_minutes ?? 60} onExpire={handleSubmit} />
+            <Countdown minutes={activeExam.duration ?? 60} onExpire={handleSubmit} />
             <button onClick={()=>dispatch(clearActiveExam())} style={{ color:'rgba(255,255,255,0.55)', fontSize:20, background:'none', border:'none', cursor:'pointer' }}>✕</button>
           </div>
         </div>

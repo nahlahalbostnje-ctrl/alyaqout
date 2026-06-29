@@ -117,7 +117,9 @@ export default function App() {
     } else {
       setInitializing(false);
     }
-  }, []);
+  }, [dispatch]);
+
+  if (initializing) return null;
 
   return (
     <BrowserRouter>

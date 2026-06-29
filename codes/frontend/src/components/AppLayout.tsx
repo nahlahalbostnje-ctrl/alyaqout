@@ -4,6 +4,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import NotificationBell from './NotificationBell';
+import BrandLogo from './BrandLogo';
 
 export interface NavItem {
   to: string;
@@ -98,24 +99,9 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                boxShadow: `0 4px 14px rgba(197,147,65,0.4)`,
-              }}
-            >
-              <img src="/logo.png" alt="ياقوت" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-            </div>
+            <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
             <div>
-              <p style={{ color: '#fff', fontWeight: 900, fontSize: 15, lineHeight: 1.2 }}>منصة الياقوت</p>
-              <p style={{ color: GOLD_L, fontSize: 11, marginTop: 2, fontWeight: 600 }}>{roleLabel}</p>
+              <p style={{ color: GOLD_L, fontSize: 11, fontWeight: 600 }}>{roleLabel}</p>
             </div>
           </div>
         </div>

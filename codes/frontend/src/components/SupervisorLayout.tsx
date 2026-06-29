@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
+import BrandLogo from './BrandLogo';
 
 const NAV = [
   { to: '/supervisor/students',            label: 'طلابي',                      d: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
@@ -37,13 +38,8 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         {/* Logo */}
         <div style={{ padding:'18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:40, height:40, borderRadius:12, background:'linear-gradient(135deg,#C59341,#D4A65A)', boxShadow:'0 4px 14px rgba(197,147,65,0.35)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <img src="/logo.png" alt="ياقوت" style={{ width:28, height:28, objectFit:'contain' }} />
-            </div>
-            <div>
-              <p style={{ color:'#fff', fontWeight:900, fontSize:14, lineHeight:1.2 }}>منصة الياقوت</p>
-              <p style={{ color:'#C59341', fontSize:11, fontWeight:600, marginTop:2 }}>بوابة المشرف</p>
-            </div>
+            <BrandLogo size={44} style={{ flexShrink:0, borderRadius:10 }} />
+            <p style={{ color:'#C59341', fontSize:11, fontWeight:600 }}>بوابة المشرف</p>
           </div>
         </div>
 

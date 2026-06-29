@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Helpers\Agora\AccessToken2;
-use App\Helpers\Agora\ServiceRtc;
+use Yasser\Agora\RtcTokenBuilder;
 
 class AgoraService
 {
@@ -14,25 +13,21 @@ class AgoraService
 
     public function generateToken(string $channel, int $uid, int $role): string
     {
-        $expire = (int) config('agora.token_expire', 3600);
+        $expireSeconds = (int) config('agora.token_expire', 3600);
+        $privilegeExpireTs = time() + $expireSeconds;
 
-        $token = new AccessToken2(
+        $rtcRole = $role === self::ROLE_PUBLISHER
+            ? RtcTokenBuilder::RolePublisher
+            : RtcTokenBuilder::RoleSubscriber;
+
+        return RtcTokenBuilder::buildTokenWithUid(
             config('agora.app_id'),
             config('agora.app_certificate'),
-            $expire
+            $channel,
+            $uid,
+            $rtcRole,
+            $privilegeExpireTs,
         );
-
-        $service = new ServiceRtc($channel, (string) $uid);
-        $service->addPrivilegeWithExpire(ServiceRtc::PRIVILEGE_JOIN_CHANNEL, $expire);
-
-        if ($role === self::ROLE_PUBLISHER) {
-            $service->addPrivilegeWithExpire(ServiceRtc::PRIVILEGE_PUBLISH_AUDIO, $expire);
-            $service->addPrivilegeWithExpire(ServiceRtc::PRIVILEGE_PUBLISH_VIDEO, $expire);
-        }
-
-        $token->addService($service);
-
-        return $token->build();
     }
 
     public function buildChannel(): string

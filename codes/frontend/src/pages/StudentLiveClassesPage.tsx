@@ -37,7 +37,16 @@ export default function StudentLiveClassesPage() {
   useEffect(() => { dispatch(fetchStudentLiveClasses()); }, [dispatch]);
 
   const display = liveClasses.length > 0
-    ? liveClasses.map(c => ({ time: c.start_time ?? '', subject: c.title ?? '', teacher: c.teacher?.name ?? '', status: c.status, id: c.id, channel: c.agora_channel }))
+    ? liveClasses.map(c => ({
+        time: c.scheduled_at
+          ? new Date(c.scheduled_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+          : '',
+        subject: c.title ?? '',
+        teacher: c.teacher?.name ?? '',
+        status: c.status,
+        id: c.id,
+        channel: c.agora_channel,
+      }))
     : MOCK_CLASSES;
 
   return (

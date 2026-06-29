@@ -71,7 +71,7 @@ export default function TeacherExamsPage() {
 
   function updateQuestion(i: number, field: keyof ExamQuestion, value: unknown) {
     const next = [...questions];
-    (next[i] as Record<string, unknown>)[field] = value;
+    (next[i] as unknown as Record<string, unknown>)[field as string] = value;
     if (field === 'type' && value === 'true_false') next[i].options = ['صح', 'خطأ'];
     setQuestions(next);
   }

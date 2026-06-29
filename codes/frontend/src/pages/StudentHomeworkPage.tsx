@@ -34,13 +34,13 @@ export default function StudentHomeworkPage() {
 
   const handleSubmit = async (hwId: number) => {
     if (!form.file_url.trim()) return;
-    await dispatch(submitHomework({ homeworkId: hwId, fileUrl: form.file_url, notes: form.notes }));
+    await dispatch(submitHomework({ homeworkId: hwId, file_url: form.file_url, notes: form.notes }));
     setForm({ file_url:'', notes:'' }); setActive(null);
     setFlash(hwId); setTimeout(()=>setFlash(null), 2500);
   };
 
-  const newHw   = homeworks.filter(h => !h.student_submission);
-  const doneHw  = homeworks.filter(h => !!h.student_submission);
+  const newHw   = homeworks.filter(h => !h.submitted);
+  const doneHw  = homeworks.filter(h => h.submitted);
   const display = tab === 'الجديدة' ? (newHw.length  > 0 ? newHw  : MOCK_HW) : (doneHw.length > 0 ? doneHw : []);
 
   return (

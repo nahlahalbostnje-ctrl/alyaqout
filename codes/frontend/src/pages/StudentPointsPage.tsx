@@ -21,12 +21,6 @@ const GRADE_BADGE: Record<string, { bg:string; color:string }> = {
   'مقبول':    { bg:'rgba(220,38,38,0.1)',   color:'#DC2626' },
 };
 
-function gradeFromPct(pct: number) {
-  if (pct >= 90) return 'ممتاز';
-  if (pct >= 80) return 'جيد جداً';
-  if (pct >= 70) return 'جيد';
-  return 'مقبول';
-}
 
 export default function StudentPointsPage() {
   const dispatch = useAppDispatch();

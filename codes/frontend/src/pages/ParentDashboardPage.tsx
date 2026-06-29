@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchParentDashboard } from '../features/parent/parentSlice';
 import ParentLayout from '../components/ParentLayout';
+import BrandLogo from '../components/BrandLogo';
 import type { ChildSummary } from '../features/parent/parentSlice';
 
 // ─── Colors ────────────────────────────────────────────────────────────────────
@@ -315,7 +316,7 @@ function LeagueCard({ userName }: { userName: string }) {
         <div style={{ display: 'inline-block', background: `linear-gradient(135deg, #1B2038, #2D3561)`, borderRadius: 10, padding: '4px 14px', marginBottom: 8 }}>
           <p style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>المستوى الحالي</p>
         </div>
-        <p style={{ color: C.text, fontWeight: 800, fontSize: 15, marginBottom: 6 }}>ولي أمر متميز</p>
+        <p style={{ color: C.text, fontWeight: 800, fontSize: 15, marginBottom: 6 }}>ولي أمر متميز — {userName}</p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginBottom: 8 }}>
           {[1, 2, 3, 4, 5].map(s => (
             <span key={s} style={{ fontSize: 17, color: s <= 4 ? C.gold : '#D1C5AA' }}>★</span>
@@ -449,13 +450,7 @@ export default function ParentDashboardPage() {
                 </div>
                 <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>نحن هنا لمساعدتك في رحلة التميز</p>
               </div>
-              <div style={{
-                width: 58, height: 58, borderRadius: 16, flexShrink: 0,
-                background: C.goldGrad, boxShadow: '0 6px 20px rgba(201,149,42,0.35)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <img src="/logo.png" alt="ياقوت" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-              </div>
+              <BrandLogo size={52} style={{ flexShrink: 0, borderRadius: 14, boxShadow: '0 6px 20px rgba(201,149,42,0.35)' }} />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentDashboard } from '../features/student/studentSlice';
 import { fetchMyPoints } from '../features/student/gamificationSlice';
 import { logout } from '../features/auth/authSlice';
+import BrandLogo from '../components/BrandLogo';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -583,8 +584,8 @@ export default function StudentDashboardPage() {
 
         {/* Center Diamond */}
         <div style={{ position:'relative', top:-12 }}>
-          <button style={{ width:54, height:54, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6), 0 0 0 1px ${C.gold}44`, outline:'none' }}>
-            💎
+          <button onClick={() => navigate('/student/dashboard')} style={{ width:54, height:54, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6), 0 0 0 1px ${C.gold}44`, outline:'none', overflow:'hidden' }}>
+            <BrandLogo size={38} />
           </button>
         </div>
 

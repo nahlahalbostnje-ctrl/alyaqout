@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
 import EmergencyButton from './EmergencyButton';
 import ChatbotWidget from './ChatbotWidget';
+import BrandLogo from './BrandLogo';
 
 const C = {
   sidebar: '#0D1E3A',
@@ -100,9 +101,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div style={{ padding:'18px 16px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:38, height:38, borderRadius:10, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 4px 12px rgba(197,147,65,0.35)' }}>
-              <img src="/logo.png" alt="ياقوت" style={{ width:26, height:26, objectFit:'contain' }} />
-            </div>
+            <BrandLogo size={38} style={{ flexShrink:0, borderRadius:10, boxShadow:'0 4px 12px rgba(197,147,65,0.35)' }} />
             <div>
               <p style={{ color:'#fff', fontWeight:900, fontSize:13, lineHeight:1.2 }}>منصة الياقوت</p>
               <p style={{ color:C.gold, fontSize:10.5, marginTop:2 }}>بوابة الطالب</p>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export function useInView<T extends Element = Element>(
   options?: IntersectionObserverInit
-): readonly [React.RefObject<T>, boolean] {
+): readonly [React.RefObject<T | null>, boolean] {
   const ref = useRef<T>(null);
   const [inView, setInView] = useState(false);
 
