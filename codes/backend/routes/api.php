@@ -54,6 +54,10 @@ use App\Http\Controllers\Admin\SupervisorAssignmentController as AdminSupervisor
 use App\Http\Controllers\Admin\TeacherApprovalController as AdminTeacherApprovalController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\SuperAdmin\SecurityController;
+use App\Http\Controllers\SuperAdmin\ImpersonationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -115,6 +119,12 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     Route::put('branches/{branch}',                 [SuperAdminBranchController::class, 'update']);
     Route::patch('branches/{branch}/toggle',        [SuperAdminBranchController::class, 'toggle']);
     Route::delete('branches/{branch}',              [SuperAdminBranchController::class, 'destroy']);
+
+    // Security center
+    Route::get('security/login-attempts',   [SecurityController::class, 'loginAttempts']);
+
+    // Impersonation
+    Route::post('impersonate/{user}',       [ImpersonationController::class, 'impersonate']);
 });
 
 /*
@@ -246,6 +256,15 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('my-items',                                                 [AdminPersonalItemController::class, 'store']);
     Route::put('my-items/{item}',                                           [AdminPersonalItemController::class, 'update']);
     Route::delete('my-items/{item}',                                        [AdminPersonalItemController::class, 'destroy']);
+
+    // Cities — scoped to admin's country
+    Route::get('cities',            [CityController::class, 'index']);
+    Route::post('cities',           [CityController::class, 'store']);
+    Route::put('cities/{city}',     [CityController::class, 'update']);
+    Route::delete('cities/{city}',  [CityController::class, 'destroy']);
+
+    // Audit log
+    Route::get('audit-log',         [AuditLogController::class, 'index']);
 });
 
 /*
@@ -259,6 +278,9 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 | Notification Routes — shared for all authenticated users
 |--------------------------------------------------------------------------
 */
+// Public cities list for dropdowns — any authenticated user
+Route::middleware('auth:api')->get('cities', [CityController::class, 'publicList']);
+
 Route::middleware('auth:api')->prefix('notifications')->group(function () {
     Route::get('/',                              [NotificationController::class, 'index']);
     Route::get('unread-count',                   [NotificationController::class, 'unreadCount']);

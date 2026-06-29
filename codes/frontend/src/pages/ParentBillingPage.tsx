@@ -83,8 +83,83 @@ function ChildPill({ name }: { name: string }) {
   );
 }
 
+const DEVICE_PLANS = [
+  { name:'جهاز لوحي أساسي', price:299, installments:6, monthly:50, emoji:'📱' },
+  { name:'جهاز لوحي متقدم', price:499, installments:12, monthly:42, emoji:'💻' },
+  { name:'جهاز لوحي + قلم ذكي', price:699, installments:12, monthly:58, emoji:'✏️' },
+];
+
+function DeviceRequestModal({ onClose }: { onClose: () => void }) {
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [childName, setChildName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = () => {
+    if (!selectedPlan || !childName) return;
+    setSubmitted(true);
+  };
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
+      <div style={{ background:'#fff', borderRadius:20, padding:28, width:480, maxHeight:'90vh', overflowY:'auto', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
+        {submitted ? (
+          <div style={{ textAlign:'center', padding:'20px 0' }}>
+            <div style={{ fontSize:56, marginBottom:12 }}>✅</div>
+            <h3 style={{ color:C.text, fontWeight:800, fontSize:18, marginBottom:8 }}>تم تقديم طلبك!</h3>
+            <p style={{ color:C.sub, fontSize:13, lineHeight:1.7, marginBottom:20 }}>سيتواصل معك فريقنا خلال 24 ساعة لإتمام الطلب وترتيب التقسيط.</p>
+            <button onClick={onClose} style={{ padding:'10px 24px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>إغلاق</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+              <h3 style={{ color:C.text, fontWeight:900, fontSize:17, margin:0 }}>طلب جهاز بالتقسيط 📦</h3>
+              <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:20, color:C.dim }}>✕</button>
+            </div>
+            <p style={{ color:C.sub, fontSize:12.5, marginBottom:16 }}>احصل على جهاز لوحي مخصص للدراسة مع إمكانية التقسيط المريح</p>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:8 }}>اختر الباقة</label>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {DEVICE_PLANS.map((p,i) => (
+                  <div key={i} onClick={() => setSelectedPlan(p.name)} style={{ padding:'12px 14px', borderRadius:12, border:`1.5px solid ${selectedPlan===p.name ? C.gold : C.border}`, background: selectedPlan===p.name ? C.goldBg : '#fff', cursor:'pointer', transition:'all 0.15s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                      <span style={{ fontSize:22 }}>{p.emoji}</span>
+                      <div>
+                        <p style={{ color: selectedPlan===p.name ? C.gold : C.text, fontWeight:700, fontSize:13 }}>{p.name}</p>
+                        <p style={{ color:C.dim, fontSize:11 }}>{p.installments} شهر · {p.monthly} د.أ/شهر</p>
+                      </div>
+                    </div>
+                    <span style={{ color:C.text, fontWeight:800, fontSize:14 }}>{p.price} د.أ</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>اسم الابن/البنت</label>
+              <input value={childName} onChange={e=>setChildName(e.target.value)} placeholder="الاسم الكامل" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box' }} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>رقم الهاتف للتواصل</label>
+              <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="رقم الهاتف" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box' }} />
+            </div>
+            <div style={{ marginBottom:18 }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>ملاحظات إضافية</label>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2} placeholder="أي متطلبات خاصة؟" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', resize:'none', boxSizing:'border-box' }} />
+            </div>
+            <button onClick={handleSubmit} style={{ width:'100%', padding:'11px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:14, fontWeight:800, border:'none', cursor:'pointer', opacity: selectedPlan && childName ? 1 : 0.5 }}>
+              تقديم الطلب
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ParentBillingPage() {
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
 
   const totalPaid = INVOICES.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
   const totalPending = INVOICES.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
@@ -105,8 +180,20 @@ export default function ParentBillingPage() {
 
   return (
     <ParentLayout>
+      {showDeviceModal && <DeviceRequestModal onClose={() => setShowDeviceModal(false)} />}
       <div dir="rtl" style={{ padding: 24, fontFamily: "'Cairo',sans-serif" }}>
-        <PageHeader title="المدفوعات والفواتير" sub="إدارة الفواتير ومتابعة المدفوعات لجميع أبنائك" />
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ width: 4, height: 22, borderRadius: 2, background: 'linear-gradient(135deg,#C59341,#D4A65A)' }} />
+              <h1 style={{ color: '#1B2038', fontWeight: 900, fontSize: 22, margin: 0 }}>المدفوعات والفواتير</h1>
+            </div>
+            <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>إدارة الفواتير ومتابعة المدفوعات لجميع أبنائك</p>
+          </div>
+          <button onClick={() => setShowDeviceModal(true)} style={{ padding:'10px 18px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 14px rgba(197,147,65,0.35)', fontFamily:"'Cairo',sans-serif" }}>
+            <span style={{ fontSize:16 }}>📦</span> طلب جهاز بالتقسيط
+          </button>
+        </div>
 
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>

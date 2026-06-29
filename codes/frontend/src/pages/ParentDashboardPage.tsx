@@ -306,7 +306,7 @@ function LeagueCard({ userName }: { userName: string }) {
       {/* Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <Ico d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" color={C.gold} size={17} />
-        <span style={{ color: C.text, fontWeight: 700, fontSize: 13.5 }}>دوري الياقوت للآباء</span>
+        <span style={{ color: C.text, fontWeight: 700, fontSize: 13.5 }}>أولومبياد ولادي 🏅</span>
       </div>
 
       {/* Diamond + Level */}
@@ -426,6 +426,9 @@ export default function ParentDashboardPage() {
   const firstName = parent?.name?.split(' ')[0] ?? 'أحمد';
   const totalKids  = stats.total_children || childData.length;
 
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? 'صباح الخير' : hour < 17 ? 'مساء الخير' : 'مساء النور';
+
   return (
     <ParentLayout>
       {/* Outer wrapper — RTL flex: first=right, last=left */}
@@ -441,7 +444,7 @@ export default function ParentDashboardPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 22 }}>👋</span>
                   <h1 style={{ color: C.text, fontSize: 21, fontWeight: 800, margin: 0 }}>
-                    مرحباً بك أ. {firstName}
+                    {timeGreeting}، أ. {firstName}
                   </h1>
                 </div>
                 <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>نحن هنا لمساعدتك في رحلة التميز</p>
@@ -464,6 +467,49 @@ export default function ParentDashboardPage() {
           )}
 
           {!loading && <>
+
+            {/* ── Chart + Tasks & Goals ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12 }}>
+
+              {/* Chart */}
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
+                <SecHead title="مؤشر التطور الأكاديمي" action="عرض التقرير الكامل" />
+                <AcademicChart />
+              </div>
+
+              {/* Tasks + Goals */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Tasks */}
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
+                  <SecHead title="المهام والتوصيات الذكية" action="عرض الكل" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {TASKS.map((t, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{t.icon}</span>
+                        <p style={{ color: C.text, fontSize: 12, lineHeight: 1.65, margin: 0 }}>{t.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Goals */}
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
+                  <SecHead title="الأهداف العائلية" action="عرض الكل" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {GOALS.map((g, i) => (
+                      <div key={i}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                          <span style={{ color: C.text, fontSize: 12, fontWeight: 600 }}>{g.label}</span>
+                          <span style={{ color: g.color, fontSize: 12, fontWeight: 700 }}>{g.progress}%</span>
+                        </div>
+                        <div style={{ height: 7, borderRadius: 4, background: `${g.color}1A` }}>
+                          <div style={{ height: '100%', width: `${g.progress}%`, borderRadius: 4, background: `linear-gradient(90deg, ${g.color}, ${g.color}bb)` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* ── 4 Stat Cards ── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -575,49 +621,6 @@ export default function ParentDashboardPage() {
                 <button style={{ width: '100%', marginTop: 12, padding: '10px', borderRadius: 12, border: `1px solid ${C.goldBdr}`, background: C.goldBg, color: C.gold, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
                   عرض جميع الإشعارات
                 </button>
-              </div>
-            </div>
-
-            {/* ── Chart + Tasks & Goals ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12 }}>
-
-              {/* Chart */}
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
-                <SecHead title="مؤشر التطور الأكاديمي" action="عرض التقرير الكامل" />
-                <AcademicChart />
-              </div>
-
-              {/* Tasks + Goals */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Tasks */}
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
-                  <SecHead title="المهام والتوصيات الذكية" action="عرض الكل" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {TASKS.map((t, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                        <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{t.icon}</span>
-                        <p style={{ color: C.text, fontSize: 12, lineHeight: 1.65, margin: 0 }}>{t.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Goals */}
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
-                  <SecHead title="الأهداف العائلية" action="عرض الكل" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {GOALS.map((g, i) => (
-                      <div key={i}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                          <span style={{ color: C.text, fontSize: 12, fontWeight: 600 }}>{g.label}</span>
-                          <span style={{ color: g.color, fontSize: 12, fontWeight: 700 }}>{g.progress}%</span>
-                        </div>
-                        <div style={{ height: 7, borderRadius: 4, background: `${g.color}1A` }}>
-                          <div style={{ height: '100%', width: `${g.progress}%`, borderRadius: 4, background: `linear-gradient(90deg, ${g.color}, ${g.color}bb)` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
 

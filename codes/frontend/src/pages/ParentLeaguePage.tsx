@@ -125,7 +125,7 @@ export default function ParentLeaguePage() {
   return (
     <ParentLayout>
       <div dir="rtl" style={{ padding: 24, fontFamily: "'Cairo',sans-serif" }}>
-        <PageHeader title="دوري الياقوت للآباء" sub="تنافس مع أولياء الأمور وارتقِ في المراتب بمتابعة أبنائك" />
+        <PageHeader title="أولومبياد ولادي 🏅" sub="تنافس مع أولياء الأمور وارتقِ في المراتب بمتابعة أبنائك" />
 
         {/* My Stats Banner */}
         <div style={{

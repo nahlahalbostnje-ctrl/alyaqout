@@ -31,7 +31,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->get(['id', 'name', 'phone', 'role', 'is_active', 'created_at']);
+        $users = $query->get(['id', 'name', 'phone', 'role', 'address', 'city_id', 'is_active', 'created_at']);
 
         return response()->json(['success' => true, 'data' => $users]);
     }
@@ -43,6 +43,8 @@ class UserController extends Controller
             'phone'     => 'required|string|max:20|unique:users,phone',
             'role'      => 'required|in:teacher,student,parent',
             'parent_id' => 'nullable|exists:users,id',
+            'address'   => 'nullable|string|max:500',
+            'city_id'   => 'nullable|exists:cities,id',
         ]);
 
         $parentId = null;
@@ -62,13 +64,15 @@ class UserController extends Controller
             'role'       => $request->role,
             'country_id' => $this->countryId(),
             'parent_id'  => $parentId,
+            'address'    => $request->role === 'teacher' ? $request->address : null,
+            'city_id'    => $request->role === 'student' ? $request->city_id : null,
             'is_active'  => true,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'تم إنشاء الحساب بنجاح.',
-            'data'    => $user->only(['id', 'name', 'phone', 'role', 'parent_id', 'is_active', 'created_at']),
+            'data'    => $user->only(['id', 'name', 'phone', 'role', 'address', 'city_id', 'parent_id', 'is_active', 'created_at']),
         ], 201);
     }
 

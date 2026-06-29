@@ -238,6 +238,65 @@ export default function ParentAcademicProgressPage() {
           </div>
         </div>
 
+        {/* Monthly Delta Chart */}
+        <div style={{ ...card(), marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 4, height: 18, borderRadius: 2, background: C.goldGrad }} />
+            <span style={{ color: C.text, fontWeight: 800, fontSize: 14 }}>الفروق الشهرية غير التراكمية 📊</span>
+          </div>
+          <p style={{ color: C.sub, fontSize: 12, marginBottom: 14 }}>
+            التغيير في النقاط مقارنةً بالشهر السابق — موجب يعني تحسن، سالب يعني تراجع
+          </p>
+          <div style={{ overflowX: 'auto' }}>
+            <svg width={520} height={160} style={{ display: 'block', minWidth: 520 }}>
+              {/* Zero line */}
+              <line x1={36} y1={80} x2={504} y2={80} stroke={C.border} strokeWidth={1.5} />
+              <text x={30} y={84} textAnchor="end" fontSize={9} fill={C.dim}>0</text>
+              {/* Grid */}
+              {[-15, 15].map(g => {
+                const y = 80 - (g / 20) * 60;
+                return (
+                  <g key={g}>
+                    <line x1={36} y1={y} x2={504} y2={y} stroke={C.border} strokeWidth={0.6} strokeDasharray="3,3" />
+                    <text x={30} y={y + 4} textAnchor="end" fontSize={8} fill={C.dim}>{g > 0 ? `+${g}` : g}</text>
+                  </g>
+                );
+              })}
+              {/* Bars per subject, per month pair */}
+              {scores.map((subjectScores, si) => {
+                const step = (504 - 36) / (MONTHS.length - 1);
+                return subjectScores.slice(1).map((v, i) => {
+                  const delta = v - subjectScores[i];
+                  const clipped = Math.max(-20, Math.min(20, delta));
+                  const barH = Math.abs(clipped / 20) * 55;
+                  const x = 36 + (i + 0.5) * step + (si - 2) * 7;
+                  const positive = clipped >= 0;
+                  const y = positive ? 80 - barH : 80;
+                  return (
+                    <rect key={`${si}-${i}`} x={x - 3} y={y} width={6} height={Math.max(barH, 1)} rx={2}
+                      fill={positive ? SUBJECT_COLORS[si] : `${SUBJECT_COLORS[si]}88`} opacity={0.85} />
+                  );
+                });
+              })}
+              {/* Month labels */}
+              {MONTHS.slice(1).map((m, i) => {
+                const step = (504 - 36) / (MONTHS.length - 1);
+                return (
+                  <text key={m} x={36 + (i + 0.5) * step} y={155} textAnchor="middle" fontSize={8} fill={C.dim}>{m}</text>
+                );
+              })}
+            </svg>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
+            {SUBJECTS.map((s, i) => (
+              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 16, height: 8, borderRadius: 2, background: SUBJECT_COLORS[i] }} />
+                <span style={{ fontSize: 10, color: C.sub }}>{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Subject Breakdown */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>تفاصيل المواد الدراسية</div>

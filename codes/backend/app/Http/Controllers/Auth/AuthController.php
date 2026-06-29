@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoginAttempt;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,11 +21,27 @@ class AuthController extends Controller
             ->first();
 
         if (! $user) {
+            LoginAttempt::create([
+                'user_id'     => null,
+                'phone'       => $request->phone,
+                'ip_address'  => $request->ip(),
+                'device_info' => $request->userAgent(),
+                'success'     => false,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'رقم الهاتف غير مسجل أو الحساب غير نشط.',
             ], 401);
         }
+
+        LoginAttempt::create([
+            'user_id'     => $user->id,
+            'phone'       => $request->phone,
+            'ip_address'  => $request->ip(),
+            'device_info' => $request->userAgent(),
+            'success'     => true,
+        ]);
 
         $token = auth('api')->login($user);
 

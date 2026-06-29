@@ -8,6 +8,8 @@ export interface AdminUser {
   name: string;
   phone: string;
   role: UserRole;
+  address?: string | null;
+  city_id?: number | null;
   is_active: boolean;
   created_at: string;
 }
@@ -35,7 +37,7 @@ export const fetchUsers = createAsyncThunk(
 
 export const addUser = createAsyncThunk(
   'adminUsers/add',
-  async (payload: { name: string; phone: string; role: UserRole }, { rejectWithValue }) => {
+  async (payload: { name: string; phone: string; role: UserRole; address?: string; city_id?: number | null }, { rejectWithValue }) => {
     try {
       const { data } = await api.post('/admin/users', payload);
       return data.data as AdminUser;

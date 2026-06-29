@@ -10,7 +10,7 @@ interface Message {
 
 const WELCOME: Message = {
   role:    'assistant',
-  content: 'مرحباً! أنا مساعدك الدراسي الذكي 🤖\nاسألني عن أي درس أو مسألة وسأساعدك على الفهم.',
+  content: 'مرحباً! أنا مستشار ياقوت 👨‍💼\nأنا هنا لمساعدتك في أي استفسار يتعلق بحسابك، أبنائك، أو المنصة. كيف يمكنني مساعدتك؟',
 };
 
 export default function ChatbotWidget() {
@@ -64,7 +64,7 @@ export default function ChatbotWidget() {
         onClick={() => setOpen((o) => !o)}
         title="المساعد الذكي"
         className="fixed bottom-6 left-40 z-40 w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-        style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
+        style={{ background: 'linear-gradient(135deg, #0D1E3A, #1B2038)', boxShadow: '0 4px 20px rgba(13,30,58,0.45)' }}
       >
         {open ? (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,17 +82,17 @@ export default function ChatbotWidget() {
       {open && (
         <div
           className="fixed bottom-24 left-6 z-50 flex flex-col rounded-3xl shadow-2xl overflow-hidden"
-          style={{ width: '340px', height: '480px', background: '#fff', border: '1px solid #ede9fe' }}
+          style={{ width: '340px', height: '480px', background: '#fff', border: '1px solid #EDE3CE' }}
           dir="rtl"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}>
+            style={{ background: 'linear-gradient(135deg, #0D1E3A, #162144)' }}>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg">🤖</div>
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg">👨‍💼</div>
               <div>
-                <p className="text-white font-bold text-sm" style={font}>المساعد الذكي</p>
-                <p className="text-purple-200 text-xs" style={font}>يمنح تلميحات لا إجابات</p>
+                <p className="text-white font-bold text-sm" style={font}>مستشار ياقوت</p>
+                <p style={{ ...font, color: '#D4A65A', fontSize: 11 }}>● متاح الآن للمساعدة</p>
               </div>
             </div>
             <button onClick={reset}
@@ -104,23 +104,23 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ background: '#f9f8ff' }}>
+          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ background: '#F9F6EE' }}>
             {messages.map((msg, i) => {
               const isUser = msg.role === 'user';
               return (
                 <div key={i} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
                   <div className="max-w-[80%]">
                     {!isUser && (
-                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs mb-1 mr-auto">
-                        🤖
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs mb-1 mr-auto" style={{ background: 'rgba(197,147,65,0.12)' }}>
+                        👨‍💼
                       </div>
                     )}
                     <div
                       className="px-3 py-2 rounded-2xl text-xs"
                       style={{
-                        background: isUser ? 'linear-gradient(135deg, #7c3aed, #5b21b6)' : '#fff',
-                        color:      isUser ? '#fff' : '#1e293b',
-                        border:     isUser ? 'none' : '1px solid #ede9fe',
+                        background: isUser ? 'linear-gradient(135deg, #0D1E3A, #1B2038)' : '#fff',
+                        color:      isUser ? '#fff' : '#1B2038',
+                        border:     isUser ? 'none' : '1px solid #EDE3CE',
                         borderTopRightRadius: isUser ? '4px' : '16px',
                         borderTopLeftRadius:  isUser ? '16px' : '4px',
                         lineHeight: 1.7,
@@ -139,9 +139,9 @@ export default function ChatbotWidget() {
               <div className="flex justify-end">
                 <div className="bg-white border border-purple-100 px-4 py-2 rounded-2xl">
                   <div className="flex gap-1 items-center">
-                    <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ animationDelay: '0ms', background: '#C59341' }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ animationDelay: '150ms', background: '#C59341' }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ animationDelay: '300ms', background: '#C59341' }} />
                   </div>
                 </div>
               </div>
@@ -155,15 +155,16 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Input */}
-          <div className="flex-shrink-0 p-3 flex items-end gap-2 bg-white" style={{ borderTop: '1px solid #ede9fe' }}>
+          <div className="flex-shrink-0 p-3 flex items-end gap-2 bg-white" style={{ borderTop: '1px solid #EDE3CE' }}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="اسأل عن أي درس..."
+              placeholder="اكتب استفساركم هنا..."
               rows={1}
               disabled={loading}
-              className="flex-1 resize-none border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50"
+              className="flex-1 resize-none border rounded-xl px-3 py-2 text-xs focus:outline-none disabled:opacity-50"
+              style={{ borderColor: '#EDE3CE' }}
               style={{ ...font, maxHeight: '80px', overflowY: 'auto' }}
               onInput={(e) => {
                 const t = e.currentTarget;
@@ -175,7 +176,7 @@ export default function ChatbotWidget() {
               onClick={send}
               disabled={loading || !input.trim()}
               className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl transition disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}
+              style={{ background: 'linear-gradient(135deg, #C59341, #D4A65A)' }}
             >
               <svg className="w-4 h-4 text-white rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

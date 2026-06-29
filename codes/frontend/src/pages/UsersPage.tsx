@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, addUser, toggleUser, deleteUser } from '../features/admin/usersSlice';
 import AdminLayout from '../components/AdminLayout';
+import api from '../services/axios';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -62,6 +63,8 @@ function Toggle({ on, onToggle, loading=false }: { on:boolean; onToggle:()=>void
 type Role = 'teacher' | 'student' | 'parent';
 type TabKey = 'all' | Role;
 
+interface City { id: number; name: string; }
+
 const ROLE_LABEL: Record<Role, string> = { teacher:'معلم', student:'طالب', parent:'ولي أمر' };
 const ROLE_COLOR: Record<Role, { color:string; bg:string }> = {
   teacher: { color: DK.blue,   bg: 'rgba(59,130,246,0.1)'  },
@@ -76,14 +79,19 @@ export default function UsersPage() {
   const [activeTab, setActiveTab]   = useState<TabKey>('all');
   const [search, setSearch]         = useState('');
   const [showModal, setShowModal]   = useState(false);
-  const [form, setForm]             = useState({ name: '', phone: '', role: 'teacher' as Role });
+  const [form, setForm]             = useState({ name: '', phone: '', role: 'teacher' as Role, address: '', city_id: '' });
   const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
   const [toggling, setToggling]     = useState<number | null>(null);
   const [deleting, setDeleting]     = useState<number | null>(null);
   const [focused, setFocused]       = useState<string | null>(null);
+  const [cities, setCities]         = useState<City[]>([]);
 
   useEffect(() => { dispatch(fetchUsers(null)); }, [dispatch]);
+
+  useEffect(() => {
+    api.get('/cities').then(r => setCities(r.data.data ?? [])).catch(() => {});
+  }, []);
 
   const filtered = users.filter((u) => {
     const matchTab = activeTab === 'all' || u.role === activeTab;
@@ -93,7 +101,7 @@ export default function UsersPage() {
   });
 
   const openModal = () => {
-    setForm({ name: '', phone: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher' });
+    setForm({ name: '', phone: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher', address: '', city_id: '' });
     setAddError(null);
     setShowModal(true);
   };
@@ -101,7 +109,10 @@ export default function UsersPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddLoading(true); setAddError(null);
-    const result = await dispatch(addUser(form));
+    const payload: Parameters<typeof addUser>[0] = { name: form.name, phone: form.phone, role: form.role };
+    if (form.role === 'teacher' && form.address.trim()) payload.address = form.address.trim();
+    if (form.role === 'student' && form.city_id) payload.city_id = Number(form.city_id);
+    const result = await dispatch(addUser(payload));
     setAddLoading(false);
     if (addUser.fulfilled.match(result)) setShowModal(false);
     else setAddError(result.payload as string);
@@ -253,9 +264,9 @@ export default function UsersPage() {
                 style={inp(focused==='phone')}
                 onFocus={() => setFocused('phone')} onBlur={() => setFocused(null)} />
             </div>
-            <div style={{ marginBottom:20 }}>
+            <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدور</label>
-              <select value={form.role} onChange={e => setForm({...form, role: e.target.value as Role})}
+              <select value={form.role} onChange={e => setForm({...form, role: e.target.value as Role, address: '', city_id: ''})}
                 style={{ ...inp(focused==='role'), cursor:'pointer' }}
                 onFocus={() => setFocused('role')} onBlur={() => setFocused(null)}>
                 <option value="teacher">معلم</option>
@@ -263,6 +274,31 @@ export default function UsersPage() {
                 <option value="parent">ولي أمر</option>
               </select>
             </div>
+
+            {form.role === 'teacher' && (
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان (اختياري)</label>
+                <input type="text" value={form.address} onChange={e => setForm({...form, address: e.target.value})}
+                  placeholder="مثال: رام الله، شارع الإرسال"
+                  style={inp(focused==='address')}
+                  onFocus={() => setFocused('address')} onBlur={() => setFocused(null)} />
+              </div>
+            )}
+
+            {form.role === 'student' && (
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدينة (اختياري)</label>
+                <select value={form.city_id} onChange={e => setForm({...form, city_id: e.target.value})}
+                  style={{ ...inp(focused==='city'), cursor:'pointer' }}
+                  onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}>
+                  <option value="">— اختر المدينة —</option>
+                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {cities.length === 0 && (
+                  <p style={{ fontSize:11, color: DK.dim, marginTop:4 }}>لا توجد مدن مضافة بعد — يمكن للأدمن إضافتها من صفحة المدن</p>
+                )}
+              </div>
+            )}
             {addError && (
               <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{addError}</p>
             )}

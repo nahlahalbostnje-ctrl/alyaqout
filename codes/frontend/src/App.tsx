@@ -87,6 +87,19 @@ import StudentPeerLeaguePage      from './pages/StudentPeerLeaguePage';
 import StudentStudy24Page         from './pages/StudentStudy24Page';
 import StudentMessagesPage        from './pages/StudentMessagesPage';
 import StudentTeacherContactPage  from './pages/StudentTeacherContactPage';
+import TeacherAttendancePage      from './pages/TeacherAttendancePage';
+import AdminApprovalsPage         from './pages/AdminApprovalsPage';
+import AdminCitiesPage            from './pages/AdminCitiesPage';
+import AdminAuditLogPage          from './pages/AdminAuditLogPage';
+import SuperAdminSecurityPage     from './pages/SuperAdminSecurityPage';
+import TeacherSchedulePage        from './pages/TeacherSchedulePage';
+import StudentReviewVideosPage    from './pages/StudentReviewVideosPage';
+import StudentLibraryPage         from './pages/StudentLibraryPage';
+import StudentTalentsPage         from './pages/StudentTalentsPage';
+import StudentStudyBuddyPage      from './pages/StudentStudyBuddyPage';
+import StudentCounselorPage       from './pages/StudentCounselorPage';
+import StudentTimeCapsulePage     from './pages/StudentTimeCapsulePage';
+import StudentChallengesPage      from './pages/StudentChallengesPage';
 import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
@@ -226,6 +239,20 @@ export default function App() {
         <Route path="/admin/my-items" element={
           <PrivateRoute roles={['admin']}><AdminPersonalItemsPage /></PrivateRoute>
         } />
+        <Route path="/admin/approval-requests" element={
+          <PrivateRoute roles={['admin']}><AdminApprovalsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/cities" element={
+          <PrivateRoute roles={['admin']}><AdminCitiesPage /></PrivateRoute>
+        } />
+        <Route path="/admin/audit-log" element={
+          <PrivateRoute roles={['admin']}><AdminAuditLogPage /></PrivateRoute>
+        } />
+
+        {/* Super Admin Security */}
+        <Route path="/super-admin/security" element={
+          <PrivateRoute roles={['super_admin']}><SuperAdminSecurityPage /></PrivateRoute>
+        } />
 
         {/* Student */}
         <Route path="/student/dashboard" element={
@@ -273,6 +300,27 @@ export default function App() {
         <Route path="/student/teacher-contact" element={
           <PrivateRoute roles={['student']}><StudentTeacherContactPage /></PrivateRoute>
         } />
+        <Route path="/student/library" element={
+          <PrivateRoute roles={['student']}><StudentLibraryPage /></PrivateRoute>
+        } />
+        <Route path="/student/talents" element={
+          <PrivateRoute roles={['student']}><StudentTalentsPage /></PrivateRoute>
+        } />
+        <Route path="/student/study-buddy" element={
+          <PrivateRoute roles={['student']}><StudentStudyBuddyPage /></PrivateRoute>
+        } />
+        <Route path="/student/counselor" element={
+          <PrivateRoute roles={['student']}><StudentCounselorPage /></PrivateRoute>
+        } />
+        <Route path="/student/time-capsule" element={
+          <PrivateRoute roles={['student']}><StudentTimeCapsulePage /></PrivateRoute>
+        } />
+        <Route path="/student/challenges" element={
+          <PrivateRoute roles={['student']}><StudentChallengesPage /></PrivateRoute>
+        } />
+        <Route path="/student/review-videos" element={
+          <PrivateRoute roles={['student']}><StudentReviewVideosPage /></PrivateRoute>
+        } />
 
         {/* Teacher */}
         <Route path="/teacher/dashboard" element={
@@ -295,6 +343,12 @@ export default function App() {
         } />
         <Route path="/teacher/my-items" element={
           <PrivateRoute roles={['teacher']}><TeacherPersonalItemsPage /></PrivateRoute>
+        } />
+        <Route path="/teacher/attendance" element={
+          <PrivateRoute roles={['teacher']}><TeacherAttendancePage /></PrivateRoute>
+        } />
+        <Route path="/teacher/schedule" element={
+          <PrivateRoute roles={['teacher']}><TeacherSchedulePage /></PrivateRoute>
         } />
 
         {/* Parent */}

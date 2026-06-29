@@ -22,6 +22,8 @@ class User extends Authenticatable implements JWTSubject
         'phone',
         'role',
         'country_id',
+        'address',
+        'city_id',
         'grade_id',
         'parent_id',
         'otp_code',
@@ -54,6 +56,11 @@ class User extends Authenticatable implements JWTSubject
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function grade(): BelongsTo

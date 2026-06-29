@@ -16,10 +16,13 @@ const navItems = [
   { to: '/admin/cms',           label: 'إدارة المحتوى',      icon: Icons.fileText       },
   { to: '/admin/supervisors',   label: 'المشرفون',            icon: Icons.users          },
   { to: '/admin/approvals',     label: 'موافقات المعلمين',   icon: Icons.clipboard      },
+  { to: '/admin/cities',        label: 'المدن',               icon: Icons.home           },
+  { to: '/admin/audit-log',    label: 'سجل العمليات',        icon: Icons.clipboard      },
   { to: '/admin/notifications', label: 'الإشعارات',          icon: Icons.bell           },
   { to: '/admin/leagues',       label: 'دوري ياقوت',          icon: Icons.trophy         },
-  { to: '/admin/my-items',      label: 'مهامي ومذكراتي',     icon: Icons.clipboard      },
-  { to: '/admin/settings',      label: 'الإعدادات',           icon: Icons.settings       },
+  { to: '/admin/my-items',           label: 'مهامي ومذكراتي',     icon: Icons.clipboard  },
+  { to: '/admin/approval-requests', label: 'مركز الموافقات',    icon: Icons.clipboard  },
+  { to: '/admin/settings',          label: 'الإعدادات',          icon: Icons.settings   },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

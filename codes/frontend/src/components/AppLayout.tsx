@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -26,6 +27,19 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector((s) => s.auth.user);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (sidebarOpen) setSidebarOpen(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const initials = user?.name
     ? user.name.split(' ').slice(0, 2).map((w: string) => w[0]).join('')
@@ -50,6 +64,12 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
       dir="rtl"
       style={{ display: 'flex', minHeight: '100vh', background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }}
     >
+      {/* ══ MOBILE BACKDROP ══ */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
+      )}
+
       {/* ══ SIDEBAR ══ */}
       <aside
         style={{
@@ -59,11 +79,15 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
           display: 'flex',
           flexDirection: 'column',
           height: '100vh',
-          position: 'sticky',
+          position: isMobile ? 'fixed' : 'sticky',
           top: 0,
+          right: 0,
+          zIndex: isMobile ? 50 : 'auto',
           overflowY: 'auto',
           scrollbarWidth: 'none',
           borderLeft: '1px solid rgba(255,255,255,0.06)',
+          transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
+          transition: 'transform 0.25s ease',
         }}
       >
         {/* Brand */}
@@ -239,15 +263,25 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
             boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
           }}
         >
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#9CA3AF', fontSize: 12 }}>لوحة التحكم</span>
-            {currentPage && (
-              <>
-                <span style={{ color: '#D1C4A8', fontSize: 12 }}>/</span>
-                <span style={{ color: '#0D1E3A', fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
-              </>
+          {/* Hamburger (mobile) + Breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(o => !o)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: SB }}>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+                </svg>
+              </button>
             )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: '#9CA3AF', fontSize: 12 }}>لوحة التحكم</span>
+              {currentPage && (
+                <>
+                  <span style={{ color: '#D1C4A8', fontSize: 12 }}>/</span>
+                  <span style={{ color: '#0D1E3A', fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Right side */}

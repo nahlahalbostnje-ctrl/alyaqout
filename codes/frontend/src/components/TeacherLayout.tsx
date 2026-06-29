@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import type { ReactNode } from 'react';
@@ -11,13 +12,26 @@ const navItems = [
   { to: '/teacher/exams',        label: 'امتحاناتي',      d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
   { to: '/teacher/homework',     label: 'واجباتي',        d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
   { to: '/teacher/emergency',    label: 'طلبات الطوارئ',  d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
-  { to: '/teacher/my-items',     label: 'مذكراتي',        d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+  { to: '/teacher/attendance',   label: 'الحضور والسلوك', d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+  { to: '/teacher/schedule',     label: 'جدولي',           d: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+  { to: '/teacher/my-items',     label: 'مذكراتي',        d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
 ];
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAppSelector((s) => s.auth.user);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const initials = user?.name?.split(' ').slice(0, 2).map((w) => w[0]).join('') ?? 'م';
   const now = new Date();
@@ -31,9 +45,21 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen" style={{ background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }} dir="rtl">
 
+      {/* ── Mobile Backdrop ── */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="w-60 flex-shrink-0 flex flex-col h-screen sticky top-0"
-        style={{ background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
+      <aside className="w-60 flex-shrink-0 flex flex-col h-screen"
+        style={{
+          background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)',
+          position: isMobile ? 'fixed' : 'sticky', top: 0, right: 0,
+          zIndex: isMobile ? 50 : 'auto' as never,
+          transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
+          transition: 'transform 0.25s ease',
+        }}>
 
         {/* Logo */}
         <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -94,9 +120,19 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 flex items-center justify-between px-6 flex-shrink-0"
+        <header className="h-14 flex items-center justify-between px-4 flex-shrink-0"
           style={{ background: '#FFFFFF', borderBottom: '1px solid #EDE3CE', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-          <p style={{ color: '#6B7280', fontSize: '13px' }}>{dateStr}</p>
+          <div className="flex items-center gap-2">
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(o => !o)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#1B2038' }}>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+                </svg>
+              </button>
+            )}
+            <p style={{ color: '#6B7280', fontSize: '12px' }}>{dateStr}</p>
+          </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
             <button onClick={handleLogout}

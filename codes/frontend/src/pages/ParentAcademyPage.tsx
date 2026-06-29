@@ -272,6 +272,39 @@ export default function ParentAcademyPage() {
           </div>
         )}
 
+        {/* ── Extracurricular / اللامنهجية ── */}
+        <div style={{ marginBottom: 26 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 4, height: 18, borderRadius: 2, background: C.goldGrad }} />
+            <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>الأنشطة اللامنهجية لأبنائك</h2>
+            <span style={{ background: C.blueBg, color: C.blue, fontSize: 11, fontWeight: 800, borderRadius: 20, padding: '2px 10px' }}>جديد</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
+            {[
+              { emoji: '🎨', title: 'الفن الإبداعي', sub: 'رسم، تلوين، خزف', color: '#EC4899', students: 420 },
+              { emoji: '🎵', title: 'الموسيقى وفنون الأداء', sub: 'إيقاع، غناء، مسرح', color: '#8B5CF6', students: 310 },
+              { emoji: '⚽', title: 'الرياضة والنشاط', sub: 'كرة، سباحة، جمناستك', color: '#10B981', students: 680 },
+              { emoji: '🤖', title: 'التكنولوجيا والبرمجة', sub: 'روبوتيكس، كودنج', color: '#3B82F6', students: 250 },
+            ].map((act, i) => (
+              <div key={i} style={{
+                background: C.card, borderRadius: 16, padding: '18px 16px', border: `1px solid ${C.border}`,
+                boxShadow: C.shadow, textAlign: 'center', cursor: 'pointer', transition: 'transform 0.15s',
+              }}
+                onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'}
+                onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'}
+              >
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: `${act.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, margin: '0 auto 10px' }}>{act.emoji}</div>
+                <p style={{ color: C.text, fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>{act.title}</p>
+                <p style={{ color: C.sub, fontSize: 11, margin: '0 0 12px' }}>{act.sub}</p>
+                <p style={{ color: C.dim, fontSize: 11, marginBottom: 12 }}>👥 {act.students.toLocaleString('ar-EG')} طالب مسجّل</p>
+                <button style={{ background: `${act.color}15`, color: act.color, border: `1px solid ${act.color}30`, borderRadius: 8, padding: '7px 0', width: '100%', fontFamily: "'Cairo',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                  سجّل ابنك الآن
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* All Courses Grid */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
