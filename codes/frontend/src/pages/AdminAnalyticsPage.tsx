@@ -125,7 +125,7 @@ export default function AdminAnalyticsPage() {
 
         {/* Tabs */}
         <div style={{ display:'flex', gap:6, marginBottom:22, background: C.card, borderRadius:14, padding:5, border:`1px solid ${C.border}`, width:'fit-content' }}>
-          {[['platform','📈 إحصاءات المنصة'],['teachers','👨‍🏫 تقييم المعلمين بالذكاء الاصطناعي']] as const}.map(([v,l]) => (
+          {([['platform','📈 إحصاءات المنصة'],['teachers','👨‍🏫 تقييم المعلمين بالذكاء الاصطناعي']] as Array<[string,string]>).map(([v,l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
               style={{ padding:'8px 20px', borderRadius:10, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:activeTab===v?700:500, background: activeTab===v ? C.goldGrad : 'transparent', color: activeTab===v ? '#1B2038' : C.sub, transition:'all 0.2s', boxShadow: activeTab===v ? '0 3px 10px rgba(197,147,65,0.3)' : 'none' }}>
               {l}
