@@ -59,7 +59,7 @@ PROMPT,
 PROMPT,
     ];
 
-    public function chat(int $countryId, string $userMessage, array $history = [], string $role = 'student'): string
+    public function chat(int $countryId, string $userMessage, array $history = [], string $role = 'student', array $context = []): string
     {
         $settings = Setting::where('country_id', $countryId)->first();
 
@@ -67,7 +67,8 @@ PROMPT,
             return 'عذراً، خدمة المساعد الذكي غير مفعّلة حالياً. تواصل مع إدارة المنصة لتفعيل مفتاح الذكاء الاصطناعي.';
         }
 
-        $systemPrompt = $settings->chatbot_system_prompt ?: (self::SYSTEM_PROMPTS[$role] ?? self::SYSTEM_PROMPTS['student']);
+        $basePrompt   = $settings->chatbot_system_prompt ?: (self::SYSTEM_PROMPTS[$role] ?? self::SYSTEM_PROMPTS['student']);
+        $systemPrompt = $basePrompt . $this->buildContextBlock($context);
         $provider     = $settings->chatbot_provider ?? 'claude';
         $apiKey       = $settings->chatbot_api_key;
 
@@ -124,5 +125,50 @@ PROMPT,
         }
         $messages[] = ['role' => 'user', 'content' => $userMessage];
         return $messages;
+    }
+
+    private function buildContextBlock(array $context): string
+    {
+        if (empty($context)) return '';
+
+        $lines = ["\n\n--- بيانات المستخدم الحالية (استخدمها في ردودك) ---"];
+
+        if (!empty($context['student_name'])) {
+            $lines[] = "اسم الطالب: {$context['student_name']}";
+        }
+        if (isset($context['attendance_total'], $context['attendance_present'])) {
+            $pct = $context['attendance_total'] > 0
+                ? round($context['attendance_present'] / $context['attendance_total'] * 100)
+                : 0;
+            $lines[] = "الحضور: {$context['attendance_present']} من {$context['attendance_total']} ({$pct}%)";
+            if ($pct < 75) {
+                $lines[] = "⚠️ تحذير: نسبة الحضور منخفضة وتحت الحد المقبول (75%).";
+            }
+        }
+        if (!empty($context['exam_results'])) {
+            $lines[] = "نتائج الاختبارات الأخيرة:";
+            foreach ($context['exam_results'] as $r) {
+                $lines[] = "  - {$r['title']}: {$r['score']}/{$r['total']}";
+            }
+        }
+        if (!empty($context['homework_stats'])) {
+            $h = $context['homework_stats'];
+            $lines[] = "الواجبات: {$h['submitted']} مسلّم من أصل {$h['total']}";
+        }
+        if (!empty($context['teacher_notes'])) {
+            $lines[] = "ملاحظات المعلمين: " . implode('؛ ', $context['teacher_notes']);
+        }
+        if (!empty($context['points'])) {
+            $lines[] = "نقاط الغيمفيكيشن: {$context['points']} نقطة";
+        }
+        if (!empty($context['children'])) {
+            $lines[] = "بيانات الأبناء:";
+            foreach ($context['children'] as $child) {
+                $lines[] = "  - {$child['name']}: حضور {$child['attendance_pct']}%, متوسط الدرجات {$child['avg_score']}%";
+            }
+        }
+
+        $lines[] = "---";
+        return implode("\n", $lines);
     }
 }

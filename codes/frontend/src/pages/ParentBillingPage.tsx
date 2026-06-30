@@ -160,6 +160,9 @@ function DeviceRequestModal({ onClose }: { onClose: () => void }) {
 export default function ParentBillingPage() {
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [renewPlan, setRenewPlan] = useState<'monthly'|'quarterly'|'annual'>('annual');
+  const [renewDone, setRenewDone] = useState(false);
 
   const totalPaid = INVOICES.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
   const totalPending = INVOICES.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
@@ -181,7 +184,63 @@ export default function ParentBillingPage() {
   return (
     <ParentLayout>
       {showDeviceModal && <DeviceRequestModal onClose={() => setShowDeviceModal(false)} />}
+
+      {/* Renewal Modal */}
+      {showRenewalModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)' }}
+          onClick={() => { setShowRenewalModal(false); setRenewDone(false); }}>
+          <div style={{ background:'#fff', borderRadius:20, padding:'28px', width:'100%', maxWidth:420, fontFamily:"'Cairo',sans-serif", direction:'rtl', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ color:'#0D1E3A', fontWeight:800, fontSize:18, marginBottom:6 }}>تجديد الاشتراك</h3>
+            <p style={{ color:'#6B7280', fontSize:13, marginBottom:20 }}>اختر مدة التجديد المناسبة لك</p>
+            {renewDone ? (
+              <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'16px', textAlign:'center', color:'#10B981', fontWeight:700, fontSize:15 }}>
+                ✅ تم تجديد اشتراكك بنجاح! سيصلك تأكيد على واتساب.
+              </div>
+            ) : (
+              <>
+                <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
+                  {([['monthly','شهري','99 ريال / شهر',''], ['quarterly','ربع سنوي','270 ريال / 3 أشهر','وفّر 27 ريال'], ['annual','سنوي','960 ريال / سنة','🎁 وفّر 228 ريال']] as const).map(([v,l,p,save]) => (
+                    <button key={v} onClick={() => setRenewPlan(v)}
+                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${renewPlan===v?C.gold:'#EDE3CE'}`, background: renewPlan===v?C.goldBg:'#F8FAFC', cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <div>
+                        <p style={{ color: renewPlan===v?C.gold:'#1B2038', fontWeight:800, fontSize:14, margin:0 }}>{l}</p>
+                        <p style={{ color:'#6B7280', fontSize:12, margin:0 }}>{p}</p>
+                      </div>
+                      {save && <span style={{ background:C.goldBg, color:C.gold, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>{save}</span>}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={() => setRenewDone(true)}
+                    style={{ flex:1, padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    تجديد الآن 🎉
+                  </button>
+                  <button onClick={() => setShowRenewalModal(false)}
+                    style={{ flex:1, padding:'13px', borderRadius:14, background:'#F1F5F9', color:'#6B7280', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    لاحقاً
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div dir="rtl" style={{ padding: 24, fontFamily: "'Cairo',sans-serif" }}>
+        {/* Subscription expiry banner */}
+        <div style={{ background:'linear-gradient(135deg,#0D1E3A,#162144)', borderRadius:16, padding:'16px 20px', marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div>
+            <p style={{ color:'rgba(255,255,255,0.6)', fontSize:12, marginBottom:2 }}>اشتراكك الحالي</p>
+            <p style={{ color:'#fff', fontWeight:800, fontSize:16, margin:0 }}>الباقة الذهبية — ينتهي في 15/08/2026</p>
+            <p style={{ color:C.gold, fontSize:12, marginTop:2 }}>متبقي 46 يوم</p>
+          </div>
+          <button onClick={() => { setShowRenewalModal(true); setRenewDone(false); }}
+            style={{ padding:'10px 20px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", boxShadow:'0 4px 14px rgba(197,147,65,0.4)' }}>
+            🔄 تجديد الاشتراك
+          </button>
+        </div>
+
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>

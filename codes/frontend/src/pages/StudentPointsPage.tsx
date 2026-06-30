@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyPoints, fetchLeaderboard } from '../features/student/gamificationSlice';
 import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import { useEncouragement } from '../components/EncouragementToast';
 
 const SEMESTERS = ['الفصل الدراسي الثاني', 'الفصل الدراسي الأول', 'العام الكامل'] as const;
 
@@ -28,8 +29,13 @@ export default function StudentPointsPage() {
   const { totalPoints } = useAppSelector(s => s.gamification);
   const [sem, setSem]     = useState(0);
   const [picker, setPicker] = useState(false);
+  const { show: celebrate, element: toastEl } = useEncouragement();
 
-  useEffect(() => { dispatch(fetchMyPoints()); dispatch(fetchLeaderboard()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchMyPoints());
+    dispatch(fetchLeaderboard());
+    celebrate('points_earned');
+  }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const overall = Math.round(MOCK_RESULTS.reduce((a,s)=>a+s.pct,0)/MOCK_RESULTS.length);
 
@@ -123,6 +129,7 @@ export default function StudentPointsPage() {
       </div>
 
       <StudentBottomNav cur="/student/points" />
+      {toastEl}
     </div>
   );
 }

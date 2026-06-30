@@ -22,6 +22,8 @@ const navItems = [
   { to: '/admin/leagues',       label: 'دوري ياقوت',          icon: Icons.trophy         },
   { to: '/admin/my-items',           label: 'مهامي ومذكراتي',     icon: Icons.clipboard  },
   { to: '/admin/approval-requests', label: 'مركز الموافقات',    icon: Icons.clipboard  },
+  { to: '/admin/teacher-management', label: 'إدارة المعلمين',      icon: Icons.users      },
+  { to: '/admin/analytics',         label: 'التحليلات وتقييم AI', icon: Icons.clipboard },
   { to: '/admin/settings',          label: 'الإعدادات',          icon: Icons.settings   },
 ];
 

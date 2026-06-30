@@ -63,6 +63,7 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
   return (
     <div
       dir="rtl"
+      data-layout="app-root"
       style={{ display: 'flex', minHeight: '100vh', background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }}
     >
       {/* ══ MOBILE BACKDROP ══ */}
@@ -272,8 +273,8 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
 
           {/* Right side */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {/* Date */}
-            <span style={{ color: '#9CA3AF', fontSize: 12 }}>{dateStr}</span>
+            {/* Date — hidden on mobile */}
+            {!isMobile && <span className="header-date" style={{ color: '#9CA3AF', fontSize: 12 }}>{dateStr}</span>}
 
             {/* Bell */}
             <NotificationBell />

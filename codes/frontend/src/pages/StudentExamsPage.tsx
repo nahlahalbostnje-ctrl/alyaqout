@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentExams, loadExam, submitExam, clearActiveExam } from '../features/student/examSlice';
 import type { ExamQuestionItem } from '../features/student/examSlice';
 import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import { useEncouragement } from '../components/EncouragementToast';
 
 // ─── Countdown Timer ─────────────────────────────────────────────────────────
 function Countdown({ minutes, onExpire }: { minutes: number; onExpire: () => void }) {
@@ -68,6 +69,7 @@ export default function StudentExamsPage() {
   const { exams, loading, submitting, activeExam } = useAppSelector(s => s.studentExam);
   const [tab, setTab] = useState<Tab>('القادمة');
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const { show: celebrate, element: toastEl } = useEncouragement();
 
   useEffect(() => { dispatch(fetchStudentExams()); }, [dispatch]);
 
@@ -77,6 +79,7 @@ export default function StudentExamsPage() {
     (activeExam.questions ?? []).forEach((q, i) => { formatted[q.id ?? i] = answers[i] ?? ''; });
     await dispatch(submitExam({ examId: activeExam.id, answers: formatted }));
     setAnswers({});
+    celebrate('exam_passed');
   };
 
   // ── Active exam view ──────────────────────────────────────────────────────
@@ -180,6 +183,7 @@ export default function StudentExamsPage() {
       </div>
 
       <StudentBottomNav cur="/student/exams" />
+      {toastEl}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchTeacherDashboard } from '../features/teacher/teacherSlice';
 import { logout } from '../features/auth/authSlice';
 import BrandLogo from '../components/BrandLogo';
+import DailyRemindersWidget from '../components/DailyRemindersWidget';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -649,6 +650,16 @@ export default function TeacherDashboardPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* مهام اليوم */}
+            <div style={{ padding:'0 20px 20px' }}>
+              <DailyRemindersWidget role="teacher" initItems={[
+                { text: 'تصحيح الواجبات المسلّمة', priority: 'high' },
+                { text: 'تسجيل الحضور لجميع الفصول', priority: 'high' },
+                { text: 'مراجعة تقارير الطلاب', priority: 'normal' },
+                { text: 'التحضير لحصة الغد', priority: 'normal' },
+              ]} />
             </div>
           </div>
         </div>

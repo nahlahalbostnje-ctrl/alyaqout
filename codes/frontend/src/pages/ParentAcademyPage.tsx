@@ -15,12 +15,15 @@ const C = {
   amber: '#F59E0B', amberBg: 'rgba(245,158,11,0.08)',
 };
 
-const CATEGORIES = ['الكل', 'التربية الإيجابية', 'مهارات التواصل', 'الصحة النفسية', 'التعليم الرقمي', 'إدارة الوقت'];
+const CATEGORIES = ['الكل', 'التربية الإيجابية', 'مهارات التواصل', 'الصحة النفسية', 'التعليم الرقمي', 'إدارة الوقت', 'الذكاء الاصطناعي', 'إرشاد تربوي'];
+
+const GRADES = ['الكل', 'المرحلة الابتدائية', 'المرحلة الإعدادية', 'المرحلة الثانوية'];
 
 type Course = {
   id: number;
   title: string;
   cat: string;
+  grade: string;
   emoji: string;
   duration: string;
   lessons: number;
@@ -33,12 +36,15 @@ type Course = {
 };
 
 const COURSES: Course[] = [
-  { id: 1, title: 'فن الحوار مع الأبناء المراهقين', cat: 'مهارات التواصل',   emoji: '💬', duration: '3 ساعات',   lessons: 8,  progress: 60,  rating: 4.9, students: 1240, level: 'متوسط', color: '#3B82F6', bg: 'rgba(59,130,246,0.06)' },
-  { id: 2, title: 'التربية الإيجابية الحديثة',      cat: 'التربية الإيجابية', emoji: '👨‍👩‍👦', duration: '4 ساعات',   lessons: 12, progress: 45,  rating: 4.8, students: 2100, level: 'مبتدئ', color: '#C59341', bg: 'rgba(197,147,65,0.06)' },
-  { id: 3, title: 'حماية أطفالك في الفضاء الرقمي',  cat: 'التعليم الرقمي',    emoji: '🛡️', duration: '2 ساعات',   lessons: 6,  progress: 80,  rating: 4.7, students: 890,  level: 'مبتدئ', color: '#8B5CF6', bg: 'rgba(139,92,246,0.06)' },
-  { id: 4, title: 'التعامل مع ضغوط الاختبارات',     cat: 'الصحة النفسية',     emoji: '🧠', duration: '2.5 ساعة', lessons: 7,  progress: 0,   rating: 4.6, students: 650,  level: 'متوسط', color: '#10B981', bg: 'rgba(16,185,129,0.06)' },
-  { id: 5, title: 'إدارة وقت المذاكرة في المنزل',   cat: 'إدارة الوقت',        emoji: '⏰', duration: '1.5 ساعة', lessons: 5,  progress: 100, rating: 4.9, students: 1800, level: 'مبتدئ', color: '#F59E0B', bg: 'rgba(245,158,11,0.06)' },
-  { id: 6, title: 'بناء ثقة الطفل بنفسه',           cat: 'التربية الإيجابية', emoji: '⭐', duration: '3 ساعات',   lessons: 10, progress: 20,  rating: 4.8, students: 970,  level: 'متقدم', color: '#EF4444', bg: 'rgba(239,68,68,0.06)' },
+  { id: 1, title: 'فن الحوار مع الأبناء المراهقين',      cat: 'مهارات التواصل',   grade: 'المرحلة الثانوية',  emoji: '💬', duration: '3 ساعات',   lessons: 8,  progress: 60,  rating: 4.9, students: 1240, level: 'متوسط', color: '#3B82F6', bg: 'rgba(59,130,246,0.06)' },
+  { id: 2, title: 'التربية الإيجابية الحديثة',            cat: 'التربية الإيجابية', grade: 'المرحلة الابتدائية', emoji: '👨‍👩‍👦', duration: '4 ساعات',   lessons: 12, progress: 45,  rating: 4.8, students: 2100, level: 'مبتدئ', color: '#C59341', bg: 'rgba(197,147,65,0.06)' },
+  { id: 3, title: 'حماية أطفالك في الفضاء الرقمي',        cat: 'التعليم الرقمي',    grade: 'المرحلة الإعدادية', emoji: '🛡️', duration: '2 ساعات',   lessons: 6,  progress: 80,  rating: 4.7, students: 890,  level: 'مبتدئ', color: '#8B5CF6', bg: 'rgba(139,92,246,0.06)' },
+  { id: 4, title: 'التعامل مع ضغوط الاختبارات',           cat: 'الصحة النفسية',     grade: 'المرحلة الثانوية',  emoji: '🧠', duration: '2.5 ساعة', lessons: 7,  progress: 0,   rating: 4.6, students: 650,  level: 'متوسط', color: '#10B981', bg: 'rgba(16,185,129,0.06)' },
+  { id: 5, title: 'إدارة وقت المذاكرة في المنزل',         cat: 'إدارة الوقت',        grade: 'المرحلة الابتدائية', emoji: '⏰', duration: '1.5 ساعة', lessons: 5,  progress: 100, rating: 4.9, students: 1800, level: 'مبتدئ', color: '#F59E0B', bg: 'rgba(245,158,11,0.06)' },
+  { id: 6, title: 'بناء ثقة الطفل بنفسه',                 cat: 'التربية الإيجابية', grade: 'المرحلة الابتدائية', emoji: '⭐', duration: '3 ساعات',   lessons: 10, progress: 20,  rating: 4.8, students: 970,  level: 'متقدم', color: '#EF4444', bg: 'rgba(239,68,68,0.06)' },
+  { id: 7, title: 'الذكاء الاصطناعي في التعليم المنزلي',  cat: 'الذكاء الاصطناعي', grade: 'المرحلة الإعدادية', emoji: '🤖', duration: '2 ساعات',   lessons: 6,  progress: 0,   rating: 4.7, students: 540,  level: 'متوسط', color: '#06B6D4', bg: 'rgba(6,182,212,0.06)' },
+  { id: 8, title: 'إرشاد تربوي — كيف تدعم ابنك عاطفياً', cat: 'إرشاد تربوي',       grade: 'المرحلة الثانوية',  emoji: '🤝', duration: '3.5 ساعة', lessons: 9,  progress: 0,   rating: 4.9, students: 1120, level: 'متوسط', color: '#EC4899', bg: 'rgba(236,72,153,0.06)' },
+  { id: 9, title: 'محادثة بالإنجليزية مع أطفالك',         cat: 'مهارات التواصل',   grade: 'المرحلة الابتدائية', emoji: '🗣️', duration: '4 ساعات',   lessons: 14, progress: 0,   rating: 4.6, students: 780,  level: 'مبتدئ', color: '#3B82F6', bg: 'rgba(59,130,246,0.06)' },
 ];
 
 const LEVEL_COLORS: Record<string, { color: string; bg: string }> = {
@@ -128,6 +134,9 @@ function CourseCard({ course, compact }: { course: Course; compact?: boolean }) 
             </span>
             <span style={{ background: lvl.bg, color: lvl.color, fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '2px 8px' }}>
               {course.level}
+            </span>
+            <span style={{ background: 'rgba(13,30,58,0.06)', color: C.navy, fontSize: 10, fontWeight: 600, borderRadius: 6, padding: '2px 8px' }}>
+              🏫 {course.grade}
             </span>
           </div>
         </div>
@@ -219,10 +228,14 @@ function PageHeader({ title, sub }: { title: string; sub: string }) {
 
 export default function ParentAcademyPage() {
   const [activeCategory, setActiveCategory] = useState('الكل');
+  const [activeGrade, setActiveGrade]       = useState('الكل');
 
-  const completedCount = COURSES.filter(c => c.progress === 100).length;
+  const completedCount   = COURSES.filter(c => c.progress === 100).length;
   const inProgressCourses = COURSES.filter(c => c.progress > 0 && c.progress < 100);
-  const filteredCourses = activeCategory === 'الكل' ? COURSES : COURSES.filter(c => c.cat === activeCategory);
+  const filteredCourses  = COURSES.filter(c =>
+    (activeCategory === 'الكل' || c.cat   === activeCategory) &&
+    (activeGrade    === 'الكل' || c.grade === activeGrade)
+  );
 
   return (
     <ParentLayout>
@@ -236,6 +249,20 @@ export default function ParentAcademyPage() {
             <span style={{ color: C.green, fontWeight: 900, fontSize: 22 }}>{completedCount}</span>
             <span style={{ color: C.green, fontSize: 12, fontWeight: 600 }}>دورات مكتملة</span>
           </div>
+        </div>
+
+        {/* Grade Filter */}
+        <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+          {GRADES.map(g => (
+            <button key={g} onClick={() => setActiveGrade(g)} style={{
+              flexShrink:0, padding:'6px 14px', borderRadius:20,
+              border: activeGrade===g ? 'none' : `1.5px solid ${C.border}`,
+              background: activeGrade===g ? C.navy : C.card,
+              color: activeGrade===g ? '#fff' : C.sub,
+              fontFamily:"'Cairo',sans-serif", fontSize:11.5, fontWeight:700,
+              cursor:'pointer', transition:'all 0.15s',
+            }}>{g}</button>
+          ))}
         </div>
 
         {/* Category Filter Pills */}

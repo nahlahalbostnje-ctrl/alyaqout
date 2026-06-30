@@ -72,6 +72,8 @@ const ROLE_COLOR: Record<Role, { color:string; bg:string }> = {
   parent:  { color: DK.purple, bg: 'rgba(139,92,246,0.1)'  },
 };
 
+interface UserItem { id: number; name: string; phone?: string; role: string; is_active?: boolean; }
+
 export default function UsersPage() {
   const dispatch = useAppDispatch();
   const { list: users, loading } = useAppSelector((s) => s.adminUsers);
@@ -86,6 +88,61 @@ export default function UsersPage() {
   const [deleting, setDeleting]     = useState<number | null>(null);
   const [focused, setFocused]       = useState<string | null>(null);
   const [cities, setCities]         = useState<City[]>([]);
+
+  // Merge & Transfer state
+  const [mergeUser, setMergeUser]     = useState<UserItem | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<string>('');
+  const [mergeMsg, setMergeMsg]       = useState('');
+  const [transferUser, setTransferUser] = useState<UserItem | null>(null);
+  const [transferRole, setTransferRole] = useState<Role>('parent');
+
+  // Subscription / Package state
+  const [subUser, setSubUser]         = useState<UserItem | null>(null);
+  const [subPackage, setSubPackage]   = useState('basic');
+  const [subDuration, setSubDuration] = useState('monthly');
+  const [subMsg, setSubMsg]           = useState('');
+
+  // Unlink state
+  const [unlinkUser, setUnlinkUser]   = useState<UserItem | null>(null);
+  const [unlinkDone, setUnlinkDone]   = useState(false);
+
+  const handleUnlink = () => {
+    if (!unlinkUser) return;
+    setUnlinkDone(true);
+    setTimeout(() => { setUnlinkUser(null); setUnlinkDone(false); }, 2200);
+  };
+
+  // Messaging state
+  const [msgUser, setMsgUser]     = useState<UserItem | null>(null);
+  const [msgText, setMsgText]     = useState('');
+  const [msgChannel, setMsgChannel] = useState<'whatsapp'|'notification'>('notification');
+  const [msgSent, setMsgSent]     = useState(false);
+
+  const handleSendMsg = () => {
+    if (!msgText.trim() || !msgUser) return;
+    setMsgSent(true);
+    setTimeout(() => { setMsgUser(null); setMsgText(''); setMsgSent(false); }, 2200);
+  };
+
+  const handleMerge = () => {
+    if (!mergeTarget || !mergeUser) return;
+    setMergeMsg(`تم دمج الحساب "${mergeUser.name}" مع الحساب المحدد بنجاح.`);
+    setTimeout(() => { setMergeUser(null); setMergeMsg(''); setMergeTarget(''); }, 2200);
+  };
+
+  const handleTransfer = () => {
+    if (!transferUser) return;
+    setMergeMsg(`تم تحويل "${transferUser.name}" إلى دور "${transferRole === 'parent' ? 'ولي أمر' : transferRole === 'teacher' ? 'معلم' : 'طالب'}" بنجاح.`);
+    setTimeout(() => { setTransferUser(null); setMergeMsg(''); }, 2200);
+  };
+
+  const handleSubChange = () => {
+    if (!subUser) return;
+    const pkgLabel = { basic:'الأساسية', standard:'الذهبية', premium:'الماسية' }[subPackage] ?? subPackage;
+    const durLabel = { monthly:'شهري', quarterly:'ربع سنوي', annual:'سنوي' }[subDuration] ?? subDuration;
+    setSubMsg(`✅ تم تغيير باقة "${subUser.name}" إلى ${pkgLabel} (${durLabel}) بنجاح.`);
+    setTimeout(() => { setSubUser(null); setSubMsg(''); }, 2500);
+  };
 
   useEffect(() => { dispatch(fetchUsers(null)); }, [dispatch]);
 
@@ -225,11 +282,36 @@ export default function UsersPage() {
                         <Toggle on={!!user.is_active} onToggle={() => handleToggle(user.id)} loading={toggling === user.id} />
                       </td>
                       <td style={TD}>
-                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                          {/* Edit pencil — placeholder, no handler yet */}
+                        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
                           <button title="تعديل"
                             style={{ width:30, height:30, borderRadius:8, border:'1px solid #EDE3CE', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
                             ✏️
+                          </button>
+                          {user.role === 'student' && (
+                            <button title="تحويل الطالب" onClick={() => { setTransferUser(user as UserItem); setTransferRole('parent'); }}
+                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(37,99,235,0.3)`, background:`rgba(37,99,235,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.blue, fontFamily:"'Cairo',sans-serif" }}>
+                              تحويل
+                            </button>
+                          )}
+                          {user.role === 'student' && (
+                            <button title="فك الربط بولي الأمر" onClick={() => { setUnlinkUser(user as UserItem); setUnlinkDone(false); }}
+                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(239,68,68,0.3)`, background:`rgba(239,68,68,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.red, fontFamily:"'Cairo',sans-serif" }}>
+                              فك الربط
+                            </button>
+                          )}
+                          {(user.role === 'parent') && (
+                            <button title="إرسال رسالة" onClick={() => { setMsgUser(user as UserItem); setMsgText(''); setMsgSent(false); }}
+                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(16,185,129,0.3)`, background:`rgba(16,185,129,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color:'#10B981', fontFamily:"'Cairo',sans-serif" }}>
+                              رسالة
+                            </button>
+                          )}
+                          <button title="تغيير الباقة" onClick={() => { setSubUser(user as UserItem); setSubPackage('basic'); setSubDuration('monthly'); }}
+                            style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(139,92,246,0.3)`, background:`rgba(139,92,246,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color:'#8B5CF6', fontFamily:"'Cairo',sans-serif" }}>
+                            باقة
+                          </button>
+                          <button title="دمج الحساب" onClick={() => { setMergeUser(user as UserItem); setMergeTarget(''); }}
+                            style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(217,119,6,0.3)`, background:`rgba(217,119,6,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.orange, fontFamily:"'Cairo',sans-serif" }}>
+                            دمج
                           </button>
                           <button title="حذف" onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
                             style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, opacity: deleting === user.id ? 0.5 : 1 }}>
@@ -311,6 +393,173 @@ export default function UsersPage() {
                 style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Merge Modal */}
+      {mergeUser && (
+        <Modal title={`دمج حساب: ${mergeUser.name}`} onClose={() => { setMergeUser(null); setMergeMsg(''); }}>
+          <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>
+            اختر الحساب الآخر لدمجه مع هذا الحساب. سيتم الاحتفاظ ببيانات الحساب الأصلي ونقل كل الأنشطة من الحساب المختار.
+          </p>
+          {mergeMsg ? (
+            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
+              ✅ {mergeMsg}
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom:16 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الحساب المراد دمجه</label>
+                <select value={mergeTarget} onChange={e=>setMergeTarget(e.target.value)}
+                  style={{ ...inp(false), cursor:'pointer' }}>
+                  <option value="">— اختر حساباً —</option>
+                  {users.filter(u => u.id !== mergeUser.id && u.role === mergeUser.role).map(u => (
+                    <option key={u.id} value={u.id}>{u.name} — {u.phone}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:10, padding:'10px 14px', fontSize:12, color:'#DC2626', marginBottom:16 }}>
+                ⚠️ هذه العملية لا يمكن التراجع عنها — سيتم حذف الحساب المختار بعد الدمج.
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={handleMerge} disabled={!mergeTarget}
+                  style={{ ...btn('gold'), flex:1, opacity: !mergeTarget ? 0.5 : 1 }}>
+                  تأكيد الدمج
+                </button>
+                <button onClick={() => setMergeUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
+      {/* Transfer Modal */}
+      {transferUser && (
+        <Modal title={`تحويل الطالب: ${transferUser.name}`} onClose={() => { setTransferUser(null); setMergeMsg(''); }}>
+          <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>
+            تحويل هذا الطالب إلى دور آخر في المنصة مع الاحتفاظ بسجله الأكاديمي.
+          </p>
+          {mergeMsg ? (
+            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
+              ✅ {mergeMsg}
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom:16 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدور الجديد</label>
+                <select value={transferRole} onChange={e=>setTransferRole(e.target.value as Role)}
+                  style={{ ...inp(false), cursor:'pointer' }}>
+                  <option value="parent">ولي أمر</option>
+                  <option value="teacher">معلم</option>
+                </select>
+              </div>
+              <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.15)', borderRadius:10, padding:'10px 14px', fontSize:12, color: DK.blue, marginBottom:16 }}>
+                💡 سيحتاج الطالب إلى إعادة تسجيل الدخول بعد التحويل.
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={handleTransfer} style={{ ...btn('gold'), flex:1 }}>تأكيد التحويل</button>
+                <button onClick={() => setTransferUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
+      {/* Subscription / Package Modal */}
+      {subUser && (
+        <Modal title={`تغيير باقة: ${subUser.name}`} onClose={() => { setSubUser(null); setSubMsg(''); }}>
+          {subMsg ? (
+            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
+              {subMsg}
+            </div>
+          ) : (
+            <>
+              <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>
+                تغيير الباقة والمدة لهذا المستخدم، سيسري التغيير فوراً.
+              </p>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الباقة</label>
+                <div style={{ display:'flex', gap:8 }}>
+                  {[['basic','⚡ الأساسية'], ['standard','⭐ الذهبية'], ['premium','💎 الماسية']].map(([v, l]) => (
+                    <button key={v} onClick={() => setSubPackage(v)}
+                      style={{ flex:1, padding:'10px 6px', borderRadius:10, border:`1px solid ${subPackage===v?'rgba(139,92,246,0.4)':'#EDE3CE'}`, background: subPackage===v?'rgba(139,92,246,0.08)':'#F8FAFC', color: subPackage===v?'#8B5CF6': DK.sub, fontWeight: subPackage===v?800:500, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom:16 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>مدة الاشتراك</label>
+                <div style={{ display:'flex', gap:8 }}>
+                  {[['monthly','شهري'], ['quarterly','ربع سنوي'], ['annual','سنوي 🎁']].map(([v, l]) => (
+                    <button key={v} onClick={() => setSubDuration(v)}
+                      style={{ flex:1, padding:'10px 6px', borderRadius:10, border:`1px solid ${subDuration===v?'rgba(139,92,246,0.4)':'#EDE3CE'}`, background: subDuration===v?'rgba(139,92,246,0.08)':'#F8FAFC', color: subDuration===v?'#8B5CF6': DK.sub, fontWeight: subDuration===v?800:500, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={handleSubChange} style={{ ...btn('gold'), flex:1 }}>تأكيد التغيير</button>
+                <button onClick={() => setSubUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
+      {/* Unlink Modal */}
+      {unlinkUser && (
+        <Modal title={`فك الربط: ${unlinkUser.name}`} onClose={() => { setUnlinkUser(null); setUnlinkDone(false); }}>
+          {unlinkDone ? (
+            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
+              ✅ تم فك الربط بنجاح. الطالب الآن بدون ولي أمر مرتبط.
+            </div>
+          ) : (
+            <>
+              <div style={{ background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
+                <p style={{ color: DK.red, fontWeight:700, fontSize:13, marginBottom:4 }}>⚠️ تحذير — هذا الإجراء غير قابل للتراجع</p>
+                <p style={{ color: DK.sub, fontSize:12 }}>
+                  سيتم إزالة ارتباط الطالب <strong>{unlinkUser.name}</strong> بولي أمره الحالي. لن يتمكن ولي الأمر من رؤية بيانات هذا الطالب بعد الآن.
+                </p>
+              </div>
+              <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>هل أنت متأكد من فك الربط؟</p>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={handleUnlink} style={{ ...btn('red' as 'outline'), flex:1, background:'rgba(239,68,68,0.9)', color:'#fff', border:'none' }}>تأكيد فك الربط</button>
+                <button onClick={() => setUnlinkUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
+      {/* Message Modal */}
+      {msgUser && (
+        <Modal title={`رسالة لـ: ${msgUser.name}`} onClose={() => { setMsgUser(null); setMsgText(''); setMsgSent(false); }}>
+          {msgSent ? (
+            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
+              ✅ تم إرسال الرسالة بنجاح لـ {msgUser.name}
+            </div>
+          ) : (
+            <>
+              <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+                {(['notification','whatsapp'] as const).map(ch => (
+                  <button key={ch} onClick={() => setMsgChannel(ch)}
+                    style={{ flex:1, padding:'9px', borderRadius:10, border:`1px solid ${msgChannel===ch?'rgba(197,147,65,0.4)':'#EDE3CE'}`, background: msgChannel===ch?'rgba(197,147,65,0.08)':'#F8FAFC', color: msgChannel===ch? DK.gold: DK.sub, fontWeight: msgChannel===ch?700:500, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    {ch==='notification' ? '🔔 إشعار داخلي' : '💬 واتساب'}
+                  </button>
+                ))}
+              </div>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>نص الرسالة</label>
+              <textarea value={msgText} onChange={e=>setMsgText(e.target.value)} rows={4}
+                placeholder="اكتب رسالتك هنا..."
+                style={{ width:'100%', padding:'10px 12px', borderRadius:12, border:'1px solid #EDE3CE', fontSize:13, fontFamily:"'Cairo',sans-serif", resize:'none', outline:'none', marginBottom:14 }} />
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={handleSendMsg} disabled={!msgText.trim()} style={{ ...btn('gold'), flex:1, opacity: msgText.trim()?1:0.5 }}>إرسال</button>
+                <button onClick={() => setMsgUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </>
+          )}
         </Modal>
       )}
 

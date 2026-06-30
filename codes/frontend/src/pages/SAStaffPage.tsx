@@ -22,12 +22,68 @@ const STAFF = [
 export default function SAStaffPage() {
   const [tab, setTab] = useState<'teachers'|'staff'>('teachers');
   const [search, setSearch] = useState('');
+  const [impersonating, setImpersonating] = useState<typeof TEACHERS[number]|null>(null);
+  const [impersonateDone, setImpersonateDone] = useState(false);
 
   const filteredTeachers = TEACHERS.filter(t=>search===''||t.name.includes(search)||t.specialty.includes(search));
   const filteredStaff = STAFF.filter(s=>search===''||s.name.includes(search)||s.role.includes(search));
 
   return (
     <SuperAdminShell>
+
+      {/* Impersonation Modal */}
+      {impersonating && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)' }}
+          onClick={() => { setImpersonating(null); setImpersonateDone(false); }}>
+          <div style={{ background:'#fff', borderRadius:20, padding:'28px', width:'100%', maxWidth:400, fontFamily:"'Cairo',sans-serif", direction:'rtl', boxShadow:'0 20px 60px rgba(0,0,0,0.25)' }}
+            onClick={e => e.stopPropagation()}>
+            {impersonateDone ? (
+              <div style={{ textAlign:'center', padding:'12px 0' }}>
+                <div style={{ fontSize:48, marginBottom:12 }}>🔑</div>
+                <h3 style={{ color:'#0D1E3A', fontWeight:800, fontSize:17, marginBottom:8 }}>تم الدخول بنجاح</h3>
+                <p style={{ color:'#64748B', fontSize:13, marginBottom:16 }}>أنت الآن داخل حساب <strong>{impersonating.name}</strong></p>
+                <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:12, padding:'10px', marginBottom:16 }}>
+                  <p style={{ color:'#EF4444', fontSize:12, fontWeight:600, margin:0 }}>⚠️ أي تعديل ستقوم به سيُطبَّق على الحساب الحقيقي</p>
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={() => { setImpersonating(null); setImpersonateDone(false); }}
+                    style={{ flex:1, padding:'12px', borderRadius:12, background:'#F1F5F9', color:'#64748B', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    الخروج
+                  </button>
+                  <a href="/teacher/dashboard" style={{ flex:1, padding:'12px', borderRadius:12, background:'linear-gradient(135deg,#C59341,#D4A65A)', color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', textDecoration:'none', textAlign:'center', fontFamily:"'Cairo',sans-serif" }}>
+                    🚀 انتقل للحساب
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+                  <div style={{ width:52, height:52, borderRadius:16, background:'rgba(197,147,65,0.12)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>{impersonating.avatar}</div>
+                  <div>
+                    <h3 style={{ color:'#0D1E3A', fontWeight:800, fontSize:16, margin:0 }}>{impersonating.name}</h3>
+                    <p style={{ color:'#64748B', fontSize:12, margin:'3px 0 0' }}>{impersonating.specialty} — {impersonating.branch}</p>
+                  </div>
+                </div>
+                <div style={{ background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:12, padding:'12px 14px', marginBottom:20 }}>
+                  <p style={{ color:'#EF4444', fontWeight:700, fontSize:13, marginBottom:4 }}>⚠️ تحذير: دخول مباشر</p>
+                  <p style={{ color:'#64748B', fontSize:12, margin:0 }}>ستدخل إلى حساب هذا المعلم كـ Super Admin. سيُسجَّل هذا الإجراء في سجل النظام.</p>
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={() => setImpersonateDone(true)}
+                    style={{ flex:1, padding:'12px', borderRadius:12, background:'linear-gradient(135deg,#C59341,#D4A65A)', color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    🔑 تأكيد الدخول
+                  </button>
+                  <button onClick={() => setImpersonating(null)}
+                    style={{ flex:1, padding:'12px', borderRadius:12, background:'#F1F5F9', color:'#64748B', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                    إلغاء
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <div>
           <h1 style={{ color:C.text, fontWeight:900, fontSize:20 }}>المعلمون والموظفون</h1>
@@ -102,9 +158,13 @@ export default function SAStaffPage() {
                   </td>
                   <td style={{padding:'12px 14px'}}>
                     <div style={{display:'flex',gap:5}}>
-                      {['✏️','📋','🗑️'].map((ico,j)=>(
+                      {(['✏️','📋','🗑️'] as const).map((ico,j)=>(
                         <button key={j} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>{ico}</button>
                       ))}
+                      <button onClick={() => { setImpersonating(t); setImpersonateDone(false); }}
+                        style={{padding:'0 10px',height:28,borderRadius:8,border:'1px solid rgba(197,147,65,0.4)',background:'rgba(197,147,65,0.08)',cursor:'pointer',fontSize:11,color:C.gold,fontWeight:700,fontFamily:"'Cairo',sans-serif"}}>
+                        🔑 دخول كـ
+                      </button>
                     </div>
                   </td>
                 </tr>

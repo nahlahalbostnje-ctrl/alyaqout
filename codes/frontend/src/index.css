@@ -652,3 +652,62 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(245,166,35,0.3);
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — Admin / Parent / Teacher
+═══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Header date hidden on small screens */
+  .header-date { display: none !important; }
+
+  /* Tables → scroll container */
+  table { display: block; overflow-x: auto; white-space: nowrap; }
+
+  /* Grid 4-col → 2-col */
+  .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Grid 3-col → 1-col */
+  .grid-3 { grid-template-columns: 1fr !important; }
+
+  /* Grid 2-col → 1-col */
+  .grid-2 { grid-template-columns: 1fr !important; }
+
+  /* AppLayout header: hide date, show compact */
+  [data-header="main"] .date-label { display: none; }
+  [data-header="main"] .user-name  { display: none; }
+
+  /* Reduce padding in main areas on mobile */
+  [data-layout="main-content"] { padding: 12px 8px !important; }
+
+  /* Sidebar nav items — hide labels when sidebar closed */
+  .nav-label-mobile { font-size: 11px !important; }
+
+  /* Cards on mobile — no horizontal overflow */
+  .card-grid { overflow-x: auto; }
+
+  /* Modal full-screen on mobile */
+  [data-modal] {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto;
+  }
+
+  /* Buttons full-width in forms on mobile */
+  .btn-form-full { width: 100% !important; }
+}
+
+@media (max-width: 480px) {
+  /* Grid 4-col → 1-col on very small */
+  .grid-4 { grid-template-columns: 1fr !important; }
+
+  /* Reduce font sizes */
+  h1, h2 { font-size: 1.1rem !important; }
+  .stat-value { font-size: 1.4rem !important; }
+}
+
+/* AppLayout mobile: fix main content not shifting when sidebar fixed */
+@media (max-width: 768px) {
+  [data-layout="app-root"] { display: block !important; }
+  [data-layout="main-wrapper"] { width: 100% !important; }
+}

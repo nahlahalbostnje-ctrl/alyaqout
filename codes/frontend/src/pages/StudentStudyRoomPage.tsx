@@ -75,7 +75,10 @@ export default function StudentStudyRoomPage() {
       {/* Header */}
       <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)', flexShrink:0 }}>
         <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
-        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>معلمي الذكي</h1>
+        <div style={{ flex:1, textAlign:'center' }}>
+          <p style={{ color:C.navy2, fontWeight:800, fontSize:16, lineHeight:1 }}>مرشد الياقوت</p>
+          <p style={{ color:C.gold, fontSize:10.5, fontWeight:600 }}>مستشارك الأكاديمي الشخصي</p>
+        </div>
         <div style={{ width:36 }} />
       </div>
 
@@ -85,9 +88,15 @@ export default function StudentStudyRoomPage() {
           <>
             {/* Robot welcome */}
             <div style={{ textAlign:'center', padding:'20px 0 24px' }}>
-              <div style={{ width:90, height:90, borderRadius:'50%', background:'linear-gradient(135deg,#0D1535,#1B2038)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontSize:46, boxShadow:'0 8px 24px rgba(13,21,53,0.4)', border:`3px solid ${C.gold}` }}>🤖</div>
-              <p style={{ color:C.navy2, fontWeight:800, fontSize:18, marginBottom:6 }}>مرحباً {firstName} 👋</p>
-              <p style={{ color:C.sub, fontSize:13.5 }}>كيف بإمكاني مساعدتك اليوم؟</p>
+              <div style={{ position:'relative', width:90, height:90, margin:'0 auto 14px' }}>
+                <div style={{ width:90, height:90, borderRadius:'50%', background:'linear-gradient(135deg,#C9952A,#DDAD50)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, boxShadow:'0 8px 24px rgba(201,149,42,0.45)', border:'3px solid #fff' }}>👨‍💼</div>
+                <div style={{ position:'absolute', bottom:2, right:2, width:22, height:22, borderRadius:'50%', background:'#10B981', border:'2px solid #fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:'#fff' }}/>
+                </div>
+              </div>
+              <p style={{ color:C.navy2, fontWeight:800, fontSize:18, marginBottom:2 }}>مرحباً {firstName} 👋</p>
+              <p style={{ color:C.gold, fontWeight:600, fontSize:12, marginBottom:4 }}>مرشد الياقوت — مستشارك الأكاديمي</p>
+              <p style={{ color:C.sub, fontSize:13 }}>أنا هنا لمساعدتك في رحلتك الدراسية</p>
             </div>
 
             {/* Quick Actions */}

@@ -17,6 +17,39 @@ class WaSenderService
         $this->apiKey = config('services.wasender.api_key', '');
     }
 
+    public function sendText(string $phone, string $text): bool
+    {
+        if (empty($this->apiKey)) {
+            Log::warning('WaSender: API key not configured');
+            return false;
+        }
+
+        $testRecipient = config('services.wasender.test_recipient');
+        $recipient     = $testRecipient ?: $phone;
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+            ])->post(self::BASE_URL . '/send-message', [
+                'to'   => $recipient,
+                'text' => $text,
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('WaSender sendText: non-success', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+            }
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error('WaSender sendText failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function sendOtp(string $phone, string $otp): bool
     {
         if (empty($this->apiKey)) {

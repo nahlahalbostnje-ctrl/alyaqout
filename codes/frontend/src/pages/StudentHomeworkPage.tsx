@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentHomework, submitHomework } from '../features/student/examSlice';
 import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import { useEncouragement } from '../components/EncouragementToast';
 
 const TABS = ['الجديدة', 'المنتهية'] as const;
 type Tab = typeof TABS[number];
@@ -29,6 +30,7 @@ export default function StudentHomeworkPage() {
   const [active, setActive] = useState<number|null>(null);
   const [form, setForm]   = useState({ file_url:'', notes:'' });
   const [flash, setFlash] = useState<number|null>(null);
+  const { show: celebrate, element: toastEl } = useEncouragement();
 
   useEffect(() => { dispatch(fetchStudentHomework()); }, [dispatch]);
 
@@ -37,6 +39,7 @@ export default function StudentHomeworkPage() {
     await dispatch(submitHomework({ homeworkId: hwId, file_url: form.file_url, notes: form.notes }));
     setForm({ file_url:'', notes:'' }); setActive(null);
     setFlash(hwId); setTimeout(()=>setFlash(null), 2500);
+    celebrate('homework_done');
   };
 
   const newHw   = homeworks.filter(h => !h.submitted);
@@ -93,13 +96,37 @@ export default function StudentHomeworkPage() {
               </div>
               {isOpen && (
                 <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
-                  <input
-                    value={form.file_url} onChange={e=>setForm(p=>({...p,file_url:e.target.value}))}
-                    placeholder="رابط الملف (URL)"
-                    style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:10, padding:'9px 12px', fontSize:13, color:C.text, background:C.bg, outline:'none', fontFamily:"'Cairo',sans-serif", marginBottom:8, boxSizing:'border-box' }} />
+                  {/* رفع صورة */}
+                  <p style={{ color:C.sub, fontSize:12, fontWeight:600, marginBottom:8 }}>📎 إرفاق الإجابة</p>
+                  <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                    <label style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'11px', borderRadius:12, border:`2px dashed ${C.gold}`, background:C.goldBg, cursor:'pointer', fontSize:13, color:C.gold, fontWeight:700, fontFamily:"'Cairo',sans-serif" }}>
+                      📷 رفع صورة
+                      <input type="file" accept="image/*" style={{ display:'none' }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = ev => setForm(p => ({ ...p, file_url: ev.target?.result as string }));
+                          reader.readAsDataURL(file);
+                        }} />
+                    </label>
+                    <span style={{ display:'flex', alignItems:'center', color:C.sub, fontSize:12 }}>أو</span>
+                    <input
+                      value={form.file_url.startsWith('data:') ? '' : form.file_url}
+                      onChange={e=>setForm(p=>({...p,file_url:e.target.value}))}
+                      placeholder="رابط الملف (URL)"
+                      style={{ flex:2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:'9px 12px', fontSize:13, color:C.text, background:C.bg, outline:'none', fontFamily:"'Cairo',sans-serif" }} />
+                  </div>
+                  {form.file_url.startsWith('data:image') && (
+                    <div style={{ marginBottom:10, position:'relative' }}>
+                      <img src={form.file_url} alt="preview" style={{ width:'100%', maxHeight:160, objectFit:'cover', borderRadius:10, border:`1px solid ${C.border}` }} />
+                      <button onClick={() => setForm(p=>({...p,file_url:''}))}
+                        style={{ position:'absolute', top:6, left:6, background:'rgba(0,0,0,0.5)', color:'#fff', border:'none', borderRadius:'50%', width:24, height:24, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+                    </div>
+                  )}
                   <textarea
                     value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))}
-                    rows={2} placeholder="ملاحظات (اختياري)"
+                    rows={2} placeholder="ملاحظات للمعلم (اختياري)"
                     style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:10, padding:'9px 12px', fontSize:13, color:C.text, background:C.bg, outline:'none', fontFamily:"'Cairo',sans-serif", resize:'none', boxSizing:'border-box', marginBottom:10 }} />
                   <div style={{ display:'flex', gap:8 }}>
                     <button onClick={()=>handleSubmit(hw.id??i)} disabled={submitting||!form.file_url.trim()} style={{ flex:1, padding:'10px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', opacity:submitting||!form.file_url.trim()?0.6:1 }}>
@@ -127,6 +154,7 @@ export default function StudentHomeworkPage() {
       </div>
 
       <StudentBottomNav cur="/student/homework" />
+      {toastEl}
     </div>
   );
 }

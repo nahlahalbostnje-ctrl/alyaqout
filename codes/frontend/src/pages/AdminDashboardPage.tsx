@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAdminStats } from '../features/admin/adminSlice';
 import AdminLayout from '../components/AdminLayout';
+import DailyRemindersWidget from '../components/DailyRemindersWidget';
 
 const DK = {
   gold: '#C59341',
@@ -94,22 +95,36 @@ export default function AdminDashboardPage() {
       <div style={{ fontFamily: "'Cairo',sans-serif", background: '#F5EDD8', minHeight: '100vh', padding: 24 }}>
 
         {/* Page Header */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 4, height: 24, borderRadius: 2, background: DK.goldGrad }} />
-            <h1 style={{ color: DK.text, fontWeight: 900, fontSize: 22, margin: 0 }}>
-              {dashboard?.country?.name ?? 'منصة الياقوت'}
-            </h1>
+        <div style={{ marginBottom: 24, background:'linear-gradient(135deg,#0D1E3A,#162144)', borderRadius:20, padding:'20px 24px', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', insetInlineEnd:-20, top:'50%', transform:'translateY(-50%)', opacity:0.06, fontSize:120 }}>🏫</div>
+          <div style={{ position:'absolute', insetInlineStart:-10, bottom:-10, opacity:0.04, fontSize:80 }}>⭐</div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                <div style={{ width:44, height:44, borderRadius:14, background:'rgba(197,147,65,0.18)', border:'1px solid rgba(197,147,65,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>🎯</div>
+                <div>
+                  <p style={{ color:'rgba(255,255,255,0.55)', fontSize:11, margin:0 }}>
+                    {new Date().toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long'})}
+                  </p>
+                  <h1 style={{ color:'#fff', fontWeight:900, fontSize:20, margin:0 }}>
+                    {dashboard?.country?.name ?? 'لوحة التحكم'}
+                  </h1>
+                </div>
+              </div>
+              <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, margin:0, paddingRight:4 }}>
+                نظرة عامة على إحصائيات المنصة
+                {dashboard && (
+                  <span style={{ color:DK.gold, fontWeight:700, marginRight:8 }}>· {dashboard.country.code}</span>
+                )}
+              </p>
+            </div>
+            <div style={{ textAlign:'left' }}>
+              <div style={{ background:'rgba(197,147,65,0.15)', borderRadius:12, padding:'8px 14px', border:'1px solid rgba(197,147,65,0.25)' }}>
+                <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10, margin:0 }}>نشاط المنصة</p>
+                <p style={{ color:DK.gold, fontWeight:800, fontSize:16, margin:0 }}>🟢 مباشر</p>
+              </div>
+            </div>
           </div>
-          <p style={{ color: DK.sub, fontSize: 13, margin: 0, paddingRight: 12 }}>
-            نظرة عامة على إحصائيات المنصة
-            {dashboard && (
-              <span style={{ color: DK.gold, fontWeight: 700, marginRight: 8 }}>
-                · {dashboard.country.code}
-              </span>
-            )}
-          </p>
-          <div style={{ marginTop: 16, height: 1, background: 'linear-gradient(to left,transparent,rgba(197,147,65,0.2),transparent)' }} />
         </div>
 
         {/* Loading */}
@@ -156,6 +171,15 @@ export default function AdminDashboardPage() {
             ))}
           </div>
         )}
+
+        {/* مهام اليوم */}
+        <div style={{ maxWidth: 480, marginTop: 8 }}>
+          <DailyRemindersWidget role="admin" initItems={[
+            { text: 'مراجعة طلبات الموافقة', priority: 'high' },
+            { text: 'متابعة تقارير المعلمين', priority: 'normal' },
+            { text: 'تحديث الإشعارات اليومية', priority: 'normal' },
+          ]} />
+        </div>
       </div>
     </AdminLayout>
   );

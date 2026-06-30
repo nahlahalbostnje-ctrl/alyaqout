@@ -89,6 +89,8 @@ import StudentMessagesPage        from './pages/StudentMessagesPage';
 import StudentTeacherContactPage  from './pages/StudentTeacherContactPage';
 import TeacherAttendancePage      from './pages/TeacherAttendancePage';
 import AdminApprovalsPage         from './pages/AdminApprovalsPage';
+import AdminAnalyticsPage         from './pages/AdminAnalyticsPage';
+import AdminTeacherManagementPage from './pages/AdminTeacherManagementPage';
 import AdminCitiesPage            from './pages/AdminCitiesPage';
 import AdminAuditLogPage          from './pages/AdminAuditLogPage';
 import SuperAdminSecurityPage     from './pages/SuperAdminSecurityPage';
@@ -243,6 +245,12 @@ export default function App() {
         } />
         <Route path="/admin/approval-requests" element={
           <PrivateRoute roles={['admin']}><AdminApprovalsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/teacher-management" element={
+          <PrivateRoute roles={['admin']}><AdminTeacherManagementPage /></PrivateRoute>
+        } />
+        <Route path="/admin/analytics" element={
+          <PrivateRoute roles={['admin']}><AdminAnalyticsPage /></PrivateRoute>
         } />
         <Route path="/admin/cities" element={
           <PrivateRoute roles={['admin']}><AdminCitiesPage /></PrivateRoute>

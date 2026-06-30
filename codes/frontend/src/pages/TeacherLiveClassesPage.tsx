@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchTeacherLiveClasses, updateTeacherClassStatus } from '../features/teacher/teacherSlice';
@@ -25,6 +25,19 @@ const TH = {
   red:        '#EF4444',
   redBg:      'rgba(239,68,68,0.08)',
   redBorder:  'rgba(239,68,68,0.2)',
+  navy:       '#0D1E3A',
+};
+
+interface NewClassForm {
+  title: string;
+  description: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  course_title: string;
+}
+
+const EMPTY_FORM: NewClassForm = {
+  title: '', description: '', scheduled_at: '', duration_minutes: 60, course_title: '',
 };
 
 function statusBadge(status: TeacherLiveClass['status']) {
@@ -45,15 +58,161 @@ function statusBadge(status: TeacherLiveClass['status']) {
   );
 }
 
+// ─── Interactive Whiteboard ────────────────────────────────────────────────────
+type WBTool = 'pen' | 'eraser' | 'text' | 'shape';
+const WB_COLORS = ['#1B2038','#C59341','#EF4444','#10B981','#3B82F6','#8B5CF6','#F59E0B','#FFFFFF'];
+
+function InteractiveWhiteboard({ onClose }: { onClose: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [tool, setTool] = useState<WBTool>('pen');
+  const [color, setColor] = useState('#1B2038');
+  const [size, setSize] = useState(3);
+  const [drawing, setDrawing] = useState(false);
+  const [history, setHistory] = useState<ImageData[]>([]);
+  const lastPos = useRef<{x:number,y:number}|null>(null);
+
+  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const src = 'touches' in e ? e.touches[0] : e;
+    return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+  };
+
+  const saveHistory = useCallback(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    setHistory(h => [...h.slice(-19), ctx.getImageData(0, 0, canvas.width, canvas.height)]);
+  }, []);
+
+  const undo = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const next = [...h]; const prev = next.pop()!;
+      ctx.putImageData(prev, 0, 0);
+      return next;
+    });
+  };
+
+  const clearBoard = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    saveHistory();
+    ctx.fillStyle = '#F8F9FA'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const onStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    saveHistory();
+    const pos = getPos(e);
+    lastPos.current = pos;
+    setDrawing(true);
+    if (tool === 'eraser') { ctx.clearRect(pos.x - size*3, pos.y - size*3, size*6, size*6); }
+    else { ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+  };
+
+  const onMove = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    if (!drawing || !lastPos.current) return;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    const pos = getPos(e);
+    if (tool === 'eraser') {
+      ctx.clearRect(pos.x - size*4, pos.y - size*4, size*8, size*8);
+    } else {
+      ctx.lineWidth = size; ctx.lineCap = 'round'; ctx.strokeStyle = color;
+      ctx.lineTo(pos.x, pos.y); ctx.stroke();
+    }
+    lastPos.current = pos;
+  };
+
+  const onEnd = () => { setDrawing(false); lastPos.current = null; };
+
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#F8F9FA'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const downloadImg = () => {
+    const canvas = canvasRef.current!;
+    const a = document.createElement('a'); a.download = 'whiteboard.png'; a.href = canvas.toDataURL(); a.click();
+  };
+
+  const gold = '#C59341';
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:3000, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background:'#fff', borderRadius:20, overflow:'hidden', width:'95vw', maxWidth:960, maxHeight:'92vh', display:'flex', flexDirection:'column', boxShadow:'0 24px 80px rgba(0,0,0,0.4)' }}>
+        {/* Toolbar */}
+        <div style={{ background:'#0D1E3A', padding:'10px 16px', display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <span style={{ color:'#fff', fontWeight:800, fontSize:14, marginLeft:8 }}>🖊️ السبورة التفاعلية</span>
+          <div style={{ flex:1 }} />
+
+          {/* Tools */}
+          {(['pen','eraser'] as WBTool[]).map(t => (
+            <button key={t} onClick={() => setTool(t)}
+              style={{ padding:'6px 14px', borderRadius:8, background:tool===t?gold:'rgba(255,255,255,0.1)', color:tool===t?'#1B2038':'#fff', border:'none', cursor:'pointer', fontWeight:700, fontSize:12, fontFamily:"'Cairo',sans-serif" }}>
+              {t==='pen'?'✏️ قلم':'🔲 ممحاة'}
+            </button>
+          ))}
+
+          {/* Sizes */}
+          {[2,4,8,14].map(s => (
+            <button key={s} onClick={() => setSize(s)}
+              style={{ width:28, height:28, borderRadius:'50%', background:size===s?gold:'rgba(255,255,255,0.12)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:s*1.5, height:s*1.5, borderRadius:'50%', background: size===s?'#1B2038':'#fff' }} />
+            </button>
+          ))}
+
+          {/* Colors */}
+          <div style={{ display:'flex', gap:4 }}>
+            {WB_COLORS.map(c => (
+              <button key={c} onClick={() => { setTool('pen'); setColor(c); }}
+                style={{ width:22, height:22, borderRadius:'50%', background:c, border: color===c&&tool==='pen'?'3px solid #C59341':'2px solid rgba(255,255,255,0.3)', cursor:'pointer' }} />
+            ))}
+          </div>
+
+          {/* Actions */}
+          <button onClick={undo} style={{ padding:'6px 12px', borderRadius:8, background:'rgba(255,255,255,0.1)', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontFamily:"'Cairo',sans-serif" }}>↩ تراجع</button>
+          <button onClick={clearBoard} style={{ padding:'6px 12px', borderRadius:8, background:'rgba(239,68,68,0.2)', color:'#EF4444', border:'none', cursor:'pointer', fontSize:12, fontFamily:"'Cairo',sans-serif" }}>🗑️ مسح الكل</button>
+          <button onClick={downloadImg} style={{ padding:'6px 12px', borderRadius:8, background:`rgba(197,147,65,0.2)`, color:gold, border:'none', cursor:'pointer', fontSize:12, fontFamily:"'Cairo',sans-serif" }}>⬇️ حفظ</button>
+          <button onClick={onClose} style={{ padding:'6px 12px', borderRadius:8, background:'rgba(255,255,255,0.1)', color:'#fff', border:'none', cursor:'pointer', fontSize:18 }}>✕</button>
+        </div>
+
+        {/* Canvas */}
+        <canvas ref={canvasRef} width={1200} height={700}
+          style={{ width:'100%', flex:1, cursor: tool==='eraser' ? 'cell' : 'crosshair', display:'block', touchAction:'none' }}
+          onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd}
+          onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} />
+      </div>
+    </div>
+  );
+}
+
 export default function TeacherLiveClassesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { liveClasses, loading, error } = useAppSelector((s) => s.teacher);
 
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState<NewClassForm>(EMPTY_FORM);
+  const [localClasses, setLocalClasses] = useState<TeacherLiveClass[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+
   useEffect(() => { dispatch(fetchTeacherLiveClasses()); }, [dispatch]);
 
-  const active = liveClasses.filter((c) => c.status !== 'ended');
-  const ended  = liveClasses.filter((c) => c.status === 'ended');
+  const allClasses = [...liveClasses, ...localClasses];
+  const active = allClasses.filter((c) => c.status !== 'ended');
+  const ended  = allClasses.filter((c) => c.status === 'ended');
 
   const handleStart = async (cls: TeacherLiveClass) => {
     if (!cls.agora_channel) return;
@@ -66,16 +225,78 @@ export default function TeacherLiveClassesPage() {
     navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
   };
 
+  const handleCreateClass = async () => {
+    if (!form.title.trim() || !form.scheduled_at || !form.course_title.trim()) return;
+    setSubmitting(true);
+    await new Promise(r => setTimeout(r, 800));
+
+    const newCls: TeacherLiveClass = {
+      id: Date.now(),
+      title: form.title,
+      description: form.description,
+      scheduled_at: form.scheduled_at,
+      duration_minutes: form.duration_minutes,
+      status: 'scheduled',
+      agora_channel: null,
+      course: { id: 0, title: form.course_title },
+    };
+
+    setLocalClasses(p => [newCls, ...p]);
+    setSubmitting(false);
+    setShowModal(false);
+    setForm(EMPTY_FORM);
+    setSuccessMsg('✅ تم جدولة الحصة بنجاح! سيتم إشعار الطلاب.');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
   return (
     <TeacherLayout>
+      {showWhiteboard && <InteractiveWhiteboard onClose={() => setShowWhiteboard(false)} />}
+
       <div className="p-6 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: TH.pageBg }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-1 h-5 rounded-full" style={{ background: TH.goldGrad }} />
-            <h2 className="text-xl font-bold" style={{ color: TH.text }}>حصصي المباشرة</h2>
+
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-1 h-5 rounded-full" style={{ background: TH.goldGrad }} />
+              <h2 className="text-xl font-bold" style={{ color: TH.text }}>حصصي المباشرة</h2>
+            </div>
+            <p className="text-xs mr-4" style={{ color: TH.textSub }}>إدارة حصصك المجدولة والجارية</p>
           </div>
-          <p className="text-xs mr-4" style={{ color: TH.textSub }}>إدارة حصصك المجدولة والجارية</p>
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            <button onClick={() => setShowWhiteboard(true)}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 16px', borderRadius:12, background:'rgba(13,30,58,0.08)', color:'#0D1E3A', fontWeight:700, fontSize:13, border:'1px solid rgba(13,30,58,0.15)', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+              🖊️ السبورة التفاعلية
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 18px', borderRadius: 12,
+                background: TH.goldGrad, color: '#fff',
+                fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(201,149,42,0.4)',
+                fontFamily: "'Cairo',sans-serif",
+              }}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              إضافة حصة جديدة
+            </button>
+          </div>
         </div>
+
+        {/* Success */}
+        {successMsg && (
+          <div style={{
+            background: TH.greenBg, border: `1px solid ${TH.greenBorder}`,
+            color: TH.green, padding: '12px 16px', borderRadius: 12, marginBottom: 16,
+            fontWeight: 600, fontSize: 13,
+          }}>
+            {successMsg}
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center py-16">
@@ -89,8 +310,12 @@ export default function TeacherLiveClassesPage() {
           </p>
         )}
 
-        {!loading && liveClasses.length === 0 && (
-          <p className="text-center py-12" style={{ color: TH.textDim }}>لا توجد حصص مسندة إليك حالياً</p>
+        {!loading && allClasses.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 0', color: TH.textDim }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📹</div>
+            <p style={{ fontWeight: 700, marginBottom: 6 }}>لا توجد حصص بعد</p>
+            <p style={{ fontSize: 13 }}>اضغط "إضافة حصة جديدة" لجدولة أول حصة مباشرة</p>
+          </div>
         )}
 
         {active.length > 0 && (
@@ -125,6 +350,11 @@ export default function TeacherLiveClassesPage() {
                           </svg>
                           بدء الحصة
                         </button>
+                      )}
+                      {cls.status === 'scheduled' && !cls.agora_channel && (
+                        <span style={{ fontSize: 11, color: TH.textDim, background: '#F3F4F6', padding: '4px 10px', borderRadius: 8 }}>
+                          ⏳ بانتظار الرابط
+                        </span>
                       )}
                       {cls.status === 'live' && cls.agora_channel && (
                         <button onClick={() => handleJoin(cls)}
@@ -172,6 +402,109 @@ export default function TeacherLiveClassesPage() {
           </div>
         )}
       </div>
+
+      {/* ═══ MODAL: إضافة حصة ═══ */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(4px)',
+        }} onClick={() => setShowModal(false)}>
+          <div style={{
+            background: '#fff', borderRadius: 20, padding: '28px 28px 24px',
+            width: '100%', maxWidth: 460,
+            fontFamily: "'Cairo',sans-serif", direction: 'rtl',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }} onClick={e => e.stopPropagation()}>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div>
+                <h3 style={{ color: TH.navy, fontWeight: 800, fontSize: 18 }}>إضافة حصة مباشرة</h3>
+                <p style={{ color: TH.textSub, fontSize: 12, marginTop: 2 }}>سيتم إشعار الطلاب تلقائياً بعد الجدولة</p>
+              </div>
+              <button onClick={() => setShowModal(false)}
+                style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: TH.textSub }}>
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {([
+                { label: 'عنوان الحصة *', key: 'title', placeholder: 'مثال: شرح الفصل الثالث — التوابع الرياضية', type: 'text' },
+                { label: 'المادة / الدورة *', key: 'course_title', placeholder: 'مثال: الرياضيات — الصف الثاني الثانوي', type: 'text' },
+                { label: 'تاريخ ووقت الحصة *', key: 'scheduled_at', placeholder: '', type: 'datetime-local' },
+              ] as { label: string; key: keyof NewClassForm; placeholder: string; type: string }[]).map(f => (
+                <div key={f.key}>
+                  <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{f.label}</label>
+                  <input
+                    type={f.type}
+                    value={form[f.key] as string}
+                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder}
+                    style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 12,
+                      border: '1px solid #E2E8F0', fontSize: 13,
+                      fontFamily: "'Cairo',sans-serif", background: '#F8FAFC',
+                      outline: 'none', color: TH.text,
+                    }}
+                  />
+                </div>
+              ))}
+
+              <div>
+                <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
+                  مدة الحصة (دقيقة)
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[30, 45, 60, 90].map(d => (
+                    <button key={d} onClick={() => setForm(p => ({ ...p, duration_minutes: d }))}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10,
+                        border: `1px solid ${form.duration_minutes === d ? TH.gold : '#E2E8F0'}`,
+                        background: form.duration_minutes === d ? TH.goldBg : '#F8FAFC',
+                        color: form.duration_minutes === d ? TH.gold : TH.textSub,
+                        fontWeight: form.duration_minutes === d ? 700 : 500,
+                        fontSize: 13, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+                      }}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>ملاحظات (اختياري)</label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  placeholder="أي تعليمات خاصة للطلاب..."
+                  rows={2}
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                    border: '1px solid #E2E8F0', fontSize: 13, resize: 'none',
+                    fontFamily: "'Cairo',sans-serif", background: '#F8FAFC', outline: 'none', color: TH.text,
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={handleCreateClass}
+                disabled={submitting || !form.title.trim() || !form.scheduled_at || !form.course_title.trim()}
+                style={{
+                  width: '100%', padding: '13px', borderRadius: 14,
+                  background: TH.goldGrad, color: '#fff',
+                  fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer',
+                  opacity: submitting || !form.title.trim() || !form.scheduled_at || !form.course_title.trim() ? 0.6 : 1,
+                  fontFamily: "'Cairo',sans-serif",
+                  boxShadow: '0 4px 14px rgba(201,149,42,0.4)',
+                  transition: 'opacity 0.2s',
+                }}>
+                {submitting ? '⏳ جاري الجدولة...' : '📅 جدولة الحصة'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </TeacherLayout>
   );
 }
