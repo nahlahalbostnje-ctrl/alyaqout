@@ -101,7 +101,7 @@ function Ico({ d, size = 16, color = 'currentColor' }: { d: string; size?: numbe
   );
 }
 
-function SecHead({ title, action, badge }: { title: string; action?: string; badge?: string }) {
+function SecHead({ title, action, badge, onAction }: { title: string; action?: string; badge?: string; onAction?: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -114,7 +114,7 @@ function SecHead({ title, action, badge }: { title: string; action?: string; bad
         )}
       </div>
       {action && (
-        <button style={{ background: 'none', border: 'none', color: C.gold, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+        <button onClick={onAction} style={{ background: 'none', border: 'none', color: C.gold, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
           {action}
         </button>
       )}
@@ -469,7 +469,7 @@ export default function ParentDashboardPage() {
 
               {/* Chart */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
-                <SecHead title="مؤشر التطور الأكاديمي" action="عرض التقرير الكامل" />
+                <SecHead title="مؤشر التطور الأكاديمي" action="عرض التقرير الكامل" onAction={()=>navigate('/parent/reports')} />
                 <AcademicChart />
               </div>
 
@@ -477,7 +477,7 @@ export default function ParentDashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Tasks */}
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
-                  <SecHead title="المهام والتوصيات الذكية" action="عرض الكل" />
+                  <SecHead title="المهام والتوصيات الذكية" action="عرض الكل" onAction={()=>navigate('/parent/reports')} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {TASKS.map((t, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -489,7 +489,7 @@ export default function ParentDashboardPage() {
                 </div>
                 {/* Goals */}
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 18px', boxShadow: C.shadow }}>
-                  <SecHead title="الأهداف العائلية" action="عرض الكل" />
+                  <SecHead title="الأهداف العائلية" action="عرض الكل" onAction={()=>navigate('/parent/reports')} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {GOALS.map((g, i) => (
                       <div key={i}>
@@ -512,7 +512,7 @@ export default function ParentDashboardPage() {
 
               {/* أبنائي List */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, boxShadow: C.shadow }}>
-                <SecHead title="أبنائي" action="عرض الكل" />
+                <SecHead title="أبنائي" action="عرض الكل" onAction={()=>navigate('/parent/children')} />
                 <div>
                   {childData.map(c => <ChildRow key={c.id} {...c} />)}
                 </div>
@@ -565,7 +565,7 @@ export default function ParentDashboardPage() {
                   />
                 </div>
 
-                <button style={{
+                <button onClick={()=>navigate('/parent/children')} style={{
                   padding: '10px 28px', borderRadius: 22, border: 'none',
                   background: C.goldGrad, color: '#fff', fontWeight: 700, fontSize: 13,
                   cursor: 'pointer', boxShadow: '0 4px 14px rgba(201,149,42,0.35)',
@@ -576,7 +576,7 @@ export default function ParentDashboardPage() {
 
               {/* آخر الإشعارات */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, boxShadow: C.shadow }}>
-                <SecHead title="آخر الإشعارات" action="عرض الكل" badge="6 جديدة" />
+                <SecHead title="آخر الإشعارات" action="عرض الكل" badge="6 جديدة" onAction={()=>navigate('/parent/notifications')} />
                 <div>
                   {NOTIFS.map((n, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderBottom: i < NOTIFS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
@@ -590,7 +590,7 @@ export default function ParentDashboardPage() {
                     </div>
                   ))}
                 </div>
-                <button style={{ width: '100%', marginTop: 12, padding: '10px', borderRadius: 12, border: `1px solid ${C.goldBdr}`, background: C.goldBg, color: C.gold, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
+                <button onClick={()=>navigate('/parent/notifications')} style={{ width: '100%', marginTop: 12, padding: '10px', borderRadius: 12, border: `1px solid ${C.goldBdr}`, background: C.goldBg, color: C.gold, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
                   عرض جميع الإشعارات
                 </button>
               </div>
@@ -622,7 +622,7 @@ export default function ParentDashboardPage() {
 
             {/* ── أكاديمية ولي الأمر ── */}
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
-              <SecHead title="أكاديمية ولي الأمر" action="عرض الكل" />
+              <SecHead title="أكاديمية ولي الأمر" action="عرض الكل" onAction={()=>navigate('/parent/academy')} />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
                 {COURSES.map((c, i) => (
                   <div key={i} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#FDFAF3', cursor: 'pointer' }}>
@@ -647,7 +647,7 @@ export default function ParentDashboardPage() {
 
               {/* Achievements */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
-                <SecHead title="الإنجازات والشارات" action="عرض الكل" />
+                <SecHead title="الإنجازات والشارات" action="عرض الكل" onAction={()=>navigate('/parent/reports')} />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                   {BADGES.map((b, i) => (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -669,7 +669,7 @@ export default function ParentDashboardPage() {
 
               {/* Invoices */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
-                <SecHead title="آخر الفواتير" action="عرض الكل" />
+                <SecHead title="آخر الفواتير" action="عرض الكل" onAction={()=>navigate('/parent/billing')} />
 
                 {/* Total row */}
                 <div style={{ background: C.goldBg, border: `1px solid ${C.goldBdr}`, borderRadius: 12, padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

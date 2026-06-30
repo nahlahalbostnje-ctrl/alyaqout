@@ -89,7 +89,7 @@ export default function SAStaffPage() {
           <h1 style={{ color:C.text, fontWeight:900, fontSize:20 }}>المعلمون والموظفون</h1>
           <p style={{ color:C.sub, fontSize:12, marginTop:2 }}>إدارة كوادر المنصة البشرية</p>
         </div>
-        <button style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(201,149,42,0.3)' }}>
+        <button onClick={() => alert('سيتم إضافة هذه الميزة قريباً — صفحة إضافة معلم/موظف جديد')} style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(201,149,42,0.3)' }}>
           <span>+</span> إضافة جديد
         </button>
       </div>

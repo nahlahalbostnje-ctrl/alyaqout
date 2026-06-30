@@ -61,18 +61,18 @@ const AI_TASKS = [
 ];
 
 const AI_SUGGESTIONS = [
-  { label:'إنشاء اختبار تفاعلي', emoji:'📝' },
-  { label:'تحليل أداء الطلاب',   emoji:'📊' },
-  { label:'إنشاء خطة درس',       emoji:'📋' },
-  { label:'كتابة تقرير لولي أمر',emoji:'✍️' },
+  { label:'إنشاء اختبار تفاعلي', emoji:'📝', to:'/teacher/exams' },
+  { label:'تحليل أداء الطلاب',   emoji:'📊', to:'/teacher/students' },
+  { label:'إنشاء خطة درس',       emoji:'📋', to:'/teacher/courses' },
+  { label:'كتابة تقرير لولي أمر',emoji:'✍️', to:'/teacher/reports' },
 ];
 
 const QUICK_TOOLS = [
-  { label:'رفع ملف',       emoji:'📤' },
-  { label:'إنشاء نشاط',   emoji:'⚡' },
-  { label:'بنك الأسئلة',  emoji:'❓' },
-  { label:'استيراد محتوى',emoji:'📥' },
-  { label:'نسخ حصة سابقة',emoji:'📋' },
+  { label:'رفع ملف',       emoji:'📤', to:'/teacher/courses' },
+  { label:'إنشاء نشاط',   emoji:'⚡', to:'/teacher/homework' },
+  { label:'بنك الأسئلة',  emoji:'❓', to:'/teacher/exams' },
+  { label:'استيراد محتوى',emoji:'📥', to:'/teacher/courses' },
+  { label:'نسخ حصة سابقة',emoji:'📋', to:'/teacher/live-classes' },
 ];
 
 const STUDENTS = [
@@ -327,7 +327,7 @@ export default function TeacherDashboardPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ width:'100%', marginTop:14, padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', boxShadow:'0 3px 10px rgba(201,149,42,0.35)' }}>
+              <button onClick={()=>navigate('/teacher/students')} style={{ width:'100%', marginTop:14, padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', boxShadow:'0 3px 10px rgba(201,149,42,0.35)' }}>
                 عرض التقرير التفصيلي
               </button>
             </div>
@@ -491,7 +491,7 @@ export default function TeacherDashboardPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ width:'100%', padding:'10px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
+              <button onClick={()=>navigate('/teacher/courses')} style={{ width:'100%', padding:'10px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
@@ -581,7 +581,7 @@ export default function TeacherDashboardPage() {
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:12 }}>
                 {AI_SUGGESTIONS.map((s,i)=>(
-                  <button key={i} style={{ display:'flex', alignItems:'center', gap:9, padding:'9px 12px', borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer', width:'100%', textAlign:'right' }}>
+                  <button key={i} onClick={()=>navigate(s.to)} style={{ display:'flex', alignItems:'center', gap:9, padding:'9px 12px', borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer', width:'100%', textAlign:'right' }}>
                     <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#1B2038,#0D1535)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{s.emoji}</div>
                     <span style={{ color:C.text, fontSize:12.5, fontWeight:600 }}>{s.label}</span>
                   </button>
@@ -630,7 +630,7 @@ export default function TeacherDashboardPage() {
                 {secTitle('أدوات سريعة')}
                 <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                   {QUICK_TOOLS.map((t,i)=>(
-                    <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'12px 16px', borderRadius:14, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer', minWidth:80 }}>
+                    <button key={i} onClick={()=>navigate(t.to)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'12px 16px', borderRadius:14, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer', minWidth:80 }}>
                       <span style={{ fontSize:22 }}>{t.emoji}</span>
                       <span style={{ color:C.text, fontSize:11, fontWeight:600 }}>{t.label}</span>
                     </button>

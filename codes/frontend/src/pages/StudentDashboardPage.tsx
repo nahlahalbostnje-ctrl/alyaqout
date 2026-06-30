@@ -446,7 +446,7 @@ export default function StudentDashboardPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:11, cursor:'pointer' }}>
+              <button onClick={()=>navigate('/student/challenges')} style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:11, cursor:'pointer' }}>
                 عرض جميع التحديات
               </button>
             </div>

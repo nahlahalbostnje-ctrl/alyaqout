@@ -334,7 +334,7 @@ export default function ParentBillingPage() {
                 </p>
               </div>
             </div>
-            <button style={{
+            <button onClick={() => { setShowRenewalModal(true); setRenewDone(false); }} style={{
               background: '#fff', color: C.gold, border: 'none',
               borderRadius: 10, padding: '10px 22px', fontWeight: 800,
               fontSize: 14, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",

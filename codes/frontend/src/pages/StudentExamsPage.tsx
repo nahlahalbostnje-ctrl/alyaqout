@@ -177,7 +177,7 @@ export default function StudentExamsPage() {
 
       {/* Bottom Button */}
       <div style={{ padding:'0 16px 16px' }}>
-        <button style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'pointer' }}>
+        <button onClick={()=>setTab('المنتهية')} style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'pointer' }}>
           عرض كل الامتحانات
         </button>
       </div>
