@@ -58,10 +58,9 @@ export default function StudentReviewVideosPage() {
     setTimeout(() => setQSent(false), 1500);
   };
 
-  const DRM_ATTRS = {
+  const drmHandlers = {
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
     onDragStart:   (e: React.DragEvent)  => e.preventDefault(),
-    style: { userSelect:'none' as const },
   };
 
   return (
@@ -119,8 +118,8 @@ export default function StudentReviewVideosPage() {
             return (
               <div key={v.id} style={{ background:C.card, borderRadius:18, overflow:'hidden', boxShadow:C.shadow, border:`1px solid ${v.watched ? 'rgba(16,185,129,0.25)' : C.border}` }}>
                 {/* Thumbnail */}
-                <div style={{ height:150, background:`linear-gradient(135deg,${col}22,${col}44)`, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}
-                  {...DRM_ATTRS}>
+                <div style={{ height:150, background:`linear-gradient(135deg,${col}22,${col}44)`, display:'flex', alignItems:'center', justifyContent:'center', position:'relative', userSelect:'none' }}
+                  {...drmHandlers}>
                   <button onClick={() => openVideo(v)}
                     style={{ width:58, height:58, borderRadius:'50%', background:'rgba(0,0,0,0.45)', border:'3px solid rgba(255,255,255,0.7)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', backdropFilter:'blur(4px)' }}>
                     <span style={{ fontSize:26, color:'#fff', marginRight:-4 }}>▶</span>
@@ -155,7 +154,7 @@ export default function StudentReviewVideosPage() {
 
           {/* Top Bar */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', flexShrink:0 }}>
-            <p style={{ color:'#fff', fontWeight:700, fontSize:14, flex:1 }} {...DRM_ATTRS}>{watching.title}</p>
+            <p style={{ color:'#fff', fontWeight:700, fontSize:14, flex:1, userSelect:'none' }} {...drmHandlers}>{watching.title}</p>
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={() => setShowQPanel(p=>!p)}
                 style={{ padding:'7px 14px', borderRadius:10, background: showQPanel ? C.goldGrad : 'rgba(197,147,65,0.2)', color: showQPanel ? '#1B2038' : C.goldL, fontWeight:700, fontSize:12.5, border:`1px solid ${C.goldBdr}`, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
@@ -170,8 +169,8 @@ export default function StudentReviewVideosPage() {
           <div style={{ flex:1, display:'flex', gap:0, overflow:'hidden' }}>
 
             {/* Video + DRM Overlay */}
-            <div style={{ flex:1, position:'relative', display:'flex', alignItems:'center', justifyContent:'center', background:'#000' }}
-              {...DRM_ATTRS}>
+            <div style={{ flex:1, position:'relative', display:'flex', alignItems:'center', justifyContent:'center', background:'#000', userSelect:'none' }}
+              {...drmHandlers}>
               {watching.url ? (
                 <video
                   ref={videoRef}

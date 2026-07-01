@@ -164,8 +164,7 @@ export default function ChatbotWidget() {
               rows={1}
               disabled={loading}
               className="flex-1 resize-none border rounded-xl px-3 py-2 text-xs focus:outline-none disabled:opacity-50"
-              style={{ borderColor: '#EDE3CE' }}
-              style={{ ...font, maxHeight: '80px', overflowY: 'auto' }}
+              style={{ borderColor: '#EDE3CE', ...font, maxHeight: '80px', overflowY: 'auto' }}
               onInput={(e) => {
                 const t = e.currentTarget;
                 t.style.height = 'auto';
