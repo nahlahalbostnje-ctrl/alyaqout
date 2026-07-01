@@ -211,6 +211,17 @@ sudo -u baitpait npm run build
 sudo -u baitpait cp -r dist/. ../backend/public/
 ```
 
+> **تحذير:** لا تستخدم `rsync --delete dist/ public/` — يحذف `index.php` و `.htaccess` و `storage` من Laravel ويكسر `/api` و `/login`.
+
+**بعد النشر** تأكد أن `public/` يحتوي:
+- `index.php` + `.htaccess` (Laravel)
+- `index.html` + `assets/` (React)
+- `storage` → symlink
+
+```bash
+ls -la codes/backend/public/index.php codes/backend/public/.htaccess
+```
+
 ### التحقق من نجاح البناء
 
 ```bash
