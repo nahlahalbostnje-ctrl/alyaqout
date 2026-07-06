@@ -1,5 +1,23 @@
 # Changelog — منصة الياقوت التعليمية
 
+## [2026-07-01] — نشر الإنتاج + توثيق
+
+### 🚀 نشر
+- المنصة live على **https://alyaqoutgroup.net**
+- دليل نشر كامل: [`DEPLOYMENT.md`](DEPLOYMENT.md)
+
+### 📄 توثيق
+- مسارات السيرفر، symlink Webuzo، `.htaccess` SPA
+- أوامر النشر والتحديث، seeders، تسجيل الدخول
+- استكشاف الأخطاء (403, 404, 500, git, npm, .env)
+
+### 🔧 إصلاحات نشر
+- PHP 8.4 + `lcobucci/jwt` 5.x
+- `DirectoryIndex index.html` + React SPA routing
+- إصلاح 9 أخطاء TypeScript لبناء الواجهة
+
+---
+
 ## [2026-06-24] — إصدار الميزات الكاملة
 
 ### ✨ ميزات جديدة

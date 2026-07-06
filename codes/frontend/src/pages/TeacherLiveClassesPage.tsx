@@ -68,7 +68,7 @@ function InteractiveWhiteboard({ onClose }: { onClose: () => void }) {
   const [color, setColor] = useState('#1B2038');
   const [size, setSize] = useState(3);
   const [drawing, setDrawing] = useState(false);
-  const [history, setHistory] = useState<ImageData[]>([]);
+  const [, setHistory] = useState<ImageData[]>([]);
   const lastPos = useRef<{x:number,y:number}|null>(null);
 
   const getPos = (e: React.MouseEvent | React.TouchEvent) => {
@@ -238,6 +238,7 @@ export default function TeacherLiveClassesPage() {
       duration_minutes: form.duration_minutes,
       status: 'scheduled',
       agora_channel: null,
+      meeting_link: null,
       course: { id: 0, title: form.course_title },
     };
 

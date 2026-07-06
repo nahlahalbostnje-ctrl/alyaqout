@@ -36,40 +36,6 @@ const KEYWORD_MAP: Record<string, string> = {
 const SP  = [0.16, 1, 0.3, 1]     as const;
 const POP = [0.34, 1.56, 0.64, 1] as const;
 
-/* ── Custom cursor ──────────────────────────── */
-function LoginCursor() {
-  const mx = useMotionValue(-200);
-  const my = useMotionValue(-200);
-  const rx = useSpring(mx, { stiffness: 280, damping: 22 });
-  const ry = useSpring(my, { stiffness: 280, damping: 22 });
-  const [hov, setHov] = useState(false);
-
-  useEffect(() => {
-    const move = (e: MouseEvent) => { mx.set(e.clientX); my.set(e.clientY); };
-    const over = (e: MouseEvent) => setHov(!!(e.target as HTMLElement).closest('button,input,a'));
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseover', over);
-    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseover', over); };
-  }, [mx, my]);
-
-  return (
-    <>
-      <motion.div className="fixed top-0 left-0 z-[9999] pointer-events-none rounded-full"
-        style={{ x: mx, y: my, translateX: '-50%', translateY: '-50%',
-          width: hov ? 6 : 8, height: hov ? 6 : 8,
-          background: '#f5a623', boxShadow: '0 0 10px rgba(245,166,35,0.9)',
-          transition: 'width 0.2s, height 0.2s',
-        }} />
-      <motion.div className="fixed top-0 left-0 z-[9998] pointer-events-none rounded-full"
-        style={{ x: rx, y: ry, translateX: '-50%', translateY: '-50%',
-          width: hov ? 46 : 34, height: hov ? 46 : 34,
-          border: '1.5px solid rgba(245,166,35,0.5)',
-          transition: 'width 0.22s, height 0.22s',
-        }} />
-    </>
-  );
-}
-
 /* ── Background particles ───────────────────── */
 function BgParticles() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -260,7 +226,7 @@ function FloatingInput({ value, onChange, hasError }: {
           borderRadius: 14,
           color: '#fff', fontSize: 15, fontWeight: 500,
           fontFamily: "'Cairo','Tajawal',sans-serif",
-          outline: 'none', cursor: 'none',
+          outline: 'none', cursor: 'text',
           backdropFilter: 'blur(8px)',
           boxShadow: focused ? '0 0 0 3px rgba(245,166,35,0.12)' : 'none',
           transition: 'border-color 0.22s ease, box-shadow 0.22s ease',
@@ -322,7 +288,6 @@ export default function LoginPage() {
       position: 'relative', overflow: 'hidden',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <LoginCursor />
 
       {/* Base gradient */}
       <div style={{

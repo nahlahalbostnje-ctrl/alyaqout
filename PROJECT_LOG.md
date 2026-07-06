@@ -1404,4 +1404,37 @@
 
 ---
 
+## 2026-06-25 — 2026-07-01
+
+### [2026-07-01] — نشر الإنتاج على alyaqoutgroup.net + توثيق كامل
+
+- **ما تم:**
+  - نشر المنصة على Webuzo (`server1`) — Laravel + React SPA
+  - إصلاح PHP 8.4 (`lcobucci/jwt` 5.6)، `.env` parsing، صلاحيات 403
+  - symlink `/home/baitpait/alyaqoutgroup` → `codes/backend/public`
+  - `.htaccess`: `/api` → Laravel، باقي المسارات → React (`index.html`)
+  - migrations إنتاج + `CountrySeeder`, `SuperAdminSeeder`, `TestUsersSeeder`, `EncouragementMessageSeeder`
+  - pull `06de54d` (مدن، أمان، صفحات جديدة) + `fd314de` (إصلاح TypeScript build)
+  - إنشاء **`DEPLOYMENT.md`** — دليل نشر وتشغيل شامل
+
+- **الملفات المتأثرة:**
+  - `DEPLOYMENT.md` ← جديد
+  - `codes/backend/.env.example` ← APP_URL + SESSION_DOMAIN + MAIL
+  - `codes/backend/public/.htaccess`
+  - `codes/backend/composer.lock`
+  - `codes/frontend/package-lock.json`
+  - 70+ ملف ميزات (06de54d)
+
+- **الإنتاج:**
+  - URL: https://alyaqoutgroup.net/login
+  - Document Root (symlink): `/home/baitpait/alyaqoutgroup`
+  - DB: `baitpait_alyaqout`
+
+- **ما تبقى:**
+  - تفعيل OTP/WaSender للإنتاج الحقيقي
+  - إعداد cron `schedule:run` لتقارير الآباء
+  - مزامنة `package-lock.json` لنجاح `npm ci` على السيرفر
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

@@ -17,11 +17,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Hide default cursor globally for custom cursor */
-@media (pointer: fine) {
-  *, *:hover { cursor: none !important; }
-}
-
 /* ═══════════════════════════════════════════════
    DESIGN TOKENS
 ═══════════════════════════════════════════════ */

@@ -106,7 +106,6 @@ import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
 import LandingPage                from './pages/LandingPage';
-import GlobalCursor               from './components/GlobalCursor';
 
 export default function App() {
   const dispatch   = useAppDispatch();
@@ -125,7 +124,6 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <GlobalCursor />
       <WhatsAppButton />
       <CookieConsent />
       <Routes>

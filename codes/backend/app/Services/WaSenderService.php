@@ -14,7 +14,7 @@ class WaSenderService
 
     public function __construct()
     {
-        $this->apiKey = config('services.wasender.api_key', '');
+        $this->apiKey = (string) (config('services.wasender.api_key') ?? '');
     }
 
     public function sendText(string $phone, string $text): bool

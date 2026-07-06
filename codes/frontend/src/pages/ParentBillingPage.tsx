@@ -38,18 +38,6 @@ const CHILD_COLORS: Record<string, string> = {
   'علي': C.green,
 };
 
-function PageHeader({ title, sub }: { title: string; sub: string }) {
-  return (
-    <div style={{ marginBottom: 22 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <div style={{ width: 4, height: 22, borderRadius: 2, background: 'linear-gradient(135deg,#C59341,#D4A65A)' }} />
-        <h1 style={{ color: '#1B2038', fontWeight: 900, fontSize: 22, margin: 0 }}>{title}</h1>
-      </div>
-      <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>{sub}</p>
-    </div>
-  );
-}
-
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
     paid: { label: 'مدفوع', color: C.green, bg: C.greenBg },
