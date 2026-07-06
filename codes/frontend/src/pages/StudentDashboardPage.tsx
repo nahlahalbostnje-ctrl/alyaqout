@@ -362,7 +362,7 @@ export default function StudentDashboardPage() {
         <div style={{ padding:'12px 16px 10px', display:'flex', alignItems:'center', justifyContent:'space-between', background:C.card, borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, zIndex:50, boxShadow:'0 1px 8px rgba(0,0,0,0.05)' }}>
 
           {/* Bell */}
-          <div style={{ position:'relative', cursor:'pointer' }}>
+          <div onClick={()=>alert('صفحة إشعارات الطالب قيد التطوير.')} style={{ position:'relative', cursor:'pointer' }}>
             <div style={{ width:40, height:40, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.navy2} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -629,7 +629,7 @@ export default function StudentDashboardPage() {
           {!isMobile && <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>انضم الآن ولا تفوت أي معلومة</p>}
         </div>
         <span style={{ color:C.goldL, fontWeight:800, fontSize:12, flexShrink:0, fontFamily:'monospace' }}>00:08:15</span>
-        <button style={{ padding:'7px 12px', borderRadius:10, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', gap:5, boxShadow:'0 3px 12px rgba(201,149,42,0.45)', minHeight:36, minWidth:44 }}>
+        <button onClick={()=>live?navigate(`/live/${live.agora_channel??'demo'}?classId=${live.id}`):navigate('/student/live-classes')} style={{ padding:'7px 12px', borderRadius:10, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', gap:5, boxShadow:'0 3px 12px rgba(201,149,42,0.45)', minHeight:36, minWidth:44 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1B2038" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
           </svg>
