@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class NotificationService
 {
+    public function __construct(
+        private readonly WaSenderService $waSender,
+    ) {}
+
     public function send(
         User $user,
         string $title,
@@ -21,6 +25,17 @@ class NotificationService
         string $type = 'general',
         ?array $data = null
     ): Notification {
+        // Deduplicate: skip if identical notification was sent within last 30 minutes
+        $existing = Notification::where('user_id', $user->id)
+            ->where('type', $type)
+            ->where('body', $body)
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
         $notification = Notification::create([
             'user_id'    => $user->id,
             'country_id' => $user->country_id,
@@ -169,11 +184,10 @@ class NotificationService
     }
 
     /**
-     * WhatsApp stub — wire up WaSenderAPI when keys are available.
+     * Send a WhatsApp text message via WaSenderService.
      */
     public function sendWhatsApp(string $phone, string $message): void
     {
-        // TODO: integrate WaSenderAPI
-        // Http::post(config('services.wasender.url'), [...]);
+        $this->waSender->sendText($phone, $message);
     }
 }

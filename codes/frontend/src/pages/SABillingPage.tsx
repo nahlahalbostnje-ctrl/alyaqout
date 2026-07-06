@@ -82,8 +82,8 @@ export default function SABillingPage() {
       </div>
 
       {/* Table */}
-      <div style={card({padding:0,overflow:'hidden'})}>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
+      <div style={card({padding:0,overflowX:'auto'})}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:620}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
               {['رقم الفاتورة','الطالب','الفرع / الدولة','طريقة الدفع','التاريخ','المبلغ','الحالة','إجراءات'].map((h,i)=>(

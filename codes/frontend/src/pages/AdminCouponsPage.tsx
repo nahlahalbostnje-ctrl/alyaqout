@@ -310,12 +310,12 @@ export default function AdminCouponsPage() {
             <p style={{ color:DK.sub, fontSize:13, margin:0 }}>أنشئ أول كوبون خصم للطلاب من النموذج أعلاه</p>
           </div>
         ) : (
-          <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
+          <div style={{ ...card({ padding:0 }), overflowX:'auto' }}>
             <div style={{ padding:'16px 20px', borderBottom:'1px solid #EDE3CE', display:'flex', alignItems:'center', gap:8 }}>
               <span style={{ fontSize:15 }}>📋</span>
               <span style={{ color:DK.text, fontWeight:800, fontSize:14 }}>الكوبونات النشطة ({coupons.length})</span>
             </div>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
               <thead>
                 <tr>
                   {['#','الكود','نوع الخصم','القيمة','الاستخدامات','تاريخ الانتهاء','الحالة','إجراءات'].map(h => (

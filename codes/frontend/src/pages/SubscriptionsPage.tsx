@@ -224,8 +224,8 @@ export default function SubscriptionsPage() {
 
         {!loading && !error && (
           items.length > 0 ? (
-            <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+            <div style={{ ...card({ padding:0 }), overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13, minWidth:700 }}>
                 <thead>
                   <tr>
                     {['#','الطالب','الباقة','تاريخ البدء','تاريخ الانتهاء','الدفع','الحالة','إجراءات'].map(h => (

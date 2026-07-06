@@ -197,7 +197,7 @@ export default function AdminLeadsPage() {
         {/* Table */}
         {!loading && leads && leads.data.length > 0 && (
           <>
-            <div style={{ ...card({ padding:0 }), overflow:'hidden', marginBottom:16 }}>
+            <div style={{ ...card({ padding:0 }), overflowX:'auto', marginBottom:16 }}>
               <div style={{ padding:'16px 20px', borderBottom:'1px solid #EDE3CE', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{ fontSize:15 }}>📋</span>

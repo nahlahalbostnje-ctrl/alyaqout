@@ -225,12 +225,12 @@ export default function AdminAnalyticsPage() {
 
             {/* Teachers Table */}
             <div>
-              <div style={card({ padding:0, overflow:'hidden' })}>
+              <div style={card({ padding:0, overflowX:'auto' })}>
                 <div style={{ padding:'16px 20px', borderBottom:`1px solid ${C.border}` }}>
                   <p style={{ color: C.text, fontWeight:800, fontSize:15 }}>أداء المعلمين — تقييم AI</p>
                   <p style={{ color: C.sub, fontSize:12, marginTop:3 }}>انقر على معلم لعرض التقييم التفصيلي</p>
                 </div>
-                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13, minWidth:560 }}>
                   <thead>
                     <tr style={{ background:'#F8F5EE' }}>
                       {['المعلم','المادة','الطلاب','متوسط الدرجات','الحضور','التفاعل','التقييم','الاتجاه'].map(h => (

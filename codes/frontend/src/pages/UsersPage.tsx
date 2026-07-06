@@ -190,7 +190,7 @@ export default function UsersPage() {
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'all',     label: 'الكل' },
-    { key: 'teacher', label: 'المدربون' },
+    { key: 'teacher', label: 'المعلمون' },
     { key: 'student', label: 'الطلاب' },
     { key: 'parent',  label: 'أولياء الأمور' },
   ];
@@ -240,7 +240,7 @@ export default function UsersPage() {
         </div>
 
         {/* Table card */}
-        <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
+        <div style={{ ...card({ padding:0 }), overflowX:'auto' }}>
           {loading ? (
             <div style={{ display:'flex', justifyContent:'center', alignItems:'center', padding:60 }}>
               <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation:'spin 0.8s linear infinite' }} />

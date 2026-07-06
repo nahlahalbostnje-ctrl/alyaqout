@@ -138,7 +138,7 @@ export default function LiveClassesPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.course_id)    { setAddError('اختر الدورة'); return; }
+    if (!form.course_id)    { setAddError('اختر الدورة الدراسية'); return; }
     if (!form.teacher_id)   { setAddError('اختر المعلم'); return; }
     if (!form.scheduled_at) { setAddError('حدد موعد الحصة'); return; }
     setAddLoading(true);
@@ -255,7 +255,7 @@ export default function LiveClassesPage() {
         </div>
 
         {/* Main table */}
-        <div style={{ ...card({ padding:0 }), overflow:'hidden' }}>
+        <div style={{ ...card({ padding:0 }), overflowX:'auto' }}>
           {loading ? (
             <div style={{ display:'flex', justifyContent:'center', alignItems:'center', padding:60 }}>
               <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor: DK.gold, animation:'spin 0.8s linear infinite' }} />
@@ -266,7 +266,7 @@ export default function LiveClassesPage() {
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
                 <tr>
-                  {['#','العنوان','الدورة','المدرب','وقت البدء','الرابط','الحالة','إجراءات'].map(h => (
+                  {['#','العنوان','الدورة الدراسية','المعلم المسؤول','وقت البدء','الرابط','الحالة','إجراءات'].map(h => (
                     <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
@@ -362,20 +362,20 @@ export default function LiveClassesPage() {
         <Modal title="إنشاء حصة مباشرة جديدة" onClose={() => setShowModal(false)}>
           <form onSubmit={handleAdd}>
             <div style={{ marginBottom:14 }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدورة</label>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدورة الدراسية</label>
               <select value={form.course_id} onChange={e => setForm({...form, course_id: Number(e.target.value)})}
                 style={{ ...inp(focused==='course'), cursor:'pointer' }}
                 onFocus={() => setFocused('course')} onBlur={() => setFocused(null)}>
-                <option value={0} disabled>اختر الدورة</option>
+                <option value={0} disabled>اختر الدورة الدراسية</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
             </div>
             <div style={{ marginBottom:14 }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدرب</label>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المعلم المسؤول</label>
               <select value={form.teacher_id} onChange={e => setForm({...form, teacher_id: Number(e.target.value)})}
                 style={{ ...inp(focused==='teacher'), cursor:'pointer' }}
                 onFocus={() => setFocused('teacher')} onBlur={() => setFocused(null)}>
-                <option value={0} disabled>اختر المدرب</option>
+                <option value={0} disabled>اختر المعلم المسؤول</option>
                 {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
               {teachers.length === 0 && (

@@ -145,7 +145,7 @@ export default function SAAnalyticsPage() {
         <table style={{ width:'100%', borderCollapse:'collapse' }}>
           <thead>
             <tr style={{ background:'rgba(0,0,0,0.03)' }}>
-              {['اسم الدورة','المدرب','الطلاب','نسبة التفاعل','التقييم'].map((h,i)=>(
+              {['اسم الدورة','المعلم','الطلاب','نسبة التفاعل','التقييم'].map((h,i)=>(
                 <th key={i} style={{ padding:'10px 12px', textAlign:'right', color:C.sub, fontSize:11, fontWeight:700, borderBottom:`1px solid ${C.border}` }}>{h}</th>
               ))}
             </tr>

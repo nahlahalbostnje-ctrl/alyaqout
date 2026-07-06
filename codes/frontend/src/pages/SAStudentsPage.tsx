@@ -70,8 +70,8 @@ export default function SAStudentsPage() {
       </div>
 
       {/* Table */}
-      <div style={card({padding:0,overflow:'hidden'})}>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
+      <div style={card({padding:0,overflowX:'auto'})}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
               {['الطالب','الصف / المسار','الفرع / الدولة','ولي الأمر','التقدم الدراسي','الحالة','إجراءات'].map((h,i)=>(

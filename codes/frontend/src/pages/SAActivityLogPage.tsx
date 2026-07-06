@@ -67,8 +67,8 @@ export default function SAActivityLogPage() {
       </div>
 
       {/* Log Table */}
-      <div style={card({padding:0,overflow:'hidden'})}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+      <div style={card({padding:0,overflowX:'auto'})}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:700}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.04)'}}>
               {['#','المستخدم','الدور','العملية','الشاشة','التفاصيل','عنوان IP','التاريخ والوقت'].map((h,i)=>(

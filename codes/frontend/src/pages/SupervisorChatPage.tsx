@@ -27,7 +27,7 @@ const CONTACTS: Contact[] = [
     { id:2, from:'me',    text:'بالطبع سارة، أرسلت لك التغذية الراجعة على منصة الياقوت.', time:'أمس' },
     { id:3, from:'other', text:'شكراً على المتابعة 😊', time:'أمس' },
   ]},
-  { id:3, name:'أ. محمد المدرب', role:'teacher', unread:1, last:'سأراجع الواجب وأرسل لك الدرجات', messages:[
+  { id:3, name:'أ. محمد المعلم', role:'teacher', unread:1, last:'سأراجع الواجب وأرسل لك الدرجات', messages:[
     { id:1, from:'other', text:'مرحباً ليلى، خالد لم يسلّم واجب هذا الأسبوع.', time:'08:00 ص' },
     { id:2, from:'me',    text:'شكراً للإبلاغ، سأتواصل مع ولي أمره فوراً.', time:'08:10 ص' },
     { id:3, from:'other', text:'سأراجع الواجب وأرسل لك الدرجات', time:'08:30 ص' },

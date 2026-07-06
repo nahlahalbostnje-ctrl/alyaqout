@@ -94,7 +94,7 @@ export default function StudentPeerLeaguePage() {
           <>
             {/* Subject picker */}
             <div style={{ ...cardS, marginBottom:14 }}>
-              <p style={{ color:C.text, fontWeight:800, fontSize:15, marginBottom:12 }}>اختر المادة</p>
+              <p style={{ color:C.text, fontWeight:800, fontSize:15, marginBottom:12 }}>اختر المادة الدراسية</p>
               <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                 {SUBJECTS.map(s=>(
                   <button key={s} onClick={()=>setSubject(s)}

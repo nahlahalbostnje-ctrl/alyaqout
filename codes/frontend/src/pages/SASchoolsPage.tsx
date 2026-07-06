@@ -80,8 +80,8 @@ export default function SASchoolsPage() {
       </div>
 
       {/* Table */}
-      <div style={card({ padding:0, overflow:'hidden' })}>
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+      <div style={card({ padding:0, overflowX:'auto' })}>
+        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:700 }}>
           <thead>
             <tr style={{ background:'rgba(0,0,0,0.03)' }}>
               {['#','الفرع / الدولة','العملة','الدورات','الطلاب','المعلمون','مدير الفرع','الأداء','الحالة','إجراءات'].map((h,i)=>(

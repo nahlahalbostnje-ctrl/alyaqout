@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchNotifications,
+  fetchUnreadCount,
   markNotificationRead,
   markAllNotificationsRead,
 } from '../features/notifications/notificationsSlice';
@@ -12,8 +13,13 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Initial fetch + poll unread count every 60 s (cache-friendly lightweight endpoint)
   useEffect(() => {
     dispatch(fetchNotifications());
+    const interval = setInterval(() => {
+      dispatch(fetchUnreadCount());
+    }, 60_000);
+    return () => clearInterval(interval);
   }, [dispatch]);
 
   useEffect(() => {

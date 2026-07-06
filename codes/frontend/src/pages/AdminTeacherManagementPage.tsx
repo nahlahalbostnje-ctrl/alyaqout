@@ -173,7 +173,7 @@ export default function AdminTeacherManagementPage() {
             </div>
 
             <div style={{ overflowX:'auto' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
                 <thead>
                   <tr style={{ background:'#F8FAFC' }}>
                     {['المعلم','المادة','الطلاب','الساعات/أسبوع','التقييم','الحالة','إجراءات'].map(h => (

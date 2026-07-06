@@ -133,8 +133,8 @@ export default function TeacherAttendancePage() {
               <button onClick={() => markAll('present')} style={{ padding:'7px 14px', borderRadius:9, background:C.greenBg, border:`1px solid ${C.green}30`, color:C.green, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تعيين الكل حاضر</button>
               <button onClick={() => markAll('absent')} style={{ padding:'7px 14px', borderRadius:9, background:C.redBg, border:`1px solid ${C.red}30`, color:C.red, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تعيين الكل غائب</button>
             </div>
-            <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
                 <thead>
                   <tr style={{ background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
                     {['#', 'اسم الطالب', 'الغيابات السابقة', 'الحضور اليوم'].map((h,i) => (

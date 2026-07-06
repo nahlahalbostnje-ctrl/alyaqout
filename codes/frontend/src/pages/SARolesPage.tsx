@@ -6,7 +6,7 @@ const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', bo
 const ROLES = [
   {id:'super_admin',  name:'السوبر أدمن',       icon:'👑', color:C.gold,   users:1,   desc:'صلاحيات كاملة وغير محدودة على المنصة'},
   {id:'admin',        name:'مدير المنصة',        icon:'🛡️', color:C.blue,   users:12,  desc:'إدارة المدارس والمحتوى والمستخدمين'},
-  {id:'teacher',      name:'المدرب',             icon:'👨‍🏫', color:C.teal,   users:936, desc:'رفع المحتوى وإدارة الدورات والطلاب'},
+  {id:'teacher',      name:'المعلم',             icon:'👨‍🏫', color:C.teal,   users:936, desc:'رفع المحتوى وإدارة الدورات والطلاب'},
   {id:'student',      name:'الطالب',             icon:'🎓', color:C.purple, users:12842,desc:'الوصول للمحتوى التعليمي والاختبارات'},
   {id:'parent',       name:'ولي الأمر',          icon:'👨‍👩‍👦', color:C.orange, users:399, desc:'متابعة أداء الأبناء وتقاريرهم'},
   {id:'supervisor',   name:'المشرف الأكاديمي',  icon:'🔍', color:C.green,  users:58,  desc:'متابعة الطلاب وغرف الدراسة'},

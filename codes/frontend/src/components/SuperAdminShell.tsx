@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect, type ReactNode } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import BrandLogo from './BrandLogo';
@@ -36,8 +36,20 @@ const NAV = [
 export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAppSelector(s => s.auth.user);
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => { if (isMobile) setSidebarOpen(false); }, [location.pathname, isMobile]);
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -47,8 +59,14 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   return (
     <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif" }}>
 
+      {/* Mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:40, backdropFilter:'blur(2px)' }} />
+      )}
+
       {/* ══ SIDEBAR ══ */}
-      <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100vh', position:'sticky', top:0, display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none' }}>
+      <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100vh', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
         <div style={{ padding:'18px 12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', textAlign:'center' }}>
           <BrandLogo size={52} style={{ margin:'0 auto 10px', borderRadius:12 }} />
           <p style={{ color:'#fff', fontWeight:900, fontSize:14, lineHeight:1.3 }}>مركز القيادة</p>
@@ -82,8 +100,17 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
 
       {/* ══ MAIN ══ */}
       <div style={{ flex:1, overflowY:'auto', minWidth:0 }}>
-        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:50, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12 }}>
+        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:10, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(o => !o)}
+                style={{ background:'none', border:'none', cursor:'pointer', padding:6, color:C.navy, display:'flex', alignItems:'center', minWidth:44, minHeight:44, justifyContent:'center' }}
+                aria-label="القائمة">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+                </svg>
+              </button>
+            )}
             <BrandLogo size={38} style={{ borderRadius:10 }} />
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>

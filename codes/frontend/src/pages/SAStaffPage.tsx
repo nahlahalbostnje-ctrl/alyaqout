@@ -117,7 +117,7 @@ export default function SAStaffPage() {
         <div style={{ display:'flex', borderRadius:12, overflow:'hidden', border:`1px solid ${C.border}`, flexShrink:0 }}>
           {(['teachers','staff'] as const).map((t,i)=>(
             <button key={t} onClick={()=>setTab(t)} style={{ padding:'8px 18px', border:'none', cursor:'pointer', fontSize:12.5, fontWeight:700, background:tab===t?C.goldGrad:'transparent', color:tab===t?'#1B2038':C.sub, transition:'all 0.15s', borderLeft:i===0?'none':`1px solid ${C.border}` }}>
-              {t==='teachers'?'المدربون':'الموظفون الإداريون'}
+              {t==='teachers'?'المعلمون':'الموظفون الإداريون'}
             </button>
           ))}
         </div>
@@ -129,11 +129,11 @@ export default function SAStaffPage() {
 
       {/* Table */}
       {tab==='teachers'?(
-        <div style={card({padding:0,overflow:'hidden'})}>
-          <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <div style={card({padding:0,overflowX:'auto'})}>
+          <table style={{width:'100%',borderCollapse:'collapse',minWidth:700}}>
             <thead>
               <tr style={{background:'rgba(0,0,0,0.03)'}}>
-                {['المدرب','التخصص','رقم الهاتف','البريد الإلكتروني','الفرع / الدولة','الدورات','التقييم','الحالة','إجراءات'].map((h,i)=>(
+                {['المعلم','التخصص','رقم الهاتف','البريد الإلكتروني','الفرع / الدولة','الدورات','التقييم','الحالة','إجراءات'].map((h,i)=>(
                   <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
                 ))}
               </tr>
@@ -173,8 +173,8 @@ export default function SAStaffPage() {
           </table>
         </div>
       ):(
-        <div style={card({padding:0,overflow:'hidden'})}>
-          <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <div style={card({padding:0,overflowX:'auto'})}>
+          <table style={{width:'100%',borderCollapse:'collapse',minWidth:700}}>
             <thead>
               <tr style={{background:'rgba(0,0,0,0.03)'}}>
                 {['الموظف','المسمى الوظيفي','رقم الهاتف','البريد الإلكتروني','القسم','الحالة','إجراءات'].map((h,i)=>(

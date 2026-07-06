@@ -146,11 +146,11 @@ export default function SupervisorPerformancePage() {
             </div>
 
             {/* Student table */}
-            <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflow:'hidden', gridColumn:'1/-1' }}>
+            <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflowX:'auto', gridColumn:'1/-1' }}>
               <div style={{ padding:'14px 20px', borderBottom:`1px solid ${C.border}` }}>
                 <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>جدول مقارنة الطلاب</p>
               </div>
-              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', minWidth:540 }}>
                 <thead>
                   <tr style={{ background:'#FDFAF4', borderBottom:`1px solid ${C.border}` }}>
                     {['الطالب','الالتزام','التقدم','الإتمام','الاختبارات','الواجبات','التوجه'].map(h=>(

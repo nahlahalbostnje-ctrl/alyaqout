@@ -457,7 +457,7 @@ export default function CategoriesPage() {
                 onBlur={() => setFocusedInput(null)}
                 style={{ ...inp('grade'), cursor: 'pointer' }}
               >
-                <option value={0} disabled>اختر الصف</option>
+                <option value={0} disabled>اختر الصف الدراسي</option>
                 {grades.map((g) => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}

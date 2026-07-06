@@ -85,7 +85,7 @@ export default function SupervisorAssignmentsPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflow:'hidden' }}>
+        <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflowX:'auto' }}>
           {filtered.length === 0 ? (
             <div style={{ padding:'60px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
               <svg width={56} height={56} fill="none" stroke={C.gold} viewBox="0 0 24 24" strokeWidth={1.2} style={{ opacity:0.35 }}>
@@ -94,7 +94,7 @@ export default function SupervisorAssignmentsPage() {
               <p style={{ color:C.dim, fontSize:14 }}>لا توجد واجبات تطابق الفلتر المحدد</p>
             </div>
           ) : (
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:600 }}>
               <thead>
                 <tr style={{ borderBottom:`1px solid ${C.border}`, background:'#FDFAF4' }}>
                   {['الطالب','الواجب','المادة','تاريخ التسليم','الحالة','الدرجة','التغذية الراجعة','إجراء'].map(h => (

@@ -284,7 +284,7 @@ export default function CoursesPage() {
         </div>
 
         {/* Courses Table */}
-        <div style={cardStyle({ padding: 0, overflow: 'hidden' })}>
+        <div style={cardStyle({ padding: 0, overflowX: 'auto' })}>
           {loading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: 12 }}>
               <div style={{
@@ -299,10 +299,10 @@ export default function CoursesPage() {
               {categories.length === 0 ? 'أضف مواد دراسية أولاً.' : 'لا توجد دورات بعد. أضف أول دورة!'}
             </p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
               <thead>
                 <tr>
-                  {['#', 'عنوان الدورة', 'القسم', 'المدرب', 'السعر', 'المشتركون', 'الحالة', 'إجراءات'].map((h) => (
+                  {['#', 'عنوان الدورة', 'القسم', 'المعلم', 'السعر', 'المشتركون', 'الحالة', 'إجراءات'].map((h) => (
                     <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
@@ -482,7 +482,7 @@ export default function CoursesPage() {
                 onBlur={() => setFocusedInput(null)}
                 style={{ ...inp('cat'), cursor: 'pointer' }}
               >
-                <option value={0} disabled>اختر المادة</option>
+                <option value={0} disabled>اختر المادة الدراسية</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>

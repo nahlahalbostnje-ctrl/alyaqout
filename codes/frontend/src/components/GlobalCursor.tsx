@@ -7,8 +7,10 @@ export default function GlobalCursor() {
   const rx = useSpring(mx, { stiffness: 280, damping: 22 });
   const ry = useSpring(my, { stiffness: 280, damping: 22 });
   const [hovered, setHovered] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
+    setIsTouch(window.matchMedia('(pointer: coarse)').matches);
     const move = (e: MouseEvent) => { mx.set(e.clientX); my.set(e.clientY); };
     const over = (e: MouseEvent) => {
       const el = e.target as HTMLElement;
@@ -21,6 +23,8 @@ export default function GlobalCursor() {
       window.removeEventListener('mouseover', over);
     };
   }, [mx, my]);
+
+  if (isTouch) return null;
 
   const dotSize = useSpring(hovered ? 6 : 8, { stiffness: 320, damping: 24 });
   const ringSize = useSpring(hovered ? 48 : 36, { stiffness: 260, damping: 22 });

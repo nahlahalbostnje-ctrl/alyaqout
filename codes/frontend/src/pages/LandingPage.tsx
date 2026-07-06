@@ -241,6 +241,7 @@ export default function LandingPage() {
   const [submitting,      setSubmitting]      = useState(false);
   const [success,         setSuccess]         = useState('');
   const [scrolled,        setScrolled]        = useState(false);
+  const [isMobile,        setIsMobile]        = useState(false);
   const [form, setForm] = useState({ country_id:'', student_name:'', phone:'', school:'', region:'', subjects:[] as string[] });
 
   useEffect(() => {
@@ -250,6 +251,13 @@ export default function LandingPage() {
     const onScroll=()=>setScrolled(window.scrollY>8);
     window.addEventListener('scroll',onScroll,{passive:true});
     return ()=>window.removeEventListener('scroll',onScroll);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   const openModal=(src:'book_now'|'free_class')=>{
@@ -399,18 +407,18 @@ export default function LandingPage() {
           <motion.div initial={{ scale:0.5,opacity:0 }} animate={{ scale:1,opacity:1 }} transition={{ duration:1.1, ease:POP, delay:0.45 }}
             style={{ marginBottom:40, display:'inline-block', position:'relative' }}>
             {/* Circular glow disc behind the logo — decorative only, does NOT clip the image */}
-            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:380, height:380, borderRadius:'50%',
+            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width: isMobile ? 200 : 380, height: isMobile ? 200 : 380, borderRadius:'50%',
               background:'radial-gradient(circle, rgba(197,147,65,0.22) 0%, rgba(197,147,65,0.08) 55%, transparent 78%)',
               boxShadow:'0 0 110px rgba(197,147,65,0.65), 0 0 220px rgba(197,147,65,0.25), 0 20px 60px rgba(0,0,0,0.35)',
               pointerEvents:'none', zIndex:0 }} />
             {/* Outer animated ring */}
             <motion.div animate={{ scale:[1,1.08,1], opacity:[0.38,0.12,0.38] }} transition={{ duration:3.2, repeat:Infinity, ease:'easeInOut' }}
-              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:430, height:430, borderRadius:'50%', border:'2px solid rgba(197,147,65,0.5)', pointerEvents:'none', zIndex:0 }} />
+              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width: isMobile ? 250 : 430, height: isMobile ? 250 : 430, borderRadius:'50%', border:'2px solid rgba(197,147,65,0.5)', pointerEvents:'none', zIndex:0 }} />
             {/* Inner ring */}
             <motion.div animate={{ scale:[1,1.05,1], opacity:[0.25,0.07,0.25] }} transition={{ duration:3.2, repeat:Infinity, ease:'easeInOut', delay:0.6 }}
-              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:380, height:380, borderRadius:'50%', border:'1.5px solid rgba(197,147,65,0.35)', pointerEvents:'none', zIndex:0 }} />
+              style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width: isMobile ? 210 : 380, height: isMobile ? 210 : 380, borderRadius:'50%', border:'1.5px solid rgba(197,147,65,0.35)', pointerEvents:'none', zIndex:0 }} />
             {/* Logo image — no circular clip, shown complete with contain */}
-            <BrandLogo style={{ position:'relative', zIndex:1, display:'block', width:420, height:'auto', filter:'drop-shadow(0 0 50px rgba(197,147,65,0.65)) drop-shadow(0 0 110px rgba(197,147,65,0.28)) drop-shadow(0 16px 32px rgba(0,0,0,0.35))' }} size={420} />
+            <BrandLogo style={{ position:'relative', zIndex:1, display:'block', width: isMobile ? 220 : 420, height:'auto', filter:'drop-shadow(0 0 50px rgba(197,147,65,0.65)) drop-shadow(0 0 110px rgba(197,147,65,0.28)) drop-shadow(0 16px 32px rgba(0,0,0,0.35))' }} size={isMobile ? 220 : 420} />
           </motion.div>
 
           {/* Heading */}
@@ -458,9 +466,9 @@ export default function LandingPage() {
       <div style={{ background:C.bg }}>
         <div style={{ maxWidth:1024, margin:'0 auto', padding:'0 24px' }}>
           <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once:true }}
-            style={{ background:C.card, borderRadius:20, boxShadow:`0 12px 60px rgba(13,30,58,0.12)`, border:`1px solid ${C.border}`, display:'grid', gridTemplateColumns:'repeat(4,1fr)', marginTop:-60, position:'relative', zIndex:10 }}>
+            style={{ background:C.card, borderRadius:20, boxShadow:`0 12px 60px rgba(13,30,58,0.12)`, border:`1px solid ${C.border}`, display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', marginTop:-60, position:'relative', zIndex:10 }}>
             {STATS.map((s,i)=>(
-              <div key={i} style={{ padding:'32px 16px', textAlign:'center', borderLeft:i<3?`1px solid ${C.border}`:'none' }}>
+              <div key={i} style={{ padding:'32px 16px', textAlign:'center', borderLeft: !isMobile && i<3 ? `1px solid ${C.border}` : 'none' }}>
                 <p style={{ fontSize:'clamp(1.8rem,3vw,2.6rem)', fontWeight:900, lineHeight:1, background:C.goldGrad, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontFamily:FONT }}>
                   <Counter target={s.value} suffix={s.suffix} />
                 </p>
@@ -522,7 +530,7 @@ export default function LandingPage() {
 
           <div style={{ position:'relative' }}>
             <div className="hidden md:block" style={{ position:'absolute', top:34, right:'16.6%', left:'16.6%', borderTop:`2px dashed rgba(197,147,65,0.38)`, zIndex:0 }} />
-            <motion.div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:32, position:'relative', zIndex:1 }}
+            <motion.div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:32, position:'relative', zIndex:1 }}
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once:true, amount:0.25 }}>
               {STEPS.map((s,i)=>(
                 <motion.div key={i} variants={cardItem} style={{ textAlign:'center' }}>
@@ -588,7 +596,7 @@ export default function LandingPage() {
 
       {/* ════════ CTA BAND ════════ */}
       <section style={{ background:C.bg, padding:'0 24px 80px' }}>
-        <motion.div style={{ maxWidth:1120, margin:'0 auto', background:`linear-gradient(135deg,${C.gold},#E9C988,${C.goldLt})`, borderRadius:28, padding:'64px 48px', textAlign:'center', position:'relative', overflow:'hidden' }}
+        <motion.div style={{ maxWidth:1120, margin:'0 auto', background:`linear-gradient(135deg,${C.gold},#E9C988,${C.goldLt})`, borderRadius:28, padding: isMobile ? '40px 20px' : '64px 48px', textAlign:'center', position:'relative', overflow:'hidden' }}
           variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once:true, amount:0.4 }}>
           <motion.div style={{ position:'absolute', inset:0, pointerEvents:'none', background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent)', width:'40%' }}
             animate={{ x:['-100%','350%'] }} transition={{ duration:2.8, repeat:Infinity, repeatDelay:3, ease:'easeInOut' }} />

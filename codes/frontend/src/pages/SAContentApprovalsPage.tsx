@@ -88,11 +88,11 @@ export default function SAContentApprovalsPage() {
       </div>
 
       {/* Table */}
-      <div style={card({padding:0,overflow:'hidden'})}>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
+      <div style={card({padding:0,overflowX:'auto'})}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:620}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
-              {['النوع','اسم الملف / المحتوى','الدورة','المدرب','تاريخ الرفع','الحجم','الحالة','إجراءات'].map((h,i)=>(
+              {['النوع','اسم الملف / المحتوى','الدورة الدراسية','المعلم','تاريخ الرفع','الحجم','الحالة','إجراءات'].map((h,i)=>(
                 <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
               ))}
             </tr>
