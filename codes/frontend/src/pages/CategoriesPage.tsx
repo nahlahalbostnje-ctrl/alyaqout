@@ -269,7 +269,7 @@ export default function CategoriesPage() {
 
         {/* Subject Cards Grid */}
         {!loading && displayed.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 14, marginBottom: 24 }}>
             {displayed.map((cat) => (
               <div key={cat.id} style={cardStyle({ padding: 16 })}>
                 {/* Icon */}
@@ -349,7 +349,8 @@ export default function CategoriesPage() {
               {grades.length === 0 ? 'أضف صفوفاً دراسية أولاً من صفحة الصفوف.' : 'لا توجد مواد بعد. أضف أول مادة!'}
             </p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
               <thead>
                 <tr>
                   {['الترتيب', 'المادة', 'الصف', 'الحالة', 'إجراءات'].map((h) => (
@@ -438,6 +439,7 @@ export default function CategoriesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

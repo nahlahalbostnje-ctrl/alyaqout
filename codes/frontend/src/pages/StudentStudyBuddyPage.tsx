@@ -110,7 +110,7 @@ export default function StudentStudyBuddyPage() {
           <p style={{ color:C.sub, fontSize:13, margin:0 }}>مؤقت ذكي للدراسة مع ملاحظات وتنظيم تلقائي للوقت</p>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20 }}>
 
           {/* Timer */}
           <div style={{ background:C.card, borderRadius:18, padding:28, border:`1px solid ${C.border}`, boxShadow:C.shadow, textAlign:'center' }}>
@@ -162,7 +162,7 @@ export default function StudentStudyBuddyPage() {
             </div>
 
             {/* Time Presets */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(70px,1fr))', gap:6, marginBottom:16 }}>
               {SUGGESTIONS.map((s,i) => (
                 <div key={i} onClick={() => { setSelected(s.time); setSeconds(s.time*60); if(phase!=='idle') reset(); }}
                   style={{ padding:'8px 4px', borderRadius:10, border:`1px solid ${selected===s.time ? C.gold : C.border}`, background: selected===s.time ? C.goldBg : '#fff', cursor:'pointer', textAlign:'center', transition:'all 0.15s' }}>

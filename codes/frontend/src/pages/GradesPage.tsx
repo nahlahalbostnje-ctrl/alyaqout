@@ -208,7 +208,7 @@ export default function GradesPage() {
 
         {/* Grade Cards Grid */}
         {!loading && grades.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
             {grades.map((grade) => (
               <div key={grade.id} style={cardStyle({ padding: 16 })}>
                 {/* Icon + sort badge row */}
@@ -291,7 +291,8 @@ export default function GradesPage() {
               </p>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
               <thead>
                 <tr>
                   {['الترتيب', 'اسم الصف', 'الحالة', 'إجراءات'].map((h) => (
@@ -368,6 +369,7 @@ export default function GradesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

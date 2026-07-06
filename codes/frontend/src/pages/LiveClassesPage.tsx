@@ -389,7 +389,7 @@ export default function LiveClassesPage() {
                 style={inp(focused==='title')}
                 onFocus={() => setFocused('title')} onBlur={() => setFocused(null)} />
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>موعد الحصة</label>
                 <input type="datetime-local" required

@@ -186,10 +186,10 @@ function BarChart({ data }: { data:{month:string;v:number}[] }) {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const card=(e:Partial<CSSProperties>={}):CSSProperties=>({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e });
-const sH=(t:string,a?:string)=>(
+const sH=(t:string,a?:string,onAction?:()=>void)=>(
   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
     <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>{t}</p>
-    {a&&<button style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
+    {a&&<button onClick={onAction ?? (()=>alert(`"${a}" لـ"${t}" قيد التطوير.`))} style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
   </div>
 );
 const medalColor=(r:number)=>r===1?C.gold:r===2?'#9CA3AF':'#B45309';
@@ -265,7 +265,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Control panel button */}
-          <button style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', flexShrink:0 }}>
+          <button onClick={()=>navigate('/dashboard/settings')} style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', flexShrink:0 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
@@ -274,8 +274,12 @@ export default function DashboardPage() {
 
           {/* Notification icons */}
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            {[{e:'🔔',n:12},{e:'✉️',n:7},{e:'🚩',n:5}].map((ic,i)=>(
-              <div key={i} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
+            {[
+              { e:'🔔', n:12, to:'/dashboard/notifications' },
+              { e:'✉️', n:7,  to:'/dashboard/messages' },
+              { e:'🚩', n:5,  to:'/dashboard/content-approvals' },
+            ].map((ic,i)=>(
+              <div key={i} onClick={()=>navigate(ic.to)} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
                 {ic.e}
                 <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
               </div>
@@ -310,7 +314,7 @@ export default function DashboardPage() {
         <div style={{ padding:'14px 18px 24px' }}>
 
           {/* ── 6 STATS CARDS ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:10, marginBottom:14 }}>
             {STATS.map((s,i)=>(
               <div key={i} style={{ ...card(), padding:'14px 12px' }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
@@ -325,7 +329,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── ROW 2: Approvals | Growth | Alerts+Donut ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'215px 1fr 255px', gap:12, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:12, marginBottom:14 }}>
 
             {/* Approvals */}
             <div style={card()}>
@@ -341,7 +345,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ width:'100%', marginTop:12, padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', boxShadow:'0 3px 10px rgba(201,149,42,0.3)' }}>
+              <button onClick={()=>navigate('/dashboard/content-approvals')} style={{ width:'100%', marginTop:12, padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer', boxShadow:'0 3px 10px rgba(201,149,42,0.3)' }}>
                 جميع الاعتمادات
               </button>
             </div>
@@ -408,7 +412,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── ROW 3: Top Schools | Activity | Servers+Revenue ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'215px 1fr 295px', gap:12, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:12, marginBottom:14 }}>
 
             {/* Top Branches */}
             <div style={card()}>
@@ -469,7 +473,7 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 </div>
-                <button style={{ width:'100%', marginTop:10, padding:'9px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer' }}>
+                <button onClick={()=>navigate('/dashboard/reports')} style={{ width:'100%', marginTop:10, padding:'9px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer' }}>
                   عرض تقرير النظام الكامل
                 </button>
               </div>
@@ -495,12 +499,12 @@ export default function DashboardPage() {
           </div>
 
           {/* ── BOTTOM ROW: 4 sections ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:12 }}>
 
             {/* Quick Reports */}
             <div style={card()}>
               {sH('التقارير السريعة')}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:8, marginBottom:12 }}>
                 {[{e:'📋',l:'تقرير المنصة'},{e:'👨‍🏫',l:'تقرير المعلمين'},{e:'🎓',l:'تقرير الطلاب'},{e:'💰',l:'التقرير المالي'},{e:'✅',l:'تقرير الاعتمادات'}].map((r,i)=>(
                   <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{r.e}</span>
@@ -512,7 +516,7 @@ export default function DashboardPage() {
                   <span style={{ color:C.gold, fontSize:10, fontWeight:600 }}>المزيد</span>
                 </button>
               </div>
-              <button style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
+              <button onClick={()=>navigate('/dashboard/reports')} style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 جميع التقارير
               </button>
             </div>
@@ -520,15 +524,21 @@ export default function DashboardPage() {
             {/* Quick Admin Tools */}
             <div style={card()}>
               {sH('أدوات الإدارة السريعة')}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
-                {[{e:'🌍',l:'إضافة فرع'},{e:'👨‍🏫',l:'إضافة معلم'},{e:'🎓',l:'إضافة طالب'},{e:'🔔',l:'إرسال إشعار'},{e:'📄',l:'إنشاء محتوى'}].map((t,i)=>(
-                  <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(90px,1fr))', gap:8, marginBottom:12 }}>
+                {[
+                  {e:'🌍',l:'إضافة فرع',to:'/dashboard/schools'},
+                  {e:'👨‍🏫',l:'إضافة معلم',to:'/dashboard/staff'},
+                  {e:'🎓',l:'إضافة طالب',to:'/dashboard/students'},
+                  {e:'🔔',l:'إرسال إشعار',to:'/dashboard/notifications'},
+                  {e:'📄',l:'إنشاء محتوى',to:'/dashboard/content-approvals'},
+                ].map((t,i)=>(
+                  <button key={i} onClick={()=>navigate(t.to)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{t.e}</span>
                     <span style={{ color:C.text, fontSize:9.5, fontWeight:600, textAlign:'center', lineHeight:1.3 }}>{t.l}</span>
                   </button>
                 ))}
               </div>
-              <button style={{ width:'100%', padding:'9px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
+              <button onClick={()=>navigate('/dashboard/settings')} style={{ width:'100%', padding:'9px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 المزيد من الأدوات
               </button>
             </div>
@@ -536,7 +546,7 @@ export default function DashboardPage() {
             {/* Subscriptions */}
             <div style={card()}>
               {sH('نظرة عامة على الاشتراكات')}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:9, marginBottom:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:9, marginBottom:12 }}>
                 {[
                   { n:42, l:'اشتراكات نشطة', c:C.green,  bg:'rgba(22,163,74,0.09)'  },
                   { n:6,  l:'منتهية',          c:C.sub,    bg:C.bg                    },
@@ -549,7 +559,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
+              <button onClick={()=>navigate('/dashboard/plans')} style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 إدارة الاشتراكات
               </button>
             </div>
@@ -564,15 +574,15 @@ export default function DashboardPage() {
                   <p style={{ color:C.sub, fontSize:11 }}>تذاكر دعم مفتوحة</p>
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:8, marginBottom:12 }}>
                 {[{e:'❓',l:'الأسئلة الشائعة'},{e:'🏠',l:'مركز المساعدة'}].map((t,i)=>(
-                  <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
+                  <button key={i} onClick={()=>navigate('/dashboard/support')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{t.e}</span>
                     <span style={{ color:C.text, fontSize:10.5, fontWeight:600, textAlign:'center' }}>{t.l}</span>
                   </button>
                 ))}
               </div>
-              <button style={{ width:'100%', padding:'9px', borderRadius:12, background:'linear-gradient(135deg,#2563EB,#1D4ED8)', color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
+              <button onClick={()=>navigate('/dashboard/support')} style={{ width:'100%', padding:'9px', borderRadius:12, background:'linear-gradient(135deg,#2563EB,#1D4ED8)', color:'#fff', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 فتح تذكرة جديدة
               </button>
             </div>

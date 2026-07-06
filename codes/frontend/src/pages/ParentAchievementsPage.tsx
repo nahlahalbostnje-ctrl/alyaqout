@@ -97,7 +97,7 @@ export default function ParentAchievementsPage() {
         </div>
 
         {/* Summary cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:24 }}>
           {[
             { label:'شارات الأبناء', value: totalEarned, icon:'🏆', color:C.gold, bg:C.goldBg },
             { label:'شاراتي كولي أمر', value: myEarned, icon:'👑', color:C.purple, bg:C.purpleBg },
@@ -121,7 +121,7 @@ export default function ParentAchievementsPage() {
             <span style={{ color:C.text, fontWeight:800, fontSize:15 }}>شاراتي — ولي الأمر</span>
             <span style={{ background:C.goldBg, color:C.gold, fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20, border:`1px solid ${C.goldBdr}` }}>{myEarned} مكتسبة</span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))', gap:12 }}>
             {MY_BADGES.map((b, i) => (
               <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, textAlign:'center' }}>
                 <div style={{
@@ -175,7 +175,7 @@ export default function ParentAchievementsPage() {
 
           {/* Earned */}
           <p style={{ color:C.text, fontWeight:800, fontSize:13, marginBottom:12 }}>✅ الشارات المكتسبة ({child.earned.length})</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:24 }}>
             {child.earned.map((b, i) => (
               <div key={i} style={{ background:`linear-gradient(160deg,#FFFDF7,${C.goldBg})`, borderRadius:14, padding:16, border:`1px solid ${C.goldBdr}`, textAlign:'center', boxShadow:'0 2px 10px rgba(197,147,65,0.12)' }}>
                 <div style={{ fontSize:38, marginBottom:8 }}>{b.emoji}</div>
@@ -189,7 +189,7 @@ export default function ParentAchievementsPage() {
 
           {/* Locked */}
           <p style={{ color:C.text, fontWeight:800, fontSize:13, marginBottom:12 }}>🔒 الشارات المقفلة ({child.locked.length})</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14 }}>
             {child.locked.map((b, i) => (
               <div key={i} style={{ background:'#F9FAFB', borderRadius:14, padding:16, border:'1px solid #E5E7EB', textAlign:'center', opacity:0.75 }}>
                 <div style={{ fontSize:38, marginBottom:8, filter:'grayscale(1)', position:'relative', display:'inline-block' }}>

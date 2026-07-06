@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
 
         {/* Stats Grid */}
         {dashboard && !loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16 }}>
             {STAT_DEFS.map((def) => (
               <StatCard
                 key={def.key}

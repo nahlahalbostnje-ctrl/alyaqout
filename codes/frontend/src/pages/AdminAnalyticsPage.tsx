@@ -137,7 +137,7 @@ export default function AdminAnalyticsPage() {
         {activeTab === 'platform' && (
           <>
             {/* KPI Row */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:22 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14, marginBottom:22 }}>
               {[
                 { icon:'👥', val:'2,010',  label:'طلاب نشطون',     color: C.blue,  trend:'+12%'  },
                 { icon:'🎓', val:'142',    label:'دورة منشورة',    color: C.green, trend:'+8%'   },
@@ -177,7 +177,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Platform Stats */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:14 }}>
               <div style={card()}>
                 <p style={{ color: C.text, fontWeight:800, fontSize:14, marginBottom:14 }}>توزيع الدورات بالمادة</p>
                 {[
@@ -298,7 +298,7 @@ export default function AdminAnalyticsPage() {
                       style={{ marginRight:'auto', width:28, height:28, borderRadius:7, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:14, color: C.sub }}>✕</button>
                   </div>
 
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
                     {[
                       { label:'متوسط الدرجات', val:`${selectedTeacher.avgScore}%` },
                       { label:'الحضور',         val:`${selectedTeacher.attendance}%` },
@@ -316,10 +316,10 @@ export default function AdminAnalyticsPage() {
                 <AIEvaluation teacher={selectedTeacher} />
 
                 <div style={{ marginTop:12, display:'flex', gap:8 }}>
-                  <button style={{ flex:1, padding:'11px', borderRadius:12, background: C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                  <button onClick={()=>alert('إرسال تقرير أداء المعلم عبر البريد/واتساب قيد التطوير.')} style={{ flex:1, padding:'11px', borderRadius:12, background: C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                     📧 إرسال تقرير
                   </button>
-                  <button style={{ flex:1, padding:'11px', borderRadius:12, background:'transparent', border:`1.5px solid ${C.border}`, color: C.text, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                  <button onClick={()=>alert('تحميل تقرير أداء المعلم كـPDF قيد التطوير.')} style={{ flex:1, padding:'11px', borderRadius:12, background:'transparent', border:`1.5px solid ${C.border}`, color: C.text, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                     📥 تحميل PDF
                   </button>
                 </div>

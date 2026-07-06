@@ -81,7 +81,7 @@ export default function StudentReviewVideosPage() {
       <div style={{ padding:'14px 16px 0' }}>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10, marginBottom:16 }}>
           {[
             { icon:'🎬', val:videos.length, label:'إجمالي',      color:C.gold  },
             { icon:'✅', val:watched,        label:'شاهدتها',    color:'#10B981'},

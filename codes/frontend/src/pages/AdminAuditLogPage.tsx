@@ -82,8 +82,8 @@ export default function AdminAuditLogPage() {
         </div>
 
         {/* Log Table */}
-        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'60px 1fr 1fr 140px 120px', padding:'11px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflowX:'auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'60px 1fr 1fr 140px 120px', minWidth:600, padding:'11px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
             {['#','العملية','الهدف','IP','الوقت'].map((h,i) => (
               <span key={i} style={{ color:C.gold, fontSize:11, fontWeight:800 }}>{h}</span>
             ))}
@@ -97,7 +97,7 @@ export default function AdminAuditLogPage() {
               <p>لا توجد سجلات بعد</p>
             </div>
           ) : filtered.map((log, idx) => (
-            <div key={log.id} style={{ display:'grid', gridTemplateColumns:'60px 1fr 1fr 140px 120px', padding:'13px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
+            <div key={log.id} style={{ display:'grid', gridTemplateColumns:'60px 1fr 1fr 140px 120px', minWidth:600, padding:'13px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
               <span style={{ color:C.dim, fontSize:12, fontWeight:700 }}>#{log.id}</span>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <span style={{ fontSize:18 }}>{ACTION_ICON[log.action] ?? ACTION_ICON.default}</span>

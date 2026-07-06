@@ -58,6 +58,8 @@ export default function LiveRoomPage() {
   const [camOff,      setCamOff]      = useState(false);
   const [ending,      setEnding]      = useState(false);
   const [elapsed,     setElapsed]     = useState(0);
+  const [wbTool,      setWbTool]      = useState(0);
+  const [wbColor,     setWbColor]     = useState(0);
 
   useEffect(() => {
     if (!joined) return;
@@ -261,17 +263,17 @@ export default function LiveRoomPage() {
           {/* Drawing tools */}
           <div style={{ background:C.card, borderRadius:14, padding:'10px 14px', display:'flex', alignItems:'center', gap:10, boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:12 }}>
             {['✏️','📐','📏','T','🔵'].map((t,i) => (
-              <button key={i} style={{ width:34, height:34, borderRadius:9, background:i===0?C.goldBg:C.bg, border:`1px solid ${i===0?C.gold:C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:i===3?13:17, cursor:'pointer', fontWeight:i===3?700:400, color:C.navy2 }}>{t}</button>
+              <button key={i} onClick={()=>setWbTool(i)} style={{ width:34, height:34, borderRadius:9, background:i===wbTool?C.goldBg:C.bg, border:`1px solid ${i===wbTool?C.gold:C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:i===3?13:17, cursor:'pointer', fontWeight:i===3?700:400, color:C.navy2 }}>{t}</button>
             ))}
             <div style={{ display:'flex', gap:5, marginRight:'auto' }}>
               {['#EF4444','#3B82F6','#16A34A','#F59E0B','#1B2038'].map((col,i) => (
-                <div key={i} style={{ width:20, height:20, borderRadius:'50%', background:col, cursor:'pointer', border:'2px solid #fff', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+                <div key={i} onClick={()=>setWbColor(i)} style={{ width:20, height:20, borderRadius:'50%', background:col, cursor:'pointer', border:i===wbColor?'2px solid #1B2038':'2px solid #fff', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
               ))}
             </div>
           </div>
 
           {/* AI Teacher button */}
-          <button style={{ width:'100%', padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 14px rgba(201,149,42,0.4)' }}>
+          <button onClick={()=>alert('سؤال المعلم الذكي المباشر أثناء الحصة قيد التطوير — استخدم المساعد الذكي من لوحة الطالب حالياً.')} style={{ width:'100%', padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 14px rgba(201,149,42,0.4)' }}>
             <span style={{ fontSize:18 }}>🤖</span>
             اسأل معلمي الذكي
           </button>

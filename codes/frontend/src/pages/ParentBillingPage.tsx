@@ -1,5 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
+import api from '../services/axios';
+
+interface Installment {
+  id: number;
+  child: string;
+  package: string;
+  installment_no: number;
+  amount: number;
+  due_date: string;
+  status: 'pending' | 'paid' | 'overdue';
+  paid_at: string | null;
+}
 
 const C = {
   gold: '#C59341', goldL: '#D4A65A',
@@ -91,7 +103,7 @@ function DeviceRequestModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:28, width:480, maxHeight:'90vh', overflowY:'auto', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
+      <div style={{ background:'#fff', borderRadius:20, padding:28, width:480, maxWidth:'92vw', maxHeight:'90vh', overflowY:'auto', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
         {submitted ? (
           <div style={{ textAlign:'center', padding:'20px 0' }}>
             <div style={{ fontSize:56, marginBottom:12 }}>✅</div>
@@ -151,6 +163,16 @@ export default function ParentBillingPage() {
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [renewPlan, setRenewPlan] = useState<'monthly'|'quarterly'|'annual'>('annual');
   const [renewDone, setRenewDone] = useState(false);
+
+  const [installments, setInstallments] = useState<Installment[]>([]);
+  const [installmentsLoading, setInstallmentsLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/parent/billing/installments')
+      .then(({ data }) => setInstallments(data.data ?? []))
+      .catch(() => setInstallments([]))
+      .finally(() => setInstallmentsLoading(false));
+  }, []);
 
   const totalPaid = INVOICES.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
   const totalPending = INVOICES.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
@@ -243,7 +265,7 @@ export default function ParentBillingPage() {
         </div>
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 20 }}>
           {/* Paid */}
           <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.green}20` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -333,6 +355,44 @@ export default function ParentBillingPage() {
           </div>
         )}
 
+        {/* Installments (خطة التقسيط) */}
+        {(installmentsLoading || installments.length > 0) && (
+          <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <div style={{ width: 4, height: 18, borderRadius: 2, background: C.goldGrad }} />
+              <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>خطة التقسيط</h2>
+            </div>
+
+            {installmentsLoading ? (
+              <p style={{ color: C.dim, fontSize: 13, textAlign: 'center', padding: '20px 0' }}>جارٍ التحميل...</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                      {['القسط #', 'الابن', 'الباقة', 'المبلغ (ريال)', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
+                        <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {installments.map((inst) => (
+                      <tr key={inst.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                        <td style={{ padding: '10px 12px', color: C.dim, fontSize: 12 }}>{inst.installment_no}</td>
+                        <td style={{ padding: '10px 12px' }}><ChildPill name={inst.child} /></td>
+                        <td style={{ padding: '10px 12px', color: C.text, fontSize: 13 }}>{inst.package}</td>
+                        <td style={{ padding: '10px 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{Number(inst.amount).toLocaleString('ar-SA')}</td>
+                        <td style={{ padding: '10px 12px', color: C.sub, fontSize: 12 }}>{inst.due_date}</td>
+                        <td style={{ padding: '10px 12px' }}><StatusBadge status={inst.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Filter Tabs + Table */}
         <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -379,7 +439,7 @@ export default function ParentBillingPage() {
                     <td style={{ padding: '12px 12px' }}><StatusBadge status={inv.status} /></td>
                     <td style={{ padding: '12px 12px' }}>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <button style={{
+                        <button onClick={()=>alert(`تحميل فاتورة PDF لـ"${inv.id}" قيد التطوير.`)} style={{
                           background: C.goldBg, border: `1px solid ${C.goldBdr}`, borderRadius: 7,
                           padding: '5px 8px', cursor: 'pointer', color: C.gold, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, fontFamily: "'Cairo',sans-serif",
                         }}>
@@ -389,7 +449,7 @@ export default function ParentBillingPage() {
                           PDF
                         </button>
                         {(inv.status === 'pending' || inv.status === 'overdue') && (
-                          <button style={{
+                          <button onClick={()=>alert(`دفع فاتورة "${inv.id}" بمبلغ ${inv.amount.toLocaleString('ar-SA')} ر.س عبر بوابة الدفع قيد التطوير.`)} style={{
                             background: inv.status === 'overdue' ? C.red : C.goldGrad,
                             border: 'none', borderRadius: 7, padding: '5px 10px',
                             cursor: 'pointer', color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: "'Cairo',sans-serif",

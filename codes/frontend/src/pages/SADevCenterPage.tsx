@@ -67,7 +67,7 @@ export default function SADevCenterPage() {
       {tab==='keys'&&(
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
           {/* Stats */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10}}>
             {[
               {label:'إجمالي الطلبات اليوم',value:'8,420',  icon:'📡',color:C.blue},
               {label:'معدل النجاح',           value:'99.2%', icon:'✅',color:C.green},
@@ -97,7 +97,7 @@ export default function SADevCenterPage() {
                   <button onClick={()=>setShowKey(showKey===ak.key?null:ak.key)} style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer'}}>
                     {showKey===ak.key?'🙈 إخفاء':'👁️ عرض'}
                   </button>
-                  <button style={{padding:'7px 14px',borderRadius:10,border:'none',background:C.goldBg,color:C.gold,fontSize:12,fontWeight:700,cursor:'pointer'}}>🔄 تجديد</button>
+                  <button onClick={()=>alert('تجديد مفاتيح API قيد التطوير — منصة API العامة للمطورين لم تُفعَّل بعد.')} style={{padding:'7px 14px',borderRadius:10,border:'none',background:C.goldBg,color:C.gold,fontSize:12,fontWeight:700,cursor:'pointer'}}>🔄 تجديد</button>
                 </div>
               </div>
               <CodeBlock code={showKey===ak.key?ak.key:'•'.repeat(48)} lang="API Key"/>
@@ -110,7 +110,7 @@ export default function SADevCenterPage() {
       {tab==='webhooks'&&(
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
-            <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة Webhook</button>
+            <button onClick={()=>alert('نظام Webhooks قيد التطوير — لا توجد بنية بث أحداث فعلية بالباك اند بعد.')} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة Webhook</button>
           </div>
           {WEBHOOKS.map((wh,i)=>(
             <div key={i} style={card()}>
@@ -130,8 +130,8 @@ export default function SADevCenterPage() {
                 </div>
                 <div style={{display:'flex',gap:8,flexShrink:0}}>
                   <span style={{color:C.dim,fontSize:11}}>آخر ping: {wh.lastPing}</span>
-                  <button style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>✏️</button>
-                  <button style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>🗑️</button>
+                  <button onClick={()=>alert('تعديل الـ Webhook قيد التطوير.')} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>✏️</button>
+                  <button onClick={()=>alert('حذف الـ Webhook قيد التطوير.')} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>🗑️</button>
                 </div>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function SADevCenterPage() {
 
       {/* Docs Tab */}
       {tab==='docs'&&(
-        <div style={{display:'grid',gridTemplateColumns:'280px 1fr',gap:14}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14}}>
           <div style={card({padding:'12px 8px'})}>
             <p style={{color:C.text,fontWeight:700,fontSize:13,padding:'6px 10px',marginBottom:8}}>نقاط النهاية (Endpoints)</p>
             {ENDPOINTS.map((ep,i)=>(
@@ -187,7 +187,7 @@ Content-Type: application/json`}/>
 
       {/* SDK Tab */}
       {tab==='sdk'&&(
-        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
           {[
             {lang:'JavaScript / Node.js', icon:'🟨', install:'npm install @yaqoot/sdk',usage:`import { YaqootClient } from '@yaqoot/sdk';
 

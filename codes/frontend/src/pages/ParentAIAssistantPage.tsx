@@ -46,6 +46,14 @@ export default function ParentAIAssistantPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const nextId = useRef(2);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -90,10 +98,10 @@ export default function ParentAIAssistantPage() {
 
   return (
     <ParentLayout>
-      <div dir="rtl" style={{ display:'flex', height:'calc(100vh - 58px)', fontFamily:"'Cairo',sans-serif" }}>
+      <div dir="rtl" style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 58px)', minHeight: isMobile ? 'calc(100vh - 58px)' : undefined, fontFamily:"'Cairo',sans-serif" }}>
 
-        {/* Left sidebar */}
-        <div style={{ width:280, flexShrink:0, background:C.card, borderLeft:`1px solid ${C.border}`, display:'flex', flexDirection:'column', padding:20, gap:16, overflowY:'auto' }}>
+        {/* Left sidebar — stacks on top, capped height, on mobile */}
+        <div style={{ width: isMobile ? '100%' : 280, maxHeight: isMobile ? 220 : undefined, flexShrink:0, background:C.card, borderLeft: isMobile ? 'none' : `1px solid ${C.border}`, borderBottom: isMobile ? `1px solid ${C.border}` : 'none', display:'flex', flexDirection:'column', padding:20, gap:16, overflowY:'auto' }}>
           {/* AI avatar */}
           <div style={{ textAlign:'center', padding:'10px 0 16px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ width:80, height:80, borderRadius:24, background:`linear-gradient(135deg,${C.navy},#2D3561)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:42, margin:'0 auto 12px', boxShadow:'0 8px 24px rgba(13,30,58,0.35)' }}>🤖</div>

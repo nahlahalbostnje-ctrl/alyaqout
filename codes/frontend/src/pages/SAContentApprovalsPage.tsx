@@ -60,7 +60,7 @@ export default function SAContentApprovalsPage() {
       </div>
 
       {/* Stats */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:14}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:10,marginBottom:14}}>
         {[
           {label:'إجمالي المحتوى',value:'2,451',icon:'📁',color:C.blue},
           {label:'بانتظار الاعتماد',value:counts.pending,icon:'⏳',color:C.orange},
@@ -122,7 +122,7 @@ export default function SAContentApprovalsPage() {
                   </td>
                   <td style={{padding:'12px 14px'}}>
                     <div style={{display:'flex',gap:5}}>
-                      <button title="معاينة" style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:C.navy,color:'#fff',cursor:'pointer',fontSize:12}}>👁️</button>
+                      <button title="معاينة" onClick={()=>alert(`معاينة الملف: ${item.name}\nالنوع: ${TYPE_INFO[item.type].label} — بواسطة ${item.teacher}`)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:C.navy,color:'#fff',cursor:'pointer',fontSize:12}}>👁️</button>
                       {item.status==='pending'&&<>
                         <button onClick={()=>approve(item.id)} title="اعتماد" style={{width:30,height:30,borderRadius:8,border:'none',background:'rgba(22,163,74,0.15)',color:C.green,cursor:'pointer',fontSize:14,fontWeight:700}}>✓</button>
                         <button onClick={()=>setRejectModal(item.id)} title="رفض" style={{width:30,height:30,borderRadius:8,border:'none',background:'rgba(239,68,68,0.12)',color:C.red,cursor:'pointer',fontSize:14,fontWeight:700}}>✕</button>
@@ -139,7 +139,7 @@ export default function SAContentApprovalsPage() {
       {/* Reject Modal */}
       {rejectModal!==null&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setRejectModal(null)}>
-          <div style={{background:C.card,borderRadius:20,padding:28,width:440}} onClick={e=>e.stopPropagation()}>
+          <div style={{background:C.card,borderRadius:20,padding:28,width:440,maxWidth:'92vw'}} onClick={e=>e.stopPropagation()}>
             <h2 style={{color:C.text,fontWeight:900,fontSize:17,marginBottom:14}}>سبب الرفض</h2>
             <textarea value={rejectReason} onChange={e=>setRejectReason(e.target.value)} placeholder="اكتب سبب رفض هذا المحتوى..." rows={4} style={{width:'100%',padding:'10px 14px',borderRadius:11,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:13,outline:'none',resize:'none',boxSizing:'border-box',fontFamily:"'Cairo',sans-serif"}}/>
             <div style={{display:'flex',gap:10,marginTop:16}}>

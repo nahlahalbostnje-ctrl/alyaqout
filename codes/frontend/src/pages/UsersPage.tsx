@@ -105,11 +105,48 @@ export default function UsersPage() {
   // Unlink state
   const [unlinkUser, setUnlinkUser]   = useState<UserItem | null>(null);
   const [unlinkDone, setUnlinkDone]   = useState(false);
+  const [unlinkBusy, setUnlinkBusy]   = useState(false);
 
-  const handleUnlink = () => {
+  const handleUnlink = async () => {
     if (!unlinkUser) return;
-    setUnlinkDone(true);
-    setTimeout(() => { setUnlinkUser(null); setUnlinkDone(false); }, 2200);
+    setUnlinkBusy(true);
+    try {
+      await api.patch(`/admin/users/${unlinkUser.id}/unlink-parent`);
+      setUnlinkDone(true);
+      setTimeout(() => { setUnlinkUser(null); setUnlinkDone(false); }, 2200);
+    } catch {
+      /* leave modal open so the admin can retry */
+    } finally {
+      setUnlinkBusy(false);
+    }
+  };
+
+  // Edit state
+  const [editUser, setEditUser]       = useState<UserItem | null>(null);
+  const [editForm, setEditForm]       = useState({ name:'', phone:'', address:'', city_id:'' });
+  const [editBusy, setEditBusy]       = useState(false);
+  const [editError, setEditError]     = useState('');
+
+  const openEdit = (u: UserItem) => {
+    setEditUser(u);
+    setEditForm({ name: u.name, phone: u.phone ?? '', address:'', city_id:'' });
+    setEditError('');
+  };
+
+  const handleEditSave = async () => {
+    if (!editUser) return;
+    setEditBusy(true);
+    setEditError('');
+    try {
+      await api.put(`/admin/users/${editUser.id}`, editForm);
+      setEditUser(null);
+      dispatch(fetchUsers(null));
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setEditError(err.response?.data?.message ?? 'تعذّر حفظ التعديلات.');
+    } finally {
+      setEditBusy(false);
+    }
   };
 
   // Messaging state
@@ -126,14 +163,29 @@ export default function UsersPage() {
 
   const handleMerge = () => {
     if (!mergeTarget || !mergeUser) return;
-    setMergeMsg(`تم دمج الحساب "${mergeUser.name}" مع الحساب المحدد بنجاح.`);
-    setTimeout(() => { setMergeUser(null); setMergeMsg(''); setMergeTarget(''); }, 2200);
+    // دمج الحسابات يتطلب ترحيل كل السجلات المرتبطة (نتائج/واجبات/نقاط) عبر جداول كثيرة —
+    // عملية حساسة لا يوجد لها تنفيذ فعلي بعد بالباك اند، فنعرض ذلك بصراحة بدل ادّعاء نجاح وهمي.
+    setMergeMsg('⏳ ميزة دمج الحسابات قيد التطوير — تتطلب ترحيل آمن لكل بيانات الحساب ولم تُفعَّل بعد.');
   };
 
-  const handleTransfer = () => {
+  const [transferBusy, setTransferBusy] = useState(false);
+  const [transferError, setTransferError] = useState('');
+
+  const handleTransfer = async () => {
     if (!transferUser) return;
-    setMergeMsg(`تم تحويل "${transferUser.name}" إلى دور "${transferRole === 'parent' ? 'ولي أمر' : transferRole === 'teacher' ? 'معلم' : 'طالب'}" بنجاح.`);
-    setTimeout(() => { setTransferUser(null); setMergeMsg(''); }, 2200);
+    setTransferBusy(true);
+    setTransferError('');
+    try {
+      await api.patch(`/admin/users/${transferUser.id}/role`, { role: transferRole });
+      setMergeMsg(`تم تحويل "${transferUser.name}" إلى دور "${transferRole === 'parent' ? 'ولي أمر' : transferRole === 'teacher' ? 'معلم' : 'طالب'}" بنجاح.`);
+      dispatch(fetchUsers(null));
+      setTimeout(() => { setTransferUser(null); setMergeMsg(''); }, 2200);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setTransferError(err.response?.data?.message ?? 'تعذّر تحويل الحساب.');
+    } finally {
+      setTransferBusy(false);
+    }
   };
 
   const handleSubChange = () => {
@@ -283,7 +335,7 @@ export default function UsersPage() {
                       </td>
                       <td style={TD}>
                         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
-                          <button title="تعديل"
+                          <button title="تعديل" onClick={() => openEdit(user as UserItem)}
                             style={{ width:30, height:30, borderRadius:8, border:'1px solid #EDE3CE', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
                             ✏️
                           </button>
@@ -403,8 +455,8 @@ export default function UsersPage() {
             اختر الحساب الآخر لدمجه مع هذا الحساب. سيتم الاحتفاظ ببيانات الحساب الأصلي ونقل كل الأنشطة من الحساب المختار.
           </p>
           {mergeMsg ? (
-            <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'14px 18px', color:'#10B981', fontWeight:700, fontSize:14, textAlign:'center' }}>
-              ✅ {mergeMsg}
+            <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:12, padding:'14px 18px', color: DK.orange, fontWeight:700, fontSize:14, textAlign:'center' }}>
+              {mergeMsg}
             </div>
           ) : (
             <>
@@ -456,8 +508,11 @@ export default function UsersPage() {
               <div style={{ background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.15)', borderRadius:10, padding:'10px 14px', fontSize:12, color: DK.blue, marginBottom:16 }}>
                 💡 سيحتاج الطالب إلى إعادة تسجيل الدخول بعد التحويل.
               </div>
+              {transferError && (
+                <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{transferError}</p>
+              )}
               <div style={{ display:'flex', gap:10 }}>
-                <button onClick={handleTransfer} style={{ ...btn('gold'), flex:1 }}>تأكيد التحويل</button>
+                <button onClick={handleTransfer} disabled={transferBusy} style={{ ...btn('gold'), flex:1, opacity: transferBusy?0.7:1 }}>{transferBusy?'جارٍ التحويل...':'تأكيد التحويل'}</button>
                 <button onClick={() => setTransferUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
               </div>
             </>
@@ -525,11 +580,47 @@ export default function UsersPage() {
               </div>
               <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>هل أنت متأكد من فك الربط؟</p>
               <div style={{ display:'flex', gap:10 }}>
-                <button onClick={handleUnlink} style={{ ...btn('red' as 'outline'), flex:1, background:'rgba(239,68,68,0.9)', color:'#fff', border:'none' }}>تأكيد فك الربط</button>
+                <button onClick={handleUnlink} disabled={unlinkBusy} style={{ ...btn('red' as 'outline'), flex:1, background:'rgba(239,68,68,0.9)', color:'#fff', border:'none', opacity: unlinkBusy?0.7:1 }}>{unlinkBusy?'جارٍ التنفيذ...':'تأكيد فك الربط'}</button>
                 <button onClick={() => setUnlinkUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
               </div>
             </>
           )}
+        </Modal>
+      )}
+
+      {/* Edit Modal */}
+      {editUser && (
+        <Modal title={`تعديل: ${editUser.name}`} onClose={() => setEditUser(null)}>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الاسم</label>
+            <input value={editForm.name} onChange={e=>setEditForm(f=>({...f, name:e.target.value}))} style={inp()} />
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>رقم الهاتف</label>
+            <input value={editForm.phone} onChange={e=>setEditForm(f=>({...f, phone:e.target.value}))} dir="ltr" style={inp()} />
+          </div>
+          {editUser.role === 'teacher' && (
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان</label>
+              <input value={editForm.address} onChange={e=>setEditForm(f=>({...f, address:e.target.value}))} style={inp()} />
+            </div>
+          )}
+          {editUser.role === 'student' && (
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدينة</label>
+              <select value={editForm.city_id} onChange={e=>setEditForm(f=>({...f, city_id:e.target.value}))} style={{ ...inp(), cursor:'pointer' }}>
+                <option value="">بدون تغيير</option>
+                {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          )}
+          {editError && (
+            <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{editError}</p>
+          )}
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={handleEditSave} disabled={editBusy} style={{ ...btn('gold'), flex:1, opacity: editBusy?0.7:1 }}>{editBusy?'جارٍ الحفظ...':'حفظ التعديلات'}</button>
+            <button onClick={() => setEditUser(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+          </div>
         </Modal>
       )}
 

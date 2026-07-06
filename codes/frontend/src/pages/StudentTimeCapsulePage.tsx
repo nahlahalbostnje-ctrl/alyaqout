@@ -56,7 +56,7 @@ export default function StudentTimeCapsulePage() {
           <p style={{ color:C.sub, fontSize:13, margin:0 }}>اكتب رسالة/هدفاً لنفسك في بداية كل شهر، سنذكّرك بها قبل نهايته</p>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20 }}>
 
           {/* New Capsule Form */}
           <div>

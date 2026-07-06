@@ -34,13 +34,13 @@ export default function SAStudentsPage() {
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>متابعة أداء وتقدم الطلاب</p>
         </div>
         <div style={{display:'flex',gap:10}}>
-          <button style={{padding:'9px 16px',borderRadius:12,background:C.bg,color:C.text,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'pointer'}}>📤 تصدير</button>
-          <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة طالب</button>
+          <button onClick={()=>alert('تصدير قائمة الطلاب قيد التطوير.')} style={{padding:'9px 16px',borderRadius:12,background:C.bg,color:C.text,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'pointer'}}>📤 تصدير</button>
+          <button onClick={()=>alert('إضافة طالب من لوحة السوبر أدمن قيد التطوير — استخدم لوحة الأدمن الخاصة بكل دولة حالياً.')} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة طالب</button>
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginBottom:14}}>
         {[
           {label:'إجمالي الطلاب',    value:'12,842',icon:'🎓',color:C.purple, sub:'+1,250 هذا الشهر'},
           {label:'الطلاب النشطون',   value:'11,640',icon:'⚡',color:C.green,  sub:'90.6% من الإجمالي'},
@@ -104,9 +104,9 @@ export default function SAStudentsPage() {
                 </td>
                 <td style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',gap:5}}>
-                    <button title="معاينة" style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>👁️</button>
-                    <button title="مراسلة" style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>💬</button>
-                    <button title="تقرير" style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>📋</button>
+                    <button title="معاينة" onClick={()=>alert(`الطالب: ${s.name}\n${s.grade} — ${s.branch}\nولي الأمر: ${s.parent}`)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>👁️</button>
+                    <button title="مراسلة" onClick={()=>alert('مراسلة الطالب مباشرة من لوحة السوبر أدمن قيد التطوير — استخدم صفحة "الرسائل" لعرض المحادثات الحالية.')} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>💬</button>
+                    <button title="تقرير" onClick={()=>alert('تقرير الطالب التفصيلي عبر لوحة السوبر أدمن قيد التطوير.')} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>📋</button>
                   </div>
                 </td>
               </tr>

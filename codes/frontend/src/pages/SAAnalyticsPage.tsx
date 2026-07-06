@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
@@ -82,6 +82,13 @@ function DonutChart() {
 
 export default function SAAnalyticsPage() {
   const [period, setPeriod] = useState('6');
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   return (
     <SuperAdminShell>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
@@ -97,7 +104,7 @@ export default function SAAnalyticsPage() {
       </div>
 
       {/* KPIs */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
         {KPIS.map((k,i)=>(
           <div key={i} style={card({ padding:'16px 14px' })}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
@@ -112,7 +119,7 @@ export default function SAAnalyticsPage() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:12, marginBottom:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap:12, marginBottom:14 }}>
         <div style={card()}>
           {sH('نمو المستخدمين الشهري', 'تصدير')}
           <div style={{ height:170 }}><LineChart data={MONTHLY}/></div>
@@ -142,7 +149,8 @@ export default function SAAnalyticsPage() {
       {/* Table */}
       <div style={card()}>
         {sH('أعلى الدورات تفاعلاً', 'عرض الكل')}
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:560 }}>
           <thead>
             <tr style={{ background:'rgba(0,0,0,0.03)' }}>
               {['اسم الدورة','المعلم','الطلاب','نسبة التفاعل','التقييم'].map((h,i)=>(
@@ -169,6 +177,7 @@ export default function SAAnalyticsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </SuperAdminShell>
   );

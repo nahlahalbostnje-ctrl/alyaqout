@@ -190,7 +190,7 @@ export default function AdminLeaguePage() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
           {statCards.map((s) => (
             <div key={s.label} style={card({ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 })}>
               <div style={{
@@ -219,7 +219,7 @@ export default function AdminLeaguePage() {
             <p style={{ color: DK.sub, fontSize: 13 }}>أضف أول بطولة للطلاب</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
             {leagues.map((league) => (
               <div key={league.id} style={card({ padding: 0, overflow: 'hidden' })}>
                 {/* Card top accent */}
@@ -398,7 +398,7 @@ export default function AdminLeaguePage() {
                 style={inputStyle('max')} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: DK.text, marginBottom: 6 }}>تاريخ البداية</label>
                 <input type="datetime-local" value={form.starts_at}

@@ -67,7 +67,7 @@ export default function StudentChallengesPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:22 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:22 }}>
           {[
             { label:'تحدي نشط', value:'3', icon:'⚡', color:C.gold, bg:C.goldBg },
             { label:'تحديات مكتملة', value:'12', icon:'✅', color:C.green, bg:C.greenBg },
@@ -116,7 +116,7 @@ export default function StudentChallengesPage() {
                     <span style={{ fontSize:16 }}>💎</span>
                     <span style={{ color:C.gold, fontWeight:800, fontSize:14 }}>{ch.reward.toLocaleString()} نقطة</span>
                   </div>
-                  <button style={{ padding:'8px 20px', borderRadius:10, background: ch.progress >= ch.total ? C.greenBg : C.goldGrad, border: ch.progress >= ch.total ? `1px solid ${C.green}` : 'none', color: ch.progress >= ch.total ? C.green : '#fff', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                  <button onClick={()=>ch.progress<ch.total && alert('تحديث تقدم التحدي تلقائياً من نشاطك الفعلي قيد التطوير.')} style={{ padding:'8px 20px', borderRadius:10, background: ch.progress >= ch.total ? C.greenBg : C.goldGrad, border: ch.progress >= ch.total ? `1px solid ${C.green}` : 'none', color: ch.progress >= ch.total ? C.green : '#fff', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                     {ch.progress >= ch.total ? '✅ مكتمل' : 'تحديث التقدم'}
                   </button>
                 </div>
@@ -165,7 +165,7 @@ export default function StudentChallengesPage() {
                       <p style={{ color:C.dim, fontSize:10 }}>نقطة</p>
                     </div>
                   </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
                     <div>
                       <p style={{ color:C.sub, fontSize:11, fontWeight:600, marginBottom:4 }}>أنت (الطالب)</p>
                       <ProgressBar value={ch.studentProgress} max={100} color={C.blue} />
@@ -176,8 +176,8 @@ export default function StudentChallengesPage() {
                     </div>
                   </div>
                   <div style={{ marginTop:14, display:'flex', gap:8 }}>
-                    <button style={{ flex:1, padding:'9px', borderRadius:10, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>تحديث تقدمي</button>
-                    <button style={{ padding:'9px 16px', borderRadius:10, background:'#F3F4F6', color:C.sub, fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>تشجيع ولي الأمر 💌</button>
+                    <button onClick={()=>alert('تحديث تقدم التحدي العائلي تلقائياً من نشاطك الفعلي قيد التطوير.')} style={{ flex:1, padding:'9px', borderRadius:10, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>تحديث تقدمي</button>
+                    <button onClick={()=>alert('إرسال رسالة تشجيع لولي الأمر عبر واتساب قيد التطوير.')} style={{ padding:'9px 16px', borderRadius:10, background:'#F3F4F6', color:C.sub, fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>تشجيع ولي الأمر 💌</button>
                   </div>
                 </div>
               ))}

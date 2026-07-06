@@ -71,7 +71,7 @@ export default function SupervisorPersonalItemsPage() {
           </button>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:24}}>
           {[{l:'الكل',v:items.length,i:'📋',c:C.blue},{l:'انتظار',v:pend,i:'⏳',c:C.orange},{l:'جارية',v:prog,i:'🔄',c:C.purple},{l:'مكتملة',v:done,i:'✅',c:C.green}].map((s,i)=>(
             <div key={i} style={card({padding:'14px',display:'flex',alignItems:'center',gap:12})}>
               <div style={{width:40,height:40,borderRadius:12,background:`${s.c}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{s.i}</div>
@@ -132,7 +132,7 @@ export default function SupervisorPersonalItemsPage() {
                 <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>العنوان *</label>
                 <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="عنوان الخطة أو المتابعة..." style={inp()} />
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12}}>
                 <div>
                   <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>النوع</label>
                   <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))} style={inp()}>
@@ -146,7 +146,7 @@ export default function SupervisorPersonalItemsPage() {
                   </select>
                 </div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12}}>
                 <div>
                   <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>الحالة</label>
                   <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} style={inp()}>

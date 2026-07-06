@@ -112,7 +112,7 @@ export default function ParentCounselingPage() {
         {/* Counselors Grid */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 14 }}>المرشدون والمستشارون</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             {COUNSELORS.map(c => (
               <div key={c.id} style={card({ padding: 24 })}>
                 {/* Avatar */}

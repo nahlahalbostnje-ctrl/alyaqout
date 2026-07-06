@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
 
 const C = {
@@ -80,6 +80,14 @@ const STATUS_LABEL: Record<Teacher['status'], { label: string; color: string; bg
 };
 
 export default function AdminTeacherManagementPage() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [selected, setSelected] = useState<Teacher | null>(null);
   const [tab, setTab] = useState<'info' | 'permissions' | 'financial'>('info');
@@ -144,7 +152,7 @@ export default function AdminTeacherManagementPage() {
         </div>
 
         {/* KPI Row */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:24 }}>
           {[
             { label:'المعلمون النشطون', value:activeCount,   icon:'👨‍🏫', color:C.green },
             { label:'إجمالي الطلاب',    value:totalStudents, icon:'🎓',   color:C.blue  },
@@ -159,7 +167,7 @@ export default function AdminTeacherManagementPage() {
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 380px', gap:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap:20 }}>
 
           {/* Teachers List */}
           <div style={{ background:C.card, borderRadius:18, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflow:'hidden' }}>

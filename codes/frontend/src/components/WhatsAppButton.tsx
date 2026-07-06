@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../services/axios';
+import { useAppSelector } from '../app/hooks';
 
 interface PublicSettings {
   whatsapp_number?:          string | null;
@@ -13,9 +14,12 @@ const STUDENT_ROUTES_WITH_BOTTOM_NAV = [
   '/student/study-room',
 ];
 
+// رقم واتساب الأدمن للتواصل المباشر — يظهر فقط للزوار (تسويق) وللسوبر أدمن.
+// باقي الأدوار (خصوصاً ولي الأمر) لديهم قنوات تواصل داخلية عبر المنصة فقط.
 export default function WhatsAppButton() {
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const location = useLocation();
+  const user = useAppSelector(s => s.auth.user);
 
   useEffect(() => {
     api.get('/settings/public')
@@ -27,6 +31,7 @@ export default function WhatsAppButton() {
   const message = settings?.whatsapp_default_message ?? 'مرحباً، أريد الاستفسار عن خدمات ياقوت';
 
   if (!number) return null;
+  if (user && user.role !== 'super_admin') return null;
 
   const href = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
   const hasBottomNav = STUDENT_ROUTES_WITH_BOTTOM_NAV.includes(location.pathname);

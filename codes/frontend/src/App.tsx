@@ -52,6 +52,7 @@ import ParentReportPage           from './pages/ParentReportPage';
 import ParentAcademicProgressPage from './pages/ParentAcademicProgressPage';
 import ParentAttendancePage       from './pages/ParentAttendancePage';
 import ParentCommunicationPage    from './pages/ParentCommunicationPage';
+import ParentNotificationsPage    from './pages/ParentNotificationsPage';
 import ParentCounselingPage       from './pages/ParentCounselingPage';
 import ParentBillingPage          from './pages/ParentBillingPage';
 import ParentLeaguePage           from './pages/ParentLeaguePage';
@@ -76,6 +77,7 @@ import SANotificationsPage        from './pages/SANotificationsPage';
 import SASettingsPage             from './pages/SASettingsPage';
 import SARolesPage                from './pages/SARolesPage';
 import SAActivityLogPage          from './pages/SAActivityLogPage';
+import SAMessagesPage              from './pages/SAMessagesPage';
 import SASupportPage              from './pages/SASupportPage';
 import SADevCenterPage            from './pages/SADevCenterPage';
 import AdminPersonalItemsPage     from './pages/AdminPersonalItemsPage';
@@ -175,6 +177,9 @@ export default function App() {
         } />
         <Route path="/dashboard/activity-log" element={
           <PrivateRoute roles={['super_admin']}><SAActivityLogPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/messages" element={
+          <PrivateRoute roles={['super_admin']}><SAMessagesPage /></PrivateRoute>
         } />
         <Route path="/dashboard/support" element={
           <PrivateRoute roles={['super_admin']}><SASupportPage /></PrivateRoute>
@@ -378,6 +383,9 @@ export default function App() {
         } />
         <Route path="/parent/communication" element={
           <PrivateRoute roles={['parent']}><ParentCommunicationPage /></PrivateRoute>
+        } />
+        <Route path="/parent/notifications" element={
+          <PrivateRoute roles={['parent']}><ParentNotificationsPage /></PrivateRoute>
         } />
         <Route path="/parent/counseling" element={
           <PrivateRoute roles={['parent']}><ParentCounselingPage /></PrivateRoute>

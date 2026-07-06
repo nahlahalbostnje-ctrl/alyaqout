@@ -22,4 +22,9 @@ class NotificationBroadcast extends Model
     {
         return $this->belongsTo(User::class, 'sent_by');
     }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

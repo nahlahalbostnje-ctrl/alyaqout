@@ -119,7 +119,7 @@ export default function PackagesPage() {
         ) : packages.length === 0 ? (
           <p style={{ textAlign:'center', padding:60, color: DK.sub, fontSize:14 }}>لا توجد باقات بعد.</p>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20 }}>
             {packages.map((pkg) => {
               const active = !!pkg.is_active;
               return (
@@ -205,7 +205,7 @@ export default function PackagesPage() {
                 style={{ ...inp(focused==='desc'), resize:'none' }}
                 onFocus={() => setFocused('desc')} onBlur={() => setFocused(null)} />
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>السعر (ر.س)</label>
                 <input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})}

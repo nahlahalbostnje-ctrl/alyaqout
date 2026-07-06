@@ -42,14 +42,14 @@ export default function SABillingPage() {
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>إدارة الإيرادات والعمليات المالية</p>
         </div>
         <div style={{display:'flex',gap:10}}>
-          <button style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.bg,color:C.text,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'pointer'}}>📥 استيراد</button>
-          <button style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>📄 PDF</button>
-          <button style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'pointer'}}>📊 Excel</button>
+          <button onClick={()=>alert('استيراد الفواتير من ملف خارجي قيد التطوير.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.bg,color:C.text,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'pointer'}}>📥 استيراد</button>
+          <button onClick={()=>alert('تصدير PDF قيد التطوير — يحتاج بناء مولّد تقرير مالي مخصص.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>📄 PDF</button>
+          <button onClick={()=>alert('تصدير Excel قيد التطوير — يحتاج مكتبة توليد Excel غير مثبّتة بعد.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'pointer'}}>📊 Excel</button>
         </div>
       </div>
 
       {/* Financial Cards */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:14}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:14}}>
         {[
           {label:'إجمالي الإيرادات (المدفوعة)', value:totalRevenue.toLocaleString(),   sub:'+18% عن الشهر الماضي',  icon:'💰', color:C.green,  up:true},
           {label:'الإيرادات هذا الشهر',          value:'245,680',                        sub:'من 348 عملية',          icon:'📅', color:C.blue,   up:true},
@@ -110,8 +110,8 @@ export default function SABillingPage() {
                 </td>
                 <td style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',gap:5}}>
-                    <button title="عرض" style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>👁️</button>
-                    <button title="طباعة" style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>🖨️</button>
+                    <button title="عرض" onClick={()=>alert(`تفاصيل الفاتورة ${inv.id}\n${inv.desc}\nالمبلغ: ${inv.amount} — ${inv.status}`)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>👁️</button>
+                    <button title="طباعة" onClick={()=>alert('طباعة الفاتورة كـPDF قيد التطوير.')} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>🖨️</button>
                   </div>
                 </td>
               </tr>

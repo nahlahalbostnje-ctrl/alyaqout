@@ -83,14 +83,14 @@ const PARENT_RECS = [
     icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
     tag: 'واجب متأخر', title: 'واجبان لم يُسلَّما',
     desc: 'لدى محمد واجبان غير مُسلَّمَين في الرياضيات والعلوم — تابع مع المعلم',
-    cta: 'تواصل مع الأستاذ', to: '/parent/messages',
+    cta: 'تواصل مع الأستاذ', to: '/parent/communication',
   },
   {
     color: C.teal, bg: 'rgba(13,148,136,0.07)',
     icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
     tag: 'حضور منخفض', title: 'علي غاب 5 مرات هذا الشهر',
     desc: 'نسبة حضور علي 89% — تواصل مع المشرف لمعرفة الأسباب وضمان المتابعة',
-    cta: 'تواصل مع المشرف', to: '/parent/messages',
+    cta: 'تواصل مع المشرف', to: '/parent/communication',
   },
   {
     color: C.gold, bg: 'rgba(201,149,42,0.07)',
@@ -291,53 +291,28 @@ const NOTIF_ICONS: Record<string, string> = {
   receipt: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
 };
 
-// ─── League Card ─────────────────────────────────────────────────────────────
+// ─── League Card (نسخة مختصرة) ────────────────────────────────────────────────
 function LeagueCard({ userName }: { userName: string }) {
-  const pts = 5420, total = 7000;
+  const navigate = useNavigate();
+  const pts = 5420, total = 7000, rank = 15;
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 20, boxShadow: C.shadowLg }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <Ico d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" color={C.gold} size={17} />
-        <span style={{ color: C.text, fontWeight: 700, fontSize: 13.5 }}>أولومبياد ولادي 🏅</span>
-      </div>
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <div style={{ fontSize: 62, lineHeight: 1, marginBottom: 6 }}>💎</div>
-        <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, #1B2038, #2D3561)', borderRadius: 10, padding: '4px 14px', marginBottom: 8 }}>
-          <p style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>المستوى الحالي</p>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 14, boxShadow: C.shadow }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>💎</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ color: C.text, fontWeight: 700, fontSize: 12.5 }}>أولومبياد ولادي 🏅</span>
+          <p style={{ color: C.sub, fontSize: 10.5, margin: '1px 0 0' }}>ولي أمر متميز — {userName} · ترتيب #{rank}</p>
         </div>
-        <p style={{ color: C.text, fontWeight: 800, fontSize: 15, marginBottom: 6 }}>ولي أمر متميز — {userName}</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginBottom: 8 }}>
-          {[1, 2, 3, 4, 5].map(s => (
-            <span key={s} style={{ fontSize: 17, color: s <= 4 ? C.gold : '#D1C5AA' }}>★</span>
-          ))}
-        </div>
-        <p style={{ color: C.text, fontSize: 24, fontWeight: 800 }}>
-          {pts.toLocaleString('ar-EG')}
-          <span style={{ fontSize: 12, color: C.sub, fontWeight: 500, marginRight: 4 }}>نقطة</span>
+        <p style={{ color: C.gold, fontWeight: 800, fontSize: 15, margin: 0, flexShrink: 0 }}>
+          {pts.toLocaleString('ar-EG')}<span style={{ fontSize: 9.5, color: C.sub, fontWeight: 500 }}> نقطة</span>
         </p>
       </div>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.sub, marginBottom: 5 }}>
-          <span>{(total - pts).toLocaleString('ar-EG')}</span>
-          <span>{total.toLocaleString('ar-EG')}</span>
-        </div>
-        <div style={{ height: 8, borderRadius: 4, background: C.goldBg }}>
-          <div style={{ height: '100%', width: `${(pts / total) * 100}%`, borderRadius: 4, background: C.goldGrad }} />
+      <div style={{ margin: '10px 0 8px' }}>
+        <div style={{ height: 6, borderRadius: 3, background: C.goldBg }}>
+          <div style={{ height: '100%', width: `${(pts / total) * 100}%`, borderRadius: 3, background: C.goldGrad }} />
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
-        {[
-          { v: '15', lbl: 'ترتيبك', sub: 'من أصل 1,200' },
-          { v: '3',  lbl: 'المستوى', sub: 'ولي أمر متميز' },
-          { v: '7',  lbl: 'التحديات المكتملة', sub: 'من أصل 12' },
-        ].map(s => (
-          <div key={s.lbl} style={{ textAlign: 'center', background: C.goldBg, borderRadius: 10, padding: '8px 4px' }}>
-            <p style={{ color: C.text, fontSize: 20, fontWeight: 800 }}>{s.v}</p>
-            <p style={{ color: C.sub, fontSize: 8.5, lineHeight: 1.4 }}>{s.sub}</p>
-          </div>
-        ))}
-      </div>
-      <button style={{ width: '100%', padding: '11px', borderRadius: 12, background: C.goldGrad, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(201,149,42,0.35)' }}>
+      <button onClick={() => navigate('/parent/league')} style={{ width: '100%', padding: '8px', borderRadius: 10, background: C.goldBg, border: `1px solid ${C.goldBdr}`, color: C.gold, fontWeight: 700, fontSize: 11.5, cursor: 'pointer' }}>
         عرض لوحة الدوري
       </button>
     </div>
@@ -346,6 +321,7 @@ function LeagueCard({ userName }: { userName: string }) {
 
 // ─── AI Card ──────────────────────────────────────────────────────────────────
 function AICard({ userName }: { userName: string }) {
+  const navigate = useNavigate();
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 20, boxShadow: C.shadow }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -361,7 +337,7 @@ function AICard({ userName }: { userName: string }) {
           أنا هنا لمساعدتك في<br />دعم رحلة أبنائك التعليمية
         </p>
       </div>
-      <button style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg, #1B2038, #2D3561)', color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 4px 14px rgba(27,32,56,0.3)' }}>
+      <button onClick={() => navigate('/parent/ai-assistant')} style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg, #1B2038, #2D3561)', color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 4px 14px rgba(27,32,56,0.3)' }}>
         <span>✨</span>تحديث التحليل
       </button>
     </div>
@@ -514,7 +490,7 @@ export default function ParentDashboardPage() {
                     label="التواصل"
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     style={{ top: '50%', right: 2, transform: 'translateY(-50%)' }}
-                    onClick={() => navigate('/parent/messages')}
+                    onClick={() => navigate('/parent/communication')}
                   />
                   {/* Bottom — المدفوعات */}
                   <HubBtn
@@ -588,7 +564,7 @@ export default function ParentDashboardPage() {
               <SecHead title="أكاديمية ولي الأمر" action="عرض الكل" onAction={() => navigate('/parent/academy')} />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
                 {COURSES.map((c, i) => (
-                  <div key={i} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#FDFAF3', cursor: 'pointer' }}>
+                  <div key={i} onClick={() => navigate('/parent/academy')} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#FDFAF3', cursor: 'pointer' }}>
                     <div style={{ height: 96, background: c.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>
                       {c.emoji}
                     </div>
@@ -606,7 +582,7 @@ export default function ParentDashboardPage() {
             </div>
 
             {/* ── 6. Achievements + Invoices ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
 
               {/* Achievements */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
@@ -634,11 +610,12 @@ export default function ParentDashboardPage() {
                       1,250 <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>ريال سعودي</span>
                     </p>
                   </div>
-                  <button style={{ padding: '8px 16px', borderRadius: 12, background: C.goldGrad, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201,149,42,0.3)' }}>
+                  <button onClick={() => navigate('/parent/billing')} style={{ padding: '8px 16px', borderRadius: 12, background: C.goldGrad, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201,149,42,0.3)' }}>
                     ادفع الآن ←
                   </button>
                 </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 460 }}>
                   <thead>
                     <tr>
                       {['التاريخ', 'البيان', 'المبلغ', 'الحالة'].map(h => (
@@ -661,6 +638,7 @@ export default function ParentDashboardPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
 

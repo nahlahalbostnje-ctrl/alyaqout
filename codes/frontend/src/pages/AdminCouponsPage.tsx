@@ -182,7 +182,7 @@ export default function AdminCouponsPage() {
                 {error}
               </div>
             )}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:16, marginBottom:16 }}>
               {/* Code */}
               <div>
                 <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>كود الكوبون</label>
@@ -428,7 +428,7 @@ export default function AdminCouponsPage() {
                   </button>
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
                 <div>
                   <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>نوع الخصم</label>
                   <select value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value as 'percentage'|'fixed'})}

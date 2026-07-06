@@ -101,7 +101,7 @@ function PagesTab() {
 
   return (
     <div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14 }}>
         {PREDEFINED_SLUGS.map(p => {
           const existing = pages.find(pg => pg.slug === p.slug);
           return (

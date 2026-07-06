@@ -142,7 +142,7 @@ export default function AdminTeacherApprovalsPage() {
 
         {/* Loading — skeleton cards */}
         {loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} style={card({ padding: 20 })}>
                 <div style={{ height: 16, background: '#F0EBE0', borderRadius: 8, marginBottom: 12, animation: 'pulse 1.4s ease-in-out infinite' }} />
@@ -162,7 +162,7 @@ export default function AdminTeacherApprovalsPage() {
               <p style={{ color: DK.sub, fontSize: 13 }}>جميع الاختبارات تمت معالجتها</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
               {exams.map((exam) => (
                 <div key={exam.id} style={card({ padding: 18, display: 'flex', flexDirection: 'column', gap: 0 })}>
                   {/* Course badge */}
@@ -228,7 +228,7 @@ export default function AdminTeacherApprovalsPage() {
               <p style={{ color: DK.sub, fontSize: 13 }}>جميع الواجبات تمت معالجتها</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
               {homeworks.map((hw) => (
                 <div key={hw.id} style={card({ padding: 18, display: 'flex', flexDirection: 'column', gap: 0 })}>
                   {/* Course badge */}

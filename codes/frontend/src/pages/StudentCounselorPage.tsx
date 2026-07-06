@@ -74,7 +74,7 @@ export default function StudentCounselorPage() {
         {view === 'list' && !booked && (
           <div>
             {/* Counselor Cards */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14, marginBottom:20 }}>
               {COUNSELORS.map((c,i) => (
                 <div key={i} onClick={() => { if(c.available) { setSelected(c); setView('book' as View); } }}
                   style={{ background:C.card, borderRadius:18, padding:20, border:`2px solid ${selected?.name===c.name ? C.gold : C.border}`, boxShadow:C.shadow, cursor: c.available ? 'pointer' : 'default', opacity: c.available ? 1 : 0.6, transition:'all 0.15s' }}>
@@ -105,7 +105,7 @@ export default function StudentCounselorPage() {
         )}
 
         {(view as string) === 'book' && selected && !booked && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:20 }}>
             <div style={{ background:C.card, borderRadius:18, padding:24, border:`1px solid ${C.border}`, boxShadow:C.shadow }}>
               <button onClick={() => setView('list')} style={{ display:'flex', alignItems:'center', gap:6, color:C.sub, fontSize:12, background:'none', border:'none', cursor:'pointer', marginBottom:16, fontFamily:"'Cairo',sans-serif" }}>
                 ← رجوع
@@ -127,7 +127,7 @@ export default function StudentCounselorPage() {
               </div>
               <div style={{ marginBottom:16 }}>
                 <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:8 }}>اختر الوقت المناسب</label>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(80px,1fr))', gap:6 }}>
                   {selected.times.map((t,i) => (
                     <button key={i} onClick={() => setSelectedTime(t)} style={{ padding:'8px', borderRadius:9, border:`1px solid ${selectedTime===t ? C.gold : C.border}`, background: selectedTime===t ? C.goldBg : '#fff', color: selectedTime===t ? C.gold : C.text, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                       {t}

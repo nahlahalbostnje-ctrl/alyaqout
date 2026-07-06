@@ -90,7 +90,7 @@ export default function TeacherCoursesPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:24 }}>
           {[
             { icon:'📚', label:'إجمالي الدورات',       val: allCourses.length },
             { icon:'✅', label:'نشطة',                 val: allCourses.filter(c=>c.status==='active').length },
@@ -227,7 +227,7 @@ export default function TeacherCoursesPage() {
                   </div>
 
                   {/* Grade + Category */}
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
                     <div>
                       <label style={{ display:'block', fontSize:12, fontWeight:700, color: C.sub, marginBottom:6 }}>الصف الدراسي</label>
                       <select value={form.grade} onChange={e=>setForm({...form,grade:e.target.value})}

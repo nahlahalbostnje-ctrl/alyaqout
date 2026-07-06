@@ -49,7 +49,7 @@ export default function SASchoolsPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
         {[
           { label:'إجمالي الأفرع',   value:String(BRANCHES.length), icon:'🌍', color:C.blue   },
           { label:'الأفرع النشطة',   value:String(activeCount),     icon:'✅', color:C.green  },

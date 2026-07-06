@@ -122,7 +122,7 @@ export default function StudentPointsPage() {
             <p style={{ color:C.sub, fontSize:12, marginBottom:2 }}>مجموع نقاطك</p>
             <p style={{ color:C.navy2, fontWeight:900, fontSize:22 }}>{(totalPoints||5420).toLocaleString()} نقطة</p>
           </div>
-          <button onClick={()=>{}} style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'pointer' }}>
+          <button onClick={()=>alert('متجر المكافآت قريباً — سيتم تفعيله عند ربط كتالوج الجوائز الفعلي.')} style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'pointer' }}>
             متجر المكافآت
           </button>
         </div>

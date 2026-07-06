@@ -70,7 +70,7 @@ export default function SupervisorQuizMonitoringPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:20 }}>
           {[
             { label:'متوسط الدرجات', value:`${avg}%`, icon:'📊', color:C.gold, bg:C.goldBg },
             { label:'اختبارات مُقدَّمة', value:MOCK.length, icon:'📋', color:C.navy, bg:'rgba(13,30,58,0.06)' },
@@ -88,7 +88,7 @@ export default function SupervisorQuizMonitoringPage() {
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16 }}>
 
           {/* Results table */}
           <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflow:'hidden' }}>

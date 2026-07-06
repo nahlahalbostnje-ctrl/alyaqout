@@ -281,7 +281,7 @@ export default function ParentLeaguePage() {
               <h2 style={{ color: C.text, fontWeight: 800, fontSize: 15, margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 7 }}>
                 <span style={{ fontSize: 18 }}>🏅</span> شاراتي
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
                 {MY_BADGES.map((b, i) => (
                   <div key={i} title={b.earned ? b.desc : `${b.desc} (${b.pts} نقطة)`} style={{
                     borderRadius: 12, padding: '12px 8px', textAlign: 'center',
@@ -321,7 +321,7 @@ export default function ParentLeaguePage() {
           <h2 style={{ color: C.text, fontWeight: 800, fontSize: 15, margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 7 }}>
             <span style={{ fontSize: 18 }}>💡</span> كيف تكسب النقاط؟
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
             {HOW_TO_EARN.map((item, i) => (
               <div key={i} style={{
                 borderRadius: 10, padding: '10px 14px',

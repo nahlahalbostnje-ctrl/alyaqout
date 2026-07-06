@@ -113,11 +113,11 @@ export default function ParentSettingsPage() {
             </div>
             <div>
               <p style={{ color:C.text, fontWeight:800, fontSize:16, marginBottom:4 }}>أ. {profile.name}</p>
-              <button style={{ padding:'6px 14px', borderRadius:9, border:`1px solid ${C.border}`, background:C.bg, color:C.sub, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تغيير الصورة</button>
+              <button onClick={()=>alert('رفع صورة شخصية جديدة قيد التطوير.')} style={{ padding:'6px 14px', borderRadius:9, border:`1px solid ${C.border}`, background:C.bg, color:C.sub, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تغيير الصورة</button>
             </div>
           </div>
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:14, marginBottom:20 }}>
             <Input label="الاسم الكامل" value={profile.name} onChange={v => setProfile(p => ({...p, name:v}))} />
             <Input label="رقم الهاتف" value={profile.phone} onChange={v => setProfile(p => ({...p, phone:v}))} />
             <Input label="البريد الإلكتروني" type="email" value={profile.email} onChange={v => setProfile(p => ({...p, email:v}))} />
@@ -210,7 +210,7 @@ export default function ParentSettingsPage() {
               </div>
             ))}
           </div>
-          <button style={{ padding:'11px 24px', borderRadius:12, background:C.goldGrad, border:'none', color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+          <button onClick={()=>alert('تم حفظ إعدادات الرقابة الأبوية محلياً — الحفظ الدائم على الخادم قيد التطوير.')} style={{ padding:'11px 24px', borderRadius:12, background:C.goldGrad, border:'none', color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
             حفظ إعدادات الرقابة
           </button>
         </SectionCard>
@@ -237,7 +237,7 @@ export default function ParentSettingsPage() {
               </div>
               <div style={{ display:'flex', gap:10 }}>
                 <button onClick={() => setShowDeleteModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, border:`1px solid ${C.border}`, background:C.card, color:C.text, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>إلغاء</button>
-                <button onClick={() => setShowDeleteModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, border:'none', background:C.red, color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تأكيد الحذف</button>
+                <button onClick={() => { setShowDeleteModal(false); alert('إرسال طلب حذف الحساب لإدارة المنصة قيد التطوير — يرجى التواصل مع الدعم الفني حالياً.'); }} style={{ flex:1, padding:'11px', borderRadius:12, border:'none', background:C.red, color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تأكيد الحذف</button>
               </div>
             </div>
           </div>

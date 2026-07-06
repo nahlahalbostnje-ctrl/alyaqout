@@ -74,7 +74,7 @@ export default function SuperAdminSecurityPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:20 }}>
           {[
             { label:'إجمالي المحاولات', value:total, icon:'🔑', color:C.gold },
             { label:'ناجحة', value:success, icon:'✅', color:C.green },
@@ -108,15 +108,15 @@ export default function SuperAdminSecurityPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 120px 1fr 130px 90px', padding:'11px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflowX:'auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 120px 1fr 130px 90px', minWidth:760, padding:'11px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
             {['الحالة','رقم الهاتف','IP','المستخدم','الجهاز','الوقت'].map((h,i) => (
               <span key={i} style={{ color:C.gold, fontSize:11, fontWeight:800 }}>{h}</span>
             ))}
           </div>
 
           {filtered.map((attempt, idx) => (
-            <div key={attempt.id} style={{ display:'grid', gridTemplateColumns:'80px 1fr 120px 1fr 130px 90px', padding:'12px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
+            <div key={attempt.id} style={{ display:'grid', gridTemplateColumns:'80px 1fr 120px 1fr 130px 90px', minWidth:760, padding:'12px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
               <span style={{ padding:'3px 10px', borderRadius:8, background: attempt.success ? C.greenBg : C.redBg, color: attempt.success ? C.green : C.red, fontSize:11, fontWeight:700 }}>
                 {attempt.success ? '✅ نجحت' : '❌ فشلت'}
               </span>

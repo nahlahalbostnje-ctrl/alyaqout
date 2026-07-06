@@ -76,6 +76,61 @@ class UserController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeUser($user);
+
+        $request->validate([
+            'name'    => 'sometimes|string|max:255',
+            'phone'   => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
+            'address' => 'nullable|string|max:500',
+            'city_id' => 'nullable|exists:cities,id',
+        ]);
+
+        $user->update($request->only(['name', 'phone', 'address', 'city_id']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث بيانات الحساب.',
+            'data'    => $user->only(['id', 'name', 'phone', 'role', 'address', 'city_id', 'is_active']),
+        ]);
+    }
+
+    public function changeRole(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeUser($user);
+
+        $request->validate([
+            'role' => 'required|in:teacher,student,parent',
+        ]);
+
+        $user->update([
+            'role'      => $request->role,
+            'parent_id' => $request->role === 'student' ? $user->parent_id : null,
+            'city_id'   => $request->role === 'student' ? $user->city_id : null,
+            'address'   => $request->role === 'teacher' ? $user->address : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحويل الحساب بنجاح.',
+            'data'    => $user->only(['id', 'name', 'phone', 'role', 'is_active']),
+        ]);
+    }
+
+    public function unlinkParent(User $user): JsonResponse
+    {
+        $this->authorizeUser($user);
+
+        if ($user->role !== 'student') {
+            return response()->json(['success' => false, 'message' => 'فك الربط متاح للطلاب فقط.'], 422);
+        }
+
+        $user->update(['parent_id' => null]);
+
+        return response()->json(['success' => true, 'message' => 'تم فك الربط بنجاح.']);
+    }
+
     public function toggle(User $user): JsonResponse
     {
         $this->authorizeUser($user);

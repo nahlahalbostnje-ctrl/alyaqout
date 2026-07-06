@@ -53,6 +53,15 @@ export default function SupervisorChatPage() {
   const [filter, setFilter] = useState<'all'|'unread'|'parent'>('all');
   const endRef = useRef<HTMLDivElement>(null);
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [showChatMobile, setShowChatMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}); }, [active.messages]);
 
   const filtered = contacts.filter(c =>
@@ -70,6 +79,7 @@ export default function SupervisorChatPage() {
   const selectContact = (c: Contact) => {
     setActive(c);
     setContacts(prev => prev.map(x => x.id===c.id ? {...x,unread:0} : x));
+    if (isMobile) setShowChatMobile(true);
   };
 
   const totalUnread = contacts.reduce((s,c)=>s+c.unread,0);
@@ -78,8 +88,9 @@ export default function SupervisorChatPage() {
     <SupervisorLayout>
       <div dir="rtl" style={{ display:'flex', height:'calc(100vh - 54px)', fontFamily:"'Cairo',sans-serif" }}>
 
-        {/* Contact list */}
-        <div style={{ width:300, flexShrink:0, background:C.card, borderLeft:`1px solid ${C.border}`, display:'flex', flexDirection:'column' }}>
+        {/* Contact list — hidden on mobile once a chat is open */}
+        {(!isMobile || !showChatMobile) && (
+        <div style={{ width:isMobile ? '100%' : 300, flexShrink:0, background:C.card, borderLeft:isMobile ? 'none' : `1px solid ${C.border}`, display:'flex', flexDirection:'column' }}>
           {/* Header */}
           <div style={{ padding:'16px 16px 10px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
@@ -126,11 +137,16 @@ export default function SupervisorChatPage() {
             })}
           </div>
         </div>
+        )}
 
-        {/* Chat area */}
+        {/* Chat area — on mobile, only shown once a contact is selected */}
+        {(!isMobile || showChatMobile) && (
         <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
           {/* Chat header */}
           <div style={{ padding:'12px 20px', background:C.card, borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:12 }}>
+            {isMobile && (
+              <button onClick={() => setShowChatMobile(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:C.text, padding:0, flexShrink:0 }}>→</button>
+            )}
             <div style={{ width:38, height:38, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:16 }}>
               {active.name.charAt(0)}
             </div>
@@ -174,6 +190,7 @@ export default function SupervisorChatPage() {
             <button onClick={send} disabled={!input.trim()} style={{ width:42, height:42, borderRadius:11, border:'none', background:input.trim()?C.goldGrad:'#E5E7EB', color:input.trim()?'#fff':C.dim, cursor:input.trim()?'pointer':'not-allowed', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>↑</button>
           </div>
         </div>
+        )}
       </div>
     </SupervisorLayout>
   );

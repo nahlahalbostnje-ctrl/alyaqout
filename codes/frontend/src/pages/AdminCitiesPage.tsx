@@ -120,7 +120,7 @@ export default function AdminCitiesPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:20 }}>
           {[
             { label:'إجمالي المدن', value:cities.length, icon:'🏙️', color:C.gold, bg:C.goldBg },
             { label:'مدن مفعّلة', value:cities.filter(c=>c.is_active).length, icon:'✅', color:C.green, bg:C.greenBg },
@@ -152,8 +152,8 @@ export default function AdminCitiesPage() {
         )}
 
         {/* Table */}
-        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 100px 120px 120px', padding:'12px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflowX:'auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 100px 120px 120px', minWidth:520, padding:'12px 20px', background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
             {['اسم المدينة','الحالة','تاريخ الإضافة','الإجراءات'].map((h,i) => (
               <span key={i} style={{ color:C.gold, fontSize:11, fontWeight:800, letterSpacing:0.5 }}>{h}</span>
             ))}
@@ -167,7 +167,7 @@ export default function AdminCitiesPage() {
               <p>{search ? 'لا توجد نتائج' : 'لا توجد مدن بعد — أضف أول مدينة!'}</p>
             </div>
           ) : filtered.map((city, idx) => (
-            <div key={city.id} style={{ display:'grid', gridTemplateColumns:'1fr 100px 120px 120px', padding:'14px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
+            <div key={city.id} style={{ display:'grid', gridTemplateColumns:'1fr 100px 120px 120px', minWidth:520, padding:'14px 20px', borderBottom: idx < filtered.length-1 ? `1px solid ${C.border}` : 'none', alignItems:'center' }}>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                 <div style={{ width:36, height:36, borderRadius:10, background:C.goldBg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>🏙️</div>
                 <span style={{ color:C.text, fontWeight:700, fontSize:14 }}>{city.name}</span>
@@ -195,7 +195,7 @@ export default function AdminCitiesPage() {
         {/* Add/Edit Modal */}
         {showModal && (
           <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-            <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, fontFamily:"'Cairo',sans-serif", direction:'rtl', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, maxWidth:'92vw', fontFamily:"'Cairo',sans-serif", direction:'rtl', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}>
               <h3 style={{ color:C.text, fontWeight:800, fontSize:18, marginBottom:20 }}>
                 {editCity ? '✏️ تعديل المدينة' : '🏙️ إضافة مدينة جديدة'}
               </h3>

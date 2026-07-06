@@ -95,7 +95,7 @@ export default function SAStaffPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:14 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
         {[
           {label:'إجمالي المعلمين',value:'936',icon:'👨‍🏫',color:C.teal},
           {label:'المعلمون النشطون',value:'898',icon:'✅',color:C.green},
@@ -158,8 +158,8 @@ export default function SAStaffPage() {
                   </td>
                   <td style={{padding:'12px 14px'}}>
                     <div style={{display:'flex',gap:5}}>
-                      {(['✏️','📋','🗑️'] as const).map((ico,j)=>(
-                        <button key={j} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>{ico}</button>
+                      {([['✏️','تعديل بيانات المعلم'],['📋','الملف التفصيلي'],['🗑️','حذف المعلم']] as const).map(([ico,label],j)=>(
+                        <button key={j} title={label} onClick={()=>alert(`${label} — إدارة الموظفين عبر الدول قيد التطوير، متاحة حالياً من لوحة الأدمن الخاصة بكل دولة.`)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>{ico}</button>
                       ))}
                       <button onClick={() => { setImpersonating(t); setImpersonateDone(false); }}
                         style={{padding:'0 10px',height:28,borderRadius:8,border:'1px solid rgba(197,147,65,0.4)',background:'rgba(197,147,65,0.08)',cursor:'pointer',fontSize:11,color:C.gold,fontWeight:700,fontFamily:"'Cairo',sans-serif"}}>
@@ -200,8 +200,8 @@ export default function SAStaffPage() {
                   </td>
                   <td style={{padding:'12px 14px'}}>
                     <div style={{display:'flex',gap:5}}>
-                      {['✏️','📋','🗑️'].map((ico,j)=>(
-                        <button key={j} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>{ico}</button>
+                      {([['✏️','تعديل بيانات الموظف'],['📋','الملف التفصيلي'],['🗑️','حذف الموظف']] as const).map(([ico,label],j)=>(
+                        <button key={j} title={label} onClick={()=>alert(`${label} — إدارة الموظفين عبر الدول قيد التطوير، متاحة حالياً من لوحة الأدمن الخاصة بكل دولة.`)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>{ico}</button>
                       ))}
                     </div>
                   </td>

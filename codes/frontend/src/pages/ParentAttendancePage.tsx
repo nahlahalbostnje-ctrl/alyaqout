@@ -128,7 +128,7 @@ export default function ParentAttendancePage() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 12, marginBottom: 20 }}>
           {[
             { label: 'إجمالي أيام', value: schoolDays, pct: null, color: C.navy, bg: C.goldBg, icon: '📅' },
             { label: 'حاضر', value: presentCount, pct: Math.round((presentCount / schoolDays) * 100), color: C.green, bg: C.greenBg, icon: '✅' },
@@ -155,7 +155,7 @@ export default function ParentAttendancePage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16, marginBottom: 20 }}>
           {/* Calendar */}
           <div style={card({ padding: 20 })}>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 16 }}>
@@ -297,7 +297,7 @@ export default function ParentAttendancePage() {
                       </td>
                       <td style={{ padding: '10px 14px', color: C.sub }}>{row.note}</td>
                       <td style={{ padding: '10px 14px' }}>
-                        <button style={{
+                        <button onClick={()=>alert(`تقديم عذر عن غياب/تأخر يوم ${row.date} قيد التطوير — سيتوفر نموذج تقديم الأعذار قريباً.`)} style={{
                           padding: '5px 12px', borderRadius: 8, border: `1px solid ${C.goldBdr}`,
                           background: C.goldBg, color: C.gold, fontSize: 11, fontWeight: 700,
                           cursor: 'pointer', fontFamily: "'Cairo',sans-serif",

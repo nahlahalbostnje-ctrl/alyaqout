@@ -64,7 +64,7 @@ export default function StudentLibraryPage() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:24 }}>
           {[
             { label:'كتاب متاح', value:'48', icon:'📚', color:C.blue, bg:C.blueBg },
             { label:'أسئلة سابقة', value:'320+', icon:'📝', color:C.gold, bg:C.goldBg },
@@ -109,7 +109,7 @@ export default function StudentLibraryPage() {
 
         {/* Tab Content */}
         {activeTab === 0 && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14 }}>
             {BOOKS.map((b,i) => (
               <div key={i} style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden', cursor:'pointer', transition:'transform 0.15s' }}
                 onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)'}
@@ -122,7 +122,7 @@ export default function StudentLibraryPage() {
                     <span style={{ padding:'2px 8px', borderRadius:6, background:C.goldBg, color:C.gold, fontSize:10, fontWeight:600 }}>{b.subject}</span>
                     <span style={{ padding:'2px 8px', borderRadius:6, background:'#F3F4F6', color:C.sub, fontSize:10 }}>{b.grade}</span>
                   </div>
-                  <button style={{ width:'100%', padding:'7px', borderRadius:9, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>قراءة</button>
+                  <button onClick={()=>alert(`"${b.title}" — قراءة الكتاب إلكترونياً قيد التطوير (يتطلب رفع ملفات المكتبة الفعلية).`)} style={{ width:'100%', padding:'7px', borderRadius:9, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>قراءة</button>
                 </div>
               </div>
             ))}
@@ -130,7 +130,7 @@ export default function StudentLibraryPage() {
         )}
 
         {activeTab === 1 && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14 }}>
             {PAST_EXAMS.map((e,i) => (
               <div key={i} style={{ background:C.card, borderRadius:16, padding:18, border:`1px solid ${C.border}`, boxShadow:C.shadow }}>
                 <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:12 }}>
@@ -150,7 +150,7 @@ export default function StudentLibraryPage() {
                     <p style={{ color:C.dim, fontSize:10 }}>تحميل</p>
                   </div>
                 </div>
-                <button style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>
+                <button onClick={()=>alert(`تحميل أسئلة "${e.subject} ${e.year}" قيد التطوير (يتطلب رفع ملفات الاختبارات السابقة الفعلية).`)} style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>
                   تحميل الأسئلة
                 </button>
               </div>
@@ -159,14 +159,14 @@ export default function StudentLibraryPage() {
         )}
 
         {activeTab === 2 && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14 }}>
             {SUMMARIES.map((s,i) => (
               <div key={i} style={{ background:C.card, borderRadius:16, padding:18, border:`1px solid ${C.border}`, boxShadow:C.shadow, textAlign:'center' }}>
                 <div style={{ fontSize:40, marginBottom:10 }}>{s.emoji}</div>
                 <p style={{ color:C.text, fontWeight:800, fontSize:13, marginBottom:4 }}>{s.title}</p>
                 <p style={{ color:C.sub, fontSize:11, marginBottom:4 }}>{s.subject}</p>
                 <p style={{ color:C.dim, fontSize:10, marginBottom:12 }}>{s.pages} صفحة</p>
-                <button style={{ width:'100%', padding:'7px', borderRadius:9, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>عرض الملخص</button>
+                <button onClick={()=>alert(`"${s.title}" — عرض الملخص قيد التطوير (يتطلب رفع ملفات الملخصات الفعلية).`)} style={{ width:'100%', padding:'7px', borderRadius:9, background:C.goldGrad, color:'#fff', fontSize:12, fontWeight:700, border:'none', cursor:'pointer' }}>عرض الملخص</button>
               </div>
             ))}
           </div>

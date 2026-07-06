@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SupervisorLayout from '../components/SupervisorLayout';
 
 const C = {
@@ -76,6 +76,14 @@ function LineChart({ data }: { data:number[] }) {
 }
 
 export default function SupervisorPerformancePage() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const [view, setView] = useState<'group'|'individual'>('group');
   const [selected, setSelected] = useState(STUDENTS[0]);
   const [exported, setExported] = useState(false);
@@ -115,12 +123,12 @@ export default function SupervisorPerformancePage() {
         </div>
 
         {view === 'group' ? (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16 }}>
 
             {/* Group rings */}
             <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, padding:20 }}>
               <p style={{ color:C.text, fontWeight:800, fontSize:15, marginBottom:16 }}>متوسطات المجموعة</p>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20 }}>
                 {[
                   { label:'معدل الالتزام',    val:groupAvg('attendance'), color:C.green },
                   { label:'التقدم في الدروس', val:groupAvg('progress'),   color:C.gold },
@@ -188,7 +196,7 @@ export default function SupervisorPerformancePage() {
             </div>
           </div>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'240px 1fr', gap:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr', gap:16 }}>
             {/* Student list */}
             <div style={{ background:C.card, borderRadius:16, boxShadow:C.shadow, border:`1px solid ${C.border}`, overflow:'hidden' }}>
               <div style={{ padding:'12px 14px', borderBottom:`1px solid ${C.border}` }}>
@@ -220,7 +228,7 @@ export default function SupervisorPerformancePage() {
                   </div>
                   <span style={{ marginRight:'auto', fontSize:20 }}>{selected.trend==='up'?'📈':selected.trend==='down'?'📉':'➡️'}</span>
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:16 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:16 }}>
                   {[
                     { label:'الالتزام',val:selected.attendance,color:C.green },
                     { label:'التقدم', val:selected.progress,  color:C.gold },

@@ -28,6 +28,14 @@ const INIT_MSGS:Msg[] = [
 ];
 
 export default function SASupportPage() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const [activeTicket, setActiveTicket] = useState<string>('T-001');
   const [msgs, setMsgs] = useState<Msg[]>(INIT_MSGS);
   const [inputText, setInputText] = useState('');
@@ -56,7 +64,7 @@ export default function SASupportPage() {
         <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ فتح تذكرة جديدة</button>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'340px 1fr',gap:14,height:'calc(100vh - 200px)',minHeight:500}}>
+      <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',gap:14,height: isMobile ? 'auto' : 'calc(100vh - 200px)',minHeight:500}}>
 
         {/* Tickets List */}
         <div style={{display:'flex',flexDirection:'column',gap:0}}>
@@ -104,8 +112,8 @@ export default function SASupportPage() {
                 <p style={{color:C.sub,fontSize:12}}>{current.subject}</p>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer'}}>📋 التفاصيل</button>
-                <button style={{padding:'7px 14px',borderRadius:10,border:'none',background:'rgba(22,163,74,0.12)',color:C.green,fontSize:12,fontWeight:700,cursor:'pointer'}}>✓ إغلاق التذكرة</button>
+                <button onClick={()=>alert(`تذكرة ${current.id}\n${current.user} — ${current.role}\n${current.subject}\nالحالة: ${current.status} | الأولوية: ${current.priority}`)} style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer'}}>📋 التفاصيل</button>
+                <button onClick={()=>alert('إغلاق التذكرة قيد التطوير.')} style={{padding:'7px 14px',borderRadius:10,border:'none',background:'rgba(22,163,74,0.12)',color:C.green,fontSize:12,fontWeight:700,cursor:'pointer'}}>✓ إغلاق التذكرة</button>
               </div>
             </div>
           )}
@@ -130,9 +138,9 @@ export default function SASupportPage() {
 
           {/* Input */}
           <div style={{padding:'12px 16px',borderTop:`1px solid ${C.border}`,display:'flex',gap:10,alignItems:'center'}}>
-            <button title="مرفق" style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>📎</button>
+            <button title="مرفق" onClick={()=>alert('إرفاق ملفات بالمحادثة قيد التطوير.')} style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>📎</button>
             <input value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="اكتب ردك هنا..." style={{flex:1,padding:'10px 14px',borderRadius:11,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:13,outline:'none',fontFamily:"'Cairo',sans-serif"}}/>
-            <button title="إرسال صوتي" style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>🎤</button>
+            <button title="إرسال صوتي" onClick={()=>alert('الرسائل الصوتية قيد التطوير.')} style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>🎤</button>
             <button onClick={sendMsg} style={{width:42,height:42,borderRadius:12,border:'none',background:C.goldGrad,cursor:'pointer',fontSize:20,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>📤</button>
           </div>
         </div>

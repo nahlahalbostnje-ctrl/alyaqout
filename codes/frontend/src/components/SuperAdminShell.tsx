@@ -29,6 +29,7 @@ const NAV = [
   { label:'الإعدادات العامة',       to:'/dashboard/settings',          icon:'⚙️', end:false },
   { label:'الصلاحيات والأدوار',     to:'/dashboard/roles',             icon:'🔑', end:false },
   { label:'سجل العمليات',          to:'/dashboard/activity-log',      icon:'📝', end:false },
+  { label:'الرسائل',               to:'/dashboard/messages',          icon:'💬', end:false },
   { label:'الدعم الفني',           to:'/dashboard/support',           icon:'🎧', end:false },
   { label:'مركز التطوير',          to:'/dashboard/dev-center',        icon:'🛠️', end:false },
 ];
@@ -114,8 +115,12 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
             <BrandLogo size={38} style={{ borderRadius:10 }} />
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            {[{e:'🔔',n:12},{e:'✉️',n:7},{e:'🚩',n:5}].map((ic,i)=>(
-              <div key={i} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
+            {[
+              { e:'🔔', n:12, to:'/dashboard/notifications' },
+              { e:'✉️', n:7,  to:'/dashboard/messages' },
+              { e:'🚩', n:5,  to:'/dashboard/content-approvals' },
+            ].map((ic,i)=>(
+              <div key={i} onClick={()=>navigate(ic.to)} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
                 {ic.e}
                 <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
               </div>

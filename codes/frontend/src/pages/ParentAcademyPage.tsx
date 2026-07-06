@@ -93,7 +93,7 @@ function CourseCard({ course, compact }: { course: Course; compact?: boolean }) 
             <div style={{ height: '100%', width: `${course.progress}%`, borderRadius: 3, background: course.color, transition: 'width 0.5s ease' }} />
           </div>
         </div>
-        <button style={{
+        <button onClick={()=>alert(`تشغيل درس "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
           background: course.color, color: '#fff', border: 'none',
           borderRadius: 8, padding: '7px 0', fontFamily: "'Cairo',sans-serif",
           fontWeight: 700, fontSize: 12, cursor: 'pointer', width: '100%',
@@ -185,14 +185,14 @@ function CourseCard({ course, compact }: { course: Course; compact?: boolean }) 
               <div style={{ height: 5, borderRadius: 3, background: `${course.color}18`, overflow: 'hidden', marginBottom: 10 }}>
                 <div style={{ height: '100%', width: `${course.progress}%`, borderRadius: 3, background: course.color }} />
               </div>
-              <button style={{
+              <button onClick={()=>alert(`تشغيل درس "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
                 background: course.color, color: '#fff', border: 'none', width: '100%',
                 borderRadius: 8, padding: '8px 0', fontFamily: "'Cairo',sans-serif",
                 fontWeight: 700, fontSize: 13, cursor: 'pointer',
               }}>متابعة التعلم</button>
             </>
           ) : (
-            <button style={{
+            <button onClick={()=>alert(`بدء دورة "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
               background: 'transparent', color: course.color,
               border: `1.5px solid ${course.color}`, width: '100%',
               borderRadius: 8, padding: '8px 0', fontFamily: "'Cairo',sans-serif",
@@ -306,7 +306,7 @@ export default function ParentAcademyPage() {
             <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>الأنشطة اللامنهجية لأبنائك</h2>
             <span style={{ background: C.blueBg, color: C.blue, fontSize: 11, fontWeight: 800, borderRadius: 20, padding: '2px 10px' }}>جديد</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
             {[
               { emoji: '🎨', title: 'الفن الإبداعي', sub: 'رسم، تلوين، خزف', color: '#EC4899', students: 420 },
               { emoji: '🎵', title: 'الموسيقى وفنون الأداء', sub: 'إيقاع، غناء، مسرح', color: '#8B5CF6', students: 310 },
@@ -324,7 +324,7 @@ export default function ParentAcademyPage() {
                 <p style={{ color: C.text, fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>{act.title}</p>
                 <p style={{ color: C.sub, fontSize: 11, margin: '0 0 12px' }}>{act.sub}</p>
                 <p style={{ color: C.dim, fontSize: 11, marginBottom: 12 }}>👥 {act.students.toLocaleString('ar-EG')} طالب مسجّل</p>
-                <button style={{ background: `${act.color}15`, color: act.color, border: `1px solid ${act.color}30`, borderRadius: 8, padding: '7px 0', width: '100%', fontFamily: "'Cairo',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                <button onClick={()=>alert(`التسجيل في نشاط "${act.title}" قيد التطوير.`)} style={{ background: `${act.color}15`, color: act.color, border: `1px solid ${act.color}30`, borderRadius: 8, padding: '7px 0', width: '100%', fontFamily: "'Cairo',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
                   سجّل ابنك الآن
                 </button>
               </div>
@@ -344,7 +344,7 @@ export default function ParentAcademyPage() {
               borderRadius: 20, padding: '2px 10px',
             }}>{filteredCourses.length}</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             {filteredCourses.map(c => (
               <CourseCard key={c.id} course={c} />
             ))}

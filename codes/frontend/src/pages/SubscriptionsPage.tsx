@@ -7,6 +7,7 @@ import { fetchUsers }    from '../features/admin/usersSlice';
 import { fetchPackages } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
+import api from '../services/axios';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -153,6 +154,40 @@ export default function SubscriptionsPage() {
     await dispatch(cancelSubscription(sub.id));
   };
 
+  // ── Installments (تقسيط الدفعات) ──
+  const [installmentSub, setInstallmentSub]     = useState<Subscription | null>(null);
+  const [installmentCount, setInstallmentCount] = useState('3');
+  const [installmentDate, setInstallmentDate]   = useState(new Date().toISOString().split('T')[0]);
+  const [installmentBusy, setInstallmentBusy]   = useState(false);
+  const [installmentError, setInstallmentError] = useState('');
+  const [installmentDone, setInstallmentDone]   = useState(false);
+
+  const openInstallmentModal = (sub: Subscription) => {
+    setInstallmentSub(sub);
+    setInstallmentCount('3');
+    setInstallmentDate(new Date().toISOString().split('T')[0]);
+    setInstallmentError('');
+    setInstallmentDone(false);
+  };
+
+  const submitInstallmentPlan = async () => {
+    if (!installmentSub) return;
+    setInstallmentBusy(true);
+    setInstallmentError('');
+    try {
+      await api.post(`/admin/subscriptions/${installmentSub.id}/installments`, {
+        count: Number(installmentCount),
+        first_due_date: installmentDate,
+      });
+      setInstallmentDone(true);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setInstallmentError(err.response?.data?.message ?? 'حدث خطأ أثناء إنشاء خطة التقسيط.');
+    } finally {
+      setInstallmentBusy(false);
+    }
+  };
+
   const filterTabs: { key: FilterStatus; label: string; count: number }[] = [
     { key: 'all',       label: 'الكل',          count: stats.total     },
     { key: 'active',    label: 'فعّال',          count: stats.active    },
@@ -187,7 +222,7 @@ export default function SubscriptionsPage() {
         </div>
 
         {/* Summary stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:24 }}>
           {statsCards.map((s) => (
             <div key={s.label} style={{ ...card({ padding:'16px 20px' }), background: s.bg, border:'1px solid #EDE3CE' }}>
               <p style={{ margin:'0 0 4px', fontSize:12, color: DK.sub, fontWeight:600 }}>{s.label}</p>
@@ -264,10 +299,16 @@ export default function SubscriptionsPage() {
                         </td>
                         <td style={TD}>
                           {sub.status === 'active' && (
-                            <button onClick={() => handleCancel(sub)}
-                              style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
-                              إلغاء
-                            </button>
+                            <div style={{ display:'flex', gap:6 }}>
+                              <button onClick={() => openInstallmentModal(sub)}
+                                style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(197,147,65,0.1)', color: DK.gold, fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                                تقسيط
+                              </button>
+                              <button onClick={() => handleCancel(sub)}
+                                style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                                إلغاء
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -311,7 +352,7 @@ export default function SubscriptionsPage() {
                 {packages.map(p => <option key={p.id} value={p.id}>{p.name} — {p.duration_days} يوم — {p.price}</option>)}
               </select>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>تاريخ البداية *</label>
                 <input type="date" value={form.starts_at} onChange={e => setForm({...form, starts_at: e.target.value})}
@@ -362,6 +403,49 @@ export default function SubscriptionsPage() {
                 style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Installment Plan Modal */}
+      {installmentSub && (
+        <Modal title={`تقسيط اشتراك ${installmentSub.student.name}`} onClose={() => setInstallmentSub(null)}>
+          {installmentDone ? (
+            <div style={{ textAlign:'center', padding:'10px 0' }}>
+              <div style={{ fontSize:48, marginBottom:10 }}>✅</div>
+              <p style={{ color: DK.text, fontWeight:700, fontSize:15, marginBottom:6 }}>تم إنشاء خطة التقسيط بنجاح</p>
+              <p style={{ color: DK.sub, fontSize:13, marginBottom:18 }}>يمكن لولي الأمر متابعة الأقساط من صفحة المدفوعات.</p>
+              <button onClick={() => setInstallmentSub(null)} style={{ ...btn('gold') }}>إغلاق</button>
+            </div>
+          ) : (
+            <div dir="rtl">
+              <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>
+                سيتم تقسيم مبلغ الاشتراك ({installmentSub.amount_paid} ريال) بالتساوي على عدد الأقساط المحدد، بدءاً من التاريخ المختار وبفاصل شهر بين كل قسط والآخر.
+              </p>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>عدد الأقساط</label>
+                <select value={installmentCount} onChange={e => setInstallmentCount(e.target.value)}
+                  style={{ ...inp(), cursor:'pointer' }}>
+                  {Array.from({ length: 11 }, (_, i) => i + 2).map(n => (
+                    <option key={n} value={n}>{n} أقساط</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom:20 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>تاريخ استحقاق القسط الأول</label>
+                <input type="date" value={installmentDate} onChange={e => setInstallmentDate(e.target.value)} style={inp()} />
+              </div>
+              {installmentError && (
+                <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{installmentError}</p>
+              )}
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={submitInstallmentPlan} disabled={installmentBusy}
+                  style={{ ...btn('gold'), flex:1, opacity: installmentBusy ? 0.7 : 1 }}>
+                  {installmentBusy ? 'جارٍ الإنشاء...' : 'إنشاء خطة التقسيط'}
+                </button>
+                <button onClick={() => setInstallmentSub(null)} style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
+              </div>
+            </div>
+          )}
         </Modal>
       )}
 

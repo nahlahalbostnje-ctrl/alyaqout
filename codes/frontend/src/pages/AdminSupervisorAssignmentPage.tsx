@@ -276,7 +276,8 @@ export default function AdminSupervisorAssignmentPage() {
                       <p style={{ fontSize: 14, color: DK.sub }}>لا يوجد طلاب معيّنون لهذا المشرف</p>
                     </div>
                   ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 460 }}>
                       <thead>
                         <tr>
                           <th style={TH}>اسم الطالب</th>
@@ -319,6 +320,7 @@ export default function AdminSupervisorAssignmentPage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   )}
                 </div>
 

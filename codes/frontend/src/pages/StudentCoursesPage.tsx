@@ -78,7 +78,7 @@ export default function StudentCoursesPage() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10, marginBottom:16 }}>
           {[
             { icon:'📚', val:display.length, label:'دوراتي' },
             { icon:'✅', val:display.filter(c=>c.progress>=100).length, label:'مكتملة' },
@@ -162,7 +162,7 @@ export default function StudentCoursesPage() {
                   </div>
                 </div>
 
-                <button style={{ marginTop:12, width:'100%', padding:'10px', borderRadius:12, background: done ? 'rgba(16,185,129,0.1)' : C.goldGrad, color: done ? '#10B981' : '#1B2038', fontWeight:700, fontSize:13, border: done ? '1px solid rgba(16,185,129,0.25)' : 'none', cursor:'pointer', boxShadow: done ? 'none' : '0 3px 12px rgba(201,149,42,0.35)' }}>
+                <button onClick={()=>navigate(`/student/courses/${course.id}/content`)} style={{ marginTop:12, width:'100%', padding:'10px', borderRadius:12, background: done ? 'rgba(16,185,129,0.1)' : C.goldGrad, color: done ? '#10B981' : '#1B2038', fontWeight:700, fontSize:13, border: done ? '1px solid rgba(16,185,129,0.25)' : 'none', cursor:'pointer', boxShadow: done ? 'none' : '0 3px 12px rgba(201,149,42,0.35)' }}>
                   {done ? '🔄 مراجعة الدورة' : '▶ متابعة التعلم'}
                 </button>
               </div>

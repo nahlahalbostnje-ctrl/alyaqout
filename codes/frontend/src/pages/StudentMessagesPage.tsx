@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BrandLogo from '../components/BrandLogo';
+import StudentBottomNav from '../components/StudentBottomNav';
 
 const C = {
   bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -9,7 +9,6 @@ const C = {
   text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
   shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444', green:'#16A34A',
 };
-const BH = 60;
 const font = { fontFamily:"'Cairo', sans-serif" };
 
 const CONVERSATIONS = [
@@ -43,6 +42,14 @@ export default function StudentMessagesPage() {
   const [msgs, setMsgs]   = useState<Record<number,Msg[]>>(INIT_MSGS);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(()=>{ endRef.current?.scrollIntoView({ behavior:'smooth' }); }, [msgs, activeId]);
 
@@ -81,8 +88,9 @@ export default function StudentMessagesPage() {
       {/* Split Layout */}
       <div style={{ display:'flex', flex:1, maxWidth:900, margin:'0 auto', width:'100%', height:'calc(100vh - 160px)' }}>
 
-        {/* Conversations List */}
-        <div style={{ width:280, borderLeft:`1px solid ${C.border}`, background:C.card, overflowY:'auto', flexShrink:0 }}>
+        {/* Conversations List — hidden on mobile once a chat is open */}
+        {(!isMobile || !activeId) && (
+        <div style={{ width:isMobile ? '100%' : 280, borderLeft:isMobile ? 'none' : `1px solid ${C.border}`, background:C.card, overflowY:'auto', flexShrink:0 }}>
           <div style={{ padding:'12px 14px', borderBottom:`1px solid ${C.border}` }}>
             <input placeholder="بحث..." style={{ width:'100%', padding:'8px 12px', borderRadius:10, border:`1px solid ${C.border}`, background:C.bg, fontSize:12, outline:'none', ...font, boxSizing:'border-box' }}/>
           </div>
@@ -108,8 +116,10 @@ export default function StudentMessagesPage() {
             </div>
           ))}
         </div>
+        )}
 
-        {/* Chat Area */}
+        {/* Chat Area — on mobile, only shown once a conversation is selected */}
+        {(!isMobile || activeId) && (
         <div style={{ flex:1, display:'flex', flexDirection:'column', background:C.bg }}>
           {!activeId ? (
             <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12 }}>
@@ -120,6 +130,9 @@ export default function StudentMessagesPage() {
             <>
               {/* Chat Header */}
               <div style={{ padding:'12px 18px', background:C.card, borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:12 }}>
+                {isMobile && (
+                  <button onClick={() => setActiveId(null)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:C.text, padding:0, flexShrink:0 }}>→</button>
+                )}
                 <div style={{ fontSize:28 }}>{active?.avatar}</div>
                 <div>
                   <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>{active?.name}</p>
@@ -156,30 +169,10 @@ export default function StudentMessagesPage() {
             </>
           )}
         </div>
+        )}
       </div>
 
-      {/* Bottom Nav */}
-      <div dir="rtl" style={{ position:'fixed', bottom:0, left:0, right:0, height:BH, background:C.card, borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-around', zIndex:100, boxShadow:'0 -4px 20px rgba(0,0,0,0.08)' }}>
-        <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          <span style={{ fontSize:9.5, color:C.sub }}>الرئيسية</span>
-        </button>
-        <button onClick={()=>navigate('/student/league')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <span style={{ fontSize:20 }}>🏆</span>
-          <span style={{ fontSize:9.5, color:C.sub }}>الدوري</span>
-        </button>
-        <div style={{ position:'relative', top:-12 }}>
-          <button style={{ width:54, height:54, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6)`, outline:'none' }}><BrandLogo size={38} /></button>
-        </div>
-        <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <span style={{ fontSize:9.5, color:C.gold, fontWeight:700 }}>الرسائل</span>
-        </button>
-        <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <span style={{ fontSize:20 }}>⋯</span>
-          <span style={{ fontSize:9.5, color:C.sub }}>المزيد</span>
-        </button>
-      </div>
+      <StudentBottomNav cur="/student/messages" />
     </div>
   );
 }

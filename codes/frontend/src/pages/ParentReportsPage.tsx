@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchParentDashboard } from '../features/parent/parentSlice';
+import api from '../services/axios';
 
 const C = {
   gold:'#C59341', goldL:'#D4A65A',
@@ -14,11 +17,12 @@ const C = {
   purple:'#8B5CF6', amber:'#F59E0B', amberBg:'rgba(245,158,11,0.08)',
 };
 
-const CHILDREN = [
+const CHILDREN_STATIC = [
   { id:1, name:'محمد أحمد', initials:'مأ', color:'#C59341', grade:'الصف الخامس' },
   { id:2, name:'سارة أحمد', initials:'سأ', color:'#3B82F6', grade:'الصف السادس' },
   { id:3, name:'علي أحمد',  initials:'عأ', color:'#10B981', grade:'الصف الثالث' },
 ];
+const CHILD_COLORS = ['#C59341', '#3B82F6', '#10B981', '#8B5CF6'];
 
 const REPORT_TYPES = [
   { id:'monthly',  label:'التقرير الشهري',  icon:'📅', desc:'ملخص الأداء الشهري الشامل' },
@@ -70,10 +74,63 @@ function RingChart({ value, label, color, bg }: { value: number; label: string; 
 }
 
 export default function ParentReportsPage() {
+  const dispatch = useAppDispatch();
+  const { children } = useAppSelector((s) => s.parent);
+
+  useEffect(() => { if (children.length === 0) dispatch(fetchParentDashboard()); }, [dispatch, children.length]);
+
+  const CHILDREN = children.length > 0
+    ? children.map((c, i) => ({
+        id: c.id, name: c.name,
+        initials: c.name.split(' ').slice(0, 2).map(w => w[0]).join(''),
+        color: CHILD_COLORS[i % CHILD_COLORS.length], grade: 'طالب',
+      }))
+    : CHILDREN_STATIC;
+
   const [selectedChild, setSelectedChild] = useState(0);
   const [selectedType, setSelectedType] = useState('monthly');
   const [selectedMonth, setSelectedMonth] = useState('مايو 2025');
   const [showReport, setShowReport] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [waBusy, setWaBusy] = useState(false);
+  const [waMsg, setWaMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const selectedChildId = CHILDREN[selectedChild]?.id;
+
+  const handleDownloadPdf = async () => {
+    if (!selectedChildId) return;
+    setPdfBusy(true);
+    try {
+      const res = await api.get(`/parent/children/${selectedChildId}/report/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `تقرير-${CHILDREN[selectedChild].name}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setWaMsg({ ok: false, text: 'تعذّر تحميل التقرير حالياً.' });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const handleSendWhatsapp = async () => {
+    if (!selectedChildId) return;
+    setWaBusy(true);
+    setWaMsg(null);
+    try {
+      const res = await api.post(`/parent/children/${selectedChildId}/report/whatsapp`);
+      setWaMsg({ ok: true, text: res.data?.message ?? 'تم الإرسال بنجاح عبر واتساب.' });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setWaMsg({ ok: false, text: err.response?.data?.message ?? 'تعذّر الإرسال عبر واتساب حالياً.' });
+    } finally {
+      setWaBusy(false);
+    }
+  };
 
   const months = ['مايو 2025','أبريل 2025','مارس 2025','فبراير 2025','يناير 2025'];
 
@@ -116,7 +173,7 @@ export default function ParentReportsPage() {
 
           {/* Report type */}
           <p style={{ color:C.sub, fontSize:12, fontWeight:700, marginBottom:10 }}>نوع التقرير</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:20 }}>
             {REPORT_TYPES.map((t) => (
               <div key={t.id} onClick={() => setSelectedType(t.id)} style={{
                 padding:'14px 16px', borderRadius:12, cursor:'pointer', textAlign:'center',
@@ -147,20 +204,32 @@ export default function ParentReportsPage() {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display:'flex', gap:12 }}>
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
             <button onClick={() => setShowReport(true)} style={{
               padding:'12px 32px', borderRadius:12, background:C.goldGrad, border:'none',
               color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer',
               boxShadow:'0 4px 14px rgba(197,147,65,0.35)', fontFamily:"'Cairo',sans-serif",
             }}>📊 توليد التقرير</button>
             {showReport && (
-              <button style={{
-                padding:'12px 24px', borderRadius:12, border:`1.5px solid ${C.gold}`,
-                background:'transparent', color:C.gold, fontWeight:700, fontSize:13, cursor:'pointer',
-                fontFamily:"'Cairo',sans-serif",
-              }}>📄 تحميل PDF</button>
+              <>
+                <button onClick={handleDownloadPdf} disabled={pdfBusy} style={{
+                  padding:'12px 24px', borderRadius:12, border:`1.5px solid ${C.gold}`,
+                  background:'transparent', color:C.gold, fontWeight:700, fontSize:13, cursor: pdfBusy ? 'default' : 'pointer',
+                  fontFamily:"'Cairo',sans-serif", opacity: pdfBusy ? 0.6 : 1,
+                }}>{pdfBusy ? '... جارٍ التحميل' : '📄 تحميل PDF'}</button>
+                <button onClick={handleSendWhatsapp} disabled={waBusy} style={{
+                  padding:'12px 24px', borderRadius:12, border:'none',
+                  background:'#25D366', color:'#fff', fontWeight:700, fontSize:13, cursor: waBusy ? 'default' : 'pointer',
+                  fontFamily:"'Cairo',sans-serif", opacity: waBusy ? 0.6 : 1,
+                }}>{waBusy ? '... جارٍ الإرسال' : '📱 إرسال عبر واتساب'}</button>
+              </>
             )}
           </div>
+          {waMsg && (
+            <p style={{ marginTop:12, fontSize:12.5, fontWeight:700, color: waMsg.ok ? C.green : C.red }}>
+              {waMsg.ok ? '✅' : '⚠️'} {waMsg.text}
+            </p>
+          )}
         </div>
 
         {/* Generated report */}
@@ -190,7 +259,8 @@ export default function ParentReportsPage() {
 
             {/* Subjects table */}
             <p style={{ color:C.text, fontWeight:800, fontSize:13, marginBottom:12 }}>أداء المواد الدراسية</p>
-            <table style={{ width:'100%', borderCollapse:'collapse', marginBottom:24 }}>
+            <div style={{ overflowX:'auto', marginBottom:24 }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:480 }}>
               <thead>
                 <tr style={{ background:'#F8F5EE' }}>
                   {['المادة','المتوسط','التقييم','الاتجاه'].map((h) => (
@@ -222,9 +292,10 @@ export default function ParentReportsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Strengths & improvements */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:24 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16, marginBottom:24 }}>
               <div style={{ background:C.greenBg, borderRadius:12, padding:16, border:'1px solid rgba(16,185,129,0.2)' }}>
                 <p style={{ color:C.green, fontWeight:800, fontSize:13, marginBottom:10 }}>✅ نقاط القوة</p>
                 <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -256,13 +327,13 @@ export default function ParentReportsPage() {
             </div>
 
             {/* Download button */}
-            <button style={{
+            <button onClick={handleDownloadPdf} disabled={pdfBusy} style={{
               width:'100%', padding:'14px', borderRadius:12, background:C.goldGrad,
-              border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer',
+              border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor: pdfBusy ? 'default' : 'pointer',
               boxShadow:'0 4px 16px rgba(197,147,65,0.35)', display:'flex', alignItems:'center',
-              justifyContent:'center', gap:8, fontFamily:"'Cairo',sans-serif",
+              justifyContent:'center', gap:8, fontFamily:"'Cairo',sans-serif", opacity: pdfBusy ? 0.6 : 1,
             }}>
-              📄 تحميل التقرير كاملاً PDF
+              {pdfBusy ? '... جارٍ التحميل' : '📄 تحميل التقرير كاملاً PDF'}
             </button>
           </div>
         )}
@@ -273,7 +344,8 @@ export default function ParentReportsPage() {
             <div style={{ width:4, height:18, borderRadius:2, background:C.goldGrad }} />
             <span style={{ color:C.text, fontWeight:800, fontSize:15 }}>التقارير السابقة</span>
           </div>
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <div style={{ overflowX:'auto' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
             <thead>
               <tr style={{ background:'#F8F5EE' }}>
                 {['التاريخ','نوع التقرير','الابن','الحالة','إجراءات'].map((h) => (
@@ -300,6 +372,7 @@ export default function ParentReportsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
       </div>

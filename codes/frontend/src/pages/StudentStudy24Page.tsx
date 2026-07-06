@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BrandLogo from '../components/BrandLogo';
+import StudentBottomNav from '../components/StudentBottomNav';
 
 const C = {
   bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -148,28 +148,7 @@ export default function StudentStudy24Page() {
         )}
       </div>
 
-      {/* Bottom Nav */}
-      <div dir="rtl" style={{ position:'fixed', bottom:0, left:0, right:0, height:BH, background:C.card, borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-around', zIndex:100, boxShadow:'0 -4px 20px rgba(0,0,0,0.08)' }}>
-        <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          <span style={{ fontSize:9.5, color:C.sub }}>الرئيسية</span>
-        </button>
-        <button onClick={()=>navigate('/student/league')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <span style={{ fontSize:20 }}>🏆</span>
-          <span style={{ fontSize:9.5, color:C.sub }}>الدوري</span>
-        </button>
-        <div style={{ position:'relative', top:-12 }}>
-          <button style={{ width:54, height:54, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6)`, outline:'none' }}><BrandLogo size={38} /></button>
-        </div>
-        <button onClick={()=>navigate('/student/messages')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <span style={{ fontSize:20 }}>✉️</span>
-          <span style={{ fontSize:9.5, color:C.sub }}>الرسائل</span>
-        </button>
-        <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 14px', border:'none', background:'none', cursor:'pointer', ...font }}>
-          <span style={{ fontSize:20 }}>⋯</span>
-          <span style={{ fontSize:9.5, color:C.sub }}>المزيد</span>
-        </button>
-      </div>
+      <StudentBottomNav cur="/student/study-24" />
     </div>
   );
 }

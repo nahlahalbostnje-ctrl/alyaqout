@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchTeacherDashboard, updateTeacherClassStatus } from '../features/teacher/teacherSlice';
 import { fetchTeacherExams, fetchTeacherHomework } from '../features/teacher/examSlice';
 import { logout } from '../features/auth/authSlice';
+import api from '../services/axios';
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────
 const T = {
@@ -81,15 +82,27 @@ function Badge({ n, color = T.red }: { n: number; color?: string }) {
 }
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ active, onNav, teacher, pendingTotal, onLogout }: {
+function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = false, open = true, onClose }: {
   active: Screen;
   onNav: (s: Screen) => void;
   teacher: { id: number; name: string } | null;
   pendingTotal: number;
   onLogout: () => void;
+  isMobile?: boolean;
+  open?: boolean;
+  onClose?: () => void;
 }) {
   return (
-    <div style={{ width: 240, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, flexShrink: 0 }}>
+    <>
+      {isMobile && open && (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199 }} />
+      )}
+      <div style={isMobile ? {
+        width: 240, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh',
+        position: 'fixed', top: 0, right: 0, zIndex: 200,
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.25s ease', boxShadow: open ? '-8px 0 24px rgba(0,0,0,0.3)' : 'none',
+      } : { width: 240, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, flexShrink: 0 }}>
       {/* Logo */}
       <div style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.sBorder}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
@@ -115,7 +128,7 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout }: {
           const isActive = active === item.screen;
           const badge = item.screen === 'homework' || item.screen === 'exams' ? pendingTotal : 0;
           return (
-            <button key={item.screen} onClick={() => onNav(item.screen)}
+            <button key={item.screen} onClick={() => { onNav(item.screen); if (isMobile) onClose?.(); }}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, marginBottom: 3, background: isActive ? T.goldGrad : 'transparent', border: `1px solid ${isActive ? T.gold : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
               <span style={{ color: isActive ? T.sidebar : T.sSub, fontWeight: isActive ? 800 : 500, fontSize: 13, flex: 1 }}>{item.label}</span>
@@ -131,7 +144,8 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout }: {
           <span>🚪</span> تسجيل الخروج
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -170,7 +184,7 @@ function HomeScreen({ stats, upcoming, teacher, recentSubmissions }: {
       <SectionTitle title={`مرحباً، أ. ${teacher?.name?.split(' ')[0] ?? '...'} 👋`} sub="هذا ملخص نشاط اليوم"/>
 
       {/* KPI grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
         {kpis.map((k, i) => (
           <div key={i} style={{ ...card(), display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: `${k.color}18`, border: `1px solid ${k.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{k.icon}</div>
@@ -182,11 +196,11 @@ function HomeScreen({ stats, upcoming, teacher, recentSubmissions }: {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 16 }}>
         {/* Alerts */}
         <div style={card()}>
           <p style={{ color: T.gold, fontWeight: 700, fontSize: 14, marginBottom: 14 }}>مدائل معلّم — تنبيهات الطلاب</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: 10 }}>
             {[
               { label: 'متفوقون',        n: stats?.today_attendance ?? 18, color: T.green  },
               { label: 'يحتاجون متابعة', n: stats?.pending_homework_subs ?? 24, color: T.orange },
@@ -370,7 +384,7 @@ function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; d
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ color: T.sub, fontSize: 12 }}>التسليمات: <strong style={{ color: T.text }}>{hw.submissions_count}</strong></span>
-                <button style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>عرض التفاصيل</button>
+                <button onClick={()=>alert(`${hw.title}\nالمادة: ${hw.course?.title ?? '—'}\nآخر موعد: ${new Date(hw.due_date).toLocaleDateString('ar-EG')}\nالتسليمات: ${hw.submissions_count}`)} style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>عرض التفاصيل</button>
               </div>
             </div>
           ))}
@@ -411,7 +425,7 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
                   {exam.duration && <p style={{ color: T.dim, fontSize: 11, marginTop: 2 }}>المدة: {exam.duration} دقيقة</p>}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 8, marginBottom: 14 }}>
                 <div style={{ background: T.card2, borderRadius: 10, padding: '8px 12px', border: `1px solid ${T.border}` }}>
                   <p style={{ color: T.dim, fontSize: 10 }}>الأسئلة</p>
                   <p style={{ color: T.text, fontWeight: 700, fontSize: 18 }}>{exam.questions_count}</p>
@@ -421,7 +435,7 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
                   <p style={{ color: T.text, fontWeight: 700, fontSize: 18 }}>{exam.submissions_count}</p>
                 </div>
               </div>
-              <button style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>إدارة الامتحان</button>
+              <button onClick={()=>alert(`${exam.title}\nالأسئلة: ${exam.questions_count} | التسليمات: ${exam.submissions_count}\nإدارة الامتحان (تعديل الأسئلة/التصحيح) قيد التطوير.`)} style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>إدارة الامتحان</button>
             </div>
           ))}
         </div>
@@ -446,11 +460,11 @@ function ReportsScreen() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
         {/* Subject rings */}
         <div style={{ ...card({ gridColumn: '1/-1' }) }}>
           <p style={{ color: T.gold, fontWeight: 700, fontSize: 14, marginBottom: 18 }}>أداء المواد — الصف {cls}</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16 }}>
             {data[cls].map((item, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '20px', background: T.card2, borderRadius: 14, border: `1px solid ${T.border}` }}>
                 <Ring pct={item.pct} size={100} color={item.c}/>
@@ -466,14 +480,14 @@ function ReportsScreen() {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🎓</div>
           <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تحليل ذكي للطلاب</p>
           <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>احصل على رأي ذكاء اصطناعي لتحسين أداء الطلاب في هذا الصف</p>
-          <button style={{ padding: '13px 24px', borderRadius: 12, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تشغيل التحليل</button>
+          <button onClick={()=>alert('تحليل الذكاء الاصطناعي لأداء الطلاب قيد التطوير.')} style={{ padding: '13px 24px', borderRadius: 12, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تشغيل التحليل</button>
         </div>
 
         <div style={{ ...card(), display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>📤</div>
           <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تصدير تقرير شامل</p>
           <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>تصدير تقرير أداء الصف كاملاً بصيغة PDF أو Excel</p>
-          <button style={{ padding: '13px 24px', borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: T.blue, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تصدير التقرير</button>
+          <button onClick={()=>alert('تصدير تقرير الأداء بصيغة PDF/Excel قيد التطوير.')} style={{ padding: '13px 24px', borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: T.blue, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تصدير التقرير</button>
         </div>
       </div>
     </div>
@@ -571,39 +585,80 @@ function AIScreen({ teacher }: { teacher: { name: string } | null }) {
 }
 
 // MESSAGES ────────────────────────────────────────────────────────────────────
+interface TeacherConvSummary {
+  id: number; parent: string; student: string;
+  unread_count: number; last_message: string | null; last_message_at: string | null;
+}
+interface TeacherThreadMsg {
+  id: number; body: string; is_mine: boolean; sender: string; created_at: string;
+}
+
 function MessagesScreen() {
-  const [tab, setTab] = useState<'all' | 'admin'>('all');
-  const [activeChat, setActiveChat] = useState(0);
-  const convs = [
-    { name: 'Students', last: 'الرسائل والتعامل مع حمد', time: '10:30 AM', unread: 2, icon: '👥' },
-    { name: 'Parents',  last: 'رابيعة عواب المدم في القفص', time: '06:15 AM', unread: 2, icon: '👨‍👩‍👦' },
-    { name: 'Administration', last: 'يدفنون مواضع الأوصوصي', time: '06:15 AM', unread: 0, icon: '🏫' },
-    { name: 'الطلاب', last: 'ريبعة أن لأصلحه سرجوم؟', time: 'أمس', unread: 1, icon: '🎓' },
-  ];
-  const shown = tab === 'admin' ? convs.filter(c => c.name === 'Administration') : convs;
+  const [convs, setConvs] = useState<TeacherConvSummary[]>([]);
+  const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [thread, setThread] = useState<TeacherThreadMsg[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingThread, setLoadingThread] = useState(false);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const loadConvs = useCallback(() => {
+    setLoadingList(true);
+    api.get('/teacher/messages')
+      .then(({ data }) => {
+        const list: TeacherConvSummary[] = data.data ?? [];
+        setConvs(list);
+        setActiveChat((prev) => prev ?? list[0]?.id ?? null);
+      })
+      .finally(() => setLoadingList(false));
+  }, []);
+
+  useEffect(() => { loadConvs(); }, [loadConvs]);
+
+  useEffect(() => {
+    if (!activeChat) { setThread([]); return; }
+    setLoadingThread(true);
+    api.get(`/teacher/messages/${activeChat}`)
+      .then(({ data }) => setThread(data.data ?? []))
+      .finally(() => setLoadingThread(false));
+  }, [activeChat]);
+
+  const active = convs.find(c => c.id === activeChat) ?? null;
+
+  const send = async () => {
+    if (!input.trim() || !activeChat || sending) return;
+    setSending(true);
+    try {
+      const { data } = await api.post(`/teacher/messages/${activeChat}`, { body: input.trim() });
+      setThread(prev => [...prev, data.data]);
+      setInput('');
+      loadConvs();
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 100px)' }}>
       {/* Conversation list */}
       <div style={{ width: 280, display: 'flex', flexDirection: 'column', gap: 0 }}>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {[['all', 'الكل'], ['admin', 'الإدارة']].map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k as 'all' | 'admin')} style={{ flex: 1, padding: '9px', borderRadius: 10, background: tab === k ? T.goldGrad : T.card, border: `1px solid ${tab === k ? T.gold : T.border}`, color: tab === k ? '#071220' : T.sub, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>{l}</button>
-          ))}
-        </div>
         <div style={{ ...card({ padding: 0, overflow: 'hidden', flex: 1 }) }}>
-          {shown.map((c, i) => (
-            <div key={i} onClick={() => setActiveChat(i)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: i < shown.length - 1 ? `1px solid ${T.border}` : 'none', cursor: 'pointer', background: activeChat === i ? T.goldBg : 'transparent', borderRight: activeChat === i ? `3px solid ${T.gold}` : '3px solid transparent' }}>
+          {loadingList && <p style={{ color: T.dim, fontSize: 13, textAlign: 'center', padding: '24px 0' }}>جارٍ التحميل...</p>}
+          {!loadingList && convs.length === 0 && (
+            <p style={{ color: T.dim, fontSize: 13, textAlign: 'center', padding: '24px 16px' }}>لا توجد محادثات بعد — سيظهر هنا أي ولي أمر يبدأ محادثة معك</p>
+          )}
+          {convs.map((c) => (
+            <div key={c.id} onClick={() => setActiveChat(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', background: activeChat === c.id ? T.goldBg : 'transparent', borderRight: activeChat === c.id ? `3px solid ${T.gold}` : '3px solid transparent' }}>
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: T.card2, border: `1.5px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, position: 'relative' }}>
-                {c.icon}
-                {c.unread > 0 && <div style={{ position: 'absolute', top: -3, right: -3, width: 18, height: 18, borderRadius: '50%', background: T.red, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.unread}</div>}
+                👨‍👩‍👦
+                {c.unread_count > 0 && <div style={{ position: 'absolute', top: -3, right: -3, width: 18, height: 18, borderRadius: '50%', background: T.red, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.unread_count}</div>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <p style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>{c.name}</p>
-                  <span style={{ color: T.dim, fontSize: 10 }}>{c.time}</span>
+                  <p style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>{c.parent}</p>
                 </div>
-                <p style={{ color: T.sub, fontSize: 11.5, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.last}</p>
+                <p style={{ color: T.gold, fontSize: 10.5, marginTop: 1 }}>بخصوص {c.student}</p>
+                <p style={{ color: T.sub, fontSize: 11.5, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.last_message ?? ''}</p>
               </div>
             </div>
           ))}
@@ -612,19 +667,41 @@ function MessagesScreen() {
 
       {/* Chat area */}
       <div style={{ flex: 1, ...card({ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }) }}>
-        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 24 }}>{shown[activeChat]?.icon}</div>
-          <p style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>{shown[activeChat]?.name}</p>
-        </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: T.dim, fontSize: 13 }}>اختر محادثة لعرضها</p>
-        </div>
-        <div style={{ padding: '14px 16px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 10 }}>
-          <input placeholder="اكتب رسالتك هنا…" dir="rtl" style={{ flex: 1, padding: '11px 16px', borderRadius: 12, background: T.card2, border: `1px solid ${T.border}`, color: T.text, fontSize: 13, outline: 'none', fontFamily: "'Cairo',sans-serif" }}/>
-          <button style={{ padding: '0 20px', borderRadius: 12, background: T.goldGrad, border: 'none', cursor: 'pointer' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.sidebar} strokeWidth="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          </button>
-        </div>
+        {!active ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: T.dim, fontSize: 13 }}>اختر محادثة لعرضها</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ padding: '14px 20px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 24 }}>👨‍👩‍👦</div>
+              <div>
+                <p style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>{active.parent}</p>
+                <p style={{ color: T.gold, fontSize: 11 }}>بخصوص {active.student}</p>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {loadingThread && <p style={{ color: T.dim, fontSize: 13, textAlign: 'center' }}>جارٍ التحميل...</p>}
+              {!loadingThread && thread.map((m) => (
+                <div key={m.id} style={{ display: 'flex', justifyContent: m.is_mine ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ maxWidth: '70%' }}>
+                    <div style={{ padding: '10px 14px', borderRadius: m.is_mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: m.is_mine ? T.goldGrad : T.card2, color: m.is_mine ? '#071220' : T.text, fontSize: 13, lineHeight: 1.6, border: m.is_mine ? 'none' : `1px solid ${T.border}` }}>{m.body}</div>
+                    <div style={{ fontSize: 10, color: T.dim, marginTop: 4, textAlign: m.is_mine ? 'right' : 'left' }}>{m.created_at}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '14px 16px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 10 }}>
+              <input value={input} onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }}
+                placeholder="اكتب رسالتك هنا…" dir="rtl"
+                style={{ flex: 1, padding: '11px 16px', borderRadius: 12, background: T.card2, border: `1px solid ${T.border}`, color: T.text, fontSize: 13, outline: 'none', fontFamily: "'Cairo',sans-serif" }}/>
+              <button onClick={send} disabled={sending} style={{ padding: '0 20px', borderRadius: 12, background: T.goldGrad, border: 'none', cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.6 : 1 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.sidebar} strokeWidth="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -641,7 +718,7 @@ function LiveRoomScreen({ liveNow, onEnd }: { liveNow: { id: number; title: stri
   return (
     <div>
       <SectionTitle title="غرفة البث المباشر" sub={liveNow?.title ?? 'لا توجد حصة مباشرة حالياً'}/>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
         {/* Video */}
         <div style={{ borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg,#0A1E45,#071220)', position: 'relative', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${T.border}` }}>
           <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -716,7 +793,7 @@ function StudentsScreen() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث عن طالب…" dir="rtl" style={{ background: 'none', border: 'none', color: T.text, fontSize: 13.5, outline: 'none', flex: 1, fontFamily: "'Cairo',sans-serif" }}/>
         </div>
-        <button style={{ padding: '0 20px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={()=>alert('فلترة متقدمة (حسب الصف/الأداء) قيد التطوير — استخدم البحث بالاسم حالياً.')} style={{ padding: '0 20px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           <span style={{ color: T.gold, fontSize: 12.5, fontWeight: 600 }}>فلتر</span>
         </button>
@@ -751,6 +828,15 @@ export default function TeacherMobileApp() {
   const { exams, homeworks } = useAppSelector(s => s.teacherExams);
   const [screen, setScreen] = useState<Screen>('home');
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => {
     dispatch(fetchTeacherDashboard());
     dispatch(fetchTeacherExams());
@@ -774,11 +860,18 @@ export default function TeacherMobileApp() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', background: T.bg, fontFamily: "'Cairo',sans-serif", direction: 'rtl' }}>
-      {/* Sidebar (right in RTL) */}
-      <Sidebar active={screen} onNav={setScreen} teacher={teacher} pendingTotal={pendingTotal} onLogout={handleLogout}/>
+      {/* Sidebar (right in RTL) — static on desktop, slide-in drawer on mobile */}
+      <Sidebar active={screen} onNav={setScreen} teacher={teacher} pendingTotal={pendingTotal} onLogout={handleLogout}
+        isMobile={isMobile} open={isMobile ? navOpen : true} onClose={() => setNavOpen(false)}/>
 
       {/* Main content */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', scrollbarWidth: 'thin', scrollbarColor: `${T.border} transparent` }}>
+      <main style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '28px 32px', scrollbarWidth: 'thin', scrollbarColor: `${T.border} transparent`, width: '100%', minWidth: 0 }}>
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <button onClick={() => setNavOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 18 }}>☰</button>
+            <span style={{ color: T.text, fontWeight: 800, fontSize: 14 }}>أ. {teacher?.name?.split(' ')[0] ?? '...'}</span>
+          </div>
+        )}
         {screen === 'home' && (
           <HomeScreen stats={stats} upcoming={upcoming} teacher={teacher} recentSubmissions={recentSubmissions}/>
         )}

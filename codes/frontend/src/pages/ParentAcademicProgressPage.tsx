@@ -170,7 +170,7 @@ export default function ParentAcademicProgressPage() {
         </div>
 
         {/* KPI Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 14, marginBottom: 20 }}>
           {[
             { label: 'متوسط الدرجات', value: `${avg}%`, icon: '📊', color: C.gold, bg: C.goldBg },
             { label: 'أعلى درجة', value: `${max}%`, icon: '🏆', color: C.green, bg: C.greenBg },
@@ -300,7 +300,7 @@ export default function ParentAcademicProgressPage() {
         {/* Subject Breakdown */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>تفاصيل المواد الدراسية</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
             {SUBJECTS.map((subj, si) => {
               const monthScores = scores[si];
               const current = monthScores[lastMonth];

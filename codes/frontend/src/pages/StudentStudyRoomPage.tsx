@@ -100,7 +100,7 @@ export default function StudentStudyRoomPage() {
             </div>
 
             {/* Quick Actions */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:8 }}>
               {QUICK_ACTIONS.map((a,i) => (
                 <button key={i} onClick={()=>send(a.label)}
                   style={{ background:C.card, borderRadius:16, padding:'14px 12px', display:'flex', flexDirection:'column', alignItems:'flex-start', gap:6, border:`1px solid ${C.border}`, boxShadow:C.shadow, cursor:'pointer', textAlign:'right', fontFamily:"'Cairo',sans-serif" }}>
@@ -130,7 +130,7 @@ export default function StudentStudyRoomPage() {
 
       {/* Input */}
       <div style={{ position:'fixed', bottom:BH, left:0, right:0, background:C.card, borderTop:`1px solid ${C.border}`, padding:'10px 14px', display:'flex', gap:8, alignItems:'flex-end', zIndex:90 }}>
-        <button style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:17 }}>🎙️</button>
+        <button onClick={()=>alert('السؤال الصوتي عبر الميكروفون قيد التطوير — يرجى الكتابة حالياً.')} style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:17 }}>🎙️</button>
         <textarea
           value={text} onChange={e=>setText(e.target.value)} onKeyDown={handleKey}
           rows={1} placeholder="اكتب سؤالك هنا..."

@@ -41,6 +41,13 @@ use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
 use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotController;
+use App\Http\Controllers\ParentPortal\BillingController as ParentBillingController;
+use App\Http\Controllers\Admin\InstallmentController as AdminInstallmentController;
+use App\Http\Controllers\ParentPortal\MessageController as ParentMessageController;
+use App\Http\Controllers\Teacher\MessageController as TeacherMessageController;
+use App\Http\Controllers\SuperAdmin\MessageController as SuperAdminMessageController;
+use App\Http\Controllers\SuperAdmin\NotificationController as SuperAdminNotificationController;
+use App\Http\Controllers\SuperAdmin\RoleController as SuperAdminRoleController;
 use App\Http\Controllers\Supervisor\ChatbotController as SupervisorChatbotController;
 use App\Http\Controllers\Teacher\ChatbotController as TeacherChatbotController;
 use App\Http\Controllers\Teacher\EmergencyController as TeacherEmergencyController;
@@ -125,6 +132,18 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
 
     // Impersonation
     Route::post('impersonate/{user}',       [ImpersonationController::class, 'impersonate']);
+
+    // Messages oversight — يشوف كل محادثات كل الدول (قراءة فقط)
+    Route::get('messages',                  [SuperAdminMessageController::class, 'index']);
+    Route::get('messages/{conversation}',   [SuperAdminMessageController::class, 'show']);
+
+    // Notifications — بث عبر أي دولة
+    Route::get('notifications/history',     [SuperAdminNotificationController::class, 'history']);
+    Route::post('notifications/broadcast',  [SuperAdminNotificationController::class, 'broadcast']);
+
+    // Roles & permissions (overrides على الصلاحيات الافتراضية — للعرض والتتبع فقط، لا تُطبَّق بعد على الـ middleware)
+    Route::get('roles/permissions',         [SuperAdminRoleController::class, 'index']);
+    Route::put('roles/permissions',         [SuperAdminRoleController::class, 'update']);
 });
 
 /*
@@ -149,7 +168,10 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('users',                      [AdminUserController::class, 'index']);
     Route::post('users',                     [AdminUserController::class, 'store']);
+    Route::put('users/{user}',               [AdminUserController::class, 'update']);
     Route::patch('users/{user}/toggle',      [AdminUserController::class, 'toggle']);
+    Route::patch('users/{user}/role',        [AdminUserController::class, 'changeRole']);
+    Route::patch('users/{user}/unlink-parent', [AdminUserController::class, 'unlinkParent']);
     Route::delete('users/{user}',            [AdminUserController::class, 'destroy']);
 
     Route::get('live-classes',                         [AdminLiveClassController::class, 'index']);
@@ -184,6 +206,11 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('subscriptions',                             [AdminSubscriptionController::class, 'store']);
     Route::patch('subscriptions/{subscription}/cancel',      [AdminSubscriptionController::class, 'cancel']);
     Route::get('users/{student}/subscriptions',              [AdminSubscriptionController::class, 'studentSubscriptions']);
+
+    // Installments (تقسيط الدفعات)
+    Route::get('subscriptions/{subscription}/installments',              [AdminInstallmentController::class, 'index']);
+    Route::post('subscriptions/{subscription}/installments',             [AdminInstallmentController::class, 'store']);
+    Route::post('subscriptions/{subscription}/installments/{installment}/mark-paid', [AdminInstallmentController::class, 'markPaid']);
 
     Route::post('notifications/broadcast',   [AdminNotificationController::class, 'broadcast']);
     Route::get('notifications/history',      [AdminNotificationController::class, 'history']);
@@ -373,6 +400,11 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::post('my-items',                         [TeacherPersonalItemController::class, 'store']);
     Route::put('my-items/{item}',                   [TeacherPersonalItemController::class, 'update']);
     Route::delete('my-items/{item}',                [TeacherPersonalItemController::class, 'destroy']);
+
+    // Messages (teacher ↔ parent)
+    Route::get('messages',                          [TeacherMessageController::class, 'index']);
+    Route::get('messages/{conversation}',           [TeacherMessageController::class, 'show']);
+    Route::post('messages/{conversation}',          [TeacherMessageController::class, 'store']);
 });
 
 /*
@@ -385,6 +417,18 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::get('children',                           [ParentHomeController::class, 'listChildren']);
     Route::get('children/{student}/live-classes',    [ParentHomeController::class, 'childLiveClasses']);
     Route::get('children/{student}/report',          [ParentReportController::class, 'childReport']);
+    Route::get('children/{student}/report/pdf',      [ParentReportController::class, 'downloadPdf']);
+    Route::post('children/{student}/report/whatsapp', [ParentReportController::class, 'sendPdfViaWhatsapp']);
+
+    // Billing / installments (parent)
+    Route::get('billing/installments',               [ParentBillingController::class, 'installments']);
+
+    // Messages (parent ↔ teacher)
+    Route::get('children/{student}/teachers',        [ParentMessageController::class, 'teachersForChild']);
+    Route::get('messages',                           [ParentMessageController::class, 'index']);
+    Route::post('messages/start',                    [ParentMessageController::class, 'start']);
+    Route::get('messages/{conversation}',            [ParentMessageController::class, 'show']);
+    Route::post('messages/{conversation}',           [ParentMessageController::class, 'store']);
 
     // Chatbot (parent)
     Route::post('chatbot',                           [ParentChatbotController::class, 'chat']);

@@ -62,14 +62,14 @@ export default function SupervisorCounselingPage() {
               <p style={{ color:'#fff', fontWeight:800, fontSize:16, marginBottom:2 }}>{activeNow.parent} — {activeNow.student}</p>
               <p style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>{activeNow.topic}</p>
             </div>
-            <button style={{ padding:'12px 24px', borderRadius:12, border:'none', background:C.goldGrad, color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:"'Cairo',sans-serif", boxShadow:'0 4px 14px rgba(197,147,65,0.4)' }}>
+            <button onClick={()=>alert('غرفة جلسات الإرشاد المباشرة قريباً — لم تُربط بعد بخدمة البث.')} style={{ padding:'12px 24px', borderRadius:12, border:'none', background:C.goldGrad, color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:"'Cairo',sans-serif", boxShadow:'0 4px 14px rgba(197,147,65,0.4)' }}>
               دخول الجلسة →
             </button>
           </div>
         )}
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:14, marginBottom:20 }}>
           {[
             { label:'جلسات قادمة',  val:upcoming,                         color:C.amber, icon:'📅' },
             { label:'إجمالي الطلبات', val:SESSIONS.length,               color:C.navy,  icon:'📋' },
@@ -128,7 +128,7 @@ export default function SupervisorCounselingPage() {
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8, flexShrink:0 }}>
                   <span style={{ padding:'3px 12px', borderRadius:20, fontSize:11.5, fontWeight:700, background:st.bg, color:st.color }}>{st.label}</span>
                   {s.status !== 'done' && (
-                    <button style={{ padding:'8px 18px', borderRadius:10, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontWeight:700, fontSize:12,
+                    <button onClick={()=>alert('غرفة جلسات الإرشاد المباشرة قريباً — لم تُربط بعد بخدمة البث.')} style={{ padding:'8px 18px', borderRadius:10, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontWeight:700, fontSize:12,
                       background:s.status==='active'?C.goldGrad:C.navy, color:'#fff',
                     }}>
                       {s.status==='active' ? 'دخول الجلسة' : 'الانضمام عند الموعد'}

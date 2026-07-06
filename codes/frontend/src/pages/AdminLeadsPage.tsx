@@ -154,7 +154,7 @@ export default function AdminLeadsPage() {
 
         {/* Stats Row */}
         {stats && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:24 }}>
             {statCards.map(sc => (
               <div key={sc.label} style={{ ...card({ padding:16 }), background:sc.bg, border:'1px solid #EDE3CE' }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>

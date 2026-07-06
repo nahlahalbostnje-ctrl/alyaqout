@@ -93,25 +93,13 @@ const NAV = [
 ];
 
 // ─── Quick Actions ─────────────────────────────────────────────────────────────
+// نكتفي هنا بالاختصارات ذات الطابع اللحظي/العاجل (تحمل badge حي) فقط.
+// باقي الروابط متاحة كاملة عبر السايدبار — تفادياً لتكرار نفس العناصر يمين ويسار.
 const ACTIONS_TEMPLATE = [
-  { label:'دخول الحصة',        desc:'انضم لحصتك',          bg:'linear-gradient(135deg,#1D4ED8,#2563EB)', badgeKey:'live',     to:'/student/live-classes', highlight:true  },
-  { label:'الواجبات',           desc:'واجباتك المعلقة',     bg:'linear-gradient(135deg,#0369A1,#0284C7)', badgeKey:'homework', to:'/student/homework',     highlight:false },
-  { label:'الامتحانات',         desc:'امتحاناتك القادمة',   bg:'linear-gradient(135deg,#4338CA,#6366F1)', badgeKey:'exams',    to:'/student/exams',        highlight:false },
-  { label:'جدول الحصص',        desc:'جدولك الأسبوعي',      bg:'linear-gradient(135deg,#0E7490,#06B6D4)', badgeKey:null,       to:'/student/live-classes', highlight:false },
-  { label:'دوري الياقوت',      desc:'نافس وتصدّر',         bg:'linear-gradient(135deg,#C9952A,#DDAD50)', badgeKey:null,       to:'/student/league',       highlight:false },
-  { label:'مستوى التطور',      desc:'تقدمك الأكاديمي',     bg:'linear-gradient(135deg,#16A34A,#15803D)', badgeKey:null,       to:'/student/report',       highlight:false },
-  { label:'غرفة الطوارئ',      desc:'مساعدة فورية',        bg:'linear-gradient(135deg,#DC2626,#EF4444)', badgeKey:'lock',     to:'/student/emergency',    highlight:false },
-  { label:'معلمي الذكي',       desc:'اسأل الذكاء الاصطناعي', bg:'linear-gradient(135deg,#374151,#4B5563)', badgeKey:null,    to:'/student/study-room',   highlight:false },
-  { label:'دوري الزملاء',      desc:'تحدى أصدقاءك',        bg:'linear-gradient(135deg,#1E40AF,#3B82F6)', badgeKey:null,       to:'/student/peer-league',  highlight:false },
-  { label:'غرفة الدراسة 24/7', desc:'دعم مباشر 24 ساعة',  bg:'linear-gradient(135deg,#111827,#1F2937)', badgeKey:'always',   to:'/student/study-24',     highlight:false },
-  { label:'الرسائل',            desc:'تواصل مع المعلم',     bg:'linear-gradient(135deg,#0369A1,#2563EB)', badgeKey:null,       to:'/student/messages',     highlight:false },
-  { label:'النتائج',            desc:'نتائجك وتقاريرك',     bg:'linear-gradient(135deg,#C9952A,#F59E0B)', badgeKey:null,       to:'/student/points',       highlight:false },
-  { label:'مكتبة الياقوت',     desc:'كتب وأسئلة سابقة',    bg:'linear-gradient(135deg,#065F46,#059669)', badgeKey:null,       to:'/student/library',      highlight:false },
-  { label:'حاضنة المواهب',     desc:'اكتشف وطوّر موهبتك',  bg:'linear-gradient(135deg,#92400E,#D97706)', badgeKey:null,       to:'/student/talents',      highlight:false },
-  { label:'صديق الدراسة',      desc:'مؤقت وملاحظات ذكية',  bg:'linear-gradient(135deg,#1E3A5F,#1D4ED8)', badgeKey:null,       to:'/student/study-buddy',  highlight:false },
-  { label:'مرشد الياقوت',      desc:'احجز جلسة استشارة',   bg:'linear-gradient(135deg,#4C1D95,#7C3AED)', badgeKey:null,       to:'/student/counselor',    highlight:false },
-  { label:'الكبسولة الزمنية',  desc:'أهدافك الشهرية',      bg:'linear-gradient(135deg,#831843,#BE185D)', badgeKey:null,       to:'/student/time-capsule', highlight:false },
-  { label:'نظام التحديات',     desc:'تحديات يومية وعائلية', bg:'linear-gradient(135deg,#713F12,#CA8A04)', badgeKey:null,       to:'/student/challenges',   highlight:false },
+  { label:'دخول الحصة',  desc:'انضم لحصتك',        bg:'linear-gradient(135deg,#1D4ED8,#2563EB)', badgeKey:'live',     to:'/student/live-classes', highlight:true  },
+  { label:'الواجبات',     desc:'واجباتك المعلقة',   bg:'linear-gradient(135deg,#0369A1,#0284C7)', badgeKey:'homework', to:'/student/homework',     highlight:false },
+  { label:'الامتحانات',   desc:'امتحاناتك القادمة', bg:'linear-gradient(135deg,#4338CA,#6366F1)', badgeKey:'exams',    to:'/student/exams',        highlight:false },
+  { label:'غرفة الطوارئ', desc:'مساعدة فورية',      bg:'linear-gradient(135deg,#DC2626,#EF4444)', badgeKey:'lock',     to:'/student/emergency',    highlight:false },
 ];
 
 // ─── Smart Recommendations with dynamic contact buttons ───────────────────────
@@ -279,6 +267,7 @@ export default function StudentDashboardPage() {
   }));
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace:true }); };
 
   const card: CSSProperties = {
@@ -287,7 +276,7 @@ export default function StudentDashboardPage() {
   };
 
   // ── Grid columns: 4 on desktop, 3 on tablet, 2 on mobile ──
-  const actionsCols = isMobile ? 'repeat(3,1fr)' : 'repeat(4,1fr)';
+  const actionsCols = isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)';
   const infoCols    = isMobile ? '1fr' : 'repeat(3,1fr)';
   const statsCols   = isMobile ? '1fr' : 'repeat(3,1fr)';
 
@@ -680,7 +669,7 @@ export default function StudentDashboardPage() {
           <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>المكتبة</span>
         </button>
 
-        <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
+        <button onClick={()=>setShowMoreMenu(true)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
           </svg>
@@ -688,6 +677,22 @@ export default function StudentDashboardPage() {
         </button>
 
       </div>
+
+      {/* More menu — bottom sheet with the full nav list (mirrors the desktop sidebar) */}
+      {showMoreMenu && (
+        <div onClick={()=>setShowMoreMenu(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:300, display:'flex', alignItems:'flex-end' }}>
+          <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxHeight:'70vh', overflowY:'auto', background:C.card, borderRadius:'20px 20px 0 0', padding:'10px 14px 24px' }}>
+            <div style={{ width:40, height:4, borderRadius:2, background:C.border, margin:'6px auto 14px' }}/>
+            {NAV.map((item,i) => (
+              <div key={i} onClick={()=>{ setShowMoreMenu(false); navigate(item.to); }}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 10px', borderRadius:12, cursor:'pointer' }}>
+                <span style={{ fontSize:18 }}>{item.emoji}</span>
+                <span style={{ color:C.text, fontSize:13.5, fontWeight:600 }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

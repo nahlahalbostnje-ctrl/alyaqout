@@ -173,7 +173,7 @@ export default function StudentReportPage() {
         {/* ── Attendance Card ── */}
         <div style={{ ...cardS, marginBottom:14 }}>
           <p style={{ color:C.text, fontWeight:900, fontSize:15, marginBottom:14 }}>📅 الحضور والغياب</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))', gap:10 }}>
             {[
               { label:'أيام الحضور', val:attendance?.present ?? 48, color:C.green   },
               { label:'أيام الغياب', val:attendance?.absent  ?? 2,  color:C.red     },
@@ -226,7 +226,7 @@ export default function StudentReportPage() {
         {/* ── Homework Stats ── */}
         <div style={{ ...cardS, marginBottom:14 }}>
           <p style={{ color:C.text, fontWeight:900, fontSize:15, marginBottom:14 }}>📚 الواجبات المنزلية</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
             {[
               { label:'واجبات مُسلَّمة', val:homework?.submitted??18, icon:'✅', color:C.green  },
               { label:'واجبات متأخرة',  val:homework?.late??2,        icon:'⏰', color:'#D97706' },

@@ -82,7 +82,7 @@ export default function AdminApprovalsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:20 }}>
           {[
             { label:'بانتظار الموافقة', value:pending, color:C.amber, bg:C.amberBg, icon:'⏳' },
             { label:'تمت الموافقة', value:approved, color:C.green, bg:C.greenBg, icon:'✅' },
@@ -119,7 +119,7 @@ export default function AdminApprovalsPage() {
         {/* Rejection Modal */}
         {rejectingId && (
           <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-            <div style={{ background:'#fff', borderRadius:18, padding:24, width:400, fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
+            <div style={{ background:'#fff', borderRadius:18, padding:24, width:400, maxWidth:'92vw', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
               <h3 style={{ color:C.text, fontWeight:800, fontSize:16, marginBottom:12 }}>سبب الرفض</h3>
               <textarea value={rejectionNote} onChange={e => setRejectionNote(e.target.value)} rows={3} placeholder="اكتب سبب الرفض ليصل للطالب..." style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', resize:'none', boxSizing:'border-box', marginBottom:12 }} />
               <div style={{ display:'flex', gap:8 }}>
@@ -164,7 +164,7 @@ export default function AdminApprovalsPage() {
                 <div style={{ display:'flex', gap:8, marginTop:6 }}>
                   <button onClick={() => handleApprove(req.id)} style={{ padding:'8px 18px', borderRadius:9, background:C.greenBg, border:`1px solid ${C.green}30`, color:C.green, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>الموافقة</button>
                   <button onClick={() => setRejectingId(req.id)} style={{ padding:'8px 18px', borderRadius:9, background:C.redBg, border:`1px solid ${C.red}30`, color:C.red, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>الرفض</button>
-                  <button style={{ padding:'8px 18px', borderRadius:9, background:'#F3F4F6', border:`1px solid ${C.border}`, color:C.sub, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>طلب مزيد من المعلومات</button>
+                  <button onClick={()=>alert(`تم إرسال طلب توضيح إلى ${req.requestedBy} (سيناريو تجريبي — الطلبات هنا بيانات عرض وليست مرتبطة بمستخدمين حقيقيين بعد).`)} style={{ padding:'8px 18px', borderRadius:9, background:'#F3F4F6', border:`1px solid ${C.border}`, color:C.sub, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>طلب مزيد من المعلومات</button>
                 </div>
               )}
             </div>

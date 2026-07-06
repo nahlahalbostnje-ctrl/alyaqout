@@ -198,7 +198,7 @@ export default function AdminBannersPage() {
 
         {/* Banners Grid */}
         {!loading && banners.length > 0 && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16 }}>
             {banners.map(banner => {
               const active = isActive(banner);
               return (
@@ -334,7 +334,7 @@ export default function AdminBannersPage() {
                   onFocus={() => setFocused('link')} onBlur={() => setFocused(null)}
                   style={inp(focused==='link')} />
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
                 <div>
                   <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>يبدأ من</label>
                   <input type="date" value={form.starts_at} onChange={e => setForm({...form, starts_at: e.target.value})}

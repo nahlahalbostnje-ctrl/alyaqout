@@ -53,7 +53,7 @@ export default function SAPlansPage() {
       </div>
 
       {/* Stats mini */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:22}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginBottom:22}}>
         {[
           {label:'إجمالي الاشتراكات النشطة',value:'42',icon:'✅',color:C.green},
           {label:'إيرادات الاشتراكات',        value:'184,550',icon:'💰',color:C.gold,suffix:'ر.س'},
@@ -71,7 +71,7 @@ export default function SAPlansPage() {
       </div>
 
       {/* Pricing Cards */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:22}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16,marginBottom:22}}>
         {PLANS.map(plan=>(
           <div key={plan.id} style={{...card({padding:'22px',position:'relative',overflow:'hidden'}), ...(plan.vip?{border:`2px solid ${C.gold}`,boxShadow:`0 4px 24px rgba(201,149,42,0.2)`}:{})}}>
             {plan.badge&&(
@@ -112,7 +112,7 @@ export default function SAPlansPage() {
             <div style={{fontSize:12,color:C.sub,textAlign:'center',marginBottom:12}}>
               <span style={{color:plan.vip?C.gold:plan.color,fontWeight:700,fontSize:15}}>{plan.active}</span> اشتراك نشط حالياً
             </div>
-            <button style={{width:'100%',padding:'11px',borderRadius:13,border:'none',cursor:'pointer',fontWeight:800,fontSize:13,background:plan.vip?C.goldGrad:plan.id==='standard'?C.blue:`${plan.color}18`,color:plan.vip?'#1B2038':plan.id==='standard'?'#fff':plan.color,boxShadow:plan.vip?'0 4px 14px rgba(201,149,42,0.3)':'none'}}>
+            <button onClick={()=>alert(`إدارة خطة "${plan.name}" (تعديل السعر/الميزات) قيد التطوير — الخطط معرَّفة حالياً كبيانات ثابتة بالواجهة فقط.`)} style={{width:'100%',padding:'11px',borderRadius:13,border:'none',cursor:'pointer',fontWeight:800,fontSize:13,background:plan.vip?C.goldGrad:plan.id==='standard'?C.blue:`${plan.color}18`,color:plan.vip?'#1B2038':plan.id==='standard'?'#fff':plan.color,boxShadow:plan.vip?'0 4px 14px rgba(201,149,42,0.3)':'none'}}>
               {plan.vip?'💎 إدارة خطة VIP':'إدارة الخطة'}
             </button>
           </div>
@@ -123,9 +123,10 @@ export default function SAPlansPage() {
       <div style={card()}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
           <p style={{color:C.text,fontWeight:800,fontSize:14}}>الاشتراكات النشطة</p>
-          <button style={{color:C.gold,fontSize:11,fontWeight:600,border:'none',background:'none',cursor:'pointer'}}>عرض الكل</button>
+          <button onClick={()=>alert('صفحة تفصيلية لكل الاشتراكات عبر الدول قيد التطوير.')} style={{color:C.gold,fontSize:11,fontWeight:600,border:'none',background:'none',cursor:'pointer'}}>عرض الكل</button>
         </div>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:560}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
               {['الفرع / الدولة','الخطة','تاريخ الاشتراك','تاريخ التجديد','الحالة'].map((h,i)=>(
@@ -149,6 +150,7 @@ export default function SAPlansPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </SuperAdminShell>
   );

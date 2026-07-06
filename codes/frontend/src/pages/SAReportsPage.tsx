@@ -89,7 +89,7 @@ export default function SAReportsPage() {
       </div>
 
       {/* Report Cards Grid */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14}}>
         {REPORT_SECTIONS.map(r=>(
           <div key={r.id} style={card({display:'flex',flexDirection:'column',gap:0})}>
             <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:14}}>
@@ -99,7 +99,7 @@ export default function SAReportsPage() {
                 <p style={{color:C.sub,fontSize:11,marginTop:3,lineHeight:1.5}}>{r.desc}</p>
               </div>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8,marginBottom:14}}>
               {r.stats.map((s,i)=>(
                 <div key={i} style={{padding:'10px 12px',borderRadius:12,background:`${r.color}08`,border:`1px solid ${r.color}20`}}>
                   <p style={{color:r.color,fontWeight:900,fontSize:16}}>{s.v}</p>
@@ -111,7 +111,7 @@ export default function SAReportsPage() {
               <button onClick={()=>handleGenerate(r.id)} style={{flex:1,padding:'10px',borderRadius:12,background:generating===r.id?C.bg:C.goldGrad,color:generating===r.id?C.sub:'#1B2038',fontWeight:700,fontSize:12,border:generating===r.id?`1px solid ${C.border}`:'none',cursor:'pointer',transition:'all 0.2s'}}>
                 {generating===r.id?'⏳ جاري التوليد...':'📊 Excel'}
               </button>
-              <button style={{flex:1,padding:'10px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>
+              <button onClick={()=>alert('تصدير PDF لهذا التقرير قيد التطوير.')} style={{flex:1,padding:'10px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>
                 📄 PDF
               </button>
             </div>

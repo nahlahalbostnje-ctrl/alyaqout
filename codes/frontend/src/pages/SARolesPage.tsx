@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
+import api from '../services/axios';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -31,13 +32,55 @@ const DEFAULT_ACCESS:Record<string,Record<string,Record<string,boolean>>> = {
   supervisor: Object.fromEntries(SCREENS.map((s,i)=>[s,Object.fromEntries(PERMS.map((p,j)=>[p,j===0&&[0,4].includes(i)]))])),
 };
 
+interface PermRow { role:string; screen:string; permission:string; allowed:boolean; }
+
 export default function SARolesPage() {
   const [editRole, setEditRole] = useState<string|null>(null);
   const [access, setAccess] = useState(DEFAULT_ACCESS);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+  const [loadingPerms, setLoadingPerms] = useState(false);
+
+  useEffect(() => {
+    if (!editRole) return;
+    setLoadingPerms(true);
+    setSaveMsg('');
+    api.get('/super-admin/roles/permissions', { params: { role: editRole } })
+      .then(({ data }) => {
+        const overrides: PermRow[] = data.data ?? [];
+        if (overrides.length === 0) return;
+        setAccess(prev => {
+          const roleAccess = { ...prev[editRole] };
+          overrides.forEach(o => {
+            roleAccess[o.screen] = { ...roleAccess[o.screen], [o.permission]: o.allowed };
+          });
+          return { ...prev, [editRole]: roleAccess };
+        });
+      })
+      .finally(() => setLoadingPerms(false));
+  }, [editRole]);
 
   const togglePerm = (screen:string, perm:string) => {
     if(!editRole) return;
     setAccess(prev=>({...prev,[editRole]:{...prev[editRole],[screen]:{...prev[editRole][screen],[perm]:!prev[editRole][screen][perm]}}}));
+  };
+
+  const savePermissions = async () => {
+    if (!editRole) return;
+    setSaveBusy(true);
+    setSaveMsg('');
+    const permissions = SCREENS.flatMap(screen =>
+      PERMS.map(perm => ({ screen, permission: perm, allowed: !!access[editRole]?.[screen]?.[perm] }))
+    );
+    try {
+      await api.put('/super-admin/roles/permissions', { role: editRole, permissions });
+      setSaveMsg('✅ تم حفظ الصلاحيات بنجاح.');
+    } catch {
+      setSaveMsg('⚠️ تعذّر حفظ الصلاحيات.');
+    } finally {
+      setSaveBusy(false);
+      setTimeout(() => setSaveMsg(''), 3000);
+    }
   };
 
   return (
@@ -47,11 +90,11 @@ export default function SARolesPage() {
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>الصلاحيات والأدوار</h1>
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>إدارة أدوار المستخدمين وصلاحياتهم</p>
         </div>
-        <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة دور جديد</button>
+        <button onClick={()=>alert('إضافة أدوار مخصصة جديدة تتطلب تعديل بنية الأدوار الأساسية بالنظام (enum + الحماية البرمجية) — غير مفعّلة بعد.')} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة دور جديد</button>
       </div>
 
       {/* Roles Cards */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:16}}>
         {ROLES.map(role=>(
           <div key={role.id} style={card({cursor:'pointer',border:editRole===role.id?`2px solid ${role.color}`:`1px solid ${C.border}`,background:editRole===role.id?`${role.color}06`:C.card})} onClick={()=>setEditRole(editRole===role.id?null:role.id)}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
@@ -79,7 +122,10 @@ export default function SARolesPage() {
               <p style={{color:C.sub,fontSize:12}}>حدد الصلاحيات الممنوحة لهذا الدور</p>
             </div>
             <div style={{flex:1}}/>
-            <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'pointer'}}>💾 حفظ الصلاحيات</button>
+            {saveMsg && <span style={{fontSize:12,fontWeight:700,color:saveMsg.startsWith('✅')?C.green:C.red,marginLeft:10}}>{saveMsg}</span>}
+            <button onClick={savePermissions} disabled={saveBusy || loadingPerms} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'pointer',opacity:(saveBusy||loadingPerms)?0.6:1}}>
+              {saveBusy?'جارٍ الحفظ...':'💾 حفظ الصلاحيات'}
+            </button>
           </div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>

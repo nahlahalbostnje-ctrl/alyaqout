@@ -80,7 +80,7 @@ export default function TeacherSchedulePage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:20 }}>
           {[
             { label:'إجمالي الحصص', value:total, icon:'📚', color:C.gold },
             { label:'قادمة', value:active, icon:'📍', color:C.blue },
@@ -118,7 +118,7 @@ export default function TeacherSchedulePage() {
                       return (
                         <td key={day} style={{ padding:6, borderBottom:`1px solid ${C.border}`, textAlign:'center', verticalAlign:'middle' }}>
                           {slot ? (
-                            <div style={{ background: STATUS_BG[slot.status], border:`1px solid ${STATUS_COLOR[slot.status]}30`, borderRadius:10, padding:'8px 10px', cursor:'pointer' }}>
+                            <div onClick={()=>alert(`${slot.subject} — ${slot.grade}\n🏫 ${slot.room}\n📅 ${slot.day} | ⏰ ${slot.time}\nالحالة: ${STATUS_LABEL[slot.status]}`)} style={{ background: STATUS_BG[slot.status], border:`1px solid ${STATUS_COLOR[slot.status]}30`, borderRadius:10, padding:'8px 10px', cursor:'pointer' }}>
                               <p style={{ color:STATUS_COLOR[slot.status], fontSize:12, fontWeight:800, margin:0, marginBottom:2 }}>{slot.grade}</p>
                               <p style={{ color:C.sub, fontSize:10, margin:0 }}>🏫 {slot.room}</p>
                             </div>
@@ -158,7 +158,7 @@ export default function TeacherSchedulePage() {
         {/* Add Modal */}
         {showAddModal && (
           <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-            <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
+            <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, maxWidth:'92vw', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
               <h3 style={{ color:C.text, fontWeight:800, fontSize:17, marginBottom:20 }}>➕ إضافة حصة جديدة</h3>
 
               {[

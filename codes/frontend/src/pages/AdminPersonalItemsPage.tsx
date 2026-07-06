@@ -73,7 +73,7 @@ export default function AdminPersonalItemsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:24}}>
           {[
             {l:'الإجمالي',   v:items.length, icon:'📋', c:C.blue},
             {l:'قيد الانتظار', v:pending,     icon:'⏳', c:C.orange},
@@ -144,7 +144,7 @@ export default function AdminPersonalItemsPage() {
                 <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>العنوان *</label>
                 <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="عنوان المهمة أو التذكير..." style={inp()} />
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12}}>
                 <div>
                   <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>النوع</label>
                   <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))} style={inp()}>
@@ -160,7 +160,7 @@ export default function AdminPersonalItemsPage() {
                   </select>
                 </div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12}}>
                 <div>
                   <label style={{color:C.sub,fontSize:12,fontWeight:700,display:'block',marginBottom:6}}>الحالة</label>
                   <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} style={inp()}>

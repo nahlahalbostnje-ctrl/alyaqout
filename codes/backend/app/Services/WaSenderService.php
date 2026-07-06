@@ -50,6 +50,41 @@ class WaSenderService
         }
     }
 
+    public function sendDocument(string $phone, string $documentUrl, string $fileName, string $caption = ''): bool
+    {
+        if (empty($this->apiKey)) {
+            Log::warning('WaSender: API key not configured');
+            return false;
+        }
+
+        $testRecipient = config('services.wasender.test_recipient');
+        $recipient     = $testRecipient ?: $phone;
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+            ])->post(self::BASE_URL . '/send-message', [
+                'to'          => $recipient,
+                'text'        => $caption,
+                'documentUrl' => $documentUrl,
+                'fileName'    => $fileName,
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('WaSender sendDocument: non-success', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+            }
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error('WaSender sendDocument failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function sendOtp(string $phone, string $otp): bool
     {
         if (empty($this->apiKey)) {

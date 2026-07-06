@@ -101,7 +101,7 @@ export default function TeacherAttendancePage() {
         </div>
 
         {/* Quick Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:18 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:18 }}>
           {[
             { label:'إجمالي الطلاب', value:STUDENTS.length, color:C.text, bg:'#F3F4F6' },
             { label:'حاضرون', value:presentCount, color:C.green, bg:C.greenBg },
@@ -171,8 +171,8 @@ export default function TeacherAttendancePage() {
 
         {/* Behavior Tab */}
         {activeTab === 'behavior' && (
-          <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:'hidden' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
               <thead>
                 <tr style={{ background:C.goldBg, borderBottom:`1px solid ${C.border}` }}>
                   {['اسم الطالب', 'السلوك', 'مستوى الانتباه', 'ملاحظة'].map((h,i) => (

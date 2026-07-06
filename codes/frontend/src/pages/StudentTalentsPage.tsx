@@ -67,7 +67,7 @@ export default function StudentTalentsPage() {
               <p style={{ color:C.goldL, fontSize:13, fontWeight:600 }}>"{form.dream || 'أن أكون الأفضل'}"</p>
             </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12, marginBottom:20 }}>
             <div style={{ background:C.card, borderRadius:14, padding:16, border:`1px solid ${C.border}`, textAlign:'center' }}>
               <p style={{ color:C.gold, fontWeight:900, fontSize:24 }}>0</p>
               <p style={{ color:C.sub, fontSize:12 }}>نقاط المواهب</p>
@@ -98,7 +98,7 @@ export default function StudentTalentsPage() {
           <p style={{ color:C.sub, fontSize:13, margin:0 }}>اكتشف موهبتك، طوّرها، وانضم لمجتمع المبدعين</p>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:20 }}>
 
           {/* Survey Form */}
           <div style={{ background:C.card, borderRadius:18, padding:24, border:`1px solid ${C.border}`, boxShadow:C.shadow }}>
@@ -132,7 +132,7 @@ export default function StudentTalentsPage() {
 
             <div style={{ marginTop:16 }}>
               <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:10 }}>اختر موهبتك</label>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(80px,1fr))', gap:8 }}>
                 {TALENT_CATEGORIES.map((t,i) => (
                   <div key={i} onClick={() => setSelectedTalent(t.label)}
                     style={{ padding:'10px 6px', borderRadius:10, border:`1px solid ${selectedTalent===t.label ? C.gold : C.border}`, background: selectedTalent===t.label ? C.goldBg : '#fff', cursor:'pointer', textAlign:'center', transition:'all 0.15s' }}>

@@ -30,14 +30,14 @@ const NAV = [
   { label: 'جدول الحصص',       emoji: '📅', to: '/student/live-classes' },
   { label: 'دوري الياقوت',     emoji: '🏆', to: '/student/league' },
   { label: 'مستوى التطور',     emoji: '📊', to: '/student/report' },
-  { label: 'غرفة الطوارئ',     emoji: '🆘', to: null },
+  { label: 'غرفة الطوارئ',     emoji: '🆘', to: '/student/emergency' },
   { label: 'معلمي الذكي',       emoji: '🤖', to: '/student/study-room' },
-  { label: 'دوري الزملاء',     emoji: '⚔️', to: null },
-  { label: 'الرسائل',           emoji: '✉️', to: null },
+  { label: 'دوري الزملاء',     emoji: '⚔️', to: '/student/peer-league' },
+  { label: 'الرسائل',           emoji: '✉️', to: '/student/messages' },
   { label: 'النتائج',           emoji: '🏅', to: '/student/points' },
-  { label: '24/7',              emoji: '🎧', to: null },
+  { label: '24/7',              emoji: '🎧', to: '/student/study-24' },
   { label: 'نقاطي',             emoji: '⭐', to: '/student/points' },
-  { label: 'تواصل مع المعلم',  emoji: '👨‍🏫', to: null },
+  { label: 'تواصل مع المعلم',  emoji: '👨‍🏫', to: '/student/teacher-contact' },
 ];
 
 export default function StudentBottomNav({ cur = '' }: { cur?: string }) {
