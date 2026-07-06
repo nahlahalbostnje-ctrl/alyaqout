@@ -101,12 +101,6 @@ const PARENT_RECS = [
   },
 ];
 
-const GOALS = [
-  { label: 'رفع متوسط الإنجليزية إلى 7...', progress: 78, color: C.gold },
-  { label: 'قراءة 10 كتب هذا العام',        progress: 60, color: C.blue },
-  { label: 'حضور جميع الحصص',              progress: 95, color: C.green },
-];
-
 const COURSES = [
   { title: 'التربية الإيجابية',    prog: 60, emoji: '👨‍👩‍👦', grad: 'linear-gradient(135deg,#FFF3E0,#FFE0B2)' },
   { title: 'مهارات الحوار الأسري', prog: 45, emoji: '💬', grad: 'linear-gradient(135deg,#E8F5E9,#C8E6C9)' },
