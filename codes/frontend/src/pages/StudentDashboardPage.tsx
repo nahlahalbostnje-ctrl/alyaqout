@@ -160,7 +160,7 @@ export default function StudentDashboardPage() {
   const dispatch  = useAppDispatch();
   const navigate  = useNavigate();
   const { student, upcoming, dashStats } = useAppSelector(s => s.student);
-  const { totalPoints, myRank } = useAppSelector(s => s.gamification);
+  const { totalPoints } = useAppSelector(s => s.gamification);
   const user = useAppSelector(s => s.auth.user);
 
   // Responsive: detect mobile viewport
@@ -176,7 +176,6 @@ export default function StudentDashboardPage() {
 
   const firstName = student?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? '...';
   const pts    = dashStats?.total_points ?? totalPoints ?? 0;
-  const rank   = myRank ?? null;
   const level  = dashStats?.level ?? Math.floor(pts / 500) + 1;
   const xpIn   = dashStats?.xp_in_level ?? (pts % 500);
   const xpNext = dashStats?.xp_for_next ?? 500;

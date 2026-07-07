@@ -110,7 +110,7 @@ export default function SABillingPage() {
                 </td>
                 <td style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',gap:5}}>
-                    <button title="عرض" onClick={()=>alert(`تفاصيل الفاتورة ${inv.id}\n${inv.desc}\nالمبلغ: ${inv.amount} — ${inv.status}`)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>👁️</button>
+                    <button title="عرض" onClick={()=>alert(`تفاصيل الفاتورة ${inv.id}\nالطالب: ${inv.student}\nالمبلغ: ${inv.amount} — ${inv.status}`)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>👁️</button>
                     <button title="طباعة" onClick={()=>alert('طباعة الفاتورة كـPDF قيد التطوير.')} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>🖨️</button>
                   </div>
                 </td>
