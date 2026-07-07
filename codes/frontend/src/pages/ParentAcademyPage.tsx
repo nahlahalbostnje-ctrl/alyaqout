@@ -252,7 +252,7 @@ export default function ParentAcademyPage() {
         </div>
 
         {/* Grade Filter */}
-        <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+        <div style={{ display:'flex', gap:8, marginBottom:10, overflowX:'auto', paddingBottom:2, scrollbarWidth:'none' }}>
           {GRADES.map(g => (
             <button key={g} onClick={() => setActiveGrade(g)} style={{
               flexShrink:0, padding:'6px 14px', borderRadius:20,

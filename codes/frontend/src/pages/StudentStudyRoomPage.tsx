@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ref, push, onValue } from 'firebase/database';
 import { db } from '../services/firebase';
 import { useAppSelector } from '../app/hooks';
-import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
+
+const C = {
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
+  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
+  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.25)',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
+  shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444',
+};
 
 interface Message {
   id:        string;
@@ -26,7 +33,6 @@ function formatTime(ts: number) {
 }
 
 export default function StudentStudyRoomPage() {
-  const navigate  = useNavigate();
   const user      = useAppSelector(s => s.auth.user);
   const roomId    = `room_${user?.id}`;
   const [messages, setMessages] = useState<Message[]>([]);
@@ -65,25 +71,19 @@ export default function StudentStudyRoomPage() {
   const firstName = user?.name?.split(' ')[0] ?? 'محمد';
 
   return (
-    <div dir="rtl" style={{ background:C.bg, height:'100vh', display:'flex', flexDirection:'column', fontFamily:"'Cairo',sans-serif" }}>
-
-      {/* Status */}
-      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2, flexShrink:0 }}>
-        <span>9:41</span><span>▶▶ 🔋</span>
-      </div>
+    <StudentLayout>
+    <div dir="rtl" style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 54px)', fontFamily:"'Cairo',sans-serif" }}>
 
       {/* Header */}
       <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)', flexShrink:0 }}>
-        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
         <div style={{ flex:1, textAlign:'center' }}>
           <p style={{ color:C.navy2, fontWeight:800, fontSize:16, lineHeight:1 }}>مرشد الياقوت</p>
           <p style={{ color:C.gold, fontSize:10.5, fontWeight:600 }}>مستشارك الأكاديمي الشخصي</p>
         </div>
-        <div style={{ width:36 }} />
       </div>
 
       {/* Chat area */}
-      <div style={{ flex:1, overflowY:'auto', padding:'16px', paddingBottom:BH+80 }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
         {messages.length === 0 && (
           <>
             {/* Robot welcome */}
@@ -129,7 +129,7 @@ export default function StudentStudyRoomPage() {
       </div>
 
       {/* Input */}
-      <div style={{ position:'fixed', bottom:BH, left:0, right:0, background:C.card, borderTop:`1px solid ${C.border}`, padding:'10px 14px', display:'flex', gap:8, alignItems:'flex-end', zIndex:90 }}>
+      <div style={{ flexShrink:0, background:C.card, borderTop:`1px solid ${C.border}`, padding:'10px 14px', display:'flex', gap:8, alignItems:'flex-end' }}>
         <button onClick={()=>alert('السؤال الصوتي عبر الميكروفون قيد التطوير — يرجى الكتابة حالياً.')} style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:17 }}>🎙️</button>
         <textarea
           value={text} onChange={e=>setText(e.target.value)} onKeyDown={handleKey}
@@ -144,7 +144,7 @@ export default function StudentStudyRoomPage() {
         </button>
       </div>
 
-      <StudentBottomNav cur="/student/study-room" />
     </div>
+    </StudentLayout>
   );
 }

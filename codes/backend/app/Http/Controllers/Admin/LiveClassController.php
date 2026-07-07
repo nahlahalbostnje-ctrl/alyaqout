@@ -32,6 +32,7 @@ class LiveClassController extends Controller
             ->with([
                 'course:id,title',
                 'teacher:id,name',
+                'student:id,name',
             ])
             ->orderBy('scheduled_at', 'desc');
 
@@ -58,6 +59,8 @@ class LiveClassController extends Controller
             'scheduled_at'     => 'required|date|after:now',
             'duration_minutes' => 'nullable|integer|min:15|max:480',
             'meeting_link'     => 'nullable|url',
+            'session_type'     => 'nullable|in:group,individual',
+            'student_id'       => 'required_if:session_type,individual|nullable|integer|exists:users,id',
         ]);
 
         // Verify course belongs to this country
@@ -70,10 +73,22 @@ class LiveClassController extends Controller
             abort(422, 'المعلم غير موجود في دولتك.');
         }
 
+        $sessionType = $request->input('session_type', 'group');
+        $studentId   = null;
+        if ($sessionType === 'individual') {
+            $student = User::findOrFail($request->student_id);
+            if ($student->country_id !== $countryId || $student->role !== 'student') {
+                abort(422, 'الطالب غير موجود في دولتك.');
+            }
+            $studentId = $student->id;
+        }
+
         $liveClass = LiveClass::create([
             'country_id'       => $countryId,
             'course_id'        => $request->course_id,
             'teacher_id'       => $request->teacher_id,
+            'session_type'     => $sessionType,
+            'student_id'       => $studentId,
             'title'            => $request->title,
             'description'      => $request->description,
             'scheduled_at'     => $request->scheduled_at,
@@ -83,7 +98,7 @@ class LiveClassController extends Controller
             'agora_channel'    => 'ch' . bin2hex(random_bytes(8)),
         ]);
 
-        $liveClass->load(['course:id,title', 'teacher:id,name']);
+        $liveClass->load(['course:id,title', 'teacher:id,name', 'student:id,name']);
 
         return response()->json([
             'success' => true,

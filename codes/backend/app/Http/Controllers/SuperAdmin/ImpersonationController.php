@@ -26,7 +26,7 @@ class ImpersonationController extends Controller
         return response()->json([
             'message'       => 'تسجيل الدخول كـ ' . $user->name,
             'token'         => $token,
-            'user'          => $user->only(['id', 'name', 'phone', 'role']),
+            'user'          => $user->only(['id', 'name', 'phone', 'role', 'country_id']),
             'redirect_to'   => $this->redirectFor($user->role),
         ]);
     }

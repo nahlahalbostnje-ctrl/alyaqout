@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ParentLayout from '../components/ParentLayout';
 
 const C = {
@@ -96,13 +96,13 @@ const RANK_STYLES: Record<number, { grad: string; medal: string }> = {
   3: { grad: 'linear-gradient(135deg,#CD7F32,#B87333)', medal: '🥉' },
 };
 
-function TopThreeCard({ entry }: { entry: LeaderEntry }) {
+function TopThreeCard({ entry, stacked }: { entry: LeaderEntry; stacked?: boolean }) {
   const style = RANK_STYLES[entry.rank];
   return (
     <div style={{
       borderRadius: 16, padding: 18, background: style.grad,
       boxShadow: '0 4px 20px rgba(0,0,0,0.12)', textAlign: 'center',
-      flex: 1, position: 'relative',
+      flex: stacked ? 'none' : 1, minWidth: 0, position: 'relative',
     }}>
       <div style={{ fontSize: 36, marginBottom: 4 }}>{style.medal}</div>
       <p style={{ color: '#fff', fontWeight: 900, fontSize: 14, margin: '0 0 4px' }}>{entry.name}</p>
@@ -122,6 +122,14 @@ export default function ParentLeaguePage() {
   const [_tab, _setTab] = useState('weekly');
   const pct = Math.min((MY_PTS / NEXT_LEVEL_PTS) * 100, 100);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   return (
     <ParentLayout>
       <div dir="rtl" style={{ padding: 24, fontFamily: "'Cairo',sans-serif" }}>
@@ -129,12 +137,12 @@ export default function ParentLeaguePage() {
 
         {/* My Stats Banner */}
         <div style={{
-          background: C.navy, borderRadius: 20, padding: '22px 26px',
+          background: C.navy, borderRadius: 20, padding: isMobile ? '20px' : '22px 26px',
           marginBottom: 22, boxShadow: '0 6px 28px rgba(13,30,58,0.25)',
-          display: 'flex', alignItems: 'center', gap: 24,
+          display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 14 : 24,
         }}>
-          <div style={{ fontSize: 60, lineHeight: 1 }}>🌟</div>
-          <div style={{ flex: 1 }}>
+          {!isMobile && <div style={{ fontSize: 60, lineHeight: 1 }}>🌟</div>}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <p style={{ color: '#fff', fontWeight: 900, fontSize: 20, margin: 0 }}>ولي أمر متميز</p>
               <span style={{ background: C.goldGrad, color: '#fff', fontSize: 10, fontWeight: 800, borderRadius: 6, padding: '2px 8px' }}>
@@ -163,7 +171,7 @@ export default function ParentLeaguePage() {
         </div>
 
         {/* Two column layout */}
-        <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 18, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
 
           {/* LEFT: Leaderboard */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -171,9 +179,9 @@ export default function ParentLeaguePage() {
               <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: '0 0 16px' }}>قائمة المتصدرين</h2>
 
               {/* Top 3 */}
-              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 10, marginBottom: 20 }}>
                 {LEADERBOARD.filter(e => e.rank <= 3).map(e => (
-                  <TopThreeCard key={e.rank} entry={e} />
+                  <TopThreeCard key={e.rank} entry={e} stacked={isMobile} />
                 ))}
               </div>
 
@@ -250,7 +258,7 @@ export default function ParentLeaguePage() {
           </div>
 
           {/* RIGHT: Challenges + Badges */}
-          <div style={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ width: isMobile ? '100%' : 340, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Weekly Challenges */}
             <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow }}>

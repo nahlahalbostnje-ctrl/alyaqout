@@ -9,6 +9,8 @@ import {
   toggleCountryAdmin,
   deleteCountryAdmin,
 } from '../features/countries/countriesSlice';
+import { impersonate } from '../features/auth/authSlice';
+import api from '../services/axios';
 import SuperAdminLayout from '../components/SuperAdminLayout';
 
 const DK = {
@@ -47,6 +49,8 @@ export default function CountryAdminsPage() {
   const [editSaving, setEditSaving]       = useState(false);
   const [editErr, setEditErr]             = useState('');
   const [toggling, setToggling]           = useState<number | null>(null);
+  const [enteringId, setEnteringId]       = useState<number | null>(null);
+  const [enterErr, setEnterErr]           = useState('');
 
   useEffect(() => {
     if (list.length === 0) dispatch(fetchCountries());
@@ -66,6 +70,20 @@ export default function CountryAdminsPage() {
     setToggling(adminId);
     await dispatch(toggleCountryAdmin({ countryId: Number(countryId), adminId }));
     setToggling(null);
+  }
+
+  async function handleEnterAsAdmin(adminId: number) {
+    setEnteringId(adminId);
+    setEnterErr('');
+    try {
+      const { data } = await api.post(`/super-admin/impersonate/${adminId}`);
+      dispatch(impersonate({ token: data.token, user: data.user }));
+      navigate('/admin/dashboard');
+    } catch {
+      setEnterErr('تعذّر الدخول كهذا المسؤول.');
+    } finally {
+      setEnteringId(null);
+    }
   }
 
   function openEdit(admin: CountryAdmin) {
@@ -147,6 +165,11 @@ export default function CountryAdminsPage() {
           <h1 className="text-2xl font-black mt-1" style={{ color: '#1B2038' }}>مسؤولو {country.name}</h1>
           <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>{country.admins.length} مسؤول مسجّل</p>
           <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
+          {enterErr && (
+            <p className="text-xs px-3 py-2 rounded-lg mt-4" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
+              {enterErr}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,6 +223,15 @@ export default function CountryAdminsPage() {
                         >
                           {admin.is_active ? 'نشط' : 'معطّل'}
                         </span>
+                        <button
+                          onClick={() => handleEnterAsAdmin(admin.id)}
+                          disabled={enteringId === admin.id}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80 disabled:opacity-40"
+                          style={{ background: 'rgba(147,51,234,0.08)', color: '#9333EA', border: '1px solid rgba(147,51,234,0.2)' }}
+                          title="دخول كهذا المسؤول لرؤية لوحته بالكامل"
+                        >
+                          {enteringId === admin.id ? '...' : '🔑 دخول كأدمن'}
+                        </button>
                         <button
                           onClick={() => openEdit(admin)}
                           className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"

@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 
 // يرسل التقارير اليومية للآباء كل يوم الساعة 8 مساءً
 Schedule::command('yaqoot:daily-reports')->dailyAt('20:00');
+
+// تذكير قبل 15 دقيقة من بدء كل حصة مباشرة (إشعار + واتساب) — للطالب ولي أمره
+Schedule::command('yaqoot:class-reminders')->everyFiveMinutes();

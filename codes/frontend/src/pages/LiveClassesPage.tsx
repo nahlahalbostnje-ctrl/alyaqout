@@ -96,6 +96,7 @@ function toLocalInput(dateStr: string): string {
 const emptyForm: LiveClassPayload = {
   course_id: 0, teacher_id: 0, title: '',
   description: '', scheduled_at: '', duration_minutes: 60,
+  session_type: 'group', student_id: null,
 };
 
 export default function LiveClassesPage() {
@@ -106,6 +107,7 @@ export default function LiveClassesPage() {
   const { list: classes, loading } = useAppSelector((s) => s.liveClasses);
 
   const teachers = allUsers.filter((u) => u.role === 'teacher');
+  const students = allUsers.filter((u) => u.role === 'student');
 
   const [activeTab, setActiveTab]   = useState<ClassStatus | null>(null);
   const [showModal, setShowModal]   = useState(false);
@@ -141,6 +143,7 @@ export default function LiveClassesPage() {
     if (!form.course_id)    { setAddError('اختر الدورة الدراسية'); return; }
     if (!form.teacher_id)   { setAddError('اختر المعلم'); return; }
     if (!form.scheduled_at) { setAddError('حدد موعد الحصة'); return; }
+    if (form.session_type === 'individual' && !form.student_id) { setAddError('اختر الطالب للحصة الفردية'); return; }
     setAddLoading(true);
     setAddError(null);
     const result = await dispatch(addLiveClass(form));
@@ -281,7 +284,14 @@ export default function LiveClassesPage() {
                       onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
                       <td style={{ ...TD, width:48, color: DK.dim, fontWeight:700 }}>{idx + 1}</td>
                       <td style={TD}>
-                        <p style={{ margin:0, fontWeight:700, color: DK.text }}>{cls.title}</p>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <p style={{ margin:0, fontWeight:700, color: DK.text }}>{cls.title}</p>
+                          {cls.session_type === 'individual' && (
+                            <span style={{ padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:800, background:'rgba(139,92,246,0.1)', color: DK.purple, flexShrink:0 }}>
+                              فردية 1:1{cls.student?.name ? ` — ${cls.student.name}` : ''}
+                            </span>
+                          )}
+                        </div>
                         {cls.agora_channel && (
                           <p style={{ margin:'2px 0 0', fontSize:11, color: DK.green, display:'flex', alignItems:'center', gap:4 }}>
                             <span style={{ width:6, height:6, borderRadius:'50%', background:'#10B981', display:'inline-block' }} />
@@ -382,6 +392,38 @@ export default function LiveClassesPage() {
                 <p style={{ fontSize:11, color: DK.orange, marginTop:4 }}>أضف معلمين أولاً من صفحة المستخدمين.</p>
               )}
             </div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>نوع الحصة</label>
+              <div style={{ display:'flex', gap:8 }}>
+                {(['group', 'individual'] as const).map(t => (
+                  <button key={t} type="button"
+                    onClick={() => setForm({ ...form, session_type: t, student_id: t === 'group' ? null : form.student_id })}
+                    style={{
+                      flex:1, padding:'9px 0', borderRadius:10, cursor:'pointer', fontWeight:700, fontSize:12.5,
+                      fontFamily:"'Cairo',sans-serif",
+                      border: form.session_type === t ? 'none' : '1.5px solid #EDE3CE',
+                      background: form.session_type === t ? DK.goldGrad : '#fff',
+                      color: form.session_type === t ? '#fff' : DK.sub,
+                    }}>
+                    {t === 'group' ? 'جماعية (كل طلاب الدورة)' : 'فردية (طالب واحد 1:1)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {form.session_type === 'individual' && (
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الطالب</label>
+                <select value={form.student_id ?? 0} onChange={e => setForm({...form, student_id: Number(e.target.value)})}
+                  style={{ ...inp(focused==='student'), cursor:'pointer' }}
+                  onFocus={() => setFocused('student')} onBlur={() => setFocused(null)}>
+                  <option value={0} disabled>اختر الطالب</option>
+                  {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                {students.length === 0 && (
+                  <p style={{ fontSize:11, color: DK.orange, marginTop:4 }}>لا يوجد طلاب مسجّلون بعد.</p>
+                )}
+              </div>
+            )}
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>عنوان الحصة</label>
               <input type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})}

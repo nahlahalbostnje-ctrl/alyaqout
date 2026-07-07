@@ -1,6 +1,13 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
+
+const C = {
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
+  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
+  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.25)',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
+  shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444',
+};
 
 interface ReviewVideo {
   id: number; subject: string; title: string; teacher: string;
@@ -24,7 +31,6 @@ const SUBJ_COLOR: Record<string, string> = {
 interface QuickQuestion { id: number; text: string; ts: number; answer?: string; }
 
 export default function StudentReviewVideosPage() {
-  const navigate  = useNavigate();
   const videoRef  = useRef<HTMLVideoElement>(null);
 
   const [videos, setVideos]       = useState<ReviewVideo[]>(MOCK_VIDEOS);
@@ -64,18 +70,15 @@ export default function StudentReviewVideosPage() {
   };
 
   return (
-    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
+    <StudentLayout>
+    <div dir="rtl" style={{ fontFamily:"'Cairo',sans-serif" }}>
 
-      {/* Status */}
-      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
-        <span>9:41</span><span>▶▶ 🔋</span>
-      </div>
-
-      {/* Header */}
-      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
-        <button onClick={() => navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
-        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>فيديوهات المراجعة 📹</h1>
-        <div style={{ width:36 }} />
+      {/* Page Header */}
+      <div style={{ padding:'20px 16px 4px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ width:4, height:22, borderRadius:2, background:C.goldGrad }} />
+          <h1 style={{ color:C.text, fontWeight:900, fontSize:20, margin:0 }}>فيديوهات المراجعة 📹</h1>
+        </div>
       </div>
 
       <div style={{ padding:'14px 16px 0' }}>
@@ -253,11 +256,11 @@ export default function StudentReviewVideosPage() {
         </div>
       )}
 
-      <StudentBottomNav cur="/student/review-videos" />
       <style>{`
         * { -webkit-user-select: none; }
         input, textarea { -webkit-user-select: text !important; }
       `}</style>
     </div>
+    </StudentLayout>
   );
 }

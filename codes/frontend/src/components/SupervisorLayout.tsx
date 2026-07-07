@@ -71,7 +71,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 10px', overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', gap:2 }}>
+        <nav style={{ flex:1, padding:'10px 10px', overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', gap:2, minHeight:0 }}>
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to}
               style={({ isActive }) => ({
@@ -93,7 +93,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         </nav>
 
         {/* User account */}
-        <div style={{ padding:'12px 10px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ flexShrink:0, padding:'12px 10px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, background:'rgba(255,255,255,0.06)', marginBottom:6 }}>
             <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#C59341,#D4A65A)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:13, flexShrink:0 }}>
               {initials}
@@ -140,6 +140,12 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             {!isMobile && <span style={{ color:'#9CA3AF', fontSize:12 }}>{dateStr}</span>}
             <NotificationBell />
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:36, height:36, borderRadius:10, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, color:'#EF4444' }}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </header>
         <main style={{ flex:1, overflowY:'auto', background:'#F5EDD8' }}>{children}</main>

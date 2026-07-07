@@ -64,6 +64,13 @@ export default function AdminSupervisorAssignmentPage() {
   const [assigning, setAssigning] = useState<number | null>(null);
   const [removing, setRemoving] = useState<number | null>(null);
   const [searchAssigned, setSearchAssigned] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [searchFree, setSearchFree] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchFocus, setSearchFocus] = useState(false);
@@ -151,10 +158,10 @@ export default function AdminSupervisorAssignmentPage() {
         </div>
 
         {/* Two-column layout */}
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
 
           {/* LEFT SIDEBAR — Supervisors list */}
-          <div style={{ width: 240, flexShrink: 0 }}>
+          <div style={{ width: isMobile ? '100%' : 240, flexShrink: 0 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: DK.sub, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>المشرفون ({supervisors.length})</p>
 
             {loadingSupervisors && (

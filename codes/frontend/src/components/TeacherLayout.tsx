@@ -71,7 +71,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none', flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
@@ -88,7 +88,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* User */}
-        <div className="px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
             style={{ background: 'rgba(255,255,255,0.06)' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0"

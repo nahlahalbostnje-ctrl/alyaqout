@@ -104,6 +104,7 @@ import StudentStudyBuddyPage      from './pages/StudentStudyBuddyPage';
 import StudentCounselorPage       from './pages/StudentCounselorPage';
 import StudentTimeCapsulePage     from './pages/StudentTimeCapsulePage';
 import StudentChallengesPage      from './pages/StudentChallengesPage';
+import StudentNotificationsPage   from './pages/StudentNotificationsPage';
 import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
@@ -330,6 +331,9 @@ export default function App() {
         } />
         <Route path="/student/challenges" element={
           <PrivateRoute roles={['student']}><StudentChallengesPage /></PrivateRoute>
+        } />
+        <Route path="/student/notifications" element={
+          <PrivateRoute roles={['student']}><StudentNotificationsPage /></PrivateRoute>
         } />
         <Route path="/student/review-videos" element={
           <PrivateRoute roles={['student']}><StudentReviewVideosPage /></PrivateRoute>

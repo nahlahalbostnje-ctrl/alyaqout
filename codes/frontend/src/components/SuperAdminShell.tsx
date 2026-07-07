@@ -73,7 +73,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
           <p style={{ color:'#fff', fontWeight:900, fontSize:14, lineHeight:1.3 }}>مركز القيادة</p>
           <p style={{ color:'rgba(255,255,255,0.45)', fontSize:10, marginTop:3 }}>الإدارة العليا للمنصة</p>
         </div>
-        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2 }}>
+        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto', minHeight:0 }}>
           {NAV.map((item, i) => (
             <NavLink key={i} to={item.to} end={item.end} style={{ textDecoration:'none' }}>
               {({ isActive }) => (
@@ -84,11 +84,12 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
               )}
             </NavLink>
           ))}
-          <div onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 10px', borderRadius:10, fontSize:12, fontWeight:500, color:'rgba(239,68,68,0.8)', cursor:'pointer', marginTop:4 }}>
-            <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج
-          </div>
         </nav>
-        <div style={{ margin:'0 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
+        {/* Pinned footer — always visible regardless of nav scroll position */}
+        <div onClick={handleLogout} style={{ flexShrink:0, margin:'4px 8px 0', display:'flex', alignItems:'center', gap:7, padding:'10px', borderRadius:10, fontSize:12, fontWeight:700, color:'rgba(239,68,68,0.85)', cursor:'pointer', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج
+        </div>
+        <div style={{ flexShrink:0, margin:'8px 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
           <BrandLogo size={40} style={{ margin:'0 auto 8px', borderRadius:8 }} />
           <p style={{ color:C.goldL, fontSize:10, marginBottom:10 }}>التميز في التعليم</p>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
@@ -101,7 +102,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
 
       {/* ══ MAIN ══ */}
       <div style={{ flex:1, overflowY:'auto', minWidth:0 }}>
-        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:10, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12 }}>
+        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:10, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(o => !o)}
@@ -125,20 +126,30 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
                 <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
               </div>
             ))}
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:38, height:38, borderRadius:11, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
+              🚪
+            </button>
           </div>
-          <div style={{ textAlign:'center', flexShrink:0 }}>
-            <p style={{ color:C.text, fontWeight:800, fontSize:16 }}>{timeStr}</p>
-            <p style={{ color:C.sub, fontSize:10 }}>{dateStr}</p>
-          </div>
-          <select value={sem} onChange={e=>setSem(e.target.value)} style={{ padding:'7px 12px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', outline:'none', flexShrink:0 }}>
-            <option>الفصل الدراسي الثاني 2025-2026</option>
-            <option>الفصل الدراسي الأول 2025-2026</option>
-          </select>
+          {!isMobile && (
+            <>
+              <div style={{ textAlign:'center', flexShrink:0 }}>
+                <p style={{ color:C.text, fontWeight:800, fontSize:16 }}>{timeStr}</p>
+                <p style={{ color:C.sub, fontSize:10 }}>{dateStr}</p>
+              </div>
+              <select value={sem} onChange={e=>setSem(e.target.value)} style={{ padding:'7px 12px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', outline:'none', flexShrink:0 }}>
+                <option>الفصل الدراسي الثاني 2025-2026</option>
+                <option>الفصل الدراسي الأول 2025-2026</option>
+              </select>
+            </>
+          )}
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-            <div style={{ textAlign:'left' }}>
-              <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مرحباً بك أ. {fullName}</p>
-              <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
-            </div>
+            {!isMobile && (
+              <div style={{ textAlign:'left' }}>
+                <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مرحباً بك أ. {fullName}</p>
+                <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
+              </div>
+            )}
             <div style={{ width:44, height:44, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, border:'2.5px solid #fff', boxShadow:'0 3px 12px rgba(201,149,42,0.35)', flexShrink:0 }}>👨‍💼</div>
           </div>
         </header>

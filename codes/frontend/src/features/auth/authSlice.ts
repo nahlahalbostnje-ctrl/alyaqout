@@ -72,6 +72,11 @@ const authSlice = createSlice({
       state.token = action.payload;
       localStorage.setItem('yaqoot_token', action.payload);
     },
+    impersonate(state, action: PayloadAction<{ token: string; user: AuthUser }>) {
+      state.token = action.payload.token;
+      state.user  = action.payload.user;
+      localStorage.setItem('yaqoot_token', action.payload.token);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -104,5 +109,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, setToken } = authSlice.actions;
+export const { logout, setToken, impersonate } = authSlice.actions;
 export default authSlice.reducer;

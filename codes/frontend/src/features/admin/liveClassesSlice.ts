@@ -3,10 +3,14 @@ import api from '../../services/axios';
 
 export type ClassStatus = 'scheduled' | 'live' | 'ended';
 
+export type SessionType = 'group' | 'individual';
+
 export interface LiveClass {
   id: number;
   course_id: number;
   teacher_id: number;
+  session_type: SessionType;
+  student_id: number | null;
   title: string;
   description: string | null;
   scheduled_at: string;
@@ -15,6 +19,7 @@ export interface LiveClass {
   agora_channel: string | null;
   course?: { id: number; title: string };
   teacher?: { id: number; name: string };
+  student?: { id: number; name: string };
 }
 
 export interface LiveClassPayload {
@@ -24,6 +29,8 @@ export interface LiveClassPayload {
   description?: string;
   scheduled_at: string;
   duration_minutes?: number;
+  session_type?: SessionType;
+  student_id?: number | null;
 }
 
 interface LiveClassesState {

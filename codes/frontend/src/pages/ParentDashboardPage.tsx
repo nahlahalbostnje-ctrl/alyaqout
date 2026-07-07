@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -272,7 +272,7 @@ function HubBtn({ label, d, style: s, onClick }: { label: string; d: string; sty
     <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, zIndex: 2, ...s }}>
       <div
         onClick={onClick}
-        style={{ width: 50, height: 50, borderRadius: '50%', background: C.card, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', cursor: 'pointer', transition: 'transform 0.2s' }}
+        style={{ width: 50, height: 50, borderRadius: '50%', background: C.card, border: `2px solid ${C.goldBdr}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(201,149,42,0.18)', cursor: 'pointer', transition: 'transform 0.2s' }}
         onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.08)'}
         onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)'}
       >
@@ -292,30 +292,26 @@ const NOTIF_ICONS: Record<string, string> = {
 };
 
 // ─── League Card (نسخة مختصرة) ────────────────────────────────────────────────
-function LeagueCard({ userName }: { userName: string }) {
+function LeagueCard({ userName: _userName }: { userName: string }) {
   const navigate = useNavigate();
   const pts = 5420, total = 7000, rank = 15;
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 14, boxShadow: C.shadow }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>💎</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ color: C.text, fontWeight: 700, fontSize: 12.5 }}>أولومبياد ولادي 🏅</span>
-          <p style={{ color: C.sub, fontSize: 10.5, margin: '1px 0 0' }}>ولي أمر متميز — {userName} · ترتيب #{rank}</p>
-        </div>
-        <p style={{ color: C.gold, fontWeight: 800, fontSize: 15, margin: 0, flexShrink: 0 }}>
-          {pts.toLocaleString('ar-EG')}<span style={{ fontSize: 9.5, color: C.sub, fontWeight: 500 }}> نقطة</span>
-        </p>
+    <button onClick={() => navigate('/parent/league')} style={{
+      display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'right',
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '10px 14px',
+      boxShadow: C.shadow, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+    }}>
+      <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.goldBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Ico d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" color={C.gold} size={16} />
       </div>
-      <div style={{ margin: '10px 0 8px' }}>
-        <div style={{ height: 6, borderRadius: 3, background: C.goldBg }}>
-          <div style={{ height: '100%', width: `${(pts / total) * 100}%`, borderRadius: 3, background: C.goldGrad }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ color: C.text, fontWeight: 700, fontSize: 12 }}>دوري أولياء الأمور</span>
+        <div style={{ height: 4, borderRadius: 2, background: C.goldBg, marginTop: 4 }}>
+          <div style={{ height: '100%', width: `${(pts / total) * 100}%`, borderRadius: 2, background: C.goldGrad }} />
         </div>
       </div>
-      <button onClick={() => navigate('/parent/league')} style={{ width: '100%', padding: '8px', borderRadius: 10, background: C.goldBg, border: `1px solid ${C.goldBdr}`, color: C.gold, fontWeight: 700, fontSize: 11.5, cursor: 'pointer' }}>
-        عرض لوحة الدوري
-      </button>
-    </div>
+      <span style={{ color: C.gold, fontWeight: 800, fontSize: 12.5, flexShrink: 0 }}>#{rank}</span>
+    </button>
   );
 }
 
@@ -350,6 +346,14 @@ export default function ParentDashboardPage() {
   const navigate = useNavigate();
   const { parent, children, stats, loading } = useAppSelector((s) => s.parent);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => { dispatch(fetchParentDashboard()); }, [dispatch]);
 
   const childData: { id: number; name: string; grade: string; progress: number; color: string }[] =
@@ -370,10 +374,10 @@ export default function ParentDashboardPage() {
 
   return (
     <ParentLayout>
-      <div style={{ display: 'flex', alignItems: 'flex-start', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', height: isMobile ? 'auto' : '100%', minHeight: '100%' }}>
 
         {/* ═══ CENTER CONTENT ═══ */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Welcome Card */}
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '20px 24px', boxShadow: C.shadow }}>
@@ -429,7 +433,7 @@ export default function ParentDashboardPage() {
             {/* ── 2. Smart Recommendations ── */}
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 20px', boxShadow: C.shadow }}>
               <SecHead title="التوصيات الذكية" action="عرض الكل" onAction={() => navigate('/parent/reports')} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
                 {PARENT_RECS.map((rec, i) => (
                   <div key={i} style={{ background: rec.bg, border: `1px solid ${rec.color}22`, borderRadius: 14, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -451,7 +455,7 @@ export default function ParentDashboardPage() {
             </div>
 
             {/* ── 3. Children | Hub | Notifications ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr 1fr', gap: 12 }}>
 
               {/* أبنائي List with per-subject mini bars */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, boxShadow: C.shadow }}>
@@ -474,6 +478,8 @@ export default function ParentDashboardPage() {
                 <p style={{ color: C.text, fontWeight: 700, fontSize: 14, marginBottom: 8, textAlign: 'center' }}>مركز العائلة</p>
 
                 <div style={{ position: 'relative', width: 230, height: 230 }}>
+                  {/* Orbit ring — ties the 4 satellite buttons visually to the gem */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 176, height: 176, borderRadius: '50%', border: `1.5px dashed ${C.goldBdr}` }} />
                   <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -52%)' }}>
                     <DiamondGem />
                   </div>
@@ -536,7 +542,7 @@ export default function ParentDashboardPage() {
             </div>
 
             {/* ── 4. Quick Stats (الثانوية) ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
               <StatCard
                 label="عدد الأبناء" value={totalKids} sub="أبناء"
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
@@ -562,7 +568,7 @@ export default function ParentDashboardPage() {
             {/* ── 5. Parent Academy ── */}
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
               <SecHead title="أكاديمية ولي الأمر" action="عرض الكل" onAction={() => navigate('/parent/academy')} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 14 }}>
                 {COURSES.map((c, i) => (
                   <div key={i} onClick={() => navigate('/parent/academy')} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#FDFAF3', cursor: 'pointer' }}>
                     <div style={{ height: 96, background: c.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>
@@ -587,7 +593,7 @@ export default function ParentDashboardPage() {
               {/* Achievements */}
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 20px', boxShadow: C.shadow }}>
                 <SecHead title="الإنجازات والشارات" action="عرض الكل" onAction={() => navigate('/parent/reports')} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(70px,1fr))', gap: 12 }}>
                   {BADGES.map((b, i) => (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                       <div style={{ width: 58, height: 58, borderRadius: '50%', background: `linear-gradient(135deg, ${b.color}22, ${b.color}0D)`, border: `2px solid ${b.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: `0 4px 12px ${b.color}25` }}>
@@ -646,7 +652,12 @@ export default function ParentDashboardPage() {
         </div>
 
         {/* ═══ LEFT SIDE PANEL ═══ */}
-        <div style={{ width: 288, flexShrink: 0, overflowY: 'auto', padding: '18px 18px 18px 0', display: 'flex', flexDirection: 'column', gap: 14, position: 'sticky', top: 0, height: '100%' }}>
+        <div style={{
+          width: isMobile ? '100%' : 288, flexShrink: 0, overflowY: 'auto',
+          padding: isMobile ? '0 18px 18px' : '18px 18px 18px 0',
+          display: 'flex', flexDirection: 'column', gap: 14,
+          position: isMobile ? 'static' : 'sticky', top: 0, height: isMobile ? 'auto' : '100%',
+        }}>
           <LeagueCard userName={firstName} />
           <AICard userName={firstName} />
           <NearestBranchWidget />

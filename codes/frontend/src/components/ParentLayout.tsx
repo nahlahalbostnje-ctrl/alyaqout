@@ -95,7 +95,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', minHeight: 0 }}>
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} style={{ textDecoration: 'none' }}>
               {({ isActive }) => (
@@ -119,7 +119,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* User */}
-        <div style={{ padding: '10px 8px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ flexShrink: 0, padding: '10px 8px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 11px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', marginBottom: 6 }}>
             <div style={{
               width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -200,6 +200,12 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
                 </div>
               </>
             )}
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer', flexShrink: 0, color: '#EF4444' }}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </header>
 

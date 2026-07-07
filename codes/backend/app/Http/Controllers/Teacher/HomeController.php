@@ -72,7 +72,7 @@ class HomeController extends Controller
 
         // Today's attendance
         $todayAttendance = AttendanceRecord::whereHas('liveClass', fn ($q) => $q->where('teacher_id', $teacherId))
-            ->whereDate('attended_at', today())
+            ->whereDate('recorded_at', today())
             ->count();
 
         // Recent 5 homework submissions for alerts

@@ -34,12 +34,17 @@ class HomeController extends Controller
             ->where('country_id', $countryId)
             ->count();
 
+        $childId = (int) $child->getAttribute('id');
+
         $upcoming = LiveClass::whereIn('status', ['scheduled', 'live'])
             ->where('country_id', $countryId)
+            ->where(function ($q) use ($childId) {
+                $q->where('session_type', 'group')->orWhere('student_id', $childId);
+            })
             ->with(['course:id,title'])
             ->orderBy('scheduled_at')
             ->limit(3)
-            ->get(['id', 'title', 'scheduled_at', 'duration_minutes', 'status', 'meeting_link', 'course_id']);
+            ->get(['id', 'title', 'scheduled_at', 'duration_minutes', 'status', 'meeting_link', 'course_id', 'session_type', 'student_id']);
 
         return [
             'id'             => $child->getAttribute('id'),
@@ -82,8 +87,13 @@ class HomeController extends Controller
                 ->orderBy('sort_order')
                 ->get(['id', 'category_id', 'title', 'price', 'is_free', 'thumbnail', 'is_active', 'country_id']);
 
+            $childId = (int) $child->getAttribute('id');
+
             $liveClasses = LiveClass::whereIn('status', ['scheduled', 'live'])
                 ->where('country_id', $countryId)
+                ->where(function ($q) use ($childId) {
+                    $q->where('session_type', 'group')->orWhere('student_id', $childId);
+                })
                 ->with(['course:id,title'])
                 ->orderBy('scheduled_at')
                 ->get();
@@ -107,9 +117,13 @@ class HomeController extends Controller
         }
 
         $countryId = (int) $student->getAttribute('country_id');
+        $studentId = (int) $student->getAttribute('id');
 
         $classes = LiveClass::whereIn('status', ['scheduled', 'live'])
             ->where('country_id', $countryId)
+            ->where(function ($q) use ($studentId) {
+                $q->where('session_type', 'group')->orWhere('student_id', $studentId);
+            })
             ->with(['course:id,title'])
             ->orderBy('scheduled_at')
             ->get();

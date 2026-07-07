@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StudentBottomNav from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
 
 const C = {
   bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -9,7 +9,6 @@ const C = {
   text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
   shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444', green:'#16A34A',
 };
-const BH = 60;
 const font = { fontFamily:"'Cairo', sans-serif" };
 
 const TUTORS = [
@@ -48,7 +47,8 @@ export default function StudentStudy24Page() {
   const cardS = { background:C.card, borderRadius:18, padding:'18px', boxShadow:C.shadow, border:`1px solid ${C.border}` } as React.CSSProperties;
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:C.bg, ...font, direction:'rtl' }}>
+    <StudentLayout>
+    <div style={{ display:'flex', flexDirection:'column', ...font, direction:'rtl' }}>
 
       {/* Hero */}
       <div style={{ background:'linear-gradient(135deg,#111827 0%,#1F2937 60%,#0D1535 100%)', padding:'28px 24px 32px', position:'relative', overflow:'hidden' }}>
@@ -81,7 +81,7 @@ export default function StudentStudy24Page() {
         ))}
       </div>
 
-      <div style={{ flex:1, padding:'20px', maxWidth:800, margin:'0 auto', width:'100%', boxSizing:'border-box', paddingBottom:BH+20 }}>
+      <div style={{ flex:1, padding:'20px', maxWidth:800, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
 
         {tab==='live' && (
           <>
@@ -148,7 +148,7 @@ export default function StudentStudy24Page() {
         )}
       </div>
 
-      <StudentBottomNav cur="/student/study-24" />
     </div>
+    </StudentLayout>
   );
 }

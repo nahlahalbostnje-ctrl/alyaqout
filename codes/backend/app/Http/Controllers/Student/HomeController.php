@@ -36,6 +36,9 @@ class HomeController extends Controller
 
         $upcoming = LiveClass::where('country_id', $countryId)
             ->whereIn('status', ['scheduled', 'live'])
+            ->where(function ($q) use ($studentId) {
+                $q->where('session_type', 'group')->orWhere('student_id', $studentId);
+            })
             ->with(['course:id,title', 'teacher:id,name'])
             ->orderBy('scheduled_at')
             ->limit(5)
@@ -51,13 +54,13 @@ class HomeController extends Controller
         // Extra stats for dashboard
         $totalPoints = (new GamificationService())->totalPoints($studentId);
 
-        $pendingHomework = Homework::where('country_id', $countryId)
+        $pendingHomework = Homework::whereHas('course', fn ($q) => $q->where('country_id', $countryId))
             ->where('status', 'approved')
             ->where('due_date', '>=', now())
             ->whereNotIn('id', HomeworkSubmission::where('student_id', $studentId)->pluck('homework_id'))
             ->count();
 
-        $upcomingExams = Exam::where('country_id', $countryId)
+        $upcomingExams = Exam::whereHas('course', fn ($q) => $q->where('country_id', $countryId))
             ->where('status', 'approved')
             ->where('starts_at', '>=', now())
             ->count();
@@ -132,8 +135,13 @@ class HomeController extends Controller
 
     public function liveClasses(): JsonResponse
     {
+        $studentId = (int) auth()->user()->id;
+
         $classes = LiveClass::where('country_id', $this->countryId())
             ->whereIn('status', ['scheduled', 'live'])
+            ->where(function ($q) use ($studentId) {
+                $q->where('session_type', 'group')->orWhere('student_id', $studentId);
+            })
             ->with(['course:id,title', 'teacher:id,name'])
             ->orderBy('scheduled_at')
             ->get();

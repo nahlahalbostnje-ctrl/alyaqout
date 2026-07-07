@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import StudentBottomNav from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchLeagues, joinLeague, fetchLeagueDetail, clearActiveLeague,
@@ -16,8 +15,6 @@ const C = {
   shadow: '0 2px 14px rgba(0,0,0,0.07)',
   red: '#EF4444', blue: '#2563EB', green: '#16A34A', purple: '#7C3AED',
 };
-const SW = 195;
-const BH = 60;
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 // ── Static mock data (fallback when API returns empty) ──────────────────────
@@ -57,7 +54,6 @@ function StatusBadge({ s }: { s: League['status'] }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentLeaguePage() {
   const dispatch  = useAppDispatch();
-  const navigate  = useNavigate();
   const { leagues, activeLeague, loading } = useAppSelector(s => s.league);
   const [joiningId, setJoiningId] = useState<number|null>(null);
   const [joinError, setJoinError] = useState<string|null>(null);
@@ -86,49 +82,11 @@ export default function StudentLeaguePage() {
   const cardS    = { background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}` } as React.CSSProperties;
 
   return (
-    <div style={{ display:'flex', minHeight:'100vh', background:C.bg, ...font, direction:'rtl' }}>
-
-      {/* ── Sidebar ── */}
-      <aside style={{ width:SW, flexShrink:0, background:C.card, borderLeft:`1px solid ${C.border}`, height:'100vh', position:'sticky', top:0, overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', paddingBottom:BH+10 }}>
-        {/* Back */}
-        <div style={{ padding:'16px 14px 0' }}>
-          <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderRadius:12, background:'linear-gradient(160deg,#162144,#0D1535)', border:`1px solid ${C.goldBdr}`, color:C.goldL, fontWeight:700, fontSize:12, cursor:'pointer', width:'100%', ...font }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            العودة للرئيسية
-          </button>
-        </div>
-
-        {/* My Stats */}
-        <div style={{ margin:'14px 10px 0', padding:'16px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:16, border:'1px solid rgba(201,149,42,0.3)', textAlign:'center' }}>
-          <div style={{ fontSize:40, marginBottom:6 }}>🏆</div>
-          <p style={{ color:'#fff', fontWeight:800, fontSize:13 }}>مركزك الحالي</p>
-          <p style={{ color:C.goldL, fontWeight:900, fontSize:28, lineHeight:1.2, marginTop:4 }}>#{myEntry?.rank ?? 5}</p>
-          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:11 }}>من {MOCK_LEADERBOARD.length} مشارك</p>
-          <div style={{ marginTop:12, padding:'8px', borderRadius:10, background:'rgba(201,149,42,0.15)', border:'1px solid rgba(201,149,42,0.25)' }}>
-            <p style={{ color:C.goldL, fontWeight:900, fontSize:18 }}>{myEntry?.score?.toLocaleString() ?? '4,450'}</p>
-            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>نقطة</p>
-          </div>
-        </div>
-
-        {/* Nav Links */}
-        <nav style={{ flex:1, padding:'14px 10px', display:'flex', flexDirection:'column', gap:4 }}>
-          {[
-            { tab:'leagues' as const, icon:'🎯', label:'الدوريات المتاحة' },
-            { tab:'board'   as const, icon:'🏅', label:'ترتيب المتنافسين' },
-          ].map(item => (
-            <button key={item.tab} onClick={()=>setTab(item.tab)}
-              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'none', cursor:'pointer', textAlign:'right', fontSize:12, fontWeight:600, transition:'all 0.15s', ...font,
-                background: tab===item.tab ? C.goldGrad : 'transparent',
-                color:      tab===item.tab ? '#1B2038'  : C.sub,
-              }}>
-              <span style={{ fontSize:16 }}>{item.icon}</span>{item.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+    <StudentLayout>
+    <div style={{ ...font, direction:'rtl' }}>
 
       {/* ── Main Content ── */}
-      <main style={{ flex:1, overflowY:'auto', paddingBottom:BH+20 }}>
+      <main style={{ flex:1, overflowY:'auto' }}>
 
         {/* Hero Banner */}
         <div style={{ background:'linear-gradient(135deg,#0D1535 0%,#1B2038 60%,#162144 100%)', padding:'28px 24px 32px', position:'relative', overflow:'hidden' }}>
@@ -168,6 +126,22 @@ export default function StudentLeaguePage() {
         </div>
 
         <div style={{ padding:'20px 20px 0' }}>
+
+          {/* Tab Switcher */}
+          <div style={{ display:'flex', gap:6, marginBottom:18, background:C.card, padding:5, borderRadius:12, border:`1px solid ${C.border}`, width:'fit-content' }}>
+            {[
+              { tab:'leagues' as const, icon:'🎯', label:'الدوريات المتاحة' },
+              { tab:'board'   as const, icon:'🏅', label:'ترتيب المتنافسين' },
+            ].map(item => (
+              <button key={item.tab} onClick={()=>setTab(item.tab)}
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:9, border:'none', cursor:'pointer', fontSize:13, fontWeight:700, transition:'all 0.15s', ...font,
+                  background: tab===item.tab ? C.goldGrad : 'transparent',
+                  color:      tab===item.tab ? '#fff'  : C.sub,
+                }}>
+                <span style={{ fontSize:15 }}>{item.icon}</span>{item.label}
+              </button>
+            ))}
+          </div>
 
           {/* Error */}
           {joinError && (
@@ -400,9 +374,8 @@ export default function StudentLeaguePage() {
         </div>
       )}
 
-      <StudentBottomNav cur="/student/league" />
-
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
+    </StudentLayout>
   );
 }

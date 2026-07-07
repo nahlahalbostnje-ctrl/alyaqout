@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import BrandLogo from '../components/BrandLogo';
@@ -199,8 +199,18 @@ const medalEmoji=(r:number)=>r===1?'🥇':r===2?'🥈':r===3?'🥉':`${r}`;
 export default function DashboardPage() {
   const dispatch  = useAppDispatch();
   const navigate  = useNavigate();
+  const location  = useLocation();
   const user      = useAppSelector(s=>s.auth.user);
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  useEffect(() => { if (isMobile) setSidebarOpen(false); }, [location.pathname, isMobile]);
   const now = new Date();
   const timeStr  = now.toLocaleTimeString('en-US',{ hour:'2-digit', minute:'2-digit' });
   const dateStr  = now.toLocaleDateString('ar-EG',{ weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -211,8 +221,20 @@ export default function DashboardPage() {
   return (
     <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif" }}>
 
+      {/* Mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:40, backdropFilter:'blur(2px)' }} />
+      )}
+
       {/* ══════ SIDEBAR ══════ */}
-      <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100vh', position:'sticky', top:0, display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none' }}>
+      <aside style={{
+        width:SW, flexShrink:0, background:C.navy, height:'100vh',
+        position: isMobile ? 'fixed' : 'sticky', top:0, right:0,
+        zIndex: isMobile ? 50 : undefined,
+        display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none',
+        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
+        transition:'transform 0.25s ease',
+      }}>
 
         {/* Brand */}
         <div style={{ padding:'18px 12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', textAlign:'center' }}>
@@ -222,7 +244,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2 }}>
+        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto', minHeight:0 }}>
           {NAV.map((item,i)=>{
             const inner=(active=false)=>(
               <div style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 10px', borderRadius:10, fontSize:12, fontWeight:active?700:500, background:active?C.goldGrad:'transparent', color:active?'#fff':'rgba(255,255,255,0.55)', cursor:'pointer' }}>
@@ -236,13 +258,15 @@ export default function DashboardPage() {
               </NavLink>
             );
           })}
-          <div onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 10px', borderRadius:10, fontSize:12, fontWeight:500, color:'rgba(239,68,68,0.75)', cursor:'pointer', marginTop:4 }}>
-            <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج
-          </div>
         </nav>
 
+        {/* Pinned footer — always visible regardless of nav scroll position */}
+        <div onClick={handleLogout} style={{ flexShrink:0, margin:'4px 8px 0', display:'flex', alignItems:'center', gap:7, padding:'10px', borderRadius:10, fontSize:12, fontWeight:700, color:'rgba(239,68,68,0.85)', cursor:'pointer', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج
+        </div>
+
         {/* Bottom card */}
-        <div style={{ margin:'0 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
+        <div style={{ flexShrink:0, margin:'8px 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
           <BrandLogo size={40} style={{ margin:'0 auto 8px', borderRadius:8 }} />
           <p style={{ color:C.goldL, fontSize:10, marginBottom:10 }}>التميز في التعليم</p>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
@@ -257,19 +281,26 @@ export default function DashboardPage() {
       <div style={{ flex:1, overflowY:'auto', minWidth:0 }}>
 
         {/* ── HEADER ── */}
-        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:50, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12 }}>
+        <header style={{ background:C.card, borderBottom:`1px solid ${C.border}`, padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30, boxShadow:'0 1px 8px rgba(0,0,0,0.05)', gap:12, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
 
-          {/* Logo */}
+          {/* Logo + hamburger */}
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
+            {isMobile && (
+              <button onClick={()=>setSidebarOpen(true)} style={{ width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </button>
+            )}
             <BrandLogo size={38} style={{ borderRadius:10 }} />
           </div>
 
           {/* Control panel button */}
-          <button onClick={()=>navigate('/dashboard/settings')} style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', flexShrink:0 }}>
+          <button onClick={()=>navigate('/dashboard/settings')} style={{ display:'flex', alignItems:'center', gap:6, padding: isMobile ? '8px 10px' : '8px 16px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:12.5, border:'none', cursor:'pointer', flexShrink:0 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
-            لوحة التحكم
+            {!isMobile && 'لوحة التحكم'}
           </button>
 
           {/* Notification icons */}
@@ -284,29 +315,39 @@ export default function DashboardPage() {
                 <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
               </div>
             ))}
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:38, height:38, borderRadius:11, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
+              🚪
+            </button>
           </div>
 
-          {/* Time + date */}
-          <div style={{ textAlign:'center', flexShrink:0 }}>
-            <p style={{ color:C.text, fontWeight:800, fontSize:16 }}>{timeStr}</p>
-            <p style={{ color:C.sub, fontSize:10 }}>{dateStr}</p>
-          </div>
+          {!isMobile && (
+            <>
+              {/* Time + date */}
+              <div style={{ textAlign:'center', flexShrink:0 }}>
+                <p style={{ color:C.text, fontWeight:800, fontSize:16 }}>{timeStr}</p>
+                <p style={{ color:C.sub, fontSize:10 }}>{dateStr}</p>
+              </div>
 
-          {/* Semester dropdown */}
-          <select value={sem} onChange={e=>setSem(e.target.value)}
-            style={{ padding:'7px 12px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', outline:'none', flexShrink:0 }}>
-            <option>الفصل الدراسي الثاني 2025-2026</option>
-            <option>الفصل الدراسي الأول 2025-2026</option>
-          </select>
+              {/* Semester dropdown */}
+              <select value={sem} onChange={e=>setSem(e.target.value)}
+                style={{ padding:'7px 12px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', outline:'none', flexShrink:0 }}>
+                <option>الفصل الدراسي الثاني 2025-2026</option>
+                <option>الفصل الدراسي الأول 2025-2026</option>
+              </select>
+            </>
+          )}
 
           {/* User */}
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-            <div style={{ textAlign:'left' }}>
-              <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مرحباً بك أ. {fullName}</p>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:4, marginTop:2 }}>
-                <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
+            {!isMobile && (
+              <div style={{ textAlign:'left' }}>
+                <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مرحباً بك أ. {fullName}</p>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:4, marginTop:2 }}>
+                  <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
+                </div>
               </div>
-            </div>
+            )}
             <div style={{ width:44, height:44, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, border:'2.5px solid #fff', boxShadow:'0 3px 12px rgba(201,149,42,0.35)', flexShrink:0 }}>👨‍💼</div>
           </div>
         </header>

@@ -25,26 +25,38 @@ export default function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-50 p-4"
+      style={{ position: 'fixed', bottom: 0, insetInlineStart: 0, insetInlineEnd: 0, zIndex: 50, padding: 16 }}
       dir="rtl"
     >
-      <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-800 mb-1">نستخدم ملفات تعريف الارتباط (Cookies)</p>
-          <p className="text-xs text-gray-500 leading-relaxed">
+      <div style={{
+        maxWidth: 672, margin: '0 auto', background: '#fff', border: '1px solid #E5E7EB',
+        borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.15)', padding: 20,
+        display: 'flex', flexDirection: 'column', gap: 14,
+      }}>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#1f2937', margin: '0 0 4px' }}>نستخدم ملفات تعريف الارتباط (Cookies)</p>
+          <p style={{ fontSize: 11.5, color: '#6b7280', lineHeight: 1.6, margin: 0 }}>
             نستخدم ملفات تعريف الارتباط لتحسين تجربتك وتحليل استخدام الموقع. بالنقر على «قبول» توافق على سياسة الخصوصية الخاصة بنا.
           </p>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
           <button
             onClick={accept}
-            className="px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded-xl hover:bg-purple-700 transition"
+            style={{
+              flex: 1, minHeight: 44, padding: '10px 20px', background: '#9333ea', color: '#fff',
+              fontSize: 13.5, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer',
+              fontFamily: "'Cairo', sans-serif",
+            }}
           >
             قبول
           </button>
           <button
             onClick={decline}
-            className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition"
+            style={{
+              flex: 1, minHeight: 44, padding: '10px 20px', background: '#fff', color: '#4b5563',
+              fontSize: 13.5, fontWeight: 700, borderRadius: 12, border: '1px solid #E5E7EB', cursor: 'pointer',
+              fontFamily: "'Cairo', sans-serif",
+            }}
           >
             رفض
           </button>

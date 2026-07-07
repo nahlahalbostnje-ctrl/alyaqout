@@ -66,6 +66,14 @@ export default function AdminNotificationsPage() {
   const [sent, setSent] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => { dispatch(fetchBroadcastHistory()); }, [dispatch]);
 
   async function handleSend(e: React.FormEvent) {
@@ -96,7 +104,7 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* Two-column layout */}
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
 
           {/* LEFT — Send Form */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -236,7 +244,7 @@ export default function AdminNotificationsPage() {
           </div>
 
           {/* RIGHT — Broadcast History */}
-          <div style={{ width: 340, flexShrink: 0 }}>
+          <div style={{ width: isMobile ? '100%' : 340, flexShrink: 0 }}>
             <div style={card({ padding: 0, overflow: 'hidden' })}>
               {/* Card header */}
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #EDE3CE', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

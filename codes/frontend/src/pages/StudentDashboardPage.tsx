@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentDashboard } from '../features/student/studentSlice';
 import { fetchMyPoints } from '../features/student/gamificationSlice';
-import { logout } from '../features/auth/authSlice';
-import BrandLogo from '../components/BrandLogo';
+import StudentLayout from '../components/StudentLayout';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -28,79 +27,10 @@ const C = {
   green:    '#16A34A',
   purple:   '#7C3AED',
 };
-const SW = 195;
-const BH = 60;
-
-// ─── Feature flag: set false to hide sidebar task card & rely on WhatsApp reminders ──
-// When false: the daily-tasks card is hidden from the sidebar.
+// ─── Feature flag: set false to hide daily-tasks card & rely on WhatsApp reminders ──
 // The WhatsApp reminder is sent via NotificationService::sendWhatsApp() on the backend
 // (triggered by a scheduled job) to inform students of pending tasks.
 const SHOW_DAILY_TASKS_CARD = true;
-
-// ─── Semantic SVG icons for each action (stroke-based, white on colored bg) ──
-const SVG_ICONS: Record<string, string> = {
-  'دخول الحصة':        'M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z',
-  'الواجبات':           'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
-  'الامتحانات':         'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-  'جدول الحصص':        'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-  'دوري الياقوت':      'M8 7v8a2 2 0 002 2h4a2 2 0 002-2V7m-8 0V5a2 2 0 012-2h4a2 2 0 012 2v2m-8 0h8',
-  'مستوى التطور':      'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-  'غرفة الطوارئ':      'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
-  'معلمي الذكي':       'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
-  'دوري الزملاء':      'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-  'غرفة الدراسة 24/7': 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-  'الرسائل':            'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-  'النتائج':            'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
-  'مكتبة الياقوت':     'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
-  'حاضنة المواهب':     'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-  'صديق الدراسة':      'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-  'مرشد الياقوت':      'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
-  'الكبسولة الزمنية':  'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-  'نظام التحديات':     'M13 10V3L4 14h7v7l9-11h-7z',
-};
-
-function ActionIcon({ path }: { path?: string }) {
-  if (!path) return null;
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d={path} />
-    </svg>
-  );
-}
-
-// ─── Nav items ────────────────────────────────────────────────────────────────
-const NAV = [
-  { to:'/student/dashboard',       label:'الرئيسية',           emoji:'🏠' },
-  { to:'/student/exams',           label:'الامتحانات',          emoji:'📝' },
-  { to:'/student/homework',        label:'الواجبات',            emoji:'📚' },
-  { to:'/student/live-classes',    label:'جدول الحصص',         emoji:'📅' },
-  { to:'/student/league',          label:'دوري الياقوت',        emoji:'🏆' },
-  { to:'/student/challenges',      label:'نظام التحديات',       emoji:'⚡' },
-  { to:'/student/report',          label:'مستوى التطور',        emoji:'📊' },
-  { to:'/student/library',         label:'مكتبة الياقوت',       emoji:'📖' },
-  { to:'/student/talents',         label:'حاضنة المواهب',       emoji:'💡' },
-  { to:'/student/study-buddy',     label:'صديق الدراسة',        emoji:'⏱️' },
-  { to:'/student/counselor',       label:'مرشد الياقوت',        emoji:'💬' },
-  { to:'/student/time-capsule',    label:'الكبسولة الزمنية',    emoji:'🎯' },
-  { to:'/student/emergency',       label:'غرفة الطوارئ',        emoji:'🚨' },
-  { to:'/student/study-room',      label:'معلمي الذكي',         emoji:'🤖' },
-  { to:'/student/peer-league',     label:'دوري الزملاء',        emoji:'⚔️' },
-  { to:'/student/study-24',        label:'غرفة الدراسة 24/7',  emoji:'🎧' },
-  { to:'/student/messages',        label:'الرسائل',             emoji:'✉️' },
-  { to:'/student/points',          label:'النتائج',             emoji:'🏅' },
-  { to:'/student/teacher-contact', label:'تواصل مع المعلم',     emoji:'👨‍🏫' },
-];
-
-// ─── Quick Actions ─────────────────────────────────────────────────────────────
-// نكتفي هنا بالاختصارات ذات الطابع اللحظي/العاجل (تحمل badge حي) فقط.
-// باقي الروابط متاحة كاملة عبر السايدبار — تفادياً لتكرار نفس العناصر يمين ويسار.
-const ACTIONS_TEMPLATE = [
-  { label:'دخول الحصة',  desc:'انضم لحصتك',        bg:'linear-gradient(135deg,#1D4ED8,#2563EB)', badgeKey:'live',     to:'/student/live-classes', highlight:true  },
-  { label:'الواجبات',     desc:'واجباتك المعلقة',   bg:'linear-gradient(135deg,#0369A1,#0284C7)', badgeKey:'homework', to:'/student/homework',     highlight:false },
-  { label:'الامتحانات',   desc:'امتحاناتك القادمة', bg:'linear-gradient(135deg,#4338CA,#6366F1)', badgeKey:'exams',    to:'/student/exams',        highlight:false },
-  { label:'غرفة الطوارئ', desc:'مساعدة فورية',      bg:'linear-gradient(135deg,#DC2626,#EF4444)', badgeKey:'lock',     to:'/student/emergency',    highlight:false },
-];
 
 // ─── Smart Recommendations with dynamic contact buttons ───────────────────────
 const RECS = [
@@ -253,47 +183,30 @@ export default function StudentDashboardPage() {
   const live   = upcoming[0];
   const nextClass = upcoming[1] ?? null;
 
-  const badgeMap: Record<string, string | null> = {
-    live:     upcoming.some(c => c.status === 'live') ? '🔴' : (upcoming.length > 0 ? String(upcoming.length) : null),
-    homework: dashStats?.pending_homework ? String(dashStats.pending_homework) : null,
-    exams:    dashStats?.upcoming_exams   ? String(dashStats.upcoming_exams)   : null,
-    lock:     '🚪', always: '24/7',
-  };
-
-  const ACTIONS = ACTIONS_TEMPLATE.map(a => ({
-    ...a,
-    badge:   a.badgeKey ? (badgeMap[a.badgeKey] ?? null) : null,
-    svgPath: SVG_ICONS[a.label],
-  }));
-
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const handleLogout = () => { dispatch(logout()); navigate('/login', { replace:true }); };
-
   const card: CSSProperties = {
     background:C.card, borderRadius:18, padding:'14px 16px',
     boxShadow:C.shadow, border:`1px solid ${C.border}`,
   };
 
-  // ── Grid columns: 4 on desktop, 3 on tablet, 2 on mobile ──
-  const actionsCols = isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)';
   const infoCols    = isMobile ? '1fr' : 'repeat(3,1fr)';
   const statsCols   = isMobile ? '1fr' : 'repeat(3,1fr)';
 
   return (
-    <div style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
+    <StudentLayout>
+    <div dir="rtl" style={{ fontFamily:"'Cairo',sans-serif" }}>
 
-      {/* ══════ SIDEBAR (hidden on mobile) ══════ */}
-      {!isMobile && (
-        <aside dir="rtl" style={{ width:SW, flexShrink:0, background:C.card, borderLeft:`1px solid ${C.border}`, height:'100vh', position:'sticky', top:0, overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', paddingBottom:BH+10 }}>
+        <div style={{ padding: isMobile ? '14px 12px 0' : '18px 20px 0' }}>
 
-          {/* Warrior Card */}
-          <div style={{ margin:'12px 10px 0', padding:'16px 10px 14px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:16, textAlign:'center', border:'1px solid rgba(201,149,42,0.3)', boxShadow:'0 6px 20px rgba(13,21,53,0.45)' }}>
+          {/* ── Welcome + Warrior Level Card ── */}
+          <div style={{ background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:20, padding: isMobile ? '16px' : '18px 22px', marginBottom:12, border:'1px solid rgba(201,149,42,0.3)', boxShadow:'0 6px 20px rgba(13,21,53,0.45)', display:'flex', alignItems:'center', gap:16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <WarriorShield level={12} />
-            <p style={{ color:'#fff', fontWeight:800, fontSize:14, marginBottom:1 }}>المحارب الياقوتي</p>
-            <p style={{ color:C.goldL, fontSize:11 }}>المستوى {level}</p>
-            <div style={{ marginTop:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, color:'rgba(255,255,255,0.4)', marginBottom:4 }}>
+            <div style={{ flex:1, minWidth:180 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <span style={{ fontSize:18 }}>👋</span>
+                <h1 style={{ color:'#fff', fontWeight:900, fontSize: isMobile ? 16 : 19, margin:0 }}>مرحباً {firstName}</h1>
+              </div>
+              <p style={{ color:C.goldL, fontSize:11.5, marginTop:2, marginBottom:8 }}>المحارب الياقوتي — المستوى {level}</p>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:9.5, color:'rgba(255,255,255,0.45)', marginBottom:4 }}>
                 <span>{xpIn.toLocaleString()}</span><span>{xpNext.toLocaleString()} XP</span>
               </div>
               <div style={{ height:5, background:'rgba(255,255,255,0.12)', borderRadius:3, overflow:'hidden' }}>
@@ -302,104 +215,16 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div style={{ margin:'8px 10px 0', display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
-            <div style={{ ...card, padding:'9px 8px', textAlign:'center' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:3, marginBottom:1 }}>
-                <span style={{ fontSize:14 }}>⭐</span>
-                <span style={{ color:C.text, fontWeight:800, fontSize:14 }}>{pts.toLocaleString()}</span>
-              </div>
-              <p style={{ color:C.sub, fontSize:9 }}>نقاطي</p>
-            </div>
-            <div style={{ ...card, padding:'9px 8px', textAlign:'center' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:3, marginBottom:1 }}>
-                <span style={{ fontSize:14 }}>🏆</span>
-                <span style={{ color:C.gold, fontWeight:800, fontSize:14 }}>{rank ? `#${rank}` : '—'}</span>
-              </div>
-              <p style={{ color:C.sub, fontSize:9 }}>ترتيبي</p>
-            </div>
-          </div>
-
-          {/* Nav */}
-          <nav style={{ padding:'10px 8px', flex:1 }}>
-            {NAV.map((item,i) => {
-              const inner = (active=false) => (
-                <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:10, marginBottom:2, fontSize:12, fontWeight:active?700:500, background:active?C.goldGrad:'transparent', color:active?'#fff':C.sub, cursor:'pointer', transition:'background 0.15s' }}>
-                  <span style={{ fontSize:15, lineHeight:1 }}>{item.emoji}</span>
-                  <span>{item.label}</span>
-                </div>
-              );
-              return (
-                <NavLink key={i} to={item.to} style={{ textDecoration:'none' }}>
-                  {({ isActive }) => inner(isActive)}
-                </NavLink>
-              );
-            })}
-            <div onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:10, marginTop:4, fontSize:12, fontWeight:500, color:C.red, cursor:'pointer' }}>
-              <span style={{ fontSize:15 }}>🚪</span>
-              تسجيل الخروج
-            </div>
-          </nav>
-
-          {/* Daily Tasks Card — hidden when SHOW_DAILY_TASKS_CARD = false */}
+          {/* Daily Tasks reminder — hidden when SHOW_DAILY_TASKS_CARD = false */}
           {SHOW_DAILY_TASKS_CARD && (
-            <div style={{ margin:'0 10px 10px', padding:'12px 10px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:'1px solid rgba(201,149,42,0.3)', textAlign:'center' }}>
-              <p style={{ color:'#fff', fontWeight:700, fontSize:11, lineHeight:1.5, marginBottom:6 }}>
-                أكمل مهامك اليومية<br/>واربح مكافآت رائعة ✨
-              </p>
-              <button onClick={()=>navigate('/student/homework')} style={{ width:'100%', padding:'7px', borderRadius:9, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11, border:'none', cursor:'pointer', boxShadow:'0 3px 10px rgba(201,149,42,0.4)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, borderRadius:14, padding:'10px 16px', marginBottom:12 }}>
+              <span style={{ fontSize:18, flexShrink:0 }}>✨</span>
+              <p style={{ flex:1, color:C.text, fontSize:12, fontWeight:600, margin:0 }}>أكمل مهامك اليومية واربح مكافآت رائعة</p>
+              <button onClick={()=>navigate('/student/homework')} style={{ flexShrink:0, padding:'7px 16px', borderRadius:9, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer' }}>
                 عرض المهام
               </button>
             </div>
           )}
-        </aside>
-      )}
-
-      {/* ══════ MAIN CONTENT ══════ */}
-      <div dir="rtl" style={{ flex:1, overflowY:'auto', paddingBottom:BH*2+14, minWidth:0 }}>
-
-        {/* ── Header ── */}
-        <div style={{ padding:'12px 16px 10px', display:'flex', alignItems:'center', justifyContent:'space-between', background:C.card, borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, zIndex:50, boxShadow:'0 1px 8px rgba(0,0,0,0.05)' }}>
-
-          {/* Bell */}
-          <div onClick={()=>alert('صفحة إشعارات الطالب قيد التطوير.')} style={{ position:'relative', cursor:'pointer' }}>
-            <div style={{ width:40, height:40, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.navy2} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-              </svg>
-            </div>
-            <div style={{ position:'absolute', top:-4, right:-4, width:18, height:18, borderRadius:'50%', background:C.red, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>3</div>
-          </div>
-
-          {/* Greeting */}
-          <div style={{ textAlign:'center', flex:1 }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-              <span style={{ fontSize:20 }}>👋</span>
-              <h1 style={{ color:C.navy2, fontWeight:900, fontSize: isMobile ? 17 : 20 }}>مرحباً {firstName}</h1>
-            </div>
-            <p style={{ color:C.sub, fontSize:11, marginTop:1 }}>الصف الخامس</p>
-          </div>
-
-          {/* Avatar */}
-          <div style={{ position:'relative' }}>
-            <div onClick={()=>setShowProfileMenu(p=>!p)} style={{ width:42, height:42, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, border:'2.5px solid #fff', boxShadow:'0 3px 12px rgba(201,149,42,0.4)', cursor:'pointer' }}>
-              👦
-            </div>
-            {showProfileMenu && (
-              <div style={{ position:'absolute', top:'110%', left:0, background:C.card, borderRadius:14, boxShadow:'0 8px 28px rgba(0,0,0,0.15)', border:`1px solid ${C.border}`, zIndex:200, minWidth:160, overflow:'hidden' }}>
-                <div style={{ padding:'12px 14px', borderBottom:`1px solid ${C.border}` }}>
-                  <p style={{ color:C.navy2, fontWeight:700, fontSize:13 }}>{user?.name ?? firstName}</p>
-                  <p style={{ color:C.sub, fontSize:11 }}>طالب</p>
-                </div>
-                <button onClick={handleLogout} style={{ width:'100%', padding:'11px 14px', border:'none', background:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, color:C.red, fontFamily:"'Cairo',sans-serif", fontSize:13, fontWeight:600 }}>
-                  🚪 تسجيل الخروج
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div style={{ padding: isMobile ? '12px 12px 0' : '14px 16px 0' }}>
 
           {/* ── Current Class Card ── */}
           <div style={{ background:'linear-gradient(135deg,#0F1E5A 0%,#0D1535 100%)', borderRadius:22, padding:'16px 18px 14px', marginBottom:12, position:'relative', overflow:'hidden', boxShadow:'0 10px 32px rgba(13,21,53,0.55)' }}>
@@ -429,27 +254,6 @@ export default function StudentDashboardPage() {
               </svg>
               دخول الحصة الآن
             </button>
-          </div>
-
-          {/* ── Quick Actions Grid ── */}
-          <div style={{ display:'grid', gridTemplateColumns:actionsCols, gap: isMobile ? 7 : 9, marginBottom:12 }}>
-            {ACTIONS.map((a,i) => (
-              <div key={i} onClick={()=>a.to&&navigate(a.to)}
-                style={{ ...card, padding: isMobile ? '10px 6px 8px' : '12px 8px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:5, position:'relative', cursor:a.to?'pointer':'default', border:`1px solid ${a.highlight?'rgba(37,99,235,0.25)':C.border}`, boxShadow:a.highlight?'0 4px 18px rgba(37,99,235,0.2)':C.shadow, transition:'transform 0.15s' }}
-                onMouseEnter={e=>{if(a.to)(e.currentTarget as HTMLDivElement).style.transform='translateY(-2px)';}}
-                onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}
-              >
-                {a.badge && (
-                  <div style={{ position:'absolute', top:4, left:4, minWidth:18, height:18, borderRadius:20, padding:'0 4px', background:C.red, color:'#fff', fontSize:8, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 6px rgba(0,0,0,0.3)' }}>{a.badge}</div>
-                )}
-                {/* Semantic SVG icon inside colored circle */}
-                <div style={{ width: isMobile ? 42 : 48, height: isMobile ? 42 : 48, borderRadius:'50%', background:a.bg, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(0,0,0,0.22)', flexShrink:0 }}>
-                  <ActionIcon path={a.svgPath} />
-                </div>
-                <p style={{ color:C.text, fontWeight:700, fontSize: isMobile ? 9.5 : 10.5, textAlign:'center', lineHeight:1.3 }}>{a.label}</p>
-                {!isMobile && <p style={{ color:C.dim, fontSize:9, textAlign:'center', lineHeight:1.3 }}>{a.desc}</p>}
-              </div>
-            ))}
           </div>
 
           {/* ── Smart Recommendations ── */}
@@ -581,22 +385,18 @@ export default function StudentDashboardPage() {
 
             {/* League */}
             <div style={{ ...card }}>
-              <SecH title="دوري الياقوت" />
-              <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'center', gap:6, marginBottom:10 }}>
-                {LEAGUE.map(p => {
-                  const h = ({1:60,2:46,3:36} as Record<number,number>)[p.rank];
-                  const bg = ({1:C.goldGrad,2:'linear-gradient(135deg,#9CA3AF,#6B7280)',3:'linear-gradient(135deg,#B45309,#92400E)'} as Record<number,string>)[p.rank];
-                  return (
-                    <div key={p.rank} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
-                      <span style={{ fontSize:16 }}>{p.avatar}</span>
-                      <span style={{ color:C.text, fontSize:8, fontWeight:700, textAlign:'center', maxWidth:50, lineHeight:1.3 }}>{p.name}</span>
-                      <span style={{ color:C.sub, fontSize:7.5 }}>{p.pts.toLocaleString()}</span>
-                      <div style={{ width:44, height:h, background:bg, borderRadius:'5px 5px 0 0', display:'flex', alignItems:'flex-start', justifyContent:'center', paddingTop:3, color:'#fff', fontSize:12, fontWeight:800 }}>
-                        {p.rank===1?'👑':`#${p.rank}`}
-                      </div>
+              <SecH title="ترتيب الصف" />
+              <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
+                {[...LEAGUE].sort((a,b)=>a.rank-b.rank).map(p => (
+                  <div key={p.rank} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 8px', borderRadius:10, background: p.rank===1 ? C.goldBg : 'transparent' }}>
+                    <span style={{ width:20, textAlign:'center', color: p.rank===1?C.gold:C.sub, fontSize:11, fontWeight:800 }}>#{p.rank}</span>
+                    <div style={{ width:26, height:26, borderRadius:'50%', background:C.goldGrad, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, flexShrink:0 }}>
+                      {p.name.charAt(0)}
                     </div>
-                  );
-                })}
+                    <span style={{ flex:1, color:C.text, fontSize:10.5, fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</span>
+                    <span style={{ color:C.sub, fontSize:9.5, fontWeight:700 }}>{p.pts.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
               <button onClick={()=>navigate('/student/league')} style={{ width:'100%', padding:'8px', borderRadius:10, background:'linear-gradient(135deg,#162144,#0D1535)', color:'#fff', fontWeight:700, fontSize:11, border:'none', cursor:'pointer', minHeight:36 }}>
                 عرض الترتيب الكامل
@@ -606,12 +406,14 @@ export default function StudentDashboardPage() {
             {/* Points */}
             <div style={{ ...card, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center' }}>
               <SecH title="نقاطي" />
-              <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:2 }}>
-                <span style={{ fontSize:18 }}>⭐</span>
-                <span style={{ color:C.text, fontWeight:900, fontSize:26, lineHeight:1 }}>{pts.toLocaleString()}</span>
+              <div style={{ width:52, height:52, borderRadius:'50%', background:C.goldBg, display:'flex', alignItems:'center', justifyContent:'center', margin:'2px 0 10px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+                  <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
               </div>
-              <p style={{ color:C.sub, fontSize:11, marginBottom:8 }}>نقطة</p>
-              <div style={{ fontSize:44, marginBottom:8 }}>💰</div>
+              <span style={{ color:C.text, fontWeight:900, fontSize:26, lineHeight:1, marginBottom:2 }}>{pts.toLocaleString()}</span>
+              <p style={{ color:C.sub, fontSize:11, marginBottom:12 }}>نقطة</p>
               <button onClick={()=>navigate('/student/points')} style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11, border:'none', cursor:'pointer', minHeight:36 }}>
                 متجر المكافآت
               </button>
@@ -619,80 +421,7 @@ export default function StudentDashboardPage() {
           </div>
 
         </div>
-      </div>
-
-      {/* ══════ FIXED NOTIFICATION BAR ══════ */}
-      <div style={{ position:'fixed', bottom:BH, right: isMobile ? 0 : SW, left:0, background:'linear-gradient(90deg,#0D1535,#162144)', borderTop:'1px solid rgba(201,149,42,0.3)', display:'flex', alignItems:'center', gap:8, padding:'8px 14px', zIndex:90, boxShadow:'0 -4px 20px rgba(13,21,53,0.4)' }}>
-        <span style={{ fontSize:20, flexShrink:0 }}>🎁</span>
-        <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ color:'#fff', fontWeight:700, fontSize:12, lineHeight:1.3 }}>حصتك في اللغة الإنجليزية بدأت الآن</p>
-          {!isMobile && <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>انضم الآن ولا تفوت أي معلومة</p>}
-        </div>
-        <span style={{ color:C.goldL, fontWeight:800, fontSize:12, flexShrink:0, fontFamily:'monospace' }}>00:08:15</span>
-        <button onClick={()=>live?navigate(`/live/${live.agora_channel??'demo'}?classId=${live.id}`):navigate('/student/live-classes')} style={{ padding:'7px 12px', borderRadius:10, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', gap:5, boxShadow:'0 3px 12px rgba(201,149,42,0.45)', minHeight:36, minWidth:44 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1B2038" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-          </svg>
-          {!isMobile && 'انضم'}
-        </button>
-      </div>
-
-      {/* ══════ FIXED BOTTOM NAV ══════ */}
-      <div dir="rtl" style={{ position:'fixed', bottom:0, left:0, right:0, height:BH, background:C.card, borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-around', zIndex:100, boxShadow:'0 -4px 20px rgba(0,0,0,0.08)' }}>
-
-        <button onClick={()=>navigate('/student/dashboard')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-          </svg>
-          <span style={{ fontSize:9.5, fontWeight:700, color:C.gold }}>الرئيسية</span>
-          <div style={{ width:14, height:2, background:C.goldGrad, borderRadius:2 }}/>
-        </button>
-
-        <button onClick={()=>navigate('/student/live-classes')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>الجدول</span>
-        </button>
-
-        {/* Center Logo */}
-        <div style={{ position:'relative', top:-12 }}>
-          <button onClick={()=>navigate('/student/dashboard')} style={{ width:52, height:52, borderRadius:'50%', background:'linear-gradient(160deg,#1B2038,#0D1535)', border:`3px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', boxShadow:`0 6px 20px rgba(13,21,53,0.6), 0 0 0 1px ${C.gold}44`, outline:'none', overflow:'hidden', minWidth:52, minHeight:52 }}>
-            <BrandLogo size={36} />
-          </button>
-        </div>
-
-        <button onClick={()=>navigate('/student/courses')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
-          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>المكتبة</span>
-        </button>
-
-        <button onClick={()=>setShowMoreMenu(true)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'4px 12px', border:'none', background:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", minWidth:44, minHeight:44 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
-          </svg>
-          <span style={{ fontSize:9.5, fontWeight:500, color:C.sub }}>المزيد</span>
-        </button>
-
-      </div>
-
-      {/* More menu — bottom sheet with the full nav list (mirrors the desktop sidebar) */}
-      {showMoreMenu && (
-        <div onClick={()=>setShowMoreMenu(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:300, display:'flex', alignItems:'flex-end' }}>
-          <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxHeight:'70vh', overflowY:'auto', background:C.card, borderRadius:'20px 20px 0 0', padding:'10px 14px 24px' }}>
-            <div style={{ width:40, height:4, borderRadius:2, background:C.border, margin:'6px auto 14px' }}/>
-            {NAV.map((item,i) => (
-              <div key={i} onClick={()=>{ setShowMoreMenu(false); navigate(item.to); }}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 10px', borderRadius:12, cursor:'pointer' }}>
-                <span style={{ fontSize:18 }}>{item.emoji}</span>
-                <span style={{ color:C.text, fontSize:13.5, fontWeight:600 }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
+    </StudentLayout>
   );
 }

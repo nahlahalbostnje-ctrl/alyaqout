@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StudentBottomNav from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
 
 const C = {
   bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -68,7 +68,8 @@ export default function StudentMessagesPage() {
   };
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:C.bg, ...font, direction:'rtl' }}>
+    <StudentLayout>
+    <div style={{ display:'flex', flexDirection:'column', ...font, direction:'rtl' }}>
 
       {/* Hero */}
       <div style={{ background:'linear-gradient(135deg,#0D1535 0%,#1B2038 60%,#0369A1 100%)', padding:'22px 24px 26px', position:'relative', overflow:'hidden' }}>
@@ -172,7 +173,7 @@ export default function StudentMessagesPage() {
         )}
       </div>
 
-      <StudentBottomNav cur="/student/messages" />
     </div>
+    </StudentLayout>
   );
 }

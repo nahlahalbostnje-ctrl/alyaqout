@@ -1,10 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentExams, loadExam, submitExam, clearActiveExam } from '../features/student/examSlice';
 import type { ExamQuestionItem } from '../features/student/examSlice';
-import StudentBottomNav, { C, BH } from '../components/StudentBottomNav';
+import StudentLayout from '../components/StudentLayout';
 import { useEncouragement } from '../components/EncouragementToast';
+
+const C = {
+  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
+  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
+  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.25)',
+  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
+  shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444',
+};
 
 // ─── Countdown Timer ─────────────────────────────────────────────────────────
 function Countdown({ minutes, onExpire }: { minutes: number; onExpire: () => void }) {
@@ -65,7 +72,6 @@ type Tab = typeof TABS[number];
 
 export default function StudentExamsPage() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const { exams, loading, submitting, activeExam } = useAppSelector(s => s.studentExam);
   const [tab, setTab] = useState<Tab>('القادمة');
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -123,18 +129,15 @@ export default function StudentExamsPage() {
   const display = filtered.length > 0 ? filtered : (tab === 'القادمة' ? MOCK_EXAMS : []);
 
   return (
-    <div dir="rtl" style={{ background:C.bg, minHeight:'100vh', fontFamily:"'Cairo',sans-serif", paddingBottom:BH+16 }}>
+    <StudentLayout>
+    <div dir="rtl" style={{ fontFamily:"'Cairo',sans-serif" }}>
 
-      {/* Status */}
-      <div style={{ background:C.card, padding:'8px 16px 2px', display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:600, color:C.navy2 }}>
-        <span>9:41</span><span>▶▶ 🔋</span>
-      </div>
-
-      {/* Header */}
-      <div style={{ background:C.card, padding:'12px 16px', display:'flex', alignItems:'center', gap:12, borderBottom:`1px solid ${C.border}`, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
-        <button onClick={()=>navigate(-1)} style={{ width:36, height:36, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>‹</button>
-        <h1 style={{ color:C.navy2, fontWeight:800, fontSize:18, flex:1, textAlign:'center' }}>الامتحانات</h1>
-        <div style={{ width:36 }} />
+      {/* Page Header */}
+      <div style={{ padding:'20px 16px 4px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ width:4, height:22, borderRadius:2, background:C.goldGrad }} />
+          <h1 style={{ color:C.text, fontWeight:900, fontSize:20, margin:0 }}>الامتحانات 📝</h1>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -182,8 +185,8 @@ export default function StudentExamsPage() {
         </button>
       </div>
 
-      <StudentBottomNav cur="/student/exams" />
       {toastEl}
     </div>
+    </StudentLayout>
   );
 }

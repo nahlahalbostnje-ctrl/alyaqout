@@ -115,6 +115,8 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
+            overflowY: 'auto',
+            minHeight: 0,
           }}
         >
           {navItems.map((item) => (
@@ -164,6 +166,7 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
         {/* User + Logout */}
         <div
           style={{
+            flexShrink: 0,
             padding: '10px 10px 14px',
             borderTop: '1px solid rgba(255,255,255,0.07)',
           }}
@@ -299,11 +302,18 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
               >
                 {initials}
               </div>
-              <div>
-                <p style={{ color: '#1B2038', fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{user?.name}</p>
-                <p style={{ color: GOLD, fontSize: 10.5 }}>{roleLabel}</p>
-              </div>
+              {!isMobile && (
+                <div>
+                  <p style={{ color: '#1B2038', fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{user?.name}</p>
+                  <p style={{ color: GOLD, fontSize: 10.5 }}>{roleLabel}</p>
+                </div>
+              )}
             </div>
+
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>
+              🚪
+            </button>
           </div>
         </header>
 

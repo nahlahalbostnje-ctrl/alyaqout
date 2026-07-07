@@ -37,6 +37,10 @@ const navItems = [
   { to: '/student/time-capsule',    label: 'الكبسولة الزمنية',      icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4' },
   { to: '/student/review-videos',  label: 'فيديوهات المراجعة',    icon: 'M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z' },
   { to: '/student/emergency',      label: 'غرفة الطوارئ',          icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+  { to: '/student/peer-league',    label: 'دوري الزملاء',          icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+  { to: '/student/study-24',       label: 'غرفة الدراسة 24/7',     icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { to: '/student/messages',       label: 'الرسائل',                icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+  { to: '/student/teacher-contact', label: 'تواصل مع المعلم',      icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
 ];
 
 const PAGE_NAMES: Record<string, string> = {
@@ -110,7 +114,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 8px', overflowY:'auto', scrollbarWidth:'none' }}>
+        <nav style={{ flex:1, padding:'10px 8px', overflowY:'auto', scrollbarWidth:'none', minHeight:0 }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} style={{ textDecoration:'none' }}>
               {({ isActive }) => (
@@ -133,7 +137,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* User Card */}
-        <div style={{ padding:'10px 8px 14px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ flexShrink:0, padding:'10px 8px 14px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px', borderRadius:12, background:'rgba(255,255,255,0.06)', marginBottom:8 }}>
             <div style={{ width:32, height:32, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', color:'#1B2038', fontWeight:900, fontSize:12, flexShrink:0 }}>
               {initials}
@@ -175,6 +179,12 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             {!isMobile && <span style={{ color:'#9CA3AF', fontSize:12 }}>{dateStr}</span>}
             <NotificationBell />
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:36, height:36, borderRadius:10, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, color:'#EF4444' }}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </header>
 

@@ -33,7 +33,26 @@ class UserController extends Controller
 
         $users = $query->get(['id', 'name', 'phone', 'role', 'address', 'city_id', 'is_active', 'created_at']);
 
+        $users->transform(function (User $u) {
+            if ($u->role === 'parent') {
+                $u->phone = $this->maskPhone($u->phone);
+            }
+            return $u;
+        });
+
         return response()->json(['success' => true, 'data' => $users]);
+    }
+
+    /**
+     * Admin only sees a masked phone for parents — full number is Super Admin-only.
+     */
+    private function maskPhone(string $phone): string
+    {
+        $len = strlen($phone);
+        if ($len <= 4) {
+            return str_repeat('*', $len);
+        }
+        return str_repeat('*', $len - 4) . substr($phone, -4);
     }
 
     public function store(Request $request): JsonResponse

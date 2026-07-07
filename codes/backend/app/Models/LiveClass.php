@@ -11,6 +11,7 @@ class LiveClass extends Model
 {
     protected $fillable = [
         'country_id', 'course_id', 'teacher_id',
+        'session_type', 'student_id',
         'title', 'description', 'scheduled_at',
         'duration_minutes', 'status', 'meeting_link', 'agora_channel',
     ];
@@ -23,4 +24,5 @@ class LiveClass extends Model
     public function country(): BelongsTo { return $this->belongsTo(Country::class); }
     public function course(): BelongsTo  { return $this->belongsTo(Course::class); }
     public function teacher(): BelongsTo { return $this->belongsTo(User::class, 'teacher_id'); }
+    public function student(): BelongsTo { return $this->belongsTo(User::class, 'student_id'); }
 }

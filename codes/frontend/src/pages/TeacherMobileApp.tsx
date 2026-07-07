@@ -870,6 +870,8 @@ export default function TeacherMobileApp() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <button onClick={() => setNavOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 18 }}>☰</button>
             <span style={{ color: T.text, fontWeight: 800, fontSize: 14 }}>أ. {teacher?.name?.split(' ')[0] ?? '...'}</span>
+            {/* Always-visible logout — no need to open the sidebar drawer */}
+            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.28)', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🚪</button>
           </div>
         )}
         {screen === 'home' && (
