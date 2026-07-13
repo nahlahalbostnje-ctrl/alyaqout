@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import type { CountryAdmin } from '../features/countries/countriesSlice';
@@ -12,75 +12,127 @@ import {
 import { impersonate } from '../features/auth/authSlice';
 import api from '../services/axios';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useToast } from '../components/Toast';
+import { getApiError } from '../utils/apiError';
 
-const DK = {
-  card:    { background: C.card, border: `1px solid ${C.border}`, boxShadow: C.shadow },
-  gold:    C.gold,
-  goldL:   C.goldL,
-  navy:    '#fff',
-  dimTxt:  C.sub,
-  inputStyle: {
-    background: C.bg,
-    border: `1px solid ${C.border}`,
-    color: C.text,
-    borderRadius: '12px',
-    padding: '10px 14px',
-    fontSize: '13px',
-    width: '100%',
-    outline: 'none',
-  } as React.CSSProperties,
-};
+const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
+  background: C.card,
+  borderRadius: 18,
+  padding: 16,
+  boxShadow: C.shadow,
+  border: `1px solid ${C.border}`,
+  ...e,
+});
+
+const inp = (): React.CSSProperties => ({
+  width: '100%',
+  padding: '9px 14px',
+  borderRadius: 11,
+  border: `1px solid ${C.border}`,
+  background: C.bg,
+  color: C.text,
+  fontSize: 13,
+  outline: 'none',
+  boxSizing: 'border-box',
+  fontFamily: "'Cairo',sans-serif",
+});
+
+const btnIcon = (): React.CSSProperties => ({
+  height: 30,
+  padding: '0 10px',
+  borderRadius: 8,
+  border: `1px solid ${C.border}`,
+  background: 'transparent',
+  cursor: 'pointer',
+  fontSize: 11,
+  fontWeight: 800,
+  fontFamily: "'Cairo',sans-serif",
+  whiteSpace: 'nowrap',
+});
 
 export default function CountryAdminsPage() {
   const { countryId } = useParams<{ countryId: string }>();
-  const navigate       = useNavigate();
-  const dispatch       = useAppDispatch();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const toast = useToast();
   const { list, loading } = useAppSelector((s) => s.countries);
 
   const country = list.find((c) => c.id === Number(countryId));
 
-  const [form, setForm]       = useState({ name: '', phone: '' });
-  const [saving, setSaving]   = useState(false);
+  const [form, setForm] = useState({ name: '', phone: '' });
+  const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<CountryAdmin | null>(null);
-  const [deleting, setDeleting]           = useState(false);
-  const [editAdmin, setEditAdmin]         = useState<CountryAdmin | null>(null);
-  const [editForm, setEditForm]           = useState({ name: '', phone: '' });
-  const [editSaving, setEditSaving]       = useState(false);
-  const [editErr, setEditErr]             = useState('');
-  const [toggling, setToggling]           = useState<number | null>(null);
-  const [enteringId, setEnteringId]       = useState<number | null>(null);
-  const [enterErr, setEnterErr]           = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
+  const [editAdmin, setEditAdmin] = useState<CountryAdmin | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', phone: '' });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editErr, setEditErr] = useState('');
+  const [toggling, setToggling] = useState<number | null>(null);
+  const [enteringId, setEnteringId] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (list.length === 0) dispatch(fetchCountries());
+    if (list.length === 0) void dispatch(fetchCountries());
   }, [dispatch, list.length]);
 
+  const admins = country?.admins ?? [];
+  const activeCount = useMemo(() => admins.filter((a) => a.is_active).length, [admins]);
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    if (!q) return admins;
+    return admins.filter((a) => a.name.includes(q) || a.phone.includes(q));
+  }, [admins, search]);
+
   async function handleAdd() {
-    if (!form.name.trim() || !form.phone.trim()) { setFormErr('الاسم ورقم الهاتف مطلوبان'); return; }
-    setSaving(true); setFormErr('');
+    if (!form.name.trim() || !form.phone.trim()) {
+      setFormErr('الاسم ورقم الهاتف مطلوبان');
+      return;
+    }
+    setSaving(true);
+    setFormErr('');
     try {
-      await dispatch(createCountryAdmin({ countryId: Number(countryId), name: form.name, phone: form.phone })).unwrap();
+      await dispatch(createCountryAdmin({
+        countryId: Number(countryId),
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+      })).unwrap();
       setForm({ name: '', phone: '' });
-    } catch (e: any) { setFormErr(e as string); }
-    finally { setSaving(false); }
+      setShowAdd(false);
+      toast.success('تم إضافة المسؤول بنجاح');
+      await dispatch(fetchCountries());
+    } catch (e: unknown) {
+      const msg = typeof e === 'string' ? e : getApiError(e, 'تعذّر إضافة المسؤول');
+      setFormErr(msg);
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleToggle(adminId: number) {
     setToggling(adminId);
-    await dispatch(toggleCountryAdmin({ countryId: Number(countryId), adminId }));
-    setToggling(null);
+    try {
+      await dispatch(toggleCountryAdmin({ countryId: Number(countryId), adminId }));
+      await dispatch(fetchCountries());
+    } catch (e: unknown) {
+      toast.error(getApiError(e, 'تعذّر تغيير حالة المسؤول'));
+    } finally {
+      setToggling(null);
+    }
   }
 
   async function handleEnterAsAdmin(adminId: number) {
     setEnteringId(adminId);
-    setEnterErr('');
     try {
       const { data } = await api.post(`/super-admin/impersonate/${adminId}`);
       dispatch(impersonate({ token: data.token, user: data.user }));
       navigate('/admin/dashboard');
-    } catch {
-      setEnterErr('تعذّر الدخول كهذا المسؤول.');
+    } catch (e: unknown) {
+      toast.error(getApiError(e, 'تعذّر الدخول كهذا المسؤول'));
     } finally {
       setEnteringId(null);
     }
@@ -94,32 +146,54 @@ export default function CountryAdminsPage() {
 
   async function handleUpdate() {
     if (!editAdmin) return;
-    if (!editForm.name.trim() || !editForm.phone.trim()) { setEditErr('الاسم ورقم الهاتف مطلوبان'); return; }
-    setEditSaving(true); setEditErr('');
+    if (!editForm.name.trim() || !editForm.phone.trim()) {
+      setEditErr('الاسم ورقم الهاتف مطلوبان');
+      return;
+    }
+    setEditSaving(true);
+    setEditErr('');
     try {
-      await dispatch(updateCountryAdmin({ countryId: Number(countryId), adminId: editAdmin.id, name: editForm.name, phone: editForm.phone })).unwrap();
+      await dispatch(updateCountryAdmin({
+        countryId: Number(countryId),
+        adminId: editAdmin.id,
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+      })).unwrap();
       setEditAdmin(null);
-    } catch (e: any) { setEditErr(e as string); }
-    finally { setEditSaving(false); }
+      toast.success('تم تحديث بيانات المسؤول');
+      await dispatch(fetchCountries());
+    } catch (e: unknown) {
+      const msg = typeof e === 'string' ? e : getApiError(e, 'تعذّر تحديث المسؤول');
+      setEditErr(msg);
+      toast.error(msg);
+    } finally {
+      setEditSaving(false);
+    }
   }
 
   async function handleDelete() {
     if (!confirmDelete) return;
     setDeleting(true);
+    setDeleteErr(null);
     try {
-      await dispatch(deleteCountryAdmin({ countryId: Number(countryId), adminId: confirmDelete.id })).unwrap();
+      await dispatch(deleteCountryAdmin({
+        countryId: Number(countryId),
+        adminId: confirmDelete.id,
+      })).unwrap();
       setConfirmDelete(null);
-    } catch { /* ignored */ }
-    finally { setDeleting(false); }
+      toast.success('تم حذف المسؤول');
+      await dispatch(fetchCountries());
+    } catch (e: unknown) {
+      setDeleteErr(getApiError(e, 'تعذّر حذف المسؤول'));
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (loading && !country) {
     return (
       <SuperAdminShell>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-10 h-10 rounded-full animate-spin"
-            style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
-        </div>
+        <p style={{ textAlign: 'center', color: C.sub, padding: 60 }}>جارٍ التحميل...</p>
       </SuperAdminShell>
     );
   }
@@ -127,12 +201,16 @@ export default function CountryAdminsPage() {
   if (!country) {
     return (
       <SuperAdminShell>
-        <div className="flex flex-col items-center justify-center h-64 gap-4" dir="rtl">
-          <p style={{ color: DK.dimTxt }}>الدولة غير موجودة</p>
+        <div style={card({ textAlign: 'center', padding: 40 })}>
+          <p style={{ color: C.sub, fontSize: 14, marginBottom: 14 }}>الدولة غير موجودة</p>
           <button
+            type="button"
             onClick={() => navigate('/dashboard/countries')}
-            className="text-sm font-bold transition hover:opacity-70"
-            style={{ color: DK.gold }}
+            style={{
+              padding: '9px 18px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13,
+              fontFamily: "'Cairo',sans-serif",
+            }}
           >
             العودة لإدارة الدول
           </button>
@@ -143,292 +221,289 @@ export default function CountryAdminsPage() {
 
   return (
     <SuperAdminShell>
-      <div dir="rtl">
-
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <button
-              onClick={() => navigate('/dashboard/countries')}
-              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all hover:bg-black/5"
-              style={{ background: C.bg, border: `1px solid ${C.border}`, color: DK.dimTxt }}
-            >
-              <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>
-              إدارة الدول
-            </span>
-          </div>
-          <h1 className="text-2xl font-black mt-1" style={{ color: '#1B2038' }}>مسؤولو {country.name}</h1>
-          <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>{country.admins.length} مسؤول مسجّل</p>
-          <div className="mt-5 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(201,149,42,0.2), transparent)' }} />
-          {enterErr && (
-            <p className="text-xs px-3 py-2 rounded-lg mt-4" style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
-              {enterErr}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Admins list */}
-          <div className="lg:col-span-2">
-            <div className="rounded-2xl overflow-hidden" style={DK.card}>
-              <div className="px-5 py-4" style={{ borderBottom: '1px solid #EDE3CE' }}>
-                <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: DK.gold }}>قائمة المسؤولين</h3>
-              </div>
-              {country.admins.length === 0 ? (
-                <div className="py-16 text-center">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                    style={{ background: 'rgba(201,149,42,0.08)', border: '1px solid #EDE3CE' }}>
-                    <svg className="w-5 h-5" fill="none" stroke="rgba(201,149,42,0.4)" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm" style={{ color: DK.dimTxt }}>لا يوجد مسؤولون لهذه الدولة بعد</p>
-                </div>
-              ) : (
-                <div>
-                  {country.admins.map((admin) => (
-                    <div
-                      key={admin.id}
-                      className="flex items-center justify-between px-5 py-4 transition-colors"
-                      style={{ borderBottom: '1px solid #EDE3CE' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,149,42,0.04)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                        >
-                          {admin.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm" style={{ color: '#1B2038' }}>{admin.name}</p>
-                          <p className="text-xs mt-0.5 dir-ltr" style={{ color: DK.dimTxt }}>{admin.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap justify-end">
-                        <span
-                          className="text-xs px-2.5 py-1 rounded-full font-bold"
-                          style={admin.is_active
-                            ? { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                            : { background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }
-                          }
-                        >
-                          {admin.is_active ? 'نشط' : 'معطّل'}
-                        </span>
-                        <button
-                          onClick={() => handleEnterAsAdmin(admin.id)}
-                          disabled={enteringId === admin.id}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80 disabled:opacity-40"
-                          style={{ background: 'rgba(147,51,234,0.08)', color: '#9333EA', border: '1px solid rgba(147,51,234,0.2)' }}
-                          title="دخول كهذا المسؤول لرؤية لوحته بالكامل"
-                        >
-                          {enteringId === admin.id ? '...' : '🔑 دخول كأدمن'}
-                        </button>
-                        <button
-                          onClick={() => openEdit(admin)}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
-                          style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.2)' }}
-                        >
-                          تعديل
-                        </button>
-                        <button
-                          onClick={() => handleToggle(admin.id)}
-                          disabled={toggling === admin.id}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80 disabled:opacity-40"
-                          style={admin.is_active
-                            ? { background: 'rgba(245,158,11,0.08)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }
-                            : { background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }
-                          }
-                        >
-                          {toggling === admin.id ? '...' : admin.is_active ? 'تعطيل' : 'تفعيل'}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(admin)}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
-                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Add form */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/countries')}
+            title="العودة"
+            style={{
+              width: 38, height: 38, borderRadius: 12, border: `1px solid ${C.border}`,
+              background: C.bg, color: C.sub, cursor: 'pointer', fontSize: 16, fontWeight: 700,
+            }}
+          >
+            →
+          </button>
           <div>
-            <div className="rounded-2xl p-5" style={DK.card}>
-              <h3 className="text-xs font-bold uppercase tracking-wide mb-5" style={{ color: DK.gold }}>
-                إضافة مسؤول جديد
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الاسم الكامل</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                    placeholder="مثال: محمد أحمد"
-                    style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>رقم الهاتف</label>
-                  <input
-                    type="text"
-                    value={form.phone}
-                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+970599000000"
-                    dir="ltr"
-                    style={DK.inputStyle}
-                    onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                    onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                  />
-                </div>
-                {formErr && (
-                  <p className="text-xs px-3 py-2 rounded-lg"
-                    style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
-                    {formErr}
-                  </p>
-                )}
-                <button
-                  onClick={handleAdd}
-                  disabled={saving}
-                  className="w-full py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                >
-                  {saving ? 'جاري الإضافة…' : 'إضافة المسؤول'}
-                </button>
-              </div>
-            </div>
+            <h1 style={{ color: C.text, fontWeight: 900, fontSize: 20, margin: 0 }}>
+              مسؤولو {country.name}
+            </h1>
+            <p style={{ color: C.sub, fontSize: 12, marginTop: 2 }}>
+              {country.code} · عملة {country.currency} · إدارة حسابات أدمن الدولة
+            </p>
           </div>
-
         </div>
+        <button
+          type="button"
+          onClick={() => { setShowAdd(true); setFormErr(''); setForm({ name: '', phone: '' }); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 12,
+            background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13, border: 'none',
+            cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+            boxShadow: '0 4px 14px rgba(201,149,42,0.3)',
+          }}
+        >
+          + إضافة مسؤول
+        </button>
       </div>
 
-      {/* Edit modal */}
-      {editAdmin && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
-          dir="rtl"
-          onClick={() => setEditAdmin(null)}
-        >
-          <div
-            className="w-full max-w-sm p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>تعديل بيانات المسؤول</h3>
-              <button onClick={() => setEditAdmin(null)}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
-                style={{ color: DK.dimTxt }}>×</button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10, marginBottom: 14 }}>
+        {[
+          { label: 'إجمالي المسؤولين', value: String(admins.length), icon: '👤', color: C.gold },
+          { label: 'النشطون', value: String(activeCount), icon: '✅', color: C.green },
+          { label: 'الموقوفون', value: String(Math.max(0, admins.length - activeCount)), icon: '⏸️', color: C.orange },
+          { label: 'الدولة', value: country.name, icon: '🗺️', color: C.blue },
+        ].map((s) => (
+          <div key={s.label} style={card({ padding: 14, display: 'flex', alignItems: 'center', gap: 12 })}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 13, background: `${s.color}18`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
+            }}>
+              {s.icon}
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>الاسم الكامل</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
-                  style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: DK.gold }}>رقم الهاتف</label>
-                <input
-                  type="text"
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
-                  dir="ltr"
-                  style={DK.inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#C9952A')}
-                  onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
-                />
-              </div>
-              {editErr && (
-                <p className="text-xs px-3 py-2 rounded-lg"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}>
-                  {editErr}
-                </p>
-              )}
-              <div className="flex gap-3 pt-1">
-                <button
-                  onClick={handleUpdate}
-                  disabled={editSaving}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                  style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
-                >
-                  {editSaving ? 'جاري الحفظ…' : 'حفظ التعديلات'}
-                </button>
-                <button onClick={() => setEditAdmin(null)}
-                  className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
-                  إلغاء
-                </button>
-              </div>
+            <div>
+              <p style={{ color: C.text, fontWeight: 900, fontSize: s.label === 'الدولة' ? 15 : 20, margin: 0 }}>{s.value}</p>
+              <p style={{ color: C.sub, fontSize: 11, margin: 0 }}>{s.label}</p>
             </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* Delete confirmation */}
-      {confirmDelete && (
+      <div style={card({ marginBottom: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 })}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14 }}>🔍</span>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث بالاسم أو الهاتف..."
+            style={{
+              width: '100%', padding: '8px 38px 8px 12px', borderRadius: 10,
+              border: `1px solid ${C.border}`, background: C.bg, color: C.text,
+              fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: "'Cairo',sans-serif",
+            }}
+          />
+        </div>
+        <p style={{ color: C.sub, fontSize: 12, margin: 0, flexShrink: 0 }}>
+          {filtered.length} مسؤول
+        </p>
+      </div>
+
+      <div style={card({ padding: 0, overflowX: 'auto' })}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+          <thead>
+            <tr style={{ background: 'rgba(0,0,0,0.03)' }}>
+              {['المسؤول', 'الهاتف', 'الحالة', 'إجراءات'].map((h) => (
+                <th key={h} style={{
+                  padding: '12px 14px', textAlign: 'right', color: C.sub, fontSize: 11,
+                  fontWeight: 700, borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap',
+                }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={4}>
+                  <p style={{ textAlign: 'center', color: C.sub, padding: 40 }}>
+                    {admins.length === 0 ? 'لا يوجد مسؤولون لهذه الدولة بعد.' : 'لا نتائج للبحث.'}
+                  </p>
+                </td>
+              </tr>
+            ) : filtered.map((admin) => (
+              <tr key={admin.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 12, background: C.goldGrad,
+                      color: '#1B2038', fontWeight: 900, fontSize: 14,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}>
+                      {admin.name.charAt(0)}
+                    </div>
+                    <p style={{ color: C.text, fontWeight: 700, fontSize: 13, margin: 0 }}>{admin.name}</p>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 14px', color: C.text, fontSize: 12, direction: 'ltr', textAlign: 'right' }}>
+                  {admin.phone}
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <span style={{
+                    padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    background: admin.is_active ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)',
+                    color: admin.is_active ? C.green : C.orange,
+                  }}>
+                    {admin.is_active ? 'نشط' : 'موقوف'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => void handleEnterAsAdmin(admin.id)}
+                      disabled={enteringId === admin.id}
+                      title="دخول كلوحة أدمن الدولة"
+                      style={{ ...btnIcon(), background: C.goldBg, color: C.gold, border: `1px solid ${C.goldBdr}` }}
+                    >
+                      {enteringId === admin.id ? '...' : '🔑 دخول'}
+                    </button>
+                    <button type="button" onClick={() => openEdit(admin)} title="تعديل" style={{ ...btnIcon(), width: 30, padding: 0, fontSize: 13 }}>
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggle(admin.id)}
+                      disabled={toggling === admin.id}
+                      title={admin.is_active ? 'إيقاف' : 'تفعيل'}
+                      style={{ ...btnIcon(), width: 30, padding: 0, fontSize: 13 }}
+                    >
+                      {toggling === admin.id ? '…' : '🔒'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDeleteErr(null); setConfirmDelete(admin); }}
+                      title="حذف"
+                      style={{ ...btnIcon(), width: 30, padding: 0, fontSize: 13 }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showAdd && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
-          dir="rtl"
-          onClick={() => setConfirmDelete(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => { if (!saving) setShowAdd(false); }}
         >
           <div
-            className="w-full max-w-sm p-6 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}
+            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-              <svg className="w-6 h-6" fill="none" stroke="#EF4444" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h2 style={{ color: C.text, fontWeight: 900, fontSize: 17, margin: 0 }}>إضافة مسؤول — {country.name}</h2>
+              <button type="button" onClick={() => setShowAdd(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: C.sub }}>×</button>
             </div>
-            <h3 className="text-base font-bold text-center mb-2" style={{ color: '#1B2038' }}>تأكيد الحذف</h3>
-            <p className="text-sm text-center mb-5" style={{ color: DK.dimTxt }}>
-              هل تريد حذف المسؤول <span className="font-bold" style={{ color: '#1B2038' }}>{confirmDelete.name}</span>؟ لا يمكن التراجع.
-            </p>
-            <div className="flex gap-3">
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>الاسم الكامل</label>
+              <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="مثال: محمد أحمد" style={inp()} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>رقم الهاتف</label>
+              <input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            {formErr && (
+              <p style={{ color: C.red, fontSize: 12, fontWeight: 700, marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 12px' }}>
+                {formErr}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: 10 }}>
               <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
-                style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                type="button"
+                disabled={saving}
+                onClick={() => void handleAdd()}
+                style={{
+                  flex: 1, padding: 11, borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13,
+                  opacity: saving ? 0.7 : 1, fontFamily: "'Cairo',sans-serif",
+                }}
               >
-                {deleting ? 'جاري الحذف…' : 'حذف'}
+                {saving ? 'جارٍ الإضافة...' : 'إضافة المسؤول'}
               </button>
-              <button onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm"
-                style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
+              <button
+                type="button"
+                onClick={() => setShowAdd(false)}
+                style={{
+                  flex: 1, padding: 11, borderRadius: 12, border: `1px solid ${C.border}`,
+                  background: C.bg, color: C.sub, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  fontFamily: "'Cairo',sans-serif",
+                }}
+              >
                 إلغاء
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {editAdmin && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => { if (!editSaving) setEditAdmin(null); }}
+        >
+          <div
+            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h2 style={{ color: C.text, fontWeight: 900, fontSize: 17, margin: 0 }}>تعديل المسؤول</h2>
+              <button type="button" onClick={() => setEditAdmin(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: C.sub }}>×</button>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>الاسم الكامل</label>
+              <input value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} style={inp()} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>رقم الهاتف</label>
+              <input value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            {editErr && (
+              <p style={{ color: C.red, fontSize: 12, fontWeight: 700, marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 12px' }}>
+                {editErr}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                disabled={editSaving}
+                onClick={() => void handleUpdate()}
+                style={{
+                  flex: 1, padding: 11, borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13,
+                  opacity: editSaving ? 0.7 : 1, fontFamily: "'Cairo',sans-serif",
+                }}
+              >
+                {editSaving ? 'جارٍ الحفظ...' : 'حفظ التعديلات'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditAdmin(null)}
+                style={{
+                  flex: 1, padding: 11, borderRadius: 12, border: `1px solid ${C.border}`,
+                  background: C.bg, color: C.sub, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  fontFamily: "'Cairo',sans-serif",
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        itemLabel={confirmDelete?.name}
+        busy={deleting}
+        error={deleteErr}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => { if (!deleting) { setConfirmDelete(null); setDeleteErr(null); } }}
+      />
     </SuperAdminShell>
   );
 }
