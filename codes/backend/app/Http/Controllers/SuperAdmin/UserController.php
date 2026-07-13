@@ -23,7 +23,7 @@ class UserController extends Controller
         ]);
 
         $query = User::query()
-            ->with(['country:id,name,code'])
+            ->with(['country:id,name,code', 'parentUser:id,name,phone'])
             ->whereNull('deleted_at')
             ->whereIn('role', ['teacher', 'supervisor', 'student', 'parent', 'admin'])
             ->orderBy('name');
@@ -113,7 +113,7 @@ class UserController extends Controller
             'is_active'  => true,
         ]);
 
-        $user->load('country:id,name,code');
+        $user->load(['country:id,name,code', 'parentUser:id,name,phone']);
 
         return response()->json([
             'success' => true,
@@ -138,6 +138,7 @@ class UserController extends Controller
             'password'   => 'nullable|string|min:6|max:100',
             'country_id' => 'sometimes|exists:countries,id',
             'role'       => 'sometimes|in:teacher,supervisor,student,parent,admin',
+            'parent_id'  => 'nullable|exists:users,id',
         ]);
 
         $data = [];
@@ -189,8 +190,31 @@ class UserController extends Controller
             }
         }
 
+        $effectiveRole = $data['role'] ?? $user->role;
+        $effectiveCountryId = $data['country_id'] ?? $user->country_id;
+
+        if ($request->has('parent_id')) {
+            if ($effectiveRole !== 'student' || ! $request->filled('parent_id')) {
+                $data['parent_id'] = null;
+            } else {
+                $parent = User::where('id', (int) $request->parent_id)
+                    ->where('role', 'parent')
+                    ->where('country_id', $effectiveCountryId)
+                    ->first();
+                if (! $parent) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'ولي الأمر غير موجود أو من دولة أخرى.',
+                    ], 422);
+                }
+                $data['parent_id'] = $parent->id;
+            }
+        } elseif (($data['role'] ?? null) === 'parent') {
+            $data['parent_id'] = null;
+        }
+
         $user->update($data);
-        $user->load('country:id,name,code');
+        $user->load(['country:id,name,code', 'parentUser:id,name,phone']);
 
         return response()->json([
             'success' => true,
@@ -205,7 +229,7 @@ class UserController extends Controller
         $this->authorizeManaged($user);
 
         $user->update(['is_active' => ! $user->is_active]);
-        $user->load('country:id,name,code');
+        $user->load(['country:id,name,code', 'parentUser:id,name,phone']);
 
         return response()->json([
             'success' => true,
@@ -248,6 +272,8 @@ class UserController extends Controller
             'country_code' => $u->country?->code,
             'is_active'    => $u->is_active,
             'parent_id'    => $u->parent_id,
+            'parent_name'  => $u->parentUser?->name,
+            'parent_phone' => $u->parentUser?->phone,
             'created_at'   => $u->created_at?->toIso8601String(),
         ];
     }
