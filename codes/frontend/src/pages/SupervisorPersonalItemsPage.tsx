@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import SupervisorLayout from '../components/SupervisorLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const C = {
   gold:'#C59341', goldG:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -47,9 +48,28 @@ export default function SupervisorPersonalItemsPage() {
     } finally { setSaving(false); }
   };
 
-  const del = async (id:number) => {
-    if(!confirm('حذف هذا العنصر؟')) return;
-    await api.delete(`/supervisor/my-items/${id}`); load();
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/supervisor/my-items/${pendingDelete.id}`);
+      setPendingDelete(null);
+      load();
+    } catch {
+      setDeleteError('فشل الحذف');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   const visible = filter==='الكل' ? items : items.filter(i=>STATUS_LABEL[i.status]===filter||PRIORITY_LABEL[i.priority]===filter);
@@ -106,7 +126,7 @@ export default function SupervisorPersonalItemsPage() {
                   </div>
                   <div style={{display:'flex',gap:5,flexShrink:0,marginRight:8}}>
                     <button onClick={()=>openEdit(it)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>✏️</button>
-                    <button onClick={()=>del(it.id)}   style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>🗑️</button>
+                    <button onClick={()=>askDelete(it.id, it.title)}   style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:12}}>🗑️</button>
                   </div>
                 </div>
                 {it.description&&<p style={{color:C.sub,fontSize:12,marginBottom:10,lineHeight:1.5}}>{it.description}</p>}
@@ -172,6 +192,14 @@ export default function SupervisorPersonalItemsPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </SupervisorLayout>
   );
 }

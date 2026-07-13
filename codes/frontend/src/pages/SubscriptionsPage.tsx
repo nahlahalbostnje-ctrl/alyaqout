@@ -8,6 +8,7 @@ import { fetchPackages } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -149,9 +150,27 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const handleCancel = async (sub: Subscription) => {
-    if (!confirm(`هل تريد إلغاء اشتراك ${sub.student.name}؟`)) return;
-    await dispatch(cancelSubscription(sub.id));
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askCancel = (sub: Subscription) => {
+    setDeleteError(null);
+    setPendingDelete({ id: sub.id, label: sub.student.name });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await dispatch(cancelSubscription(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر إلغاء الاشتراك');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   // ── Installments (تقسيط الدفعات) ──
@@ -304,7 +323,7 @@ export default function SubscriptionsPage() {
                                 style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(197,147,65,0.1)', color: DK.gold, fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                                 تقسيط
                               </button>
-                              <button onClick={() => handleCancel(sub)}
+                              <button onClick={() => askCancel(sub)}
                                 style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                                 إلغاء
                               </button>
@@ -450,6 +469,17 @@ export default function SubscriptionsPage() {
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        title="تأكيد الإلغاء"
+        itemLabel={pendingDelete?.label}
+        confirmText="نعم، ألغِ الاشتراك"
+        message={pendingDelete ? <>هل تريد إلغاء اشتراك <strong style={{ color: '#1B2038' }}>«{pendingDelete.label}»</strong>؟</> : null}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

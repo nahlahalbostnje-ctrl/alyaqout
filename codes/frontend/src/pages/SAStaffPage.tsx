@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -47,6 +48,9 @@ export default function SAStaffPage() {
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -131,13 +135,23 @@ export default function SAStaffPage() {
     }
   };
 
-  const deleteUser = async (u: StaffUser) => {
-    if (!confirm(`هل تريد حذف حساب ${u.name}؟`)) return;
+  const askDeleteUser = (u: StaffUser) => {
+    setDeleteError(null);
+    setPendingDelete({ id: u.id, label: u.name });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     try {
-      await api.delete(`/super-admin/users/${u.id}`);
+      await api.delete(`/super-admin/users/${pendingDelete.id}`);
+      setPendingDelete(null);
       await loadUsers();
     } catch {
-      alert('تعذّر حذف الحساب');
+      setDeleteError('تعذّر حذف الحساب');
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -226,7 +240,7 @@ export default function SAStaffPage() {
                 <td style={{ padding:'12px 14px' }}>
                   <div style={{ display:'flex', gap:6 }}>
                     <button onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
-                    <button onClick={()=>deleteUser(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
+                    <button onClick={()=>askDeleteUser(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -298,6 +312,14 @@ export default function SAStaffPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmDeleteUser()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </SuperAdminShell>
   );
 }

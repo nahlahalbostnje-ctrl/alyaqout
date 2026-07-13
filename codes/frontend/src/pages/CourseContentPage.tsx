@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchUnits, addUnit, deleteUnit,
@@ -74,6 +75,15 @@ export default function CourseContentPage() {
 
   const [videoModal, setVideoModal]   = useState<number | null>(null);
   const [videoForm, setVideoForm]     = useState({ title: '', video_url: '', type: 'video' as ContentType, duration: '' });
+  const [pendingDelete, setPendingDelete] = useState<
+    | { kind: 'unit'; id: number; label: string; courseId: number }
+    | { kind: 'lesson'; id: number; label: string; unitId: number }
+    | { kind: 'video'; id: number; label: string; lessonId: number }
+    | null
+  >(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
 
   useEffect(() => {
     dispatch(clearContent());
@@ -92,6 +102,27 @@ export default function CourseContentPage() {
     if (next.has(id)) { next.delete(id); }
     else { next.add(id); if (!videos[id]) dispatch(fetchVideos(id)); }
     setOpenLessons(next);
+  }
+
+
+  async function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      if (pendingDelete.kind === 'unit') {
+        await dispatch(deleteUnit({ courseId: pendingDelete.courseId, unitId: pendingDelete.id }));
+      } else if (pendingDelete.kind === 'lesson') {
+        await dispatch(deleteLesson({ unitId: pendingDelete.unitId, lessonId: pendingDelete.id }));
+      } else {
+        await dispatch(deleteVideo({ lessonId: pendingDelete.lessonId, videoId: pendingDelete.id }));
+      }
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر الحذف');
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   async function handleAddUnit(e: React.FormEvent) {
@@ -202,7 +233,7 @@ export default function CourseContentPage() {
                       + درس
                     </button>
                     <button
-                      onClick={() => dispatch(deleteUnit({ courseId: cId, unitId: unit.id }))}
+                      onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'unit', id: unit.id, label: unit.title, courseId: cId }); }}
                       className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition hover:opacity-80"
                       style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)' }}
                     >
@@ -253,7 +284,7 @@ export default function CourseContentPage() {
                                 + محتوى
                               </button>
                               <button
-                                onClick={() => dispatch(deleteLesson({ unitId: unit.id, lessonId: lesson.id }))}
+                                onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'lesson', id: lesson.id, label: lesson.title, unitId: unit.id }); }}
                                 className="text-xs font-bold px-2 py-1 rounded-lg transition hover:opacity-80"
                                 style={{ color: '#EF4444' }}
                               >
@@ -283,7 +314,7 @@ export default function CourseContentPage() {
                                       )}
                                     </div>
                                     <button
-                                      onClick={() => dispatch(deleteVideo({ lessonId: lesson.id, videoId: v.id }))}
+                                      onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'video', id: v.id, label: v.title, lessonId: lesson.id }); }}
                                       className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold"
                                       style={{ color: '#EF4444' }}
                                     >
@@ -487,6 +518,14 @@ export default function CourseContentPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

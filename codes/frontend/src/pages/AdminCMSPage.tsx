@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -216,9 +217,28 @@ function FaqsTab() {
     try { await api.put(`/admin/cms/faqs/${faq.id}`, { is_active: !faq.is_active }); await load(); } catch { /* ignore */ }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف هذا السؤال؟')) return;
-    try { await api.delete(`/admin/cms/faqs/${id}`); await load(); } catch { /* ignore */ }
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/admin/cms/faqs/${pendingDelete.id}`);
+      setPendingDelete(null);
+      await load();
+    } catch {
+      setDeleteError('فشل حذف السؤال');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   return (
@@ -270,7 +290,7 @@ function FaqsTab() {
                     color: faq.is_active?DK.red:DK.green }}>
                   {faq.is_active ? 'إخفاء' : 'إظهار'}
                 </button>
-                <button onClick={e => { e.stopPropagation(); handleDelete(faq.id); }}
+                <button onClick={e => { e.stopPropagation(); askDelete(faq.id, faq.question); }}
                   style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}>
                   حذف
                 </button>
@@ -323,6 +343,15 @@ function FaqsTab() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </div>
   );
 }
@@ -382,9 +411,28 @@ function SocialTab() {
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف هذا الرابط؟')) return;
-    try { await api.delete(`/admin/cms/social/${id}`); await load(); } catch { /* ignore */ }
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/admin/cms/social/${pendingDelete.id}`);
+      setPendingDelete(null);
+      await load();
+    } catch {
+      setDeleteError('فشل حذف الرابط');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   const handleSaveUrl = async (link: SocialLink) => {
@@ -469,7 +517,7 @@ function SocialTab() {
                 {link.is_active ? 'إخفاء' : 'إظهار'}
               </button>
               <button
-                onClick={() => handleDelete(link.id)}
+                onClick={() => askDelete(link.id, link.platform)}
                 style={{ padding:'7px 10px', borderRadius:10, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}
               >
                 حذف
@@ -521,6 +569,15 @@ function SocialTab() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </div>
   );
 }

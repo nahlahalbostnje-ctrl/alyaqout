@@ -13,6 +13,7 @@ import {
   type Course,
 } from '../features/admin/coursesSlice';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const DK = {
@@ -142,6 +143,9 @@ export default function CoursesPage() {
   const [addLoading, setAddLoading]       = useState(false);
   const [toggling, setToggling]           = useState<number | null>(null);
   const [deleting, setDeleting]           = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [teacherTarget, setTeacherTarget] = useState<Course | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<number | ''>('');
   const [teacherLoading, setTeacherLoading]   = useState(false);
@@ -201,11 +205,25 @@ export default function CoursesPage() {
     setToggling(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
-    setDeleting(id);
-    await dispatch(deleteCourse(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deleteCourse(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الدورة');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   const displayed = filterCat ? courses.filter((c) => c.category_id === filterCat) : courses;
@@ -445,7 +463,7 @@ export default function CoursesPage() {
                           {toggling === course.id ? '...' : course.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button
-                          onClick={() => handleDelete(course.id)}
+                          onClick={() => askDelete(course.id, course.title)}
                           disabled={deleting === course.id}
                           style={{
                             padding: '5px 12px', borderRadius: 8,
@@ -655,6 +673,14 @@ export default function CoursesPage() {
           </form>
         </Modal>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

@@ -7,6 +7,7 @@ import {
   deleteGrade,
 } from '../features/admin/gradesSlice';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const DK = {
@@ -131,6 +132,9 @@ export default function GradesPage() {
   const [addLoading, setAddLoading]   = useState(false);
   const [toggling, setToggling]       = useState<number | null>(null);
   const [deleting, setDeleting]       = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [nameF, setNameF]             = useState(false);
   const [sortF, setSortF]             = useState(false);
 
@@ -157,11 +161,25 @@ export default function GradesPage() {
     setToggling(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذا الصف؟')) return;
-    setDeleting(id);
-    await dispatch(deleteGrade(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deleteGrade(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الصف');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   const inp = (focused: boolean): React.CSSProperties => ({
@@ -248,7 +266,7 @@ export default function GradesPage() {
                     </span>
                   </div>
                   <button
-                    onClick={() => handleDelete(grade.id)}
+                    onClick={() => askDelete(grade.id, grade.name)}
                     disabled={deleting === grade.id}
                     style={{
                       padding: '4px 10px', borderRadius: 8, border: 'none',
@@ -351,7 +369,7 @@ export default function GradesPage() {
                           {toggling === grade.id ? '...' : grade.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button
-                          onClick={() => handleDelete(grade.id)}
+                          onClick={() => askDelete(grade.id, grade.name)}
                           disabled={deleting === grade.id}
                           style={{
                             padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
@@ -447,6 +465,14 @@ export default function GradesPage() {
           </form>
         </Modal>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

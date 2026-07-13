@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const C = {
   gold:'#C59341', goldG:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -47,9 +48,28 @@ export default function AdminPersonalItemsPage() {
     } finally { setSaving(false); }
   };
 
-  const del = async (id:number) => {
-    if(!confirm('حذف هذا العنصر؟')) return;
-    await api.delete(`/admin/my-items/${id}`); load();
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/admin/my-items/${pendingDelete.id}`);
+      setPendingDelete(null);
+      load();
+    } catch {
+      setDeleteError('فشل الحذف');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   const visible = filter==='الكل' ? items : items.filter(i=>STATUS_LABEL[i.status]===filter||PRIORITY_LABEL[i.priority]===filter);
@@ -117,7 +137,7 @@ export default function AdminPersonalItemsPage() {
                   </div>
                   <div style={{display:'flex',gap:6,flexShrink:0,marginRight:10}}>
                     <button onClick={()=>openEdit(it)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>✏️</button>
-                    <button onClick={()=>del(it.id)}   style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>🗑️</button>
+                    <button onClick={()=>askDelete(it.id, it.title)}   style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:13}}>🗑️</button>
                   </div>
                 </div>
                 {it.description&&<p style={{color:C.sub,fontSize:13,marginBottom:12,lineHeight:1.6}}>{it.description}</p>}
@@ -188,6 +208,14 @@ export default function AdminPersonalItemsPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

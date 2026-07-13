@@ -7,6 +7,7 @@ import {
   deletePackage,
 } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -65,6 +66,9 @@ export default function PackagesPage() {
   const [addLoading, setAddLoading] = useState(false);
   const [toggling, setToggling]     = useState<number | null>(null);
   const [deleting, setDeleting]     = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [focused, setFocused]       = useState<string | null>(null);
 
   useEffect(() => { dispatch(fetchPackages()); }, [dispatch]);
@@ -89,11 +93,25 @@ export default function PackagesPage() {
     setToggling(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الباقة؟')) return;
-    setDeleting(id);
-    await dispatch(deletePackage(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deletePackage(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الباقة');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   return (
@@ -175,7 +193,7 @@ export default function PackagesPage() {
                         {active ? 'نشط' : 'معطّل'}
                       </span>
                     </div>
-                    <button onClick={() => handleDelete(pkg.id)} disabled={deleting === pkg.id}
+                    <button onClick={() => askDelete(pkg.id, pkg.name)} disabled={deleting === pkg.id}
                       style={{ padding:'6px 14px', borderRadius:10, border:'none', background: 'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif", opacity: deleting === pkg.id ? 0.5 : 1 }}>
                       {deleting === pkg.id ? '...' : '🗑️ حذف'}
                     </button>
@@ -244,6 +262,14 @@ export default function PackagesPage() {
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

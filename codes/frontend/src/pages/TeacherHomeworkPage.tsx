@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchTeacherHomework, createHomework, deleteHomework,
@@ -47,6 +48,10 @@ export default function TeacherHomeworkPage() {
   const [viewSubs, setViewSubs]   = useState<number | null>(null);
   const [gradeForm, setGradeForm] = useState<Record<number, { grade: string; feedback: string }>>({});
   const [form, setForm] = useState({ course_id: '', title: '', description: '', due_date: '' });
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
 
   useEffect(() => { dispatch(fetchTeacherHomework()); }, [dispatch]);
 
@@ -60,6 +65,21 @@ export default function TeacherHomeworkPage() {
     }));
     setShowModal(false);
     setForm({ course_id: '', title: '', description: '', due_date: '' });
+  }
+
+
+  async function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await dispatch(deleteHomework(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الواجب');
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   async function handleViewSubs(hwId: number) {
@@ -128,7 +148,7 @@ export default function TeacherHomeworkPage() {
                         التسليمات
                       </button>
                     )}
-                    <button onClick={() => dispatch(deleteHomework(hw.id))}
+                    <button onClick={() => { setDeleteError(null); setPendingDelete({ id: hw.id, label: hw.title }); }}
                       className="text-xs px-2 py-1.5 rounded-lg transition"
                       style={{ background: TH.redBg, color: TH.red, border: `1px solid ${TH.redBorder}` }}>
                       حذف
@@ -230,6 +250,14 @@ export default function TeacherHomeworkPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </TeacherLayout>
   );
 }

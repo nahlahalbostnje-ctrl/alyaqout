@@ -6,6 +6,7 @@ import {
   fetchExamSubmissions, gradeExamSubmission,
 } from '../features/teacher/examSlice';
 import type { ExamQuestion } from '../features/teacher/examSlice';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const TH = {
   pageBg:     '#F5EDD8',
@@ -59,6 +60,10 @@ export default function TeacherExamsPage() {
     course_id: '', title: '', description: '', duration: '',
   });
 
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const [questions, setQuestions] = useState<ExamQuestion[]>([
     { question: '', type: 'mcq', options: ['', '', '', ''], answer: '', points: 1 },
   ]);
@@ -89,6 +94,21 @@ export default function TeacherExamsPage() {
     setShowModal(false);
     setForm({ course_id: '', title: '', description: '', duration: '' });
     setQuestions([{ question: '', type: 'mcq', options: ['', '', '', ''], answer: '', points: 1 }]);
+  }
+
+
+  async function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await dispatch(deleteExam(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الامتحان');
+    } finally {
+      setDeleteBusy(false);
+    }
   }
 
   async function handleViewSubs(examId: number) {
@@ -152,7 +172,7 @@ export default function TeacherExamsPage() {
                           التسليمات
                         </button>
                       )}
-                      <button onClick={() => dispatch(deleteExam(exam.id))}
+                      <button onClick={() => { setDeleteError(null); setPendingDelete({ id: exam.id, label: exam.title }); }}
                         className="text-xs px-2 py-1.5 rounded-lg transition"
                         style={{ background: TH.redBg, color: TH.red, border: `1px solid ${TH.redBorder}` }}>
                         حذف
@@ -301,6 +321,14 @@ export default function TeacherExamsPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </TeacherLayout>
   );
 }

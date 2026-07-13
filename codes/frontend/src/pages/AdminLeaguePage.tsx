@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -137,12 +138,28 @@ export default function AdminLeaguePage() {
     try { await api.patch(`/admin/leagues/${id}/status`, { status }); await load(); } catch { /* ignore */ }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف هذا الدوري؟')) return;
-    try { await api.delete(`/admin/leagues/${id}`); await load(); }
-    catch (err: unknown) {
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/admin/leagues/${pendingDelete.id}`);
+      setPendingDelete(null);
+      await load();
+    } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      alert(e.response?.data?.message || 'فشل الحذف');
+      setDeleteError(e.response?.data?.message || 'فشل الحذف');
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -289,7 +306,7 @@ export default function AdminLeaguePage() {
                       </button>
                     )}
                     {league.status === 'pending' && (
-                      <button onClick={() => handleDelete(league.id)}
+                      <button onClick={() => askDelete(league.id, league.name)}
                         style={{
                           padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
                           background: 'rgba(239,68,68,0.06)', color: DK.red, fontSize: 12, fontWeight: 700,
@@ -433,6 +450,14 @@ export default function AdminLeaguePage() {
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

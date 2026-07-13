@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, addUser, toggleUser, deleteUser } from '../features/admin/usersSlice';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -86,6 +87,9 @@ export default function UsersPage() {
   const [addLoading, setAddLoading] = useState(false);
   const [toggling, setToggling]     = useState<number | null>(null);
   const [deleting, setDeleting]     = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [focused, setFocused]       = useState<string | null>(null);
   const [cities, setCities]         = useState<City[]>([]);
 
@@ -233,11 +237,25 @@ export default function UsersPage() {
     setToggling(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    setDeleting(id);
-    await dispatch(deleteUser(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deleteUser(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف المستخدم');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   const tabs: { key: TabKey; label: string }[] = [
@@ -365,7 +383,7 @@ export default function UsersPage() {
                             style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(217,119,6,0.3)`, background:`rgba(217,119,6,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.orange, fontFamily:"'Cairo',sans-serif" }}>
                             دمج
                           </button>
-                          <button title="حذف" onClick={() => handleDelete(user.id)} disabled={deleting === user.id}
+                          <button title="حذف" onClick={() => askDelete(user.id, user.name)} disabled={deleting === user.id}
                             style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, opacity: deleting === user.id ? 0.5 : 1 }}>
                             🗑️
                           </button>
@@ -655,6 +673,14 @@ export default function UsersPage() {
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

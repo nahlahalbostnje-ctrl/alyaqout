@@ -8,6 +8,7 @@ import {
   deleteCategory,
 } from '../features/admin/categoriesSlice';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const DK = {
@@ -146,6 +147,9 @@ export default function CategoriesPage() {
   const [addLoading, setAddLoading]        = useState(false);
   const [toggling, setToggling]            = useState<number | null>(null);
   const [deleting, setDeleting]            = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [focusedInput, setFocusedInput]    = useState<string | null>(null);
 
   useEffect(() => {
@@ -183,11 +187,25 @@ export default function CategoriesPage() {
     setToggling(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
-    setDeleting(id);
-    await dispatch(deleteCategory(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deleteCategory(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف المادة');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   const displayed = filterGrade
@@ -314,7 +332,7 @@ export default function CategoriesPage() {
                     </span>
                   </div>
                   <button
-                    onClick={() => handleDelete(cat.id)}
+                    onClick={() => askDelete(cat.id, cat.name)}
                     disabled={deleting === cat.id}
                     style={{
                       padding: '4px 10px', borderRadius: 8, border: 'none',
@@ -421,7 +439,7 @@ export default function CategoriesPage() {
                           {toggling === cat.id ? '...' : cat.is_active ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button
-                          onClick={() => handleDelete(cat.id)}
+                          onClick={() => askDelete(cat.id, cat.name)}
                           disabled={deleting === cat.id}
                           style={{
                             padding: '5px 12px', borderRadius: 8,
@@ -534,6 +552,14 @@ export default function CategoriesPage() {
           </form>
         </Modal>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

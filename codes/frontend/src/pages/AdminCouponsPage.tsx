@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -137,14 +138,28 @@ export default function AdminCouponsPage() {
     } catch { /* ignore */ }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('حذف هذا الكوبون؟')) return;
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     try {
-      await api.delete(`/admin/coupons/${id}`);
+      await api.delete(`/admin/coupons/${pendingDelete.id}`);
+      setPendingDelete(null);
       await load();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      alert(e.response?.data?.message || 'فشل الحذف');
+      setDeleteError(e.response?.data?.message || 'فشل الحذف');
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -386,7 +401,7 @@ export default function AdminCouponsPage() {
                             {coupon.is_active ? 'تعطيل' : 'تفعيل'}
                           </button>
                           <button
-                            onClick={() => handleDelete(coupon.id)}
+                            onClick={() => askDelete(coupon.id, coupon.code)}
                             style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}
                           >
                             حذف
@@ -496,6 +511,14 @@ export default function AdminCouponsPage() {
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -43,6 +44,9 @@ export default function SASchoolsPage() {
   const [showModal,    setShowModal]    = useState(false);
   const [editTarget,   setEditTarget]   = useState<BranchRow | null>(null);
   const [saving,       setSaving]       = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [form, setForm] = useState({
     country_id: '',
     admin_name: '',
@@ -161,14 +165,24 @@ export default function SASchoolsPage() {
     }
   };
 
-  const deleteBranch = async (b: BranchRow) => {
+  const askDeleteBranch = (b: BranchRow) => {
     if (b.id == null) return;
-    if (!confirm(`هل تريد حذف فرع ${b.country}؟`)) return;
+    setDeleteError(null);
+    setPendingDelete({ id: b.id, label: `فرع ${b.country}` });
+  };
+
+  const confirmDeleteBranch = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     try {
-      await api.delete(`/super-admin/branches/${b.id}`);
+      await api.delete(`/super-admin/branches/${pendingDelete.id}`);
+      setPendingDelete(null);
       await loadBranches();
     } catch {
-      alert('تعذّر حذف الفرع');
+      setDeleteError('تعذّر حذف الفرع');
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -261,7 +275,7 @@ export default function SASchoolsPage() {
                     <div style={{ display:'flex', gap:6 }}>
                       <button onClick={()=>openEdit(b)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✏️</button>
                       <button onClick={()=>toggleBranch(b)} title={b.is_active?'تعليق':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🔒</button>
-                      <button onClick={()=>deleteBranch(b)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
+                      <button onClick={()=>askDeleteBranch(b)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
                     </div>
                   </td>
                 </tr>
@@ -340,6 +354,14 @@ export default function SASchoolsPage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmDeleteBranch()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </SuperAdminShell>
   );
 }

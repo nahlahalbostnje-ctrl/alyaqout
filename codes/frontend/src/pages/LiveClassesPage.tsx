@@ -12,6 +12,7 @@ import {
   type LiveClassPayload,
 } from '../features/admin/liveClassesSlice';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -115,6 +116,9 @@ export default function LiveClassesPage() {
   const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
   const [deleting, setDeleting]     = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [focused, setFocused]       = useState<string | null>(null);
 
@@ -161,11 +165,25 @@ export default function LiveClassesPage() {
     setUpdatingStatus(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الحصة؟')) return;
-    setDeleting(id);
-    await dispatch(deleteLiveClass(id));
-    setDeleting(null);
+  const askDelete = (id: number, label: string) => {
+    setDeleteError(null);
+    setPendingDelete({ id, label });
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    setDeleting(pendingDelete.id);
+    try {
+      await dispatch(deleteLiveClass(pendingDelete.id));
+      setPendingDelete(null);
+    } catch {
+      setDeleteError('تعذّر حذف الحصة');
+    } finally {
+      setDeleting(null);
+      setDeleteBusy(false);
+    }
   };
 
   const nextStatus: Record<ClassStatus, { label: string; value: ClassStatus; color:string; bg:string } | null> = {
@@ -345,7 +363,7 @@ export default function LiveClassesPage() {
                             </button>
                           )}
                           {(cls.status === 'scheduled' || cls.status === 'ended') && (
-                            <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id}
+                            <button onClick={() => askDelete(cls.id, cls.title)} disabled={deleting === cls.id}
                               style={{
                                 padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE',
                                 background:'#fff', color: DK.sub,
@@ -473,6 +491,14 @@ export default function LiveClassesPage() {
         @keyframes spin { to { transform: rotate(360deg) } }
         @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
       `}</style>
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </AdminLayout>
   );
 }

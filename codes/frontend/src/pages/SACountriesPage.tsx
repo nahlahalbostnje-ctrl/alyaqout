@@ -10,6 +10,7 @@ import {
   deleteCountry,
   type Country,
 } from '../features/countries/countriesSlice';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -233,31 +234,22 @@ export default function SACountriesPage() {
         </div>
       )}
 
-      {deleteTarget && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:210, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={()=>!deleting && setDeleteTarget(null)}>
-          <div style={{ background:C.card, borderRadius:20, padding:28, width:420, maxWidth:'92vw', textAlign:'center' }} onClick={(e)=>e.stopPropagation()}>
-            <div style={{ fontSize:48, marginBottom:12 }}>⚠️</div>
-            <h2 style={{ color:C.text, fontWeight:900, fontSize:18, marginBottom:10 }}>تأكيد حذف الدولة</h2>
-            <p style={{ color:C.sub, fontSize:14, lineHeight:1.7, marginBottom:8 }}>
-              هل أنت متأكد من حذف دولة <strong style={{ color:C.text }}>«{deleteTarget.name}»</strong>؟
-            </p>
-            <p style={{ color:C.red, fontSize:12, marginBottom:18, lineHeight:1.6 }}>
-              لا يمكن التراجع عن هذا الإجراء. قد تفشل العملية إن وُجدت أفرع أو مستخدمون مرتبطون بهذه الدولة.
-            </p>
-            {deleteErr && (
-              <p style={{ background:'rgba(239,68,68,0.08)', color:C.red, borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14, textAlign:'right' }}>{deleteErr}</p>
-            )}
-            <div style={{ display:'flex', gap:10 }}>
-              <button disabled={deleting} onClick={confirmDelete} style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#DC2626,#EF4444)', color:'#fff', fontWeight:800, fontSize:13, cursor:deleting?'default':'pointer', opacity:deleting?0.7:1 }}>
-                {deleting ? 'جارٍ الحذف...' : 'نعم، احذف'}
-              </button>
-              <button disabled={deleting} onClick={()=>setDeleteTarget(null)} style={{ flex:1, padding:'12px', borderRadius:12, border:`1px solid ${C.border}`, background:C.bg, color:C.sub, fontWeight:700, fontSize:13, cursor:'pointer' }}>
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        open={!!deleteTarget}
+        title="تأكيد حذف الدولة"
+        itemLabel={deleteTarget?.name}
+        message={deleteTarget ? (
+          <>
+            هل أنت متأكد من حذف دولة <strong style={{ color: C.text }}>«{deleteTarget.name}»</strong>؟
+            <br />
+            قد تفشل العملية إن وُجدت أفرع أو مستخدمون مرتبطون بهذه الدولة.
+          </>
+        ) : null}
+        busy={deleting}
+        error={deleteErr || null}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => { if (!deleting) { setDeleteTarget(null); setDeleteErr(''); } }}
+      />
     </SuperAdminShell>
   );
 }

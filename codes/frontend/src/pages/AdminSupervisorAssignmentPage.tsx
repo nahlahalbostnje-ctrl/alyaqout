@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const DK = {
   gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -116,8 +117,20 @@ export default function AdminSupervisorAssignmentPage() {
     } finally { setAssigning(null); }
   };
 
-  const handleRemove = async (student: Student) => {
-    if (!selected) return;
+  const [pendingRemove, setPendingRemove] = useState<Student | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const askRemove = (student: Student) => {
+    setDeleteError(null);
+    setPendingRemove(student);
+  };
+
+  const confirmPendingDelete = async () => {
+    if (!pendingRemove || !selected) return;
+    const student = pendingRemove;
+    setDeleteBusy(true);
+    setDeleteError(null);
     setRemoving(student.id);
     try {
       await api.delete(`/admin/supervisors/${selected.id}/students/${student.id}`);
@@ -126,7 +139,13 @@ export default function AdminSupervisorAssignmentPage() {
       setSupervisors((prev) => prev.map((s) =>
         s.id === selected.id ? { ...s, student_count: s.student_count - 1 } : s
       ));
-    } finally { setRemoving(null); }
+      setPendingRemove(null);
+    } catch {
+      setDeleteError('تعذّر إزالة الطالب');
+    } finally {
+      setRemoving(null);
+      setDeleteBusy(false);
+    }
   };
 
   const filteredAssigned = assigned.filter((s) =>
@@ -312,7 +331,7 @@ export default function AdminSupervisorAssignmentPage() {
                             <td style={{ ...TD, color: DK.sub, direction: 'ltr', textAlign: 'right' }}>{student.phone}</td>
                             <td style={{ ...TD, textAlign: 'center' }}>
                               <button
-                                onClick={() => handleRemove(student)}
+                                onClick={() => askRemove(student)}
                                 disabled={removing === student.id}
                                 style={{
                                   padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -403,6 +422,18 @@ export default function AdminSupervisorAssignmentPage() {
           </div>
         </Modal>
       )}
+
+      <ConfirmDeleteModal
+        open={!!pendingRemove}
+        title="تأكيد الإزالة"
+        itemLabel={pendingRemove?.name}
+        confirmText="نعم، أزل"
+        message={pendingRemove ? <>هل تريد إزالة الطالب <strong style={{ color: '#1B2038' }}>«{pendingRemove.name}»</strong> من المشرف؟</> : null}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmPendingDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingRemove(null); setDeleteError(null); } }}
+      />
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </AdminLayout>
