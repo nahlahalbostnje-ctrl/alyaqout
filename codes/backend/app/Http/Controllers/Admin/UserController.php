@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -31,7 +32,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->get(['id', 'name', 'phone', 'role', 'address', 'city_id', 'is_active', 'created_at']);
+        $users = $query->get(['id', 'name', 'phone', 'email', 'role', 'address', 'city_id', 'is_active', 'created_at']);
 
         $users->transform(function (User $u) {
             if ($u->role === 'parent') {
@@ -57,6 +58,8 @@ class UserController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $learner = in_array($request->role, ['student', 'parent'], true);
+
         $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:users,phone',
@@ -64,8 +67,14 @@ class UserController extends Controller
             'parent_id' => 'nullable|exists:users,id',
             'address'   => 'nullable|string|max:500',
             'city_id'   => 'nullable|exists:cities,id',
-            'email'     => 'nullable|email|max:255|unique:users,email',
-            'password'  => 'nullable|string|min:6|max:100',
+            'email'     => [
+                Rule::requiredIf(fn () => $learner),
+                'nullable', 'email', 'max:255', 'unique:users,email',
+            ],
+            'password'  => [
+                Rule::requiredIf(fn () => $learner),
+                'nullable', 'string', 'min:6', 'max:100',
+            ],
         ]);
 
         $parentId = null;
@@ -103,19 +112,36 @@ class UserController extends Controller
     {
         $this->authorizeUser($user);
 
+        $learner = in_array($user->role, ['student', 'parent'], true);
+
         $request->validate([
-            'name'    => 'sometimes|string|max:255',
-            'phone'   => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
-            'address' => 'nullable|string|max:500',
-            'city_id' => 'nullable|exists:cities,id',
+            'name'     => 'sometimes|string|max:255',
+            'phone'    => 'sometimes|string|max:20|unique:users,phone,'.$user->id,
+            'address'  => 'nullable|string|max:500',
+            'city_id'  => 'nullable|exists:cities,id',
+            'email'    => [
+                Rule::requiredIf(fn () => $learner && $request->has('email')),
+                'nullable', 'email', 'max:255', 'unique:users,email,'.$user->id,
+            ],
+            'password' => 'nullable|string|min:6|max:100',
         ]);
 
-        $user->update($request->only(['name', 'phone', 'address', 'city_id']));
+        $data = $request->only(['name', 'phone', 'address', 'city_id']);
+        if ($request->has('email')) {
+            $data['email'] = $request->filled('email')
+                ? strtolower(trim((string) $request->email))
+                : null;
+        }
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+        }
+
+        $user->update($data);
 
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث بيانات الحساب.',
-            'data'    => $user->only(['id', 'name', 'phone', 'role', 'address', 'city_id', 'is_active']),
+            'data'    => $user->only(['id', 'name', 'phone', 'email', 'role', 'address', 'city_id', 'is_active']),
         ]);
     }
 

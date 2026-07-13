@@ -73,7 +73,7 @@ const ROLE_COLOR: Record<Role, { color:string; bg:string }> = {
   parent:  { color: DK.purple, bg: 'rgba(139,92,246,0.1)'  },
 };
 
-interface UserItem { id: number; name: string; phone?: string; role: string; is_active?: boolean; }
+interface UserItem { id: number; name: string; phone?: string; email?: string | null; role: string; is_active?: boolean; }
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
@@ -82,7 +82,7 @@ export default function UsersPage() {
   const [activeTab, setActiveTab]   = useState<TabKey>('all');
   const [search, setSearch]         = useState('');
   const [showModal, setShowModal]   = useState(false);
-  const [form, setForm]             = useState({ name: '', phone: '', role: 'teacher' as Role, address: '', city_id: '' });
+  const [form, setForm]             = useState({ name: '', phone: '', email: '', password: '', role: 'teacher' as Role, address: '', city_id: '' });
   const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
   const [toggling, setToggling]     = useState<number | null>(null);
@@ -127,22 +127,36 @@ export default function UsersPage() {
 
   // Edit state
   const [editUser, setEditUser]       = useState<UserItem | null>(null);
-  const [editForm, setEditForm]       = useState({ name:'', phone:'', address:'', city_id:'' });
+  const [editForm, setEditForm]       = useState({ name:'', phone:'', email:'', password:'', address:'', city_id:'' });
   const [editBusy, setEditBusy]       = useState(false);
   const [editError, setEditError]     = useState('');
 
   const openEdit = (u: UserItem) => {
     setEditUser(u);
-    setEditForm({ name: u.name, phone: u.phone ?? '', address:'', city_id:'' });
+    setEditForm({ name: u.name, phone: u.phone ?? '', email: u.email ?? '', password: '', address:'', city_id:'' });
     setEditError('');
   };
 
   const handleEditSave = async () => {
     if (!editUser) return;
+    if ((editUser.role === 'student' || editUser.role === 'parent') && !editForm.email.trim()) {
+      setEditError('البريد الإلكتروني مطلوب للطالب وولي الأمر');
+      return;
+    }
     setEditBusy(true);
     setEditError('');
     try {
-      await api.put(`/admin/users/${editUser.id}`, editForm);
+      const payload: Record<string, unknown> = {
+        name: editForm.name,
+        phone: editForm.phone,
+      };
+      if (editUser.role === 'teacher') payload.address = editForm.address;
+      if (editUser.role === 'student' && editForm.city_id) payload.city_id = Number(editForm.city_id);
+      if (editUser.role === 'student' || editUser.role === 'parent') {
+        payload.email = editForm.email.trim().toLowerCase();
+        if (editForm.password.trim()) payload.password = editForm.password.trim();
+      }
+      await api.put(`/admin/users/${editUser.id}`, payload);
       setEditUser(null);
       dispatch(fetchUsers(null));
     } catch (e: unknown) {
@@ -214,17 +228,25 @@ export default function UsersPage() {
   });
 
   const openModal = () => {
-    setForm({ name: '', phone: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher', address: '', city_id: '' });
+    setForm({ name: '', phone: '', email: '', password: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher', address: '', city_id: '' });
     setAddError(null);
     setShowModal(true);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if ((form.role === 'student' || form.role === 'parent') && (!form.email.trim() || !form.password.trim())) {
+      setAddError('البريد الإلكتروني وكلمة المرور مطلوبان للطالب وولي الأمر');
+      return;
+    }
     setAddLoading(true); setAddError(null);
     const payload: Parameters<typeof addUser>[0] = { name: form.name, phone: form.phone, role: form.role };
     if (form.role === 'teacher' && form.address.trim()) payload.address = form.address.trim();
     if (form.role === 'student' && form.city_id) payload.city_id = Number(form.city_id);
+    if (form.role === 'student' || form.role === 'parent') {
+      payload.email = form.email.trim().toLowerCase();
+      payload.password = form.password.trim();
+    }
     const result = await dispatch(addUser(payload));
     setAddLoading(false);
     if (addUser.fulfilled.match(result)) setShowModal(false);
@@ -427,6 +449,25 @@ export default function UsersPage() {
               </select>
             </div>
 
+            {(form.role === 'student' || form.role === 'parent') && (
+              <>
+                <div style={{ marginBottom:14 }}>
+                  <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>البريد الإلكتروني</label>
+                  <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+                    placeholder="user@example.com" required dir="ltr"
+                    style={inp(focused==='email')}
+                    onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} />
+                </div>
+                <div style={{ marginBottom:14 }}>
+                  <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>كلمة المرور</label>
+                  <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
+                    placeholder="6 أحرف على الأقل" required dir="ltr"
+                    style={inp(focused==='password')}
+                    onFocus={() => setFocused('password')} onBlur={() => setFocused(null)} />
+                </div>
+              </>
+            )}
+
             {form.role === 'teacher' && (
               <div style={{ marginBottom:14 }}>
                 <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان (اختياري)</label>
@@ -617,6 +658,18 @@ export default function UsersPage() {
             <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>رقم الهاتف</label>
             <input value={editForm.phone} onChange={e=>setEditForm(f=>({...f, phone:e.target.value}))} dir="ltr" style={inp()} />
           </div>
+          {(editUser.role === 'student' || editUser.role === 'parent') && (
+            <>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>البريد الإلكتروني</label>
+                <input type="email" value={editForm.email} onChange={e=>setEditForm(f=>({...f, email:e.target.value}))} dir="ltr" style={inp()} />
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>كلمة المرور (اتركها فارغة للإبقاء)</label>
+                <input type="password" value={editForm.password} onChange={e=>setEditForm(f=>({...f, password:e.target.value}))} dir="ltr" placeholder="••••••••" style={inp()} />
+              </div>
+            </>
+          )}
           {editUser.role === 'teacher' && (
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان</label>

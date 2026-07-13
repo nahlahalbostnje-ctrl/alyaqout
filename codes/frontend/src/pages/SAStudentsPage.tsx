@@ -52,19 +52,22 @@ type TabKey = 'students' | 'parents';
 const emptyForm = {
   name: '',
   phone: '',
+  email: '',
+  password: '',
   country_id: '',
   role: 'student' as 'student' | 'parent',
   parent_id: '',
 };
 
 function exportCsv(rows: StudentUser[]) {
-  const header = ['id', 'name', 'phone', 'role', 'country', 'parent', 'is_active', 'created_at'];
+  const header = ['id', 'name', 'phone', 'email', 'role', 'country', 'parent', 'is_active', 'created_at'];
   const lines = [
     header.join(','),
     ...rows.map((r) => [
       r.id,
       `"${(r.name || '').replace(/"/g, '""')}"`,
       r.phone,
+      `"${(r.email || '').replace(/"/g, '""')}"`,
       r.role,
       `"${(r.country || '').replace(/"/g, '""')}"`,
       `"${(r.parent_name || '').replace(/"/g, '""')}"`,
@@ -191,6 +194,8 @@ export default function SAStudentsPage() {
     setForm({
       name: u.name,
       phone: u.phone,
+      email: u.email ?? '',
+      password: '',
       country_id: u.country_id ? String(u.country_id) : '',
       role: u.role === 'parent' ? 'parent' : 'student',
       parent_id: u.parent_id ? String(u.parent_id) : '',
@@ -212,6 +217,24 @@ export default function SAStudentsPage() {
       toast.error(msg);
       return;
     }
+    if (!form.email.trim()) {
+      const msg = 'البريد الإلكتروني مطلوب لتسجيل الدخول';
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!editingId && !form.password.trim()) {
+      const msg = 'كلمة المرور مطلوبة عند إنشاء الحساب (6 أحرف على الأقل)';
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (form.password.trim() && form.password.trim().length < 6) {
+      const msg = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
     setSaving(true);
     setFormError(null);
     const creating = !editingId;
@@ -220,11 +243,15 @@ export default function SAStudentsPage() {
       const payload: Record<string, unknown> = {
         name: form.name.trim(),
         phone: form.phone.trim(),
+        email: form.email.trim().toLowerCase(),
         country_id: Number(form.country_id),
         role: form.role,
       };
       if (form.role === 'student') {
         payload.parent_id = form.parent_id ? Number(form.parent_id) : null;
+      }
+      if (form.password.trim()) {
+        payload.password = form.password.trim();
       }
 
       if (editingId) {
@@ -305,7 +332,7 @@ export default function SAStudentsPage() {
 
   const isEdit = editingId !== null;
   const showParentColumn = tab === 'students';
-  const colCount = showParentColumn ? 7 : 6;
+  const colCount = showParentColumn ? 8 : 7;
 
   return (
     <SuperAdminShell>
@@ -420,8 +447,8 @@ export default function SAStudentsPage() {
           <thead>
             <tr style={{ background: 'rgba(0,0,0,0.03)' }}>
               {(showParentColumn
-                ? ['الاسم', 'الهاتف', 'الدولة', 'ولي الأمر', 'الحالة', 'إجراءات']
-                : ['الاسم', 'الهاتف', 'الدولة', 'الحالة', 'إجراءات']
+                ? ['الاسم', 'الهاتف', 'البريد', 'الدولة', 'ولي الأمر', 'الحالة', 'إجراءات']
+                : ['الاسم', 'الهاتف', 'البريد', 'الدولة', 'الحالة', 'إجراءات']
               ).map((h) => (
                 <th key={h} style={{ padding: '12px 14px', textAlign: 'right', color: C.sub, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
               ))}
@@ -442,6 +469,7 @@ export default function SAStudentsPage() {
               <tr key={u.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                 <td style={{ padding: '12px 14px', color: C.text, fontWeight: 700, fontSize: 13 }}>{u.name}</td>
                 <td style={{ padding: '12px 14px', color: C.text, fontSize: 12, direction: 'ltr', textAlign: 'right' }}>{u.phone}</td>
+                <td style={{ padding: '12px 14px', color: C.sub, fontSize: 12, direction: 'ltr', textAlign: 'right' }}>{u.email || '—'}</td>
                 <td style={{ padding: '12px 14px', color: C.sub, fontSize: 12 }}>{u.country || '—'}</td>
                 {showParentColumn && (
                   <td style={{ padding: '12px 14px', color: C.sub, fontSize: 12 }}>
@@ -548,6 +576,40 @@ export default function SAStudentsPage() {
                   width: '100%', padding: '9px 14px', borderRadius: 11, border: `1px solid ${C.border}`,
                   background: C.bg, color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box',
                   direction: 'ltr', textAlign: 'right', fontFamily: "'Cairo',sans-serif",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>البريد الإلكتروني (لتسجيل الدخول)</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="student@example.com"
+                dir="ltr"
+                style={{
+                  width: '100%', padding: '9px 14px', borderRadius: 11, border: `1px solid ${C.border}`,
+                  background: C.bg, color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                  textAlign: 'right', fontFamily: "'Cairo',sans-serif",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>
+                كلمة المرور {isEdit ? '(اتركها فارغة للإبقاء على الحالية)' : ''}
+              </label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder={isEdit ? '••••••••' : '6 أحرف على الأقل'}
+                dir="ltr"
+                style={{
+                  width: '100%', padding: '9px 14px', borderRadius: 11, border: `1px solid ${C.border}`,
+                  background: C.bg, color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                  textAlign: 'right', fontFamily: "'Cairo',sans-serif",
                 }}
               />
             </div>

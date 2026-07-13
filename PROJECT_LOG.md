@@ -1537,4 +1537,11 @@
 
 ---
 
+### [2026-07-13] — بريد وكلمة مرور للطالب وولي الأمر
+
+- **ما تم:** إلزام email+password عند إنشاء طالب/ولي أمر (سوبر أدمن + أدمن)، حقول في النماذج، وتحديث نص صفحة الدخول
+- **الملفات:** `SuperAdmin/UserController`, `Admin/UserController`, `SAStudentsPage`, `UsersPage`, `LoginPage`, `usersSlice`
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

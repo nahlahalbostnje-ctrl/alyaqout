@@ -409,7 +409,7 @@ export default function LoginPage() {
                     hasError={hasError}
                   />
                   <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, margin: 0, fontFamily: "'Cairo',sans-serif" }}>
-                    للسوبر أدمن، الأدمن، المعلم، والمشرف
+                    لجميع الأدوار: سوبر أدمن، أدمن، معلم، مشرف، طالب، وولي أمر
                   </p>
 
                   {/* Error / success / info inside forms below */}

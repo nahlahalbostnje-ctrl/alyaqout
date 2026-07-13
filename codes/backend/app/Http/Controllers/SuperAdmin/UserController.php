@@ -73,17 +73,23 @@ class UserController extends Controller
     /** POST /super-admin/users */
     public function store(Request $request): JsonResponse
     {
+        $learner = in_array($request->role, ['student', 'parent'], true);
+
         $request->validate([
             'name'       => 'required|string|max:255',
             'phone'      => 'required|string|max:20|unique:users,phone',
             'role'       => 'required|in:teacher,supervisor,student,parent',
             'country_id' => 'required|exists:countries,id',
             'email'      => [
+                Rule::requiredIf(fn () => $learner
+                    || (in_array($request->role, ['teacher', 'supervisor'], true) && $request->filled('password'))),
                 'nullable', 'email', 'max:255',
                 Rule::unique('users', 'email'),
-                Rule::requiredIf(fn () => in_array($request->role, ['teacher', 'supervisor'], true) && $request->filled('password')),
             ],
-            'password'   => 'nullable|string|min:6|max:100',
+            'password'   => [
+                Rule::requiredIf(fn () => $learner),
+                'nullable', 'string', 'min:6', 'max:100',
+            ],
             'parent_id'  => 'nullable|exists:users,id',
         ]);
 
@@ -136,10 +142,17 @@ class UserController extends Controller
             abort(403, 'غير مصرح.');
         }
 
+        $roleForRules = $request->input('role', $user->role);
+        $learner = in_array($roleForRules, ['student', 'parent'], true);
+
         $request->validate([
             'name'       => 'sometimes|string|max:255',
             'phone'      => ['sometimes', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
-            'email'      => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email'      => [
+                Rule::requiredIf(fn () => $learner && $request->has('email')),
+                'nullable', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
             'password'   => 'nullable|string|min:6|max:100',
             'country_id' => 'sometimes|exists:countries,id',
             'role'       => 'sometimes|in:teacher,supervisor,student,parent,admin',
