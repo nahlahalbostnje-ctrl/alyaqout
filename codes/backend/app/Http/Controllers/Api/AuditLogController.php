@@ -13,9 +13,9 @@ class AuditLogController extends Controller
 {
     /** Arabic UI filter → SQL action patterns */
     private const ACTION_GROUPS = [
-        'إضافة'        => ['create', 'store', 'add', 'create_user', 'create_country', 'create_branch'],
-        'تعديل'        => ['update', 'toggle', 'edit', 'update_city', 'update_country', 'update_branch', 'toggle_user', 'toggle_country'],
-        'حذف'          => ['delete', 'destroy', 'delete_user', 'delete_city', 'delete_country', 'delete_branch'],
+        'إضافة'        => ['create', 'store', 'add'],
+        'تعديل'        => ['update', 'toggle', 'edit'],
+        'حذف'          => ['delete', 'destroy'],
         'تسجيل دخول'   => ['login', 'impersonate'],
         'تصدير'        => ['export'],
         'اعتماد'       => ['approve'],

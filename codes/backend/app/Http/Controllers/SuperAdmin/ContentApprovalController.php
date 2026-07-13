@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminActionLog;
 use App\Models\Exam;
 use App\Models\Homework;
+use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -91,7 +92,9 @@ class ContentApprovalController extends Controller
     {
         $request->validate(['status' => 'required|in:approved,rejected']);
 
-        $exam->update(['status' => $request->status]);
+        ActivityLogger::withoutLogging(function () use ($request, $exam): void {
+            $exam->update(['status' => $request->status]);
+        });
         $exam->load(['course:id,title,country_id', 'course.country:id,name', 'teacher:id,name']);
 
         AdminActionLog::record(
@@ -113,7 +116,9 @@ class ContentApprovalController extends Controller
     {
         $request->validate(['status' => 'required|in:approved,rejected']);
 
-        $homework->update(['status' => $request->status]);
+        ActivityLogger::withoutLogging(function () use ($request, $homework): void {
+            $homework->update(['status' => $request->status]);
+        });
         $homework->load(['course:id,title,country_id', 'course.country:id,name', 'teacher:id,name']);
 
         AdminActionLog::record(

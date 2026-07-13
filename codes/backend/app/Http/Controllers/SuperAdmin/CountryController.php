@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AdminActionLog;
 use App\Models\Branch;
 use App\Models\Country;
 use App\Models\User;
@@ -36,8 +35,6 @@ class CountryController extends Controller
 
         $country = Country::create($validated);
 
-        AdminActionLog::record('create_country', 'Country', $country->id, $country->name);
-
         return response()->json([
             'success' => true,
             'message' => 'Country created successfully.',
@@ -63,17 +60,7 @@ class CountryController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        $before = $country->only(['name', 'code', 'currency', 'phone_code', 'sort_order']);
         $country->update($validated);
-
-        AdminActionLog::record(
-            'update_country',
-            'Country',
-            $country->id,
-            $country->name,
-            $before,
-            $country->only(['name', 'code', 'currency', 'phone_code', 'sort_order'])
-        );
 
         return response()->json([
             'success' => true,
@@ -98,28 +85,14 @@ class CountryController extends Controller
             ], 422);
         }
 
-        $label = $country->name;
-        $id = $country->id;
         $country->delete();
-
-        AdminActionLog::record('delete_country', 'Country', $id, $label);
 
         return response()->json(['success' => true, 'message' => 'تم حذف الدولة.']);
     }
 
     public function toggle(Country $country): JsonResponse
     {
-        $before = ['is_active' => $country->is_active];
         $country->update(['is_active' => ! $country->is_active]);
-
-        AdminActionLog::record(
-            'toggle_country',
-            'Country',
-            $country->id,
-            $country->name,
-            $before,
-            ['is_active' => $country->is_active]
-        );
 
         return response()->json([
             'success' => true,

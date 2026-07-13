@@ -26,8 +26,9 @@ const ACTION_ICON: Record<string, string> = {
 };
 
 const ACTION_LABEL: Record<string, string> = {
+  create:'إضافة', update:'تعديل', delete:'حذف',
   create_user:'إنشاء مستخدم', delete_user:'حذف مستخدم', toggle_user:'تغيير حالة',
-  impersonate:'دخول كمستخدم', update_city:'تعديل مدينة', delete_city:'حذف مدينة',
+  impersonate:'دخول كمستخدم', login:'تسجيل دخول', update_city:'تعديل مدينة', delete_city:'حذف مدينة',
   approve:'موافقة', reject:'رفض',
 };
 

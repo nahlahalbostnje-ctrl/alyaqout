@@ -21,14 +21,14 @@ class AdminActionLog extends Model
     public static function record(string $action, ?string $targetType = null, ?int $targetId = null, ?string $targetLabel = null, ?array $before = null, ?array $after = null): void
     {
         static::create([
-            'admin_id'     => auth()->id(),
+            'admin_id'     => auth('api')->id() ?? auth()->id(),
             'action'       => $action,
             'target_type'  => $targetType,
             'target_id'    => $targetId,
             'target_label' => $targetLabel,
             'before'       => $before,
             'after'        => $after,
-            'ip_address'   => request()->ip(),
+            'ip_address'   => request()?->ip(),
         ]);
     }
 }

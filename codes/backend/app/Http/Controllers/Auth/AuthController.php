@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\LoginAttempt;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\PhoneNormalizer;
 use App\Services\WaSenderService;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +53,7 @@ class AuthController extends Controller
         }
 
         $token = auth('api')->login($user);
+        $this->logUserLogin($user, $request);
 
         return $this->respondWithToken($token, $user);
     }
@@ -211,6 +213,7 @@ class AuthController extends Controller
         ]);
 
         $token = auth('api')->login($user);
+        $this->logUserLogin($user, $request);
 
         return $this->respondWithToken($token, $user);
     }
@@ -278,6 +281,12 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'user'       => $this->userPayload($user),
         ]);
+    }
+
+    /** Write successful login into activity log for every role. */
+    private function logUserLogin(User $user, Request $request): void
+    {
+        ActivityLogger::recordLogin($user, $request->ip());
     }
 
     private function userPayload(User $user): array
