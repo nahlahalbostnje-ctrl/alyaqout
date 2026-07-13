@@ -105,8 +105,33 @@ AGORA_TOKEN_EXPIRE=3600
 JWT_SECRET=<يُولَّد بـ artisan jwt:secret>
 
 WASENDER_API_KEY=
+# اختبار فقط: كل رموز OTP تُرسل لهذا الرقم الواحد (مثال: +97059xxxxxxx). اتركه فارغاً في الإنتاج.
 WASENDER_TEST_RECIPIENT=
+PHONE_DEFAULT_COUNTRY=PS
 ```
+
+### اختبار OTP برقم واتساب واحد
+
+1. في `.env` على السيرفر ضع مفتاح WaSender ورقم اختبارك:
+
+```bash
+WASENDER_API_KEY=your_key_here
+WASENDER_TEST_RECIPIENT=+97059xxxxxxx
+```
+
+2. امسح الكاش:
+
+```bash
+sudo -u baitpait php artisan config:clear
+sudo -u baitpait php artisan optimize:clear
+```
+
+3. من صفحة الدخول اطلب OTP بأي رقم مستخدم مسجّل — الرسالة تصل **فقط** إلى `WASENDER_TEST_RECIPIENT`.
+4. أدخل الرمز الذي وصلك على رقم الاختبار لإكمال تسجيل الدخول بالحساب الذي طلبت له OTP.
+5. بعد انتهاء الاختبار: احذف قيمة `WASENDER_TEST_RECIPIENT` (أو اتركها فارغة) وأعد `config:clear` حتى يُرسل كل مستخدم لنفسه.
+
+> بدون `WASENDER_API_KEY`: يظهر `debug_otp` في الواجهة/الاستجابة (لا واتساب).
+> مع المفتاح وبدون `WASENDER_TEST_RECIPIENT`: الإرسال للرقم الحقيقي (فلسطين: فحص 970 ثم 972).
 
 ### توليد المفاتيح (مرة واحدة)
 
@@ -259,7 +284,10 @@ curl -s https://alyaqoutgroup.net/api/public/countries | head -c 200
 
 > بدون `WASENDER_API_KEY`: يظهر `debug_otp` في الاستجابة للاختبار. مع المفتاح: الرمز يُرسل واتساب فقط.
 >
-> **فلسطين (`970` / `972`):** قبل الإرسال يستدعي WaSender `GET /api/on-whatsapp/{phone}` ويجرّب المقدمتين لنفس الرقم المحلي، ثم يرسل بالصيغة الموجودة على واتساب. إن لم يوجد على الاثنين → رفض OTP برسالة واضحة.
+> **اختبار برقم واحد:** عيّن `WASENDER_TEST_RECIPIENT=+97059…` — كل OTP يذهب لهذا الرقم فقط (انظر قسم «اختبار OTP برقم واتساب واحد» أعلاه).
+>
+> **فلسطين (`970` / `972`):** الأرقام المحلية `05…` تُخزَّن كـ `00970…`. قبل الإرسال (خارج وضع الاختبار) يُفحص واتساب بـ 970 ثم 972. إن لم يوجد على الاثنين → رفض OTP برسالة واضحة.
+> **دولة افتراضية:** `PHONE_DEFAULT_COUNTRY=PS` حتى تُفعَّل دول أخرى.
 
 ### API
 

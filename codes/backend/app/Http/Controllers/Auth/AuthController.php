@@ -99,8 +99,11 @@ class AuthController extends Controller
         // Use the phone stored on the user for OTP + WaSender resolve
         $phone = (string) $user->phone;
 
-        $hasWaKey = ! empty(config('services.wasender.api_key'));
-        if ($hasWaKey) {
+        $hasWaKey   = ! empty(config('services.wasender.api_key'));
+        $otpTestMode = $this->waSender->hasOtpTestRecipient();
+
+        // In OTP test mode we skip "is user phone on WhatsApp" — message goes to WASENDER_TEST_RECIPIENT
+        if ($hasWaKey && ! $otpTestMode) {
             $resolved = $this->waSender->resolveWhatsAppNumber($phone);
             if ($resolved === null) {
                 $hint = PhoneNormalizer::isPalestine($phone)
@@ -126,12 +129,18 @@ class AuthController extends Controller
         $payload = [
             'success'    => true,
             'message'    => $sent
-                ? 'تم إرسال رمز التحقق عبر واتساب.'
+                ? ($otpTestMode
+                    ? 'وضع الاختبار: تم إرسال رمز التحقق إلى رقم واتساب الاختبار فقط.'
+                    : 'تم إرسال رمز التحقق عبر واتساب.')
                 : 'تم إنشاء رمز التحقق. تعذّر الإرسال عبر واتساب — تحقق من إعدادات WaSender.',
             'expires_in' => 600,
         ];
 
-        if (PhoneNormalizer::isPalestine($phone) && $hasWaKey) {
+        if ($otpTestMode) {
+            $payload['otp_test_mode'] = true;
+        }
+
+        if (PhoneNormalizer::isPalestine($phone) && $hasWaKey && ! $otpTestMode) {
             $payload['whatsapp_prefix_checked'] = ['970', '972'];
         }
 

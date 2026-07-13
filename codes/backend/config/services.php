@@ -37,7 +37,13 @@ return [
 
     'wasender' => [
         'api_key'        => env('WASENDER_API_KEY'),
+        // When set: ALL OTP WhatsApp messages go to this number (test only). Leave empty in production.
         'test_recipient' => env('WASENDER_TEST_RECIPIENT'),
+    ],
+
+    'phone' => [
+        // Platform default today: Palestine. Change when multi-country signup/login is enabled.
+        'default_country' => env('PHONE_DEFAULT_COUNTRY', 'PS'),
     ],
 
 ];

@@ -48,7 +48,7 @@ class WaSenderService
 
     public function sendOtp(string $phone, string $otp): bool
     {
-        $recipient = $this->resolveRecipient($phone);
+        $recipient = $this->resolveOtpRecipient($phone);
         if ($recipient === null) {
             Log::warning('WaSender sendOtp: no WhatsApp recipient resolved', [
                 'phone' => $phone,
@@ -64,8 +64,41 @@ class WaSenderService
     }
 
     /**
+     * True when WASENDER_TEST_RECIPIENT is set — OTP is redirected to that single number.
+     */
+    public function hasOtpTestRecipient(): bool
+    {
+        return ! empty(config('services.wasender.test_recipient'));
+    }
+
+    /**
+     * OTP recipient: test number (if configured) or real WhatsApp resolve (970/972).
+     */
+    public function resolveOtpRecipient(string $phone): ?string
+    {
+        if (empty($this->apiKey)) {
+            Log::warning('WaSender: API key not configured');
+
+            return null;
+        }
+
+        $testRecipient = config('services.wasender.test_recipient');
+        if (! empty($testRecipient)) {
+            $to = PhoneNormalizer::toE164((string) $testRecipient);
+            Log::info('WaSender OTP test mode: redirecting to test recipient', [
+                'user_phone'     => $phone,
+                'test_recipient' => $to,
+            ]);
+
+            return $to;
+        }
+
+        return $this->resolveWhatsAppNumber($phone);
+    }
+
+    /**
      * Resolve the E.164 number that exists on WhatsApp.
-     * Palestine: tries +970 then +972 (or reverse if stored as 972).
+     * Palestine: tries +970 then +972.
      *
      * @return string|null E.164 like +97059… or null if not on WhatsApp / unresolved
      */
@@ -76,11 +109,6 @@ class WaSenderService
 
             // Without API key: still return best-guess E.164 for debug/local flows
             return PhoneNormalizer::toE164($phone);
-        }
-
-        $testRecipient = config('services.wasender.test_recipient');
-        if (! empty($testRecipient)) {
-            return PhoneNormalizer::toE164((string) $testRecipient);
         }
 
         $candidates = PhoneNormalizer::whatsappCandidates($phone);
