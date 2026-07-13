@@ -51,14 +51,17 @@ class PublicController extends Controller
 
     public function faqs(Request $request): JsonResponse
     {
-        $query = Faq::where('is_active', true)->orderBy('sort_order');
-
-        if ($request->filled('country_id')) {
-            $query->where('country_id', (int) $request->country_id);
-        }
+        // Platform FAQs (Super Admin) — public landing. Optional country_id ignored for scope;
+        // all active platform FAQs are shown.
+        $faqs = Faq::query()
+            ->platform()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'question', 'answer', 'sort_order']);
 
         return response()->json([
-            'faqs' => $query->get(['id', 'question', 'answer']),
+            'faqs' => $faqs,
         ]);
     }
 

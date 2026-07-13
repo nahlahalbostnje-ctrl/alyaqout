@@ -41,9 +41,8 @@ function Modal({ title, onClose, children }: { title:string; onClose:()=>void; c
 }
 
 interface Page     { id: number; slug: string; title: string; content: string; updated_at: string | null; }
-interface Faq      { id: number; question: string; answer: string; sort_order: number; is_active: boolean; }
 interface SocialLink { id: number; platform: string; url: string; icon: string | null; is_active: boolean; }
-type Tab = 'pages' | 'faqs' | 'social';
+type Tab = 'pages' | 'social';
 
 const PREDEFINED_SLUGS = [
   { slug: 'about',   label: 'من نحن',           icon: 'ℹ️' },
@@ -172,186 +171,6 @@ function PagesTab() {
           </form>
         </Modal>
       )}
-    </div>
-  );
-}
-
-// ─── FAQs Tab ─────────────────────────────────────────────────────────────────
-
-function FaqsTab() {
-  const [faqs, setFaqs]         = useState<Faq[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing]   = useState<Faq | null>(null);
-  const [form, setForm]         = useState({ question: '', answer: '', sort_order: '0' });
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState<string | null>(null);
-  const [focused, setFocused]   = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<number | null>(null);
-
-  const load = async () => {
-    setLoading(true);
-    try { const { data } = await api.get('/admin/cms/faqs'); setFaqs(data.faqs); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const openCreate = () => { setEditing(null); setForm({ question: '', answer: '', sort_order: '0' }); setError(null); setShowForm(true); };
-  const openEdit = (faq: Faq) => { setEditing(faq); setForm({ question: faq.question, answer: faq.answer, sort_order: String(faq.sort_order) }); setError(null); setShowForm(true); };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true); setError(null);
-    const payload = { ...form, sort_order: parseInt(form.sort_order) || 0 };
-    try {
-      if (editing) await api.put(`/admin/cms/faqs/${editing.id}`, payload);
-      else         await api.post('/admin/cms/faqs', payload);
-      setShowForm(false); await load();
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'حدث خطأ');
-    } finally { setSaving(false); }
-  };
-
-  const handleToggle = async (faq: Faq) => {
-    try { await api.put(`/admin/cms/faqs/${faq.id}`, { is_active: !faq.is_active }); await load(); } catch { /* ignore */ }
-  };
-
-  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const askDelete = (id: number, label: string) => {
-    setDeleteError(null);
-    setPendingDelete({ id, label });
-  };
-
-  const confirmPendingDelete = async () => {
-    if (!pendingDelete) return;
-    setDeleteBusy(true);
-    setDeleteError(null);
-    try {
-      await api.delete(`/admin/cms/faqs/${pendingDelete.id}`);
-      setPendingDelete(null);
-      await load();
-    } catch {
-      setDeleteError('فشل حذف السؤال');
-    } finally {
-      setDeleteBusy(false);
-    }
-  };
-
-  return (
-    <div>
-      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}>
-        <button onClick={openCreate} style={btn('gold')}>+ إضافة سؤال جديد</button>
-      </div>
-
-      {loading && (
-        <div style={{ display:'flex', justifyContent:'center', padding:'40px 0' }}>
-          <div style={{ width:28, height:28, borderRadius:'50%', border:`3px solid rgba(197,147,65,0.15)`, borderTopColor:DK.gold, animation:'spin 0.8s linear infinite' }} />
-        </div>
-      )}
-
-      {!loading && faqs.length === 0 && (
-        <div style={{ ...card(), textAlign:'center', padding:'40px 20px' }}>
-          <div style={{ fontSize:36, marginBottom:10 }}>❓</div>
-          <p style={{ color:DK.sub, fontSize:13, margin:0 }}>لا توجد أسئلة شائعة بعد</p>
-        </div>
-      )}
-
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {faqs.map(faq => (
-          <div key={faq.id} style={card({ padding:0, overflow:'hidden' })}>
-            {/* Question header - clickable to expand */}
-            <div
-              onClick={() => setExpanded(expanded===faq.id ? null : faq.id)}
-              style={{ padding:'14px 18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}
-            >
-              <div style={{ display:'flex', alignItems:'center', gap:10, flex:1 }}>
-                <span style={{ color:DK.gold, fontWeight:900, fontSize:16 }}>{expanded===faq.id ? '▲' : '▼'}</span>
-                <p style={{ color:DK.text, fontWeight:700, fontSize:13, margin:0 }}>{faq.question}</p>
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                <span style={{
-                  padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700,
-                  background: faq.is_active?'rgba(16,185,129,0.1)':'rgba(156,163,175,0.1)',
-                  color: faq.is_active?DK.green:DK.dim,
-                }}>
-                  {faq.is_active ? 'فعّال' : 'مخفي'}
-                </span>
-                <button onClick={e => { e.stopPropagation(); openEdit(faq); }}
-                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(197,147,65,0.1)', color:DK.gold }}>
-                  تعديل
-                </button>
-                <button onClick={e => { e.stopPropagation(); handleToggle(faq); }}
-                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif",
-                    background: faq.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
-                    color: faq.is_active?DK.red:DK.green }}>
-                  {faq.is_active ? 'إخفاء' : 'إظهار'}
-                </button>
-                <button onClick={e => { e.stopPropagation(); askDelete(faq.id, faq.question); }}
-                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'rgba(239,68,68,0.08)', color:DK.red }}>
-                  حذف
-                </button>
-              </div>
-            </div>
-            {/* Answer - expanded */}
-            {expanded === faq.id && (
-              <div style={{ padding:'0 18px 14px 18px', borderTop:'1px solid #F3EDE0' }}>
-                <p style={{ color:DK.sub, fontSize:13, lineHeight:1.7, margin:'12px 0 0' }}>{faq.answer}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Add/Edit FAQ Modal */}
-      {showForm && (
-        <Modal title={editing ? 'تعديل السؤال' : 'سؤال جديد'} onClose={() => { setShowForm(false); setEditing(null); setError(null); }}>
-          <form onSubmit={handleSubmit}>
-            {error && <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>{error}</div>}
-            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div>
-                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>السؤال</label>
-                <input required value={form.question} onChange={e => setForm({...form, question: e.target.value})}
-                  onFocus={() => setFocused('fq')} onBlur={() => setFocused(null)}
-                  style={inputFocusStyle(focused==='fq')} />
-              </div>
-              <div>
-                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>الجواب</label>
-                <textarea required rows={5} value={form.answer} onChange={e => setForm({...form, answer: e.target.value})}
-                  onFocus={() => setFocused('fa')} onBlur={() => setFocused(null)}
-                  style={{ ...inputFocusStyle(focused==='fa'), resize:'none' }} />
-              </div>
-              <div>
-                <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>ترتيب العرض</label>
-                <input type="number" min="0" value={form.sort_order}
-                  onChange={e => setForm({...form, sort_order: e.target.value})}
-                  onFocus={() => setFocused('fsort')} onBlur={() => setFocused(null)}
-                  style={inputFocusStyle(focused==='fsort')} dir="ltr" />
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:10, marginTop:20 }}>
-              <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
-                {saving ? 'جاري الحفظ...' : (editing ? 'حفظ التعديلات' : 'إضافة السؤال')}
-              </button>
-              <button type="button" onClick={() => { setShowForm(false); setEditing(null); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
-                إلغاء
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      <ConfirmDeleteModal
-        open={!!pendingDelete}
-        itemLabel={pendingDelete?.label}
-        busy={deleteBusy}
-        error={deleteError}
-        onConfirm={() => void confirmPendingDelete()}
-        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
-      />
     </div>
   );
 }
@@ -589,7 +408,6 @@ export default function AdminCMSPage() {
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'pages',  label: 'الصفحات',          icon: '📄' },
-    { key: 'faqs',   label: 'الأسئلة الشائعة',  icon: '❓' },
     { key: 'social', label: 'روابط التواصل',    icon: '🔗' },
   ];
 
@@ -601,8 +419,15 @@ export default function AdminCMSPage() {
           <div style={{ width:4, height:28, borderRadius:4, background:DK.goldGrad }} />
           <div>
             <h1 style={{ color:DK.text, fontWeight:900, fontSize:20, margin:0 }}>إدارة المحتوى</h1>
-            <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>تحرير صفحات الموقع والأسئلة الشائعة وروابط التواصل</p>
+            <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>تحرير صفحات الموقع وروابط التواصل — الأسئلة الشائعة يديرها سوبر أدمن المنصة</p>
           </div>
+        </div>
+
+        <div style={{
+          background:'rgba(37,99,235,0.06)', border:'1px solid rgba(37,99,235,0.2)',
+          borderRadius:14, padding:'12px 16px', marginBottom:20, fontSize:13, color:DK.sub, lineHeight:1.7,
+        }}>
+          الأسئلة الشائعة للمنصة تُدار من لوحة <strong>سوبر أدمن المنصة</strong> فقط، وتظهر مباشرة في الصفحة الرئيسية.
         </div>
 
         {/* Tabs */}
@@ -625,7 +450,6 @@ export default function AdminCMSPage() {
         </div>
 
         {activeTab === 'pages'  && <PagesTab />}
-        {activeTab === 'faqs'   && <FaqsTab />}
         {activeTab === 'social' && <SocialTab />}
       </div>
 

@@ -72,6 +72,7 @@ import SAStaffPage                from './pages/SAStaffPage';
 import SAStudentsPage             from './pages/SAStudentsPage';
 import SAContentApprovalsPage     from './pages/SAContentApprovalsPage';
 import SABillingPage              from './pages/SABillingPage';
+import SAFaqsPage                 from './pages/SAFaqsPage';
 import SAPlansPage                from './pages/SAPlansPage';
 import SAReportsPage              from './pages/SAReportsPage';
 import SANotificationsPage        from './pages/SANotificationsPage';
@@ -173,6 +174,9 @@ export default function App() {
         } />
         <Route path="/dashboard/notifications" element={
           <PrivateRoute roles={['super_admin']}><SANotificationsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/faqs" element={
+          <PrivateRoute roles={['super_admin']}><SAFaqsPage /></PrivateRoute>
         } />
         <Route path="/dashboard/settings" element={
           <PrivateRoute roles={['super_admin']}><SASettingsPage /></PrivateRoute>

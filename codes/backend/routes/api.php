@@ -34,6 +34,7 @@ use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\SuperAdmin\ContentApprovalController as SuperAdminContentApprovalController;
+use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\PersonalItemController as AdminPersonalItemController;
 use App\Http\Controllers\Teacher\PersonalItemController as TeacherPersonalItemController;
 use App\Http\Controllers\ParentPortal\PersonalItemController as ParentPersonalItemController;
@@ -153,6 +154,13 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
 
     // Billing / invoices — subscriptions across countries
     Route::get('billing',                   [SuperAdminBillingController::class, 'index']);
+
+    // Platform FAQs (landing) — Super Admin only
+    Route::get('faqs',                      [SuperAdminFaqController::class, 'index']);
+    Route::post('faqs',                     [SuperAdminFaqController::class, 'store']);
+    Route::put('faqs/{faq}',                [SuperAdminFaqController::class, 'update']);
+    Route::patch('faqs/{faq}/toggle',       [SuperAdminFaqController::class, 'toggle']);
+    Route::delete('faqs/{faq}',             [SuperAdminFaqController::class, 'destroy']);
 
     // Impersonation
     Route::post('impersonate/{user}',       [ImpersonationController::class, 'impersonate']);

@@ -28,6 +28,7 @@ const NAV = [
   { label:'الخطط والاشتراكات',      to:'/dashboard/plans',             icon:'📋', end:false },
   { label:'التقارير والتحليلات',    to:'/dashboard/reports',           icon:'📈', end:false },
   { label:'نظام التنبيهات',         to:'/dashboard/notifications',     icon:'🔔', end:false },
+  { label:'الأسئلة الشائعة',        to:'/dashboard/faqs',              icon:'❓', end:false },
   { label:'الإعدادات العامة',       to:'/dashboard/settings',          icon:'⚙️', end:false },
   { label:'الصلاحيات والأدوار',     to:'/dashboard/roles',             icon:'🔑', end:false },
   { label:'سجل العمليات',          to:'/dashboard/activity-log',      icon:'📝', end:false },

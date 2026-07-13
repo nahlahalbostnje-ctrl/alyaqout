@@ -30,6 +30,7 @@ const NAV = [
   { label:'الخطط والاشتراكات',        to:'/dashboard/plans',              icon:'📋', end:false },
   { label:'التقارير والتحليلات',      to:'/dashboard/reports',            icon:'📈', end:false },
   { label:'نظام التنبيهات',           to:'/dashboard/notifications',      icon:'🔔', end:false },
+  { label:'الأسئلة الشائعة',          to:'/dashboard/faqs',               icon:'❓', end:false },
   { label:'الإعدادات العامة',         to:'/dashboard/settings',           icon:'⚙️', end:false },
   { label:'الصلاحيات والأدوار',       to:'/dashboard/roles',              icon:'🔑', end:false },
   { label:'سجل العمليات',            to:'/dashboard/activity-log',       icon:'📝', end:false },
@@ -608,7 +609,7 @@ export default function DashboardPage() {
               {emptyBox}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:8, marginBottom:12 }}>
                 {[{e:'❓',l:'الأسئلة الشائعة'},{e:'🏠',l:'مركز المساعدة'}].map((t,i)=>(
-                  <button key={i} onClick={()=>navigate('/dashboard/support')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
+                  <button key={i} onClick={()=>navigate(i===0?'/dashboard/faqs':'/dashboard/support')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{t.e}</span>
                     <span style={{ color:C.text, fontSize:10.5, fontWeight:600, textAlign:'center' }}>{t.l}</span>
                   </button>

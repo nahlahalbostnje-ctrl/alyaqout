@@ -18,5 +18,14 @@ class Faq extends Model
         'created_at' => 'datetime',
     ];
 
-    public function country(): BelongsTo { return $this->belongsTo(Country::class); }
+    /** Platform-wide FAQs managed by Super Admin (country_id is null). */
+    public function scopePlatform($query)
+    {
+        return $query->whereNull('country_id');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

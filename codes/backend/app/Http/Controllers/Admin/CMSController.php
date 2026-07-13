@@ -43,48 +43,35 @@ class CMSController extends Controller
         return response()->json(['message' => 'تم الحفظ', 'page' => $page]);
     }
 
-    // ─── FAQs ────────────────────────────────────────────
+    // ─── FAQs (managed by Super Admin only) ───────────────
 
     public function faqIndex(): JsonResponse
     {
-        $faqs = Faq::where('country_id', Auth::user()->country_id)->orderBy('sort_order')->get();
-        return response()->json(['faqs' => $faqs]);
+        return response()->json([
+            'faqs'    => [],
+            'message' => 'إدارة الأسئلة الشائعة متاحة لسوبر أدمن المنصة فقط.',
+        ], 403);
     }
 
     public function faqStore(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'question'   => 'required|string',
-            'answer'     => 'required|string',
-            'sort_order' => 'nullable|integer|min:0',
-        ]);
-
-        $faq = Faq::create([...$validated, 'country_id' => Auth::user()->country_id]);
-
-        return response()->json(['message' => 'تمت الإضافة', 'faq' => $faq], 201);
+        return response()->json([
+            'message' => 'إدارة الأسئلة الشائعة متاحة لسوبر أدمن المنصة فقط.',
+        ], 403);
     }
 
     public function faqUpdate(Request $request, Faq $faq): JsonResponse
     {
-        abort_if($faq->country_id !== Auth::user()->country_id, 403);
-
-        $validated = $request->validate([
-            'question'   => 'sometimes|string',
-            'answer'     => 'sometimes|string',
-            'sort_order' => 'nullable|integer|min:0',
-            'is_active'  => 'sometimes|boolean',
-        ]);
-
-        $faq->update($validated);
-
-        return response()->json(['message' => 'تم التحديث', 'faq' => $faq]);
+        return response()->json([
+            'message' => 'إدارة الأسئلة الشائعة متاحة لسوبر أدمن المنصة فقط.',
+        ], 403);
     }
 
     public function faqDestroy(Faq $faq): JsonResponse
     {
-        abort_if($faq->country_id !== Auth::user()->country_id, 403);
-        $faq->delete();
-        return response()->json(['message' => 'تم الحذف']);
+        return response()->json([
+            'message' => 'إدارة الأسئلة الشائعة متاحة لسوبر أدمن المنصة فقط.',
+        ], 403);
     }
 
     // ─── Social Links ─────────────────────────────────────
