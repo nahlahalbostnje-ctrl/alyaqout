@@ -142,7 +142,8 @@ function fmtDate(iso: string): string {
 export default function SAActivityLogPage() {
   const [search, setSearch] = useState('');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('الكل');
-  const [date, setDate] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -160,7 +161,8 @@ export default function SAActivityLogPage() {
           per_page: 50,
           q: search.trim() || undefined,
           action: actionFilter === 'الكل' ? undefined : actionFilter,
-          date: date || undefined,
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
         },
       });
       const paginated = data.data;
@@ -175,14 +177,14 @@ export default function SAActivityLogPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, actionFilter, date]);
+  }, [page, search, actionFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     const t = setTimeout(() => { void load(); }, search ? 350 : 0);
     return () => clearTimeout(t);
   }, [load, search]);
 
-  useEffect(() => { setPage(1); }, [search, actionFilter, date]);
+  useEffect(() => { setPage(1); }, [search, actionFilter, dateFrom, dateTo]);
 
   const exportCsv = () => {
     if (logs.length === 0) return;
@@ -287,21 +289,65 @@ export default function SAActivityLogPage() {
             <option key={a} value={a}>{a}</option>
           ))}
         </select>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: C.bg,
-            color: C.text,
-            fontSize: 12,
-            outline: 'none',
-            fontFamily: "'Cairo',sans-serif",
-          }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.sub, fontSize: 12, fontWeight: 700 }}>
+            من
+            <input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => setDateFrom(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                background: C.bg,
+                color: C.text,
+                fontSize: 12,
+                outline: 'none',
+                fontFamily: "'Cairo',sans-serif",
+              }}
+            />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.sub, fontSize: 12, fontWeight: 700 }}>
+            إلى
+            <input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => setDateTo(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                background: C.bg,
+                color: C.text,
+                fontSize: 12,
+                outline: 'none',
+                fontFamily: "'Cairo',sans-serif",
+              }}
+            />
+          </label>
+          {(dateFrom || dateTo) && (
+            <button
+              type="button"
+              onClick={() => { setDateFrom(''); setDateTo(''); }}
+              style={{
+                padding: '7px 12px',
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.sub,
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Cairo',sans-serif",
+              }}
+            >
+              مسح التاريخ
+            </button>
+          )}
+        </div>
         <p style={{ color: C.sub, fontSize: 12, flexShrink: 0, margin: 0 }}>
           {loading ? '...' : `${total.toLocaleString('en-US')} سجل`}
         </p>

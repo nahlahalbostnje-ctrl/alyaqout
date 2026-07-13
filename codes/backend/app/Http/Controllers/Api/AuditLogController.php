@@ -54,7 +54,14 @@ class AuditLogController extends Controller
             $query->where('admin_id', (int) $request->admin_id);
         }
 
-        if ($request->filled('date')) {
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+        } elseif ($request->filled('date')) {
             $query->whereDate('created_at', $request->date);
         }
 
