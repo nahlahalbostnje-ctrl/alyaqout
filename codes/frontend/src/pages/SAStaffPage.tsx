@@ -46,6 +46,7 @@ export default function SAStaffPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
@@ -90,12 +91,32 @@ export default function SAStaffPage() {
   }, []);
 
   const openAdd = () => {
+    setEditingId(null);
     setForm({
       ...emptyForm,
       role: tab === 'teachers' ? 'teacher' : 'supervisor',
       country_id: countries[0] ? String(countries[0].id) : '',
     });
     setShowModal(true);
+  };
+
+  const openEdit = (u: StaffUser) => {
+    setEditingId(u.id);
+    setForm({
+      name: u.name,
+      phone: u.phone,
+      email: u.email ?? '',
+      password: '',
+      country_id: u.country_id ? String(u.country_id) : '',
+      role: u.role === 'supervisor' ? 'supervisor' : 'teacher',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    if (saving) return;
+    setShowModal(false);
+    setEditingId(null);
   };
 
   const handleSubmit = async () => {
@@ -105,21 +126,31 @@ export default function SAStaffPage() {
     }
     setSaving(true);
     try {
-      await api.post('/super-admin/users', {
+      const payload = {
         name: form.name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim() || null,
-        password: form.password || null,
         country_id: Number(form.country_id),
         role: form.role,
-      });
+        ...(form.password.trim() ? { password: form.password.trim() } : {}),
+      };
+
+      if (editingId) {
+        await api.put(`/super-admin/users/${editingId}`, payload);
+      } else {
+        await api.post('/super-admin/users', {
+          ...payload,
+          password: form.password || null,
+        });
+      }
       setShowModal(false);
+      setEditingId(null);
       await loadUsers();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
       const msg = e.response?.data?.message
         ?? (e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(' — ') : null)
-        ?? 'تعذّر إنشاء الحساب';
+        ?? (editingId ? 'تعذّر تحديث الحساب' : 'تعذّر إنشاء الحساب');
       alert(msg);
     } finally {
       setSaving(false);
@@ -161,6 +192,8 @@ export default function SAStaffPage() {
     () => Math.max(0, meta.teachers - meta.active_teachers),
     [meta]
   );
+
+  const isEdit = editingId !== null;
 
   return (
     <SuperAdminShell>
@@ -239,8 +272,9 @@ export default function SAStaffPage() {
                 </td>
                 <td style={{ padding:'12px 14px' }}>
                   <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
-                    <button onClick={()=>askDeleteUser(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
+                    <button type="button" onClick={()=>openEdit(u)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>✏️</button>
+                    <button type="button" onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
+                    <button type="button" onClick={()=>askDeleteUser(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -250,11 +284,11 @@ export default function SAStaffPage() {
       </div>
 
       {showModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={()=>setShowModal(false)}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={closeModal}>
           <div style={{ background:C.card, borderRadius:20, padding:28, width:480, maxWidth:'90vw', maxHeight:'90vh', overflowY:'auto' }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-              <h2 style={{ color:C.text, fontWeight:900, fontSize:17 }}>إضافة معلم / مشرف</h2>
-              <button onClick={()=>setShowModal(false)} style={{ border:'none', background:'none', cursor:'pointer', fontSize:20, color:C.sub }}>×</button>
+              <h2 style={{ color:C.text, fontWeight:900, fontSize:17 }}>{isEdit ? 'تعديل بيانات الحساب' : 'إضافة معلم / مشرف'}</h2>
+              <button type="button" onClick={closeModal} style={{ border:'none', background:'none', cursor:'pointer', fontSize:20, color:C.sub }}>×</button>
             </div>
 
             <div style={{ marginBottom:14 }}>
@@ -294,20 +328,24 @@ export default function SAStaffPage() {
             </div>
 
             <div style={{ marginBottom:14 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>كلمة المرور (اختياري مع البريد)</label>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>
+                {isEdit ? 'كلمة المرور الجديدة (اتركها فارغة للإبقاء)' : 'كلمة المرور (اختياري مع البريد)'}
+              </label>
               <input type="password" value={form.password} onChange={e=>setForm(f=>({...f, password:e.target.value}))} placeholder="6 أحرف على الأقل"
                 style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box' }}/>
             </div>
 
-            <p style={{ color:C.sub, fontSize:11, marginBottom:16, background:C.bg, borderRadius:10, padding:'10px 14px' }}>
-              بدون بريد وكلمة سر يمكن الدخول لاحقاً عبر رقم الجوال ورمز واتساب OTP.
-            </p>
+            {!isEdit && (
+              <p style={{ color:C.sub, fontSize:11, marginBottom:16, background:C.bg, borderRadius:10, padding:'10px 14px' }}>
+                بدون بريد وكلمة سر يمكن الدخول لاحقاً عبر رقم الجوال ورمز واتساب OTP.
+              </p>
+            )}
 
             <div style={{ display:'flex', gap:10 }}>
-              <button disabled={saving} onClick={handleSubmit} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>
-                {saving ? 'جارٍ الحفظ...' : 'إنشاء الحساب'}
+              <button type="button" disabled={saving} onClick={() => void handleSubmit()} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>
+                {saving ? 'جارٍ الحفظ...' : (isEdit ? 'حفظ التعديلات' : 'إنشاء الحساب')}
               </button>
-              <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
+              <button type="button" onClick={closeModal} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
             </div>
           </div>
         </div>

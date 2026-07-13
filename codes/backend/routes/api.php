@@ -135,6 +135,7 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     // Platform users (teachers, supervisors, students, parents) — cross-country
     Route::get('users',                    [SuperAdminUserController::class, 'index']);
     Route::post('users',                   [SuperAdminUserController::class, 'store']);
+    Route::put('users/{user}',             [SuperAdminUserController::class, 'update']);
     Route::patch('users/{user}/toggle',   [SuperAdminUserController::class, 'toggle']);
     Route::delete('users/{user}',         [SuperAdminUserController::class, 'destroy']);
 

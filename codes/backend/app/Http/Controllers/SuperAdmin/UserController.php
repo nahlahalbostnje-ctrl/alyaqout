@@ -122,6 +122,80 @@ class UserController extends Controller
         ], 201);
     }
 
+    /** PUT /super-admin/users/{user} */
+    public function update(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeManaged($user);
+
+        if (! in_array($user->role, ['teacher', 'supervisor', 'student', 'parent', 'admin'], true)) {
+            abort(403, 'غير مصرح.');
+        }
+
+        $request->validate([
+            'name'       => 'sometimes|string|max:255',
+            'phone'      => ['sometimes', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
+            'email'      => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password'   => 'nullable|string|min:6|max:100',
+            'country_id' => 'sometimes|exists:countries,id',
+            'role'       => 'sometimes|in:teacher,supervisor,student,parent,admin',
+        ]);
+
+        $data = [];
+
+        if ($request->filled('name')) {
+            $data['name'] = $request->name;
+        }
+
+        if ($request->filled('phone')) {
+            $phone = PhoneNormalizer::toStorage($request->phone);
+            if (User::where('phone', $phone)->where('id', '!=', $user->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'رقم الجوال مسجّل مسبقاً.',
+                ], 422);
+            }
+            $data['phone'] = $phone;
+        }
+
+        if ($request->has('email')) {
+            $data['email'] = $request->filled('email')
+                ? strtolower(trim((string) $request->email))
+                : null;
+        }
+
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+        }
+
+        if ($request->filled('country_id')) {
+            $data['country_id'] = (int) $request->country_id;
+        }
+
+        if ($request->filled('role')) {
+            // Keep staff page scoped: only allow teacher ↔ supervisor switches here for those roles
+            if (in_array($user->role, ['teacher', 'supervisor'], true)
+                && in_array($request->role, ['teacher', 'supervisor'], true)) {
+                $data['role'] = $request->role;
+            } elseif ($user->role === $request->role) {
+                $data['role'] = $request->role;
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن تغيير الدور إلى هذه القيمة من هنا.',
+                ], 422);
+            }
+        }
+
+        $user->update($data);
+        $user->load('country:id,name,code');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث بيانات الحساب.',
+            'data'    => $this->format($user),
+        ]);
+    }
+
     /** PATCH /super-admin/users/{user}/toggle */
     public function toggle(User $user): JsonResponse
     {
