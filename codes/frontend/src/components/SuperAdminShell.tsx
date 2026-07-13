@@ -31,6 +31,7 @@ const NAV = [
   { label:'الإعدادات العامة',       to:'/dashboard/settings',          icon:'⚙️', end:false },
   { label:'الصلاحيات والأدوار',     to:'/dashboard/roles',             icon:'🔑', end:false },
   { label:'سجل العمليات',          to:'/dashboard/activity-log',      icon:'📝', end:false },
+  { label:'مركز الأمان',             to:'/super-admin/security',         icon:'🔐', end:false },
   { label:'الرسائل',               to:'/dashboard/messages',          icon:'💬', end:false },
   { label:'الدعم الفني',           to:'/dashboard/support',           icon:'🎧', end:false },
   { label:'مركز التطوير',          to:'/dashboard/dev-center',        icon:'🛠️', end:false },

@@ -16,8 +16,8 @@ class SecurityController extends Controller
         $query = LoginAttempt::with('user:id,name,role')
             ->orderByDesc('created_at');
 
-        if ($request->filled('success')) {
-            $query->where('success', (bool) $request->success);
+        if ($request->has('success')) {
+            $query->where('success', $request->boolean('success'));
         }
 
         $attempts = $query->paginate(50);

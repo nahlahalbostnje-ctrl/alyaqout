@@ -11,18 +11,18 @@ import {
 } from '../features/countries/countriesSlice';
 import { impersonate } from '../features/auth/authSlice';
 import api from '../services/axios';
-import SuperAdminLayout from '../components/SuperAdminLayout';
+import SuperAdminShell, { C } from '../components/SuperAdminShell';
 
 const DK = {
-  card:    { background: '#FFFFFF', border: '1px solid #EDE3CE', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' },
-  gold:    '#C9952A',
-  goldL:   '#DDAD50',
+  card:    { background: C.card, border: `1px solid ${C.border}`, boxShadow: C.shadow },
+  gold:    C.gold,
+  goldL:   C.goldL,
   navy:    '#fff',
-  dimTxt:  '#6B7280',
+  dimTxt:  C.sub,
   inputStyle: {
-    background: '#FFFFFF',
-    border: '1px solid #EDE3CE',
-    color: '#1B2038',
+    background: C.bg,
+    border: `1px solid ${C.border}`,
+    color: C.text,
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '13px',
@@ -115,43 +115,43 @@ export default function CountryAdminsPage() {
 
   if (loading && !country) {
     return (
-      <SuperAdminLayout>
+      <SuperAdminShell>
         <div className="flex items-center justify-center h-64">
           <div className="w-10 h-10 rounded-full animate-spin"
             style={{ border: '3px solid rgba(201,149,42,0.15)', borderTopColor: DK.gold }} />
         </div>
-      </SuperAdminLayout>
+      </SuperAdminShell>
     );
   }
 
   if (!country) {
     return (
-      <SuperAdminLayout>
+      <SuperAdminShell>
         <div className="flex flex-col items-center justify-center h-64 gap-4" dir="rtl">
           <p style={{ color: DK.dimTxt }}>الدولة غير موجودة</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard/countries')}
             className="text-sm font-bold transition hover:opacity-70"
             style={{ color: DK.gold }}
           >
-            العودة للوحة التحكم
+            العودة لإدارة الدول
           </button>
         </div>
-      </SuperAdminLayout>
+      </SuperAdminShell>
     );
   }
 
   return (
-    <SuperAdminLayout>
-      <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }} dir="rtl">
+    <SuperAdminShell>
+      <div dir="rtl">
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/dashboard/countries')}
               className="w-9 h-9 flex items-center justify-center rounded-xl transition-all hover:bg-black/5"
-              style={{ background: '#F9FAFB', border: '1px solid #EDE3CE', color: DK.dimTxt }}
+              style={{ background: C.bg, border: `1px solid ${C.border}`, color: DK.dimTxt }}
             >
               <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -429,6 +429,6 @@ export default function CountryAdminsPage() {
           </div>
         </div>
       )}
-    </SuperAdminLayout>
+    </SuperAdminShell>
   );
 }
