@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useToast } from '../components/Toast';
+import { getApiError } from '../utils/apiError';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -36,6 +38,7 @@ function fmt(n: number): string {
 }
 
 export default function SASchoolsPage() {
+  const toast = useToast();
   const [branches,     setBranches]     = useState<BranchRow[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState<string | null>(null);
@@ -132,7 +135,7 @@ export default function SASchoolsPage() {
         });
       } else {
         if (!form.country_id) {
-          alert('يرجى اختيار الدولة');
+          toast.error('يرجى اختيار الدولة');
           setSaving(false);
           return;
         }
@@ -148,8 +151,7 @@ export default function SASchoolsPage() {
       setShowModal(false);
       await loadBranches();
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      alert(e.response?.data?.message ?? 'تعذّر حفظ الفرع');
+      toast.error(getApiError(err, 'تعذّر حفظ الفرع'));
     } finally {
       setSaving(false);
     }
@@ -160,8 +162,8 @@ export default function SASchoolsPage() {
     try {
       await api.patch(`/super-admin/branches/${b.id}/toggle`);
       await loadBranches();
-    } catch {
-      alert('تعذّر تغيير حالة الفرع');
+    } catch (err: unknown) {
+      toast.error(getApiError(err, 'تعذّر تغيير حالة الفرع'));
     }
   };
 

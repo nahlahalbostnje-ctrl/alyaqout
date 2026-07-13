@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useToast } from '../components/Toast';
+import { getApiError } from '../utils/apiError';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -61,6 +63,7 @@ function exportCsv(rows: StudentUser[]) {
 }
 
 export default function SAStudentsPage() {
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('الكل');
   const [users, setUsers] = useState<StudentUser[]>([]);
@@ -72,6 +75,7 @@ export default function SAStudentsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -130,6 +134,7 @@ export default function SAStudentsPage() {
 
   const openEdit = (u: StudentUser) => {
     setEditingId(u.id);
+    setFormError(null);
     setForm({
       name: u.name,
       phone: u.phone,
@@ -143,14 +148,18 @@ export default function SAStudentsPage() {
     if (saving) return;
     setShowModal(false);
     setEditingId(null);
+    setFormError(null);
   };
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.phone.trim() || !form.country_id) {
-      alert('يرجى تعبئة الاسم والجوال والدولة');
+      const msg = 'يرجى تعبئة الاسم والجوال والدولة';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     setSaving(true);
+    setFormError(null);
     try {
       const payload = {
         name: form.name.trim(),
@@ -160,18 +169,18 @@ export default function SAStudentsPage() {
       };
       if (editingId) {
         await api.put(`/super-admin/users/${editingId}`, payload);
+        toast.success('تم تحديث الحساب بنجاح');
       } else {
         await api.post('/super-admin/users', payload);
+        toast.success('تم إنشاء الحساب بنجاح');
       }
       setShowModal(false);
       setEditingId(null);
       await loadUsers();
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
-      const msg = e.response?.data?.message
-        ?? (e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(' — ') : null)
-        ?? (editingId ? 'تعذّر تحديث الحساب' : 'تعذّر إنشاء الحساب');
-      alert(msg);
+      const msg = getApiError(err, editingId ? 'تعذّر تحديث الحساب' : 'تعذّر إنشاء الحساب');
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -181,8 +190,8 @@ export default function SAStudentsPage() {
     try {
       await api.patch(`/super-admin/users/${u.id}/toggle`);
       await loadUsers();
-    } catch {
-      alert('تعذّر تغيير حالة الحساب');
+    } catch (err: unknown) {
+      toast.error(getApiError(err, 'تعذّر تغيير حالة الحساب'));
     }
   };
 
@@ -338,6 +347,12 @@ export default function SAStudentsPage() {
                 {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+
+            {formError && (
+              <p style={{ color:C.red, fontSize:12, fontWeight:700, marginBottom:14, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:10, padding:'10px 12px' }}>
+                {formError}
+              </p>
+            )}
 
             <div style={{ display:'flex', gap:10 }}>
               <button type="button" disabled={saving} onClick={() => void handleSubmit()} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>

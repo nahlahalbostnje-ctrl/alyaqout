@@ -5,6 +5,7 @@ import { fetchTeacherDashboard, updateTeacherClassStatus } from '../features/tea
 import { fetchTeacherExams, fetchTeacherHomework } from '../features/teacher/examSlice';
 import { logout } from '../features/auth/authSlice';
 import api from '../services/axios';
+import { toast } from '../components/Toast';
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────
 const T = {
@@ -363,7 +364,7 @@ function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; d
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ color: T.sub, fontSize: 12 }}>التسليمات: <strong style={{ color: T.text }}>{hw.submissions_count}</strong></span>
-                <button onClick={()=>alert(`${hw.title}\nالمادة: ${hw.course?.title ?? '—'}\nآخر موعد: ${new Date(hw.due_date).toLocaleDateString('ar-EG')}\nالتسليمات: ${hw.submissions_count}`)} style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>عرض التفاصيل</button>
+                <button onClick={()=>toast.info(`${hw.title}\nالمادة: ${hw.course?.title ?? '—'}\nآخر موعد: ${new Date(hw.due_date).toLocaleDateString('ar-EG')}\nالتسليمات: ${hw.submissions_count}`)} style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>عرض التفاصيل</button>
               </div>
             </div>
           ))}

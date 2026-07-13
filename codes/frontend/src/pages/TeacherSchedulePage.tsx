@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
+import { toast } from '../components/Toast';
 
 const C = {
   gold:'#C9952A', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
@@ -109,7 +110,7 @@ export default function TeacherSchedulePage() {
                       return (
                         <td key={day} style={{ padding:6, borderBottom:`1px solid ${C.border}`, textAlign:'center', verticalAlign:'middle' }}>
                           {slot ? (
-                            <div onClick={()=>alert(`${slot.subject} — ${slot.grade}\n🏫 ${slot.room}\n📅 ${slot.day} | ⏰ ${slot.time}\nالحالة: ${STATUS_LABEL[slot.status]}`)} style={{ background: STATUS_BG[slot.status], border:`1px solid ${STATUS_COLOR[slot.status]}30`, borderRadius:10, padding:'8px 10px', cursor:'pointer' }}>
+                            <div onClick={()=>toast.info(`${slot.subject} — ${slot.grade}\n🏫 ${slot.room}\n📅 ${slot.day} | ⏰ ${slot.time}\nالحالة: ${STATUS_LABEL[slot.status]}`)} style={{ background: STATUS_BG[slot.status], border:`1px solid ${STATUS_COLOR[slot.status]}30`, borderRadius:10, padding:'8px 10px', cursor:'pointer' }}>
                               <p style={{ color:STATUS_COLOR[slot.status], fontSize:12, fontWeight:800, margin:0, marginBottom:2 }}>{slot.grade}</p>
                               <p style={{ color:C.sub, fontSize:10, margin:0 }}>🏫 {slot.room}</p>
                             </div>

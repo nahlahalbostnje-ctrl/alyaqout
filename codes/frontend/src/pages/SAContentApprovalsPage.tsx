@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
+import { useToast } from '../components/Toast';
+import { getApiError } from '../utils/apiError';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -43,6 +45,7 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 export default function SAContentApprovalsPage() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'all'|ContentStatus>('pending');
   const [items, setItems] = useState<ContentItem[]>([]);
   const [meta, setMeta] = useState<Meta>({
@@ -87,8 +90,8 @@ export default function SAContentApprovalsPage() {
       await api.patch(path, { status });
       setRejectModal(null);
       await load();
-    } catch {
-      alert('تعذّر تحديث حالة المحتوى');
+    } catch (err: unknown) {
+      toast.error(getApiError(err, 'تعذّر تحديث حالة المحتوى'));
     } finally {
       setBusyId(null);
     }

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        App::setLocale(config('app.locale', 'ar'));
+
         Event::listen('eloquent.created: *', function (string $event, array $payload): void {
             $model = $payload[0] ?? null;
             if ($model instanceof Model) {

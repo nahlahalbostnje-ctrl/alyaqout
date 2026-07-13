@@ -11,6 +11,8 @@ import {
   type Country,
 } from '../features/countries/countriesSlice';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useToast } from '../components/Toast';
+import { getApiError } from '../utils/apiError';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -23,6 +25,7 @@ const emptyForm = {
 };
 
 export default function SACountriesPage() {
+  const toast = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { list, loading, error } = useAppSelector((s) => s.countries);
@@ -102,8 +105,8 @@ export default function SACountriesPage() {
   const handleToggle = async (c: Country) => {
     try {
       await dispatch(toggleCountry(c.id)).unwrap();
-    } catch {
-      alert('تعذّر تغيير حالة الدولة');
+    } catch (err: unknown) {
+      toast.error(getApiError(err, 'تعذّر تغيير حالة الدولة'));
     }
   };
 

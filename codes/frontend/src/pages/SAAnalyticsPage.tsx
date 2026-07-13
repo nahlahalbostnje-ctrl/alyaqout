@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
+import { toast } from '../components/Toast';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 const sH = (t:string, a?:string, onAction?:()=>void) => (
   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
     <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>{t}</p>
-    {a&&<button onClick={onAction ?? (()=>alert(`"${a}" لـ"${t}" قيد التطوير.`))} style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
+    {a&&<button onClick={onAction ?? (()=>toast.info(`"${a}" لـ"${t}" قيد التطوير.`))} style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
   </div>
 );
 

@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 import BrandLogo from '../components/BrandLogo';
+import { toast } from '../components/Toast';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -125,7 +126,7 @@ const card=(e:Partial<CSSProperties>={}):CSSProperties=>({ background:C.card, bo
 const sH=(t:string,a?:string,onAction?:()=>void)=>(
   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
     <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>{t}</p>
-    {a&&<button onClick={onAction ?? (()=>alert(`"${a}" لـ"${t}" قيد التطوير.`))} style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
+    {a&&<button onClick={onAction ?? (()=>toast.info(`"${a}" لـ"${t}" قيد التطوير.`))} style={{ color:C.gold, fontSize:11, fontWeight:600, border:'none', background:'none', cursor:'pointer' }}>{a}</button>}
   </div>
 );
 const medalColor=(r:number)=>r===1?C.gold:r===2?'#9CA3AF':'#B45309';
