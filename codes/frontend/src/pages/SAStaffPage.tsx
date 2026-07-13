@@ -80,40 +80,68 @@ export default function SAStaffPage() {
     }
   }, [tab, search]);
 
+  const loadCountries = useCallback(async (): Promise<CountryOpt[]> => {
+    try {
+      const { data } = await api.get('/super-admin/countries');
+      const list = (data.data ?? data.countries ?? []) as CountryOpt[];
+      const mapped = Array.isArray(list)
+        ? list
+            .filter((c) => c && c.id != null && c.name)
+            .map((c) => ({ id: Number(c.id), name: String(c.name) }))
+        : [];
+      setCountries(mapped);
+      return mapped;
+    } catch {
+      setCountries([]);
+      return [];
+    }
+  }, []);
+
   useEffect(() => {
     const t = setTimeout(() => { loadUsers(); }, search ? 300 : 0);
     return () => clearTimeout(t);
   }, [loadUsers, search]);
 
   useEffect(() => {
-    api.get('/super-admin/countries')
-      .then(({ data }) => {
-        const list = (data.data ?? data.countries ?? data ?? []) as CountryOpt[];
-        setCountries(Array.isArray(list) ? list.map((c: CountryOpt) => ({ id: c.id, name: c.name })) : []);
-      })
-      .catch(() => setCountries([]));
-  }, []);
+    void loadCountries();
+  }, [loadCountries]);
 
-  const openAdd = () => {
+  const resolveCountryId = (u: StaffUser, list: CountryOpt[]): string => {
+    if (u.country_id != null && u.country_id !== 0) {
+      const byId = list.find((c) => c.id === Number(u.country_id));
+      if (byId) return String(byId.id);
+      // حتى لو لم تُحمَّل القائمة بعد، أبقِ المعرّف
+      return String(u.country_id);
+    }
+    if (u.country) {
+      const byName = list.find((c) => c.name === u.country);
+      if (byName) return String(byName.id);
+    }
+    return '';
+  };
+
+  const openAdd = async () => {
     setEditingId(null);
     setFormError(null);
+    const list = countries.length > 0 ? countries : await loadCountries();
     setForm({
       ...emptyForm,
       role: tab === 'teachers' ? 'teacher' : 'supervisor',
-      country_id: countries[0] ? String(countries[0].id) : '',
+      country_id: list[0] ? String(list[0].id) : '',
     });
     setShowModal(true);
   };
 
-  const openEdit = (u: StaffUser) => {
+  const openEdit = async (u: StaffUser) => {
     setEditingId(u.id);
     setFormError(null);
+    const list = countries.length > 0 ? countries : await loadCountries();
     setForm({
-      name: u.name,
-      phone: u.phone,
+      name: u.name ?? '',
+      phone: u.phone ?? '',
       email: u.email ?? '',
       password: '',
-      country_id: u.country_id ? String(u.country_id) : '',
+      country_id: resolveCountryId(u, list),
       role: u.role === 'supervisor' ? 'supervisor' : 'teacher',
     });
     setShowModal(true);
@@ -127,10 +155,23 @@ export default function SAStaffPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name.trim() || !form.phone.trim() || !form.country_id) {
-      const msg = 'يرجى تعبئة الاسم والجوال والدولة';
+    const missing: string[] = [];
+    if (!form.name.trim()) missing.push('الاسم');
+    if (!form.phone.trim()) missing.push('رقم الجوال');
+    if (!form.country_id) missing.push('الدولة');
+    if (missing.length > 0) {
+      const msg = missing.length === 1 && missing[0] === 'الدولة'
+        ? 'يرجى اختيار الدولة من القائمة'
+        : `يرجى تعبئة: ${missing.join(' و')}`;
       setFormError(msg);
       toast.error(msg);
+      return;
+    }
+    if (countries.length === 0) {
+      const msg = 'قائمة الدول غير محمّلة. أعد فتح النافذة بعد لحظات.';
+      setFormError(msg);
+      toast.error(msg);
+      await loadCountries();
       return;
     }
     setSaving(true);
@@ -212,7 +253,7 @@ export default function SAStaffPage() {
           <h1 style={{ color:C.text, fontWeight:900, fontSize:20 }}>المعلمون والموظفون</h1>
           <p style={{ color:C.sub, fontSize:12, marginTop:2 }}>إدارة كوادر المنصة البشرية</p>
         </div>
-        <button onClick={openAdd} style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(201,149,42,0.3)' }}>
+        <button onClick={() => void openAdd()} style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(201,149,42,0.3)' }}>
           <span>+</span> إضافة جديد
         </button>
       </div>
@@ -282,7 +323,7 @@ export default function SAStaffPage() {
                 </td>
                 <td style={{ padding:'12px 14px' }}>
                   <div style={{ display:'flex', gap:6 }}>
-                    <button type="button" onClick={()=>openEdit(u)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>✏️</button>
+                    <button type="button" onClick={()=>void openEdit(u)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>✏️</button>
                     <button type="button" onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
                     <button type="button" onClick={()=>askDeleteUser(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
                   </div>
@@ -323,12 +364,27 @@ export default function SAStaffPage() {
             </div>
 
             <div style={{ marginBottom:14 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>الدولة</label>
-              <select value={form.country_id} onChange={e=>setForm(f=>({...f, country_id:e.target.value}))}
-                style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', cursor:'pointer' }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>الدولة *</label>
+              <select
+                value={form.country_id}
+                onChange={e=>setForm(f=>({...f, country_id:e.target.value}))}
+                style={{
+                  width:'100%', padding:'9px 14px', borderRadius:11,
+                  border:`1.5px solid ${!form.country_id && formError ? C.red : C.border}`,
+                  background:C.bg, color:C.text, fontSize:13, outline:'none',
+                  boxSizing:'border-box', cursor:'pointer', fontFamily:"'Cairo',sans-serif",
+                }}
+              >
                 <option value="">اختر الدولة</option>
-                {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {countries.map(c => (
+                  <option key={c.id} value={String(c.id)}>{c.name}</option>
+                ))}
               </select>
+              {countries.length === 0 && (
+                <p style={{ color:C.orange, fontSize:11, marginTop:6, fontWeight:600 }}>
+                  جارٍ تحميل الدول أو تعذّر جلبها — أعد فتح نافذة التعديل.
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom:14 }}>
