@@ -67,6 +67,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\SuperAdmin\SecurityController;
 use App\Http\Controllers\SuperAdmin\ImpersonationController;
+use App\Http\Controllers\SuperAdmin\BillingController as SuperAdminBillingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -149,6 +150,9 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
 
     // Activity / audit log — platform-wide for super admin
     Route::get('activity-log',              [AuditLogController::class, 'index']);
+
+    // Billing / invoices — subscriptions across countries
+    Route::get('billing',                   [SuperAdminBillingController::class, 'index']);
 
     // Impersonation
     Route::post('impersonate/{user}',       [ImpersonationController::class, 'impersonate']);
