@@ -26,6 +26,7 @@ export interface GrowthPoint { month: string; total: number; }
 interface SuperAdminState {
   stats:         SuperAdminStats | null;
   approvals:     { exams: number; homeworks: number } | null;
+  badges:        { approvals: number; messages: number; notifications: number } | null;
   countryStats:  CountryStat[];
   growthChart:   GrowthPoint[];
   loading:       boolean;
@@ -35,6 +36,7 @@ interface SuperAdminState {
 const initialState: SuperAdminState = {
   stats:        null,
   approvals:    null,
+  badges:       null,
   countryStats: [],
   growthChart:  [],
   loading:      false,
@@ -67,6 +69,7 @@ const superAdminSlice = createSlice({
         state.loading      = false;
         state.stats        = action.payload.stats;
         state.approvals    = action.payload.approvals;
+        state.badges       = action.payload.badges ?? null;
         state.countryStats = action.payload.country_stats;
         state.growthChart  = action.payload.growth_chart;
       })

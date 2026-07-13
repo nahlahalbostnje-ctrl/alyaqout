@@ -140,7 +140,7 @@ export default function DashboardPage() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const user      = useAppSelector(s=>s.auth.user);
-  const { stats, approvals, countryStats, growthChart, loading, error } = useAppSelector(s => s.superAdmin);
+  const { stats, approvals, badges, countryStats, growthChart, loading, error } = useAppSelector(s => s.superAdmin);
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -308,14 +308,14 @@ export default function DashboardPage() {
           {/* Notification icons */}
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             {[
-              { e:'🔔', n: approvals ? (approvals.exams + approvals.homeworks) : 0, to:'/dashboard/notifications' },
-              { e:'✉️', n:0,  to:'/dashboard/messages' },
-              { e:'🚩', n: approvals ? (approvals.exams + approvals.homeworks) : 0,  to:'/dashboard/content-approvals' },
+              { e:'🔔', n: badges?.notifications ?? 0, to:'/dashboard/notifications', color: C.red },
+              { e:'✉️', n: badges?.messages ?? 0, to:'/dashboard/messages', color: C.blue },
+              { e:'🚩', n: badges?.approvals ?? ((approvals?.exams ?? 0) + (approvals?.homeworks ?? 0)), to:'/dashboard/content-approvals', color: C.orange },
             ].map((ic,i)=>(
               <div key={i} onClick={()=>navigate(ic.to)} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
                 {ic.e}
                 {ic.n > 0 && (
-                  <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
+                  <div style={{ position:'absolute', top:-5, right:-5, minWidth:18, height:18, padding:'0 4px', borderRadius:20, background:ic.color, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n > 99 ? '99+' : ic.n}</div>
                 )}
               </div>
             ))}

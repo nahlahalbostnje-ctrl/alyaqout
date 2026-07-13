@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
+import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 import BrandLogo from './BrandLogo';
 
 export const C = {
@@ -40,9 +41,15 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector(s => s.auth.user);
+  const badges = useAppSelector(s => s.superAdmin.badges);
+  const approvals = useAppSelector(s => s.superAdmin.approvals);
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchSuperAdminStats());
+  }, [dispatch]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -57,6 +64,17 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const fullName = user?.name ?? 'السوبر أدمن';
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
+
+  const pendingApprovals = badges?.approvals
+    ?? ((approvals?.exams ?? 0) + (approvals?.homeworks ?? 0));
+  const messagesCount = badges?.messages ?? 0;
+  const notifCount = badges?.notifications ?? 0;
+
+  const headerIcons = [
+    { e:'🔔', n: notifCount, to:'/dashboard/notifications', color: C.red },
+    { e:'✉️', n: messagesCount, to:'/dashboard/messages', color: C.blue },
+    { e:'🚩', n: pendingApprovals, to:'/dashboard/content-approvals', color: C.orange },
+  ];
 
   return (
     <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif" }}>
@@ -117,14 +135,14 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
             <BrandLogo size={38} style={{ borderRadius:10 }} />
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            {[
-              { e:'🔔', n:12, to:'/dashboard/notifications' },
-              { e:'✉️', n:7,  to:'/dashboard/messages' },
-              { e:'🚩', n:5,  to:'/dashboard/content-approvals' },
-            ].map((ic,i)=>(
-              <div key={i} onClick={()=>navigate(ic.to)} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
+            {headerIcons.map((ic,i)=>(
+              <div key={i} onClick={()=>navigate(ic.to)} title={ic.to} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
                 {ic.e}
-                <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
+                {ic.n > 0 && (
+                  <div style={{ position:'absolute', top:-5, right:-5, minWidth:18, height:18, padding:'0 4px', borderRadius:20, background:ic.color, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    {ic.n > 99 ? '99+' : ic.n}
+                  </div>
+                )}
               </div>
             ))}
             {/* Always-visible logout — no need to open the sidebar drawer */}

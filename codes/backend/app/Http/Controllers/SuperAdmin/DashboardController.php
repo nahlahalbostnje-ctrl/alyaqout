@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\Country;
 use App\Models\Course;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
+use App\Models\Notification;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -86,6 +89,14 @@ class DashboardController extends Controller
             'homeworks' => $pendingHomeworks,
         ];
 
+        $badges = [
+            'approvals'     => $pendingExams + $pendingHomeworks,
+            'messages'      => Conversation::count(),
+            'notifications' => Notification::where('user_id', Auth::id())
+                ->where('is_read', false)
+                ->count(),
+        ];
+
         return response()->json([
             'success' => true,
             'data'    => [
@@ -104,6 +115,7 @@ class DashboardController extends Controller
                     'students_last_month'  => $studentsLastMonth,
                 ],
                 'approvals'      => $approvals,
+                'badges'         => $badges,
                 'country_stats'  => $countryStats,
                 'growth_chart'   => $growth,
             ],
