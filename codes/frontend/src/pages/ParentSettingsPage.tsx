@@ -58,20 +58,23 @@ export default function ParentSettingsPage() {
   const initials = user?.name ? user.name.split(' ').slice(0,2).map((w:string) => w[0]).join('') : 'و';
 
   const [profile, setProfile] = useState({
-    name: user?.name ?? 'ولي الأمر', phone: '0512345678',
-    email: 'parent@example.com', whatsapp: '0512345678',
-    city: 'الرياض', lang: 'ar',
+    name: user?.name ?? '',
+    phone: (user as { phone?: string } | null)?.phone ?? '',
+    email: (user as { email?: string } | null)?.email ?? '',
+    whatsapp: (user as { phone?: string } | null)?.phone ?? '',
+    city: '',
+    lang: 'ar',
   });
   const [password, setPassword] = useState({ current:'', newPass:'', confirm:'' });
   const [notifs, setNotifs] = useState({
-    homeworkReminder:true, examAlert:true, attendanceAlert:true,
-    invoiceAlert:true, weeklyReport:true, promotions:false,
-    whatsappNotif:true, emailNotif:true, smsNotif:false,
+    homeworkReminder:false, examAlert:false, attendanceAlert:false,
+    invoiceAlert:false, weeklyReport:false, promotions:false,
+    whatsappNotif:false, emailNotif:false, smsNotif:false,
   });
   const [parental, setParental] = useState([
-    { label:'تحديد وقت استخدام المنصة', enabled:true,  detail:'السماح فقط من 3 م إلى 9 م' },
-    { label:'تفعيل وضع التركيز',         enabled:false, detail:'إخفاء المحتوى الترفيهي' },
-    { label:'منع الرسائل بين الطلاب',    enabled:true,  detail:'التواصل مع المعلمين فقط' },
+    { label:'تحديد وقت استخدام المنصة', enabled:false,  detail:'غير مربوط بالخادم بعد' },
+    { label:'تفعيل وضع التركيز',         enabled:false, detail:'غير مربوط بالخادم بعد' },
+    { label:'منع الرسائل بين الطلاب',    enabled:false,  detail:'غير مربوط بالخادم بعد' },
   ]);
   const [profileSaved, setProfileSaved] = useState(false);
   const [passSaved, setPassSaved]       = useState(false);

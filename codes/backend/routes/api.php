@@ -33,6 +33,7 @@ use App\Http\Controllers\SuperAdmin\BranchController as SuperAdminBranchControll
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
+use App\Http\Controllers\SuperAdmin\ContentApprovalController as SuperAdminContentApprovalController;
 use App\Http\Controllers\Admin\PersonalItemController as AdminPersonalItemController;
 use App\Http\Controllers\Teacher\PersonalItemController as TeacherPersonalItemController;
 use App\Http\Controllers\ParentPortal\PersonalItemController as ParentPersonalItemController;
@@ -136,6 +137,11 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     Route::post('users',                   [SuperAdminUserController::class, 'store']);
     Route::patch('users/{user}/toggle',   [SuperAdminUserController::class, 'toggle']);
     Route::delete('users/{user}',         [SuperAdminUserController::class, 'destroy']);
+
+    // Content approvals (exams + homeworks) — cross-country
+    Route::get('approvals',                              [SuperAdminContentApprovalController::class, 'index']);
+    Route::patch('approvals/exams/{exam}',                [SuperAdminContentApprovalController::class, 'decideExam']);
+    Route::patch('approvals/homeworks/{homework}',        [SuperAdminContentApprovalController::class, 'decideHomework']);
 
     // Security center
     Route::get('security/login-attempts',   [SecurityController::class, 'loginAttempts']);

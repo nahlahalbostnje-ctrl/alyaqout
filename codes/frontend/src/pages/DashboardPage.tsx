@@ -159,7 +159,7 @@ export default function DashboardPage() {
   const now = new Date();
   const timeStr  = now.toLocaleTimeString('en-US',{ hour:'2-digit', minute:'2-digit' });
   const dateStr  = now.toLocaleDateString('ar-EG',{ weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  const fullName = user?.name ?? 'عبد الله الشمري';
+  const fullName = user?.name ?? 'السوبر أدمن';
 
   const handleLogout = ()=>{ dispatch(logout()); navigate('/login',{ replace:true }); };
 

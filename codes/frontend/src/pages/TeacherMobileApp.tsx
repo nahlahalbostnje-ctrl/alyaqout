@@ -57,23 +57,6 @@ const card = (extra?: Record<string, unknown>) => ({
   ...extra,
 });
 
-function Ring({ pct, size = 80, color = T.gold }: { pct: number; size?: number; color?: string }) {
-  const r = size / 2 - 9;
-  const c = 2 * Math.PI * r;
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(13,21,53,0.1)" strokeWidth="8"/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="8"
-          strokeDasharray={c} strokeDashoffset={c - (pct / 100) * c} strokeLinecap="round"/>
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color, fontWeight: 900, fontSize: size > 90 ? 18 : 14 }}>{pct}%</span>
-      </div>
-    </div>
-  );
-}
-
 function Badge({ n, color = T.red }: { n: number; color?: string }) {
   if (!n) return null;
   return (
@@ -202,9 +185,9 @@ function HomeScreen({ stats, upcoming, teacher, recentSubmissions }: {
           <p style={{ color: T.gold, fontWeight: 700, fontSize: 14, marginBottom: 14 }}>مدائل معلّم — تنبيهات الطلاب</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: 10 }}>
             {[
-              { label: 'متفوقون',        n: stats?.today_attendance ?? 18, color: T.green  },
-              { label: 'يحتاجون متابعة', n: stats?.pending_homework_subs ?? 24, color: T.orange },
-              { label: 'تدخل عاجل',      n: stats?.pending_exam_subs ?? 7,  color: T.red   },
+              { label: 'حضور اليوم',        n: stats?.today_attendance ?? 0, color: T.green  },
+              { label: 'واجبات معلّقة', n: stats?.pending_homework_subs ?? 0, color: T.orange },
+              { label: 'امتحانات معلّقة',      n: stats?.pending_exam_subs ?? 0,  color: T.red   },
             ].map((a, i) => (
               <div key={i} style={{ textAlign: 'center', padding: '16px 8px', borderRadius: 12, background: `${a.color}10`, border: `1px solid ${a.color}30` }}>
                 <p style={{ color: a.color, fontWeight: 900, fontSize: 32, lineHeight: 1 }}>{a.n}</p>
@@ -212,13 +195,9 @@ function HomeScreen({ stats, upcoming, teacher, recentSubmissions }: {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <Ring pct={92} size={90} color={T.gold}/>
-            <div>
-              <p style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>جودة الصف</p>
-              <p style={{ color: T.sub, fontSize: 11.5, marginTop: 3 }}>مرتفعة هذا الشهر</p>
-            </div>
-          </div>
+          {(stats?.today_attendance != null || (stats?.pending_homework_subs ?? 0) + (stats?.pending_exam_subs ?? 0) > 0) ? null : (
+            <p style={{ textAlign:'center', color:T.sub, fontSize:12, marginTop:12 }}>لا توجد مؤشرات إضافية حالياً</p>
+          )}
         </div>
 
         {/* Recent submissions */}
@@ -446,49 +425,12 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
 
 // REPORTS ─────────────────────────────────────────────────────────────────────
 function ReportsScreen() {
-  const [cls, setCls] = useState<'A' | 'B'>('A');
-  const data = {
-    A: [{ sub: 'English', pct: 92, label: 'ممتاز', c: T.green }, { sub: 'Math', pct: 78, label: 'جيداً', c: T.orange }, { sub: 'Science', pct: 77, label: 'مقبول', c: T.orange }],
-    B: [{ sub: 'English', pct: 92, label: 'ممتاز', c: T.green }, { sub: 'Math',  pct: 92, label: 'ممتاز', c: T.green  }, { sub: 'Science', pct: 92, label: 'ممتاز', c: T.green }],
-  };
   return (
     <div>
       <SectionTitle title="التقارير" sub="تقارير أداء الصفوف والطلاب"/>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
-        {(['A', 'B'] as const).map(c => (
-          <button key={c} onClick={() => setCls(c)} style={{ padding: '10px 32px', borderRadius: 12, background: cls === c ? T.goldGrad : T.card, border: `1px solid ${cls === c ? T.gold : T.border}`, color: cls === c ? '#071220' : T.sub, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>الصف {c}</button>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
-        {/* Subject rings */}
-        <div style={{ ...card({ gridColumn: '1/-1' }) }}>
-          <p style={{ color: T.gold, fontWeight: 700, fontSize: 14, marginBottom: 18 }}>أداء المواد — الصف {cls}</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16 }}>
-            {data[cls].map((item, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '20px', background: T.card2, borderRadius: 14, border: `1px solid ${T.border}` }}>
-                <Ring pct={item.pct} size={100} color={item.c}/>
-                <p style={{ color: T.text, fontWeight: 800, fontSize: 15 }}>{item.sub}</p>
-                <span style={{ color: item.c, fontSize: 12, fontWeight: 700, background: `${item.c}15`, padding: '4px 16px', borderRadius: 20, border: `1px solid ${item.c}30` }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Action */}
-        <div style={{ ...card(), display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🎓</div>
-          <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تحليل ذكي للطلاب</p>
-          <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>احصل على رأي ذكاء اصطناعي لتحسين أداء الطلاب في هذا الصف</p>
-          <button disabled title="غير متاح بعد" style={{ padding: '13px 24px', borderRadius: 12, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 14, cursor: 'not-allowed', marginTop: 4, opacity: 0.55 }}>تشغيل التحليل</button>
-        </div>
-
-        <div style={{ ...card(), display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>📤</div>
-          <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تصدير تقرير شامل</p>
-          <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>تصدير تقرير أداء الصف كاملاً بصيغة PDF أو Excel</p>
-          <button disabled title="غير متاح بعد" style={{ padding: '13px 24px', borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: T.blue, fontWeight: 800, fontSize: 14, cursor: 'not-allowed', marginTop: 4, opacity: 0.55 }}>تصدير التقرير</button>
-        </div>
+      <div style={{ ...card(), textAlign:'center', padding:'48px 24px' }}>
+        <p style={{ color: T.text, fontWeight: 700, fontSize: 15, marginBottom: 8 }}>لا توجد بيانات حالياً</p>
+        <p style={{ color: T.sub, fontSize: 13, lineHeight: 1.6 }}>ستظهر تقارير الأداء هنا عند توفرها من النظام.</p>
       </div>
     </div>
   );
@@ -728,11 +670,11 @@ function LiveRoomScreen({ liveNow, onEnd }: { liveNow: { id: number; title: stri
             </div>
           </div>
           <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', borderRadius: 20, padding: '5px 14px' }}>
-            <span style={{ color: '#fff', fontSize: 12 }}>👥 {Math.floor(Math.random() * 30) + 10}</span>
+            <span style={{ color: '#fff', fontSize: 12 }}>👥 —</span>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 110, height: 110, borderRadius: '50%', background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 50, margin: '0 auto 14px', border: `3px solid ${T.gold}`, boxShadow: '0 0 40px rgba(212,160,23,0.4)' }}>👨‍🏫</div>
-            <p style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{liveNow?.title ?? 'English - 5th A'}</p>
+            <p style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{liveNow?.title ?? 'لا توجد حصة مباشرة'}</p>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 4 }}>غرفة البث المباشر</p>
           </div>
         </div>
@@ -773,46 +715,12 @@ function LiveRoomScreen({ liveNow, onEnd }: { liveNow: { id: number; title: stri
 
 // STUDENTS ────────────────────────────────────────────────────────────────────
 function StudentsScreen() {
-  const [search, setSearch] = useState('');
-  const students = [
-    { name: 'أحمد الحمي',     spec: 'الصف A', pct: 95, qpct: 92, color: '#3B82F6' },
-    { name: 'عاطفة علي',      spec: 'الصف B', pct: 95, qpct: 92, color: '#7C3AED' },
-    { name: 'حاكم المطار',    spec: 'الصف A', pct: 95, qpct: 92, color: '#0E7490' },
-    { name: 'Sarah Johnson',  spec: 'الصف B', pct: 92, qpct: 92, color: '#16A34A' },
-    { name: 'حمد لبطان',      spec: 'الصف A', pct: 93, qpct: 92, color: '#C9952A' },
-    { name: 'نورة العتيبي',   spec: 'الصف B', pct: 88, qpct: 85, color: '#DB2777' },
-    { name: 'خالد المنصوري',  spec: 'الصف A', pct: 90, qpct: 88, color: '#0891B2' },
-    { name: 'ليلى الزهراني',  spec: 'الصف B', pct: 97, qpct: 96, color: '#16A34A' },
-  ].filter(s => !search || s.name.includes(search));
-
   return (
     <div>
       <SectionTitle title="إدارة الطلاب" sub="عرض أداء طلابك ومتابعتهم"/>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث عن طالب…" dir="rtl" style={{ background: 'none', border: 'none', color: T.text, fontSize: 13.5, outline: 'none', flex: 1, fontFamily: "'Cairo',sans-serif" }}/>
-        </div>
-        <button disabled title="غير متاح بعد" style={{ padding: '0 20px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: 8, opacity: 0.55 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          <span style={{ color: T.gold, fontSize: 12.5, fontWeight: 600 }}>فلتر</span>
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 12 }}>
-        {students.map((s, i) => (
-          <div key={i} style={{ ...card({ display: 'flex', alignItems: 'center', gap: 14 }) }}>
-            <div style={{ width: 50, height: 50, borderRadius: '50%', background: `linear-gradient(135deg,${s.color},${s.color}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🎓</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: T.text, fontWeight: 700, fontSize: 13.5 }}>{s.name}</p>
-              <p style={{ color: T.sub, fontSize: 11.5, marginTop: 3 }}>{s.spec}</p>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Ring pct={s.pct} size={52} color={s.pct >= 90 ? T.green : T.orange}/>
-              <Ring pct={s.qpct} size={52} color={T.gold}/>
-            </div>
-          </div>
-        ))}
+      <div style={{ ...card(), textAlign:'center', padding:'48px 24px' }}>
+        <p style={{ color: T.text, fontWeight: 700, fontSize: 15, marginBottom: 8 }}>لا توجد بيانات حالياً</p>
+        <p style={{ color: T.sub, fontSize: 13, lineHeight: 1.6 }}>ستظهر قائمة الطلاب هنا عند ربطها بدورات المعلم في النظام.</p>
       </div>
     </div>
   );
