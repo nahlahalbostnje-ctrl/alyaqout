@@ -55,7 +55,12 @@ export const deleteCountry = createAsyncThunk('countries/delete', async (id: num
   try {
     await api.delete(`/super-admin/countries/${id}`);
     return id;
-  } catch (err: any) { return rejectWithValue(err.response?.data?.message || 'فشل حذف الدولة'); }
+  } catch (err: any) {
+    const msg = err.response?.data?.message
+      || (err.response?.status === 404 ? 'الدولة غير موجودة أو سبق حذفها.' : null)
+      || 'فشل حذف الدولة';
+    return rejectWithValue(msg);
+  }
 });
 
 export const toggleCountry = createAsyncThunk('countries/toggle', async (id: number, { rejectWithValue }) => {

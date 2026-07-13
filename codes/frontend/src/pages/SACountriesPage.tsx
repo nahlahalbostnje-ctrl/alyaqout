@@ -32,6 +32,9 @@ export default function SACountriesPage() {
   const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState('');
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Country | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState('');
 
   useEffect(() => { dispatch(fetchCountries()); }, [dispatch]);
 
@@ -103,12 +106,28 @@ export default function SACountriesPage() {
     }
   };
 
-  const handleDelete = async (c: Country) => {
-    if (!confirm(`هل تريد حذف دولة «${c.name}»؟`)) return;
+  const askDelete = (c: Country) => {
+    setDeleteErr('');
+    setDeleteTarget(c);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteErr('');
     try {
-      await dispatch(deleteCountry(c.id)).unwrap();
+      await dispatch(deleteCountry(deleteTarget.id)).unwrap();
+      setDeleteTarget(null);
+      await dispatch(fetchCountries());
     } catch (e: unknown) {
-      alert(typeof e === 'string' ? e : 'تعذّر حذف الدولة');
+      const msg = typeof e === 'string' ? e : 'تعذّر حذف الدولة';
+      const friendly = /No query results|not found|ModelNotFound/i.test(msg)
+        ? 'هذه الدولة غير موجودة أو سبق حذفها. سيتم تحديث القائمة.'
+        : msg;
+      setDeleteErr(friendly);
+      await dispatch(fetchCountries());
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -169,7 +188,7 @@ export default function SACountriesPage() {
                     <button onClick={()=>openEdit(c)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>✏️</button>
                     <button onClick={()=>handleToggle(c)} title={c.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
                     <button onClick={()=>navigate(`/dashboard/countries/${c.id}/admins`)} title="المدراء" style={{ padding:'0 10px', height:30, borderRadius:8, border:`1px solid ${C.goldBdr}`, background:C.goldBg, color:C.gold, cursor:'pointer', fontSize:11, fontWeight:700 }}>المدراء</button>
-                    <button onClick={()=>handleDelete(c)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
+                    <button onClick={()=>askDelete(c)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -209,6 +228,32 @@ export default function SACountriesPage() {
                 {saving ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة الدولة')}
               </button>
               <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:210, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={()=>!deleting && setDeleteTarget(null)}>
+          <div style={{ background:C.card, borderRadius:20, padding:28, width:420, maxWidth:'92vw', textAlign:'center' }} onClick={(e)=>e.stopPropagation()}>
+            <div style={{ fontSize:48, marginBottom:12 }}>⚠️</div>
+            <h2 style={{ color:C.text, fontWeight:900, fontSize:18, marginBottom:10 }}>تأكيد حذف الدولة</h2>
+            <p style={{ color:C.sub, fontSize:14, lineHeight:1.7, marginBottom:8 }}>
+              هل أنت متأكد من حذف دولة <strong style={{ color:C.text }}>«{deleteTarget.name}»</strong>؟
+            </p>
+            <p style={{ color:C.red, fontSize:12, marginBottom:18, lineHeight:1.6 }}>
+              لا يمكن التراجع عن هذا الإجراء. قد تفشل العملية إن وُجدت أفرع أو مستخدمون مرتبطون بهذه الدولة.
+            </p>
+            {deleteErr && (
+              <p style={{ background:'rgba(239,68,68,0.08)', color:C.red, borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14, textAlign:'right' }}>{deleteErr}</p>
+            )}
+            <div style={{ display:'flex', gap:10 }}>
+              <button disabled={deleting} onClick={confirmDelete} style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#DC2626,#EF4444)', color:'#fff', fontWeight:800, fontSize:13, cursor:deleting?'default':'pointer', opacity:deleting?0.7:1 }}>
+                {deleting ? 'جارٍ الحذف...' : 'نعم، احذف'}
+              </button>
+              <button disabled={deleting} onClick={()=>setDeleteTarget(null)} style={{ flex:1, padding:'12px', borderRadius:12, border:`1px solid ${C.border}`, background:C.bg, color:C.sub, fontWeight:700, fontSize:13, cursor:'pointer' }}>
+                إلغاء
+              </button>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -70,6 +71,20 @@ class CountryController extends Controller
 
     public function destroy(Country $country): JsonResponse
     {
+        if ($country->users()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن حذف الدولة لوجود مستخدمين مرتبطين بها.',
+            ], 422);
+        }
+
+        if (Branch::where('country_id', $country->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن حذف الدولة لوجود فرع مرتبط بها. احذف الفرع أولاً.',
+            ], 422);
+        }
+
         $country->delete();
 
         return response()->json(['success' => true, 'message' => 'تم حذف الدولة.']);
