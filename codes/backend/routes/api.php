@@ -146,6 +146,9 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     // Security center
     Route::get('security/login-attempts',   [SecurityController::class, 'loginAttempts']);
 
+    // Activity / audit log — platform-wide for super admin
+    Route::get('activity-log',              [AuditLogController::class, 'index']);
+
     // Impersonation
     Route::post('impersonate/{user}',       [ImpersonationController::class, 'impersonate']);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActionLog;
 use App\Models\Exam;
 use App\Models\Homework;
 use Illuminate\Http\JsonResponse;
@@ -93,6 +94,13 @@ class ContentApprovalController extends Controller
         $exam->update(['status' => $request->status]);
         $exam->load(['course:id,title,country_id', 'course.country:id,name', 'teacher:id,name']);
 
+        AdminActionLog::record(
+            $request->status === 'approved' ? 'approve_exam' : 'reject_exam',
+            'Exam',
+            $exam->id,
+            $exam->title
+        );
+
         return response()->json([
             'success' => true,
             'message' => $request->status === 'approved' ? 'تم اعتماد الامتحان.' : 'تم رفض الامتحان.',
@@ -107,6 +115,13 @@ class ContentApprovalController extends Controller
 
         $homework->update(['status' => $request->status]);
         $homework->load(['course:id,title,country_id', 'course.country:id,name', 'teacher:id,name']);
+
+        AdminActionLog::record(
+            $request->status === 'approved' ? 'approve_homework' : 'reject_homework',
+            'Homework',
+            $homework->id,
+            $homework->title
+        );
 
         return response()->json([
             'success' => true,

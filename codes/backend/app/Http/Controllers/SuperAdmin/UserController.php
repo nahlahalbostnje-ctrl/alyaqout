@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActionLog;
 use App\Models\User;
 use App\Services\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
@@ -115,6 +116,8 @@ class UserController extends Controller
 
         $user->load('country:id,name,code');
 
+        AdminActionLog::record('create_user', 'User', $user->id, $user->name.' ('.$user->role.')');
+
         return response()->json([
             'success' => true,
             'message' => 'تم إنشاء الحساب بنجاح.',
@@ -127,8 +130,18 @@ class UserController extends Controller
     {
         $this->authorizeManaged($user);
 
+        $before = ['is_active' => $user->is_active];
         $user->update(['is_active' => ! $user->is_active]);
         $user->load('country:id,name,code');
+
+        AdminActionLog::record(
+            'toggle_user',
+            'User',
+            $user->id,
+            $user->name.' ('.$user->role.')',
+            $before,
+            ['is_active' => $user->is_active]
+        );
 
         return response()->json([
             'success' => true,
@@ -140,7 +153,11 @@ class UserController extends Controller
     public function destroy(User $user): JsonResponse
     {
         $this->authorizeManaged($user);
+        $label = $user->name.' ('.$user->role.')';
+        $id = $user->id;
         $user->delete();
+
+        AdminActionLog::record('delete_user', 'User', $id, $label);
 
         return response()->json([
             'success' => true,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import { useAppSelector } from '../app/hooks';
+import api from '../services/axios';
 
 const C = {
   gold:'#C59341', goldL:'#D4A65A', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -25,8 +25,6 @@ const ACTION_ICON: Record<string, string> = {
   approve: '✅', reject: '❌', default: '📝',
 };
 
-
-
 const ACTION_LABEL: Record<string, string> = {
   create_user:'إنشاء مستخدم', delete_user:'حذف مستخدم', toggle_user:'تغيير حالة',
   impersonate:'دخول كمستخدم', update_city:'تعديل مدينة', delete_city:'حذف مدينة',
@@ -34,20 +32,20 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 export default function AdminAuditLogPage() {
-  const token = useAppSelector(s => s.auth.token) ?? '';
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/admin/audit-log', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(j => { if (j.data?.data) setLogs(j.data.data); })
+    setLoading(true);
+    api.get('/admin/audit-log')
+      .then(({ data }) => {
+        const paginated = data.data;
+        setLogs(paginated?.data ?? []);
+      })
       .catch(() => { setLogs([]); })
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   const filtered = logs.filter(l =>
     !search || (l.target_label ?? '').includes(search) || (ACTION_LABEL[l.action] ?? l.action).includes(search)
