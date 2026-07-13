@@ -43,6 +43,32 @@ class CouponController extends Controller
         return response()->json(['message' => 'تم إنشاء الكوبون', 'coupon' => $coupon], 201);
     }
 
+    public function update(Request $request, Coupon $coupon): JsonResponse
+    {
+        abort_if($coupon->country_id !== Auth::user()->country_id, 403);
+
+        $validated = $request->validate([
+            'code'           => 'sometimes|string|max:50|unique:coupons,code,'.$coupon->id,
+            'discount_type'  => 'sometimes|in:percentage,fixed',
+            'discount_value' => 'sometimes|numeric|min:0.01',
+            'max_uses'       => 'nullable|integer|min:1',
+            'expires_at'     => 'nullable|date',
+            'scope'          => 'sometimes|in:all,specific_course',
+            'course_id'      => 'nullable|exists:courses,id',
+        ]);
+
+        if (isset($validated['code'])) {
+            $validated['code'] = strtoupper($validated['code']);
+        }
+
+        $coupon->update($validated);
+
+        return response()->json([
+            'message' => 'تم تعديل الكوبون',
+            'coupon'  => $coupon->load('course:id,title'),
+        ]);
+    }
+
     public function toggle(Coupon $coupon): JsonResponse
     {
         abort_if($coupon->country_id !== Auth::user()->country_id, 403);

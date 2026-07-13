@@ -84,6 +84,7 @@ export default function AdminCouponsPage() {
   const [coupons, setCoupons]   = useState<Coupon[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editTarget, setEditTarget] = useState<Coupon | null>(null);
   const [form, setForm]         = useState(emptyForm);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -101,22 +102,55 @@ export default function AdminCouponsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreate = () => {
+    setEditTarget(null);
+    setForm(emptyForm);
+    setError(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (coupon: Coupon) => {
+    setEditTarget(coupon);
+    setForm({
+      code: coupon.code,
+      discount_type: coupon.discount_type,
+      discount_value: String(coupon.discount_value),
+      max_uses: coupon.max_uses != null ? String(coupon.max_uses) : '',
+      expires_at: coupon.expires_at ? coupon.expires_at.slice(0, 10) : '',
+      scope: coupon.scope,
+      course_id: coupon.course_id != null ? String(coupon.course_id) : '',
+    });
+    setError(null);
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditTarget(null);
+    setForm(emptyForm);
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    const body = {
+      code:           form.code.toUpperCase(),
+      discount_type:  form.discount_type,
+      discount_value: parseFloat(form.discount_value),
+      max_uses:       form.max_uses ? parseInt(form.max_uses) : null,
+      expires_at:     form.expires_at || null,
+      scope:          form.scope,
+      course_id:      form.scope === 'specific_course' && form.course_id ? parseInt(form.course_id) : null,
+    };
     try {
-      await api.post('/admin/coupons', {
-        code:           form.code.toUpperCase(),
-        discount_type:  form.discount_type,
-        discount_value: parseFloat(form.discount_value),
-        max_uses:       form.max_uses ? parseInt(form.max_uses) : null,
-        expires_at:     form.expires_at || null,
-        scope:          form.scope,
-        course_id:      form.scope === 'specific_course' && form.course_id ? parseInt(form.course_id) : null,
-      });
-      setForm(emptyForm);
-      setShowForm(false);
+      if (editTarget) {
+        await api.put(`/admin/coupons/${editTarget.id}`, body);
+      } else {
+        await api.post('/admin/coupons', body);
+      }
+      closeForm();
       await load();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
@@ -180,7 +214,7 @@ export default function AdminCouponsPage() {
               <p style={{ color:DK.sub, fontSize:12, margin:'2px 0 0' }}>مولّد كوبونات الخصم للاشتراكات</p>
             </div>
           </div>
-          <button style={btn('gold')} onClick={() => { setShowForm(true); setError(null); setForm(emptyForm); }}>
+          <button style={btn('gold')} onClick={openCreate}>
             + إنشاء كوبون جديد
           </button>
         </div>
@@ -191,7 +225,7 @@ export default function AdminCouponsPage() {
             <span style={{ fontSize:18 }}>🎟️</span>
             <h2 style={{ color:DK.text, fontWeight:800, fontSize:15, margin:0 }}>مولّد الكوبون</h2>
           </div>
-          <form onSubmit={handleCreate}>
+          <form onSubmit={handleSubmit}>
             {error && (
               <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>
                 {error}
@@ -308,7 +342,7 @@ export default function AdminCouponsPage() {
               )}
             </div>
             <button type="submit" disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>
-              {saving ? 'جاري الإنشاء...' : '✓ إنشاء الكوبون'}
+              {saving ? 'جارٍ الحفظ...' : (editTarget ? '✓ حفظ التعديلات' : '✓ إنشاء الكوبون')}
             </button>
           </form>
         </div>
@@ -392,6 +426,13 @@ export default function AdminCouponsPage() {
                       <td style={TD}>
                         <div style={{ display:'flex', gap:6 }}>
                           <button
+                            onClick={() => openEdit(coupon)}
+                            title="تعديل"
+                            style={{ padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif", background:'#fff', color:DK.gold }}
+                          >
+                            ✏️
+                          </button>
+                          <button
                             onClick={() => handleToggle(coupon)}
                             style={{ padding:'5px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:"'Cairo',sans-serif",
                               background: coupon.is_active?'rgba(239,68,68,0.08)':'rgba(16,185,129,0.08)',
@@ -417,10 +458,10 @@ export default function AdminCouponsPage() {
         )}
       </div>
 
-      {/* Create Modal */}
+      {/* Create / Edit Modal */}
       {showForm && (
-        <Modal title="إنشاء كوبون جديد" onClose={() => { setShowForm(false); setError(null); }}>
-          <form onSubmit={handleCreate}>
+        <Modal title={editTarget ? `تعديل ${editTarget.code}` : 'إنشاء كوبون جديد'} onClose={closeForm}>
+          <form onSubmit={handleSubmit}>
             {error && (
               <div style={{ background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'10px 14px', color:DK.red, fontSize:13, marginBottom:14 }}>
                 {error}
@@ -500,9 +541,9 @@ export default function AdminCouponsPage() {
             </div>
             <div style={{ display:'flex', gap:10, marginTop:20 }}>
               <button type="submit" disabled={saving} style={{ ...btn('gold'), flex:1, opacity:saving?0.6:1 }}>
-                {saving ? 'جاري الإنشاء...' : 'إنشاء الكوبون'}
+                {saving ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إنشاء الكوبون')}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(null); }} style={{ ...btn('outline'), flex:1 }}>
+              <button type="button" onClick={closeForm} style={{ ...btn('outline'), flex:1 }}>
                 إلغاء
               </button>
             </div>

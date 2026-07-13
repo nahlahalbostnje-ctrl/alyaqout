@@ -66,6 +66,22 @@ export const addLiveClass = createAsyncThunk(
   }
 );
 
+export const updateLiveClass = createAsyncThunk(
+  'liveClasses/update',
+  async (
+    payload: { id: number; title: string; scheduled_at: string; duration_minutes?: number; description?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { id, ...body } = payload;
+      const { data } = await api.put(`/admin/live-classes/${id}`, body);
+      return data.data as LiveClass;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعديل الحصة');
+    }
+  }
+);
+
 export const updateClassStatus = createAsyncThunk(
   'liveClasses/updateStatus',
   async (payload: { id: number; status: ClassStatus }, { rejectWithValue }) => {
@@ -102,6 +118,10 @@ const liveClassesSlice = createSlice({
       .addCase(fetchLiveClasses.fulfilled,  (s, a) => { s.loading = false; s.list = a.payload; })
       .addCase(fetchLiveClasses.rejected,   (s, a) => { s.loading = false; s.error = a.payload as string; })
       .addCase(addLiveClass.fulfilled,      (s, a) => { s.list.unshift(a.payload); })
+      .addCase(updateLiveClass.fulfilled,   (s, a) => {
+        const i = s.list.findIndex((c) => c.id === a.payload.id);
+        if (i !== -1) s.list[i] = a.payload;
+      })
       .addCase(updateClassStatus.fulfilled, (s, a) => {
         const i = s.list.findIndex((c) => c.id === a.payload.id);
         if (i !== -1) s.list[i] = a.payload;

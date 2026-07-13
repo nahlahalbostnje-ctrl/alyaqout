@@ -207,6 +207,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     // Leagues
     Route::get('leagues',                              [AdminLeagueController::class, 'index']);
     Route::post('leagues',                             [AdminLeagueController::class, 'store']);
+    Route::put('leagues/{league}',                     [AdminLeagueController::class, 'update']);
     Route::patch('leagues/{league}/status',            [AdminLeagueController::class, 'updateStatus']);
     Route::delete('leagues/{league}',                  [AdminLeagueController::class, 'destroy']);
 
@@ -254,6 +255,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     // Coupons
     Route::get('coupons',                            [AdminCouponController::class, 'index']);
     Route::post('coupons',                           [AdminCouponController::class, 'store']);
+    Route::put('coupons/{coupon}',                   [AdminCouponController::class, 'update']);
     Route::patch('coupons/{coupon}/toggle',          [AdminCouponController::class, 'toggle']);
     Route::delete('coupons/{coupon}',                [AdminCouponController::class, 'destroy']);
     Route::post('coupons/validate',                  [AdminCouponController::class, 'validate']);

@@ -43,6 +43,22 @@ export const addPackage = createAsyncThunk(
   }
 );
 
+export const updatePackage = createAsyncThunk(
+  'packages/update',
+  async (
+    payload: { id: number; name: string; description?: string; price: number; duration_days: number; sort_order?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { id, ...body } = payload;
+      const { data } = await api.put(`/admin/packages/${id}`, body);
+      return data.data as Package;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعديل الباقة');
+    }
+  }
+);
+
 export const togglePackage = createAsyncThunk(
   'packages/toggle',
   async (id: number, { rejectWithValue }) => {
@@ -77,6 +93,10 @@ const packagesSlice = createSlice({
       .addCase(fetchPackages.fulfilled, (s, a) => { s.loading = false; s.list = a.payload; })
       .addCase(fetchPackages.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
       .addCase(addPackage.fulfilled,    (s, a) => { s.list.push(a.payload); })
+      .addCase(updatePackage.fulfilled, (s, a) => {
+        const i = s.list.findIndex((p) => p.id === a.payload.id);
+        if (i !== -1) s.list[i] = a.payload;
+      })
       .addCase(togglePackage.fulfilled, (s, a) => {
         const i = s.list.findIndex((p) => p.id === a.payload.id);
         if (i !== -1) s.list[i] = a.payload;

@@ -172,12 +172,15 @@ class UserController extends Controller
         }
 
         if ($request->filled('role')) {
-            // Keep staff page scoped: only allow teacher ↔ supervisor switches here for those roles
-            if (in_array($user->role, ['teacher', 'supervisor'], true)
-                && in_array($request->role, ['teacher', 'supervisor'], true)) {
-                $data['role'] = $request->role;
-            } elseif ($user->role === $request->role) {
-                $data['role'] = $request->role;
+            $from = $user->role;
+            $to = (string) $request->role;
+            $staff = ['teacher', 'supervisor'];
+            $learners = ['student', 'parent'];
+
+            if ($from === $to
+                || (in_array($from, $staff, true) && in_array($to, $staff, true))
+                || (in_array($from, $learners, true) && in_array($to, $learners, true))) {
+                $data['role'] = $to;
             } else {
                 return response()->json([
                     'success' => false,

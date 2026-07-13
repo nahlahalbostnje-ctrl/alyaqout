@@ -3,8 +3,10 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchPackages,
   addPackage,
+  updatePackage,
   togglePackage,
   deletePackage,
+  type Package,
 } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -61,6 +63,7 @@ export default function PackagesPage() {
   const { list: packages, loading } = useAppSelector((s) => s.packages);
 
   const [showModal, setShowModal]   = useState(false);
+  const [editTarget, setEditTarget] = useState<Package | null>(null);
   const [form, setForm]             = useState(emptyForm);
   const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
@@ -73,15 +76,46 @@ export default function PackagesPage() {
 
   useEffect(() => { dispatch(fetchPackages()); }, [dispatch]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const openAdd = () => {
+    setEditTarget(null);
+    setForm(emptyForm);
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (pkg: Package) => {
+    setEditTarget(pkg);
+    setForm({
+      name: pkg.name,
+      description: pkg.description ?? '',
+      price: Number(pkg.price),
+      duration_days: pkg.duration_days,
+      sort_order: pkg.sort_order,
+    });
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditTarget(null);
+    setForm(emptyForm);
+    setAddError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddLoading(true);
     setAddError(null);
-    const result = await dispatch(addPackage(form));
+    const result = editTarget
+      ? await dispatch(updatePackage({ id: editTarget.id, ...form }))
+      : await dispatch(addPackage(form));
     setAddLoading(false);
-    if (addPackage.fulfilled.match(result)) {
-      setShowModal(false);
-      setForm(emptyForm);
+    if (
+      (editTarget && updatePackage.fulfilled.match(result)) ||
+      (!editTarget && addPackage.fulfilled.match(result))
+    ) {
+      closeModal();
     } else {
       setAddError(result.payload as string);
     }
@@ -124,7 +158,7 @@ export default function PackagesPage() {
             <div style={{ width:4, height:28, borderRadius:4, background: DK.goldGrad }} />
             <h1 style={{ margin:0, fontSize:22, fontWeight:900, color: DK.text }}>الباقات</h1>
           </div>
-          <button onClick={() => { setShowModal(true); setAddError(null); setForm(emptyForm); }}
+          <button onClick={openAdd}
             style={{ ...btn('gold'), display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ fontSize:16, fontWeight:400 }}>+</span> إضافة باقة
           </button>
@@ -193,10 +227,16 @@ export default function PackagesPage() {
                         {active ? 'نشط' : 'معطّل'}
                       </span>
                     </div>
-                    <button onClick={() => askDelete(pkg.id, pkg.name)} disabled={deleting === pkg.id}
-                      style={{ padding:'6px 14px', borderRadius:10, border:'none', background: 'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif", opacity: deleting === pkg.id ? 0.5 : 1 }}>
-                      {deleting === pkg.id ? '...' : '🗑️ حذف'}
-                    </button>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button onClick={() => openEdit(pkg)} title="تعديل"
+                        style={{ padding:'6px 12px', borderRadius:10, border:'1px solid #EDE3CE', background:'#fff', color: DK.gold, fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                        ✏️ تعديل
+                      </button>
+                      <button onClick={() => askDelete(pkg.id, pkg.name)} disabled={deleting === pkg.id}
+                        style={{ padding:'6px 14px', borderRadius:10, border:'none', background: 'rgba(239,68,68,0.1)', color:'#EF4444', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif", opacity: deleting === pkg.id ? 0.5 : 1 }}>
+                        {deleting === pkg.id ? '...' : '🗑️ حذف'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -205,10 +245,10 @@ export default function PackagesPage() {
         )}
       </div>
 
-      {/* Add Package Modal */}
+      {/* Add / Edit Package Modal */}
       {showModal && (
-        <Modal title="إضافة باقة اشتراك" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd}>
+        <Modal title={editTarget ? `تعديل ${editTarget.name}` : 'إضافة باقة اشتراك'} onClose={closeModal}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>اسم الباقة</label>
               <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
@@ -252,9 +292,9 @@ export default function PackagesPage() {
             <div style={{ display:'flex', gap:10 }}>
               <button type="submit" disabled={addLoading}
                 style={{ ...btn('gold'), flex:1, opacity: addLoading ? 0.7 : 1 }}>
-                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+                {addLoading ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة')}
               </button>
-              <button type="button" onClick={() => setShowModal(false)}
+              <button type="button" onClick={closeModal}
                 style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
             </div>
           </form>

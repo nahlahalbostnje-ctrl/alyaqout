@@ -6,10 +6,12 @@ import { fetchUsers }   from '../features/admin/usersSlice';
 import {
   fetchLiveClasses,
   addLiveClass,
+  updateLiveClass,
   updateClassStatus,
   deleteLiveClass,
   type ClassStatus,
   type LiveClassPayload,
+  type LiveClass,
 } from '../features/admin/liveClassesSlice';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -112,6 +114,7 @@ export default function LiveClassesPage() {
 
   const [activeTab, setActiveTab]   = useState<ClassStatus | null>(null);
   const [showModal, setShowModal]   = useState(false);
+  const [editTarget, setEditTarget] = useState<LiveClass | null>(null);
   const [form, setForm]             = useState<LiveClassPayload>(emptyForm);
   const [addError, setAddError]     = useState<string | null>(null);
   const [addLoading, setAddLoading] = useState(false);
@@ -133,6 +136,7 @@ export default function LiveClassesPage() {
   }, [dispatch, activeTab]);
 
   const openModal = () => {
+    setEditTarget(null);
     setForm({
       ...emptyForm,
       course_id:  courses[0]?.id  ?? 0,
@@ -142,18 +146,54 @@ export default function LiveClassesPage() {
     setShowModal(true);
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const openEdit = (cls: LiveClass) => {
+    setEditTarget(cls);
+    setForm({
+      course_id: cls.course_id,
+      teacher_id: cls.teacher_id,
+      title: cls.title,
+      description: cls.description ?? '',
+      scheduled_at: cls.scheduled_at,
+      duration_minutes: cls.duration_minutes,
+      session_type: cls.session_type,
+      student_id: cls.student_id,
+    });
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditTarget(null);
+    setAddError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.course_id)    { setAddError('اختر الدورة الدراسية'); return; }
-    if (!form.teacher_id)   { setAddError('اختر المعلم'); return; }
+    if (!form.title.trim()) { setAddError('عنوان الحصة مطلوب'); return; }
     if (!form.scheduled_at) { setAddError('حدد موعد الحصة'); return; }
-    if (form.session_type === 'individual' && !form.student_id) { setAddError('اختر الطالب للحصة الفردية'); return; }
+    if (!editTarget) {
+      if (!form.course_id)    { setAddError('اختر الدورة الدراسية'); return; }
+      if (!form.teacher_id)   { setAddError('اختر المعلم'); return; }
+      if (form.session_type === 'individual' && !form.student_id) { setAddError('اختر الطالب للحصة الفردية'); return; }
+    }
     setAddLoading(true);
     setAddError(null);
-    const result = await dispatch(addLiveClass(form));
+    const result = editTarget
+      ? await dispatch(updateLiveClass({
+          id: editTarget.id,
+          title: form.title.trim(),
+          scheduled_at: form.scheduled_at,
+          duration_minutes: form.duration_minutes,
+          description: form.description,
+        }))
+      : await dispatch(addLiveClass(form));
     setAddLoading(false);
-    if (addLiveClass.fulfilled.match(result)) {
-      setShowModal(false);
+    if (
+      (editTarget && updateLiveClass.fulfilled.match(result)) ||
+      (!editTarget && addLiveClass.fulfilled.match(result))
+    ) {
+      closeModal();
     } else {
       setAddError(result.payload as string);
     }
@@ -342,6 +382,15 @@ export default function LiveClassesPage() {
                       </td>
                       <td style={TD}>
                         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+                          <button onClick={() => openEdit(cls)} title="تعديل"
+                            style={{
+                              padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE',
+                              background:'#fff', color: DK.gold,
+                              fontWeight:700, fontSize:12, cursor:'pointer',
+                              fontFamily:"'Cairo',sans-serif",
+                            }}>
+                            ✏️
+                          </button>
                           {next && (
                             <button onClick={() => handleStatusChange(cls.id, next.value)}
                               disabled={updatingStatus === cls.id}
@@ -385,10 +434,12 @@ export default function LiveClassesPage() {
         </div>
       </div>
 
-      {/* Add Live Class Modal */}
+      {/* Add / Edit Live Class Modal */}
       {showModal && (
-        <Modal title="إنشاء حصة مباشرة جديدة" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd}>
+        <Modal title={editTarget ? `تعديل ${editTarget.title}` : 'إنشاء حصة مباشرة جديدة'} onClose={closeModal}>
+          <form onSubmit={handleSubmit}>
+            {!editTarget && (
+              <>
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الدورة الدراسية</label>
               <select value={form.course_id} onChange={e => setForm({...form, course_id: Number(e.target.value)})}
@@ -442,6 +493,8 @@ export default function LiveClassesPage() {
                 )}
               </div>
             )}
+              </>
+            )}
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>عنوان الحصة</label>
               <input type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})}
@@ -468,19 +521,21 @@ export default function LiveClassesPage() {
                   onFocus={() => setFocused('duration')} onBlur={() => setFocused(null)} />
               </div>
             </div>
+            {!editTarget && (
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(16,185,129,0.06)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:10, padding:'10px 14px', marginBottom:20 }}>
               <span style={{ width:8, height:8, borderRadius:'50%', background:'#10B981', display:'inline-block', flexShrink:0 }} />
               <p style={{ margin:0, fontSize:12, color:'#10B981' }}>سيتم إنشاء قناة Agora داخلية تلقائياً للحصة.</p>
             </div>
+            )}
             {addError && (
               <p style={{ background:'rgba(239,68,68,0.08)', color:'#EF4444', borderRadius:10, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{addError}</p>
             )}
-            <div style={{ display:'flex', gap:10 }}>
+            <div style={{ display:'flex', gap:10, marginTop: editTarget ? 6 : 0 }}>
               <button type="submit" disabled={addLoading}
                 style={{ ...btn('gold'), flex:1, opacity: addLoading ? 0.7 : 1 }}>
-                {addLoading ? 'جاري الإنشاء...' : 'إنشاء الحصة'}
+                {addLoading ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إنشاء الحصة')}
               </button>
-              <button type="button" onClick={() => setShowModal(false)}
+              <button type="button" onClick={closeModal}
                 style={{ ...btn('outline'), flex:1 }}>إلغاء</button>
             </div>
           </form>

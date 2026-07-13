@@ -93,6 +93,16 @@ export const addLesson = createAsyncThunk(
   }
 );
 
+export const updateLesson = createAsyncThunk(
+  'courseContent/updateLesson',
+  async (payload: { unitId: number; lessonId: number; title: string }) => {
+    const res = await api.put(`/admin/units/${payload.unitId}/lessons/${payload.lessonId}`, {
+      title: payload.title,
+    });
+    return { unitId: payload.unitId, lesson: res.data.data as LessonItem };
+  }
+);
+
 export const deleteLesson = createAsyncThunk(
   'courseContent/deleteLesson',
   async (payload: { unitId: number; lessonId: number }) => {
@@ -114,6 +124,22 @@ export const addVideo = createAsyncThunk(
   async (payload: { lessonId: number; title: string; video_url: string; type: string; duration: number }) => {
     const res = await api.post(`/admin/lessons/${payload.lessonId}/videos`, payload);
     return { lessonId: payload.lessonId, video: res.data.data as VideoItem };
+  }
+);
+
+export const updateVideo = createAsyncThunk(
+  'courseContent/updateVideo',
+  async (payload: {
+    lessonId: number;
+    videoId: number;
+    title: string;
+    video_url: string;
+    type: string;
+    duration: number;
+  }) => {
+    const { lessonId, videoId, ...body } = payload;
+    const res = await api.put(`/admin/lessons/${lessonId}/videos/${videoId}`, body);
+    return { lessonId, video: res.data.data as VideoItem };
   }
 );
 
@@ -155,7 +181,13 @@ const courseContentSlice = createSlice({
 
       .addCase(updateUnit.fulfilled, (state, action) => {
         const idx = state.units.findIndex((u) => u.id === action.payload.id);
-        if (idx !== -1) state.units[idx] = action.payload;
+        if (idx !== -1) {
+          state.units[idx] = {
+            ...state.units[idx],
+            ...action.payload,
+            lessons_count: state.units[idx].lessons_count,
+          };
+        }
       })
 
       .addCase(deleteUnit.fulfilled, (state, action: PayloadAction<number>) => {
@@ -177,6 +209,19 @@ const courseContentSlice = createSlice({
       })
       .addCase(addLesson.rejected, (state) => { state.saving = false; })
 
+      .addCase(updateLesson.fulfilled, (state, action) => {
+        const { unitId, lesson } = action.payload;
+        const list = state.lessons[unitId] ?? [];
+        const idx = list.findIndex((l) => l.id === lesson.id);
+        if (idx !== -1) {
+          state.lessons[unitId][idx] = {
+            ...list[idx],
+            ...lesson,
+            videos_count: list[idx].videos_count,
+          };
+        }
+      })
+
       .addCase(deleteLesson.fulfilled, (state, action) => {
         const { unitId, lessonId } = action.payload;
         state.lessons[unitId] = (state.lessons[unitId] ?? []).filter((l) => l.id !== lessonId);
@@ -196,6 +241,13 @@ const courseContentSlice = createSlice({
         state.videos[lessonId].push(video);
       })
       .addCase(addVideo.rejected, (state) => { state.saving = false; })
+
+      .addCase(updateVideo.fulfilled, (state, action) => {
+        const { lessonId, video } = action.payload;
+        const list = state.videos[lessonId] ?? [];
+        const idx = list.findIndex((v) => v.id === video.id);
+        if (idx !== -1) state.videos[lessonId][idx] = video;
+      })
 
       .addCase(deleteVideo.fulfilled, (state, action) => {
         const { lessonId, videoId } = action.payload;

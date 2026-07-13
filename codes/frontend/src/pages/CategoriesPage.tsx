@@ -4,8 +4,10 @@ import { fetchGrades } from '../features/admin/gradesSlice';
 import {
   fetchCategories,
   addCategory,
+  updateCategory,
   toggleCategory,
   deleteCategory,
+  type Category,
 } from '../features/admin/categoriesSlice';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -142,6 +144,7 @@ export default function CategoriesPage() {
 
   const [filterGrade, setFilterGrade]      = useState<number | null>(null);
   const [showModal, setShowModal]          = useState(false);
+  const [editTarget, setEditTarget]        = useState<Category | null>(null);
   const [form, setForm]                    = useState({ grade_id: 0, name: '', sort_order: 0 });
   const [addError, setAddError]            = useState<string | null>(null);
   const [addLoading, setAddLoading]        = useState(false);
@@ -162,20 +165,40 @@ export default function CategoriesPage() {
   }, [dispatch, filterGrade]);
 
   const openModal = () => {
+    setEditTarget(null);
     setForm({ grade_id: grades[0]?.id ?? 0, name: '', sort_order: 0 });
     setAddError(null);
     setShowModal(true);
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const openEdit = (cat: Category) => {
+    setEditTarget(cat);
+    setForm({ grade_id: cat.grade_id, name: cat.name, sort_order: cat.sort_order });
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditTarget(null);
+    setAddError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.grade_id) { setAddError('اختر الصف الدراسي'); return; }
+    if (!form.grade_id && !editTarget) { setAddError('اختر الصف الدراسي'); return; }
+    if (!form.name.trim()) { setAddError('اسم المادة مطلوب'); return; }
     setAddLoading(true);
     setAddError(null);
-    const result = await dispatch(addCategory(form));
+    const result = editTarget
+      ? await dispatch(updateCategory({ id: editTarget.id, name: form.name.trim(), sort_order: form.sort_order }))
+      : await dispatch(addCategory(form));
     setAddLoading(false);
-    if (addCategory.fulfilled.match(result)) {
-      setShowModal(false);
+    if (
+      (editTarget && updateCategory.fulfilled.match(result)) ||
+      (!editTarget && addCategory.fulfilled.match(result))
+    ) {
+      closeModal();
     } else {
       setAddError(result.payload as string);
     }
@@ -331,19 +354,33 @@ export default function CategoriesPage() {
                       {toggling === cat.id ? '...' : cat.is_active ? 'نشط' : 'معطّل'}
                     </span>
                   </div>
-                  <button
-                    onClick={() => askDelete(cat.id, cat.name)}
-                    disabled={deleting === cat.id}
-                    style={{
-                      padding: '4px 10px', borderRadius: 8, border: 'none',
-                      background: 'rgba(239,68,68,0.08)', color: '#EF4444',
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: "'Cairo',sans-serif",
-                      opacity: deleting === cat.id ? 0.5 : 1,
-                    }}
-                  >
-                    {deleting === cat.id ? '...' : 'حذف'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => openEdit(cat)}
+                      title="تعديل"
+                      style={{
+                        padding: '4px 10px', borderRadius: 8, border: '1px solid #EDE3CE',
+                        background: '#fff', color: DK.gold,
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: "'Cairo',sans-serif",
+                      }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => askDelete(cat.id, cat.name)}
+                      disabled={deleting === cat.id}
+                      style={{
+                        padding: '4px 10px', borderRadius: 8, border: 'none',
+                        background: 'rgba(239,68,68,0.08)', color: '#EF4444',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: "'Cairo',sans-serif",
+                        opacity: deleting === cat.id ? 0.5 : 1,
+                      }}
+                    >
+                      {deleting === cat.id ? '...' : 'حذف'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -425,6 +462,18 @@ export default function CategoriesPage() {
                     <td style={TD}>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
+                          onClick={() => openEdit(cat)}
+                          title="تعديل"
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
+                            background: '#fff', color: DK.gold,
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif",
+                          }}
+                        >
+                          ✏️ تعديل
+                        </button>
+                        <button
                           onClick={() => handleToggle(cat.id)}
                           disabled={toggling === cat.id}
                           style={{
@@ -462,10 +511,10 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Add Category Modal */}
+      {/* Add / Edit Category Modal */}
       {showModal && (
-        <Modal title="إضافة مادة دراسية" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd}>
+        <Modal title={editTarget ? `تعديل ${editTarget.name}` : 'إضافة مادة دراسية'} onClose={closeModal}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
                 الصف الدراسي
@@ -475,7 +524,8 @@ export default function CategoriesPage() {
                 onChange={(e) => setForm({ ...form, grade_id: Number(e.target.value) })}
                 onFocus={() => setFocusedInput('grade')}
                 onBlur={() => setFocusedInput(null)}
-                style={{ ...inp('grade'), cursor: 'pointer' }}
+                disabled={!!editTarget}
+                style={{ ...inp('grade'), cursor: editTarget ? 'not-allowed' : 'pointer', opacity: editTarget ? 0.7 : 1 }}
               >
                 <option value={0} disabled>اختر الصف الدراسي</option>
                 {grades.map((g) => (
@@ -534,11 +584,11 @@ export default function CategoriesPage() {
                   opacity: addLoading ? 0.6 : 1,
                 }}
               >
-                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+                {addLoading ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 style={{
                   flex: 1, padding: '11px 0', borderRadius: 12,
                   border: '1px solid #EDE3CE', background: '#fff', color: '#6B7280',

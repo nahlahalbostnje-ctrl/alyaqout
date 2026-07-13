@@ -41,6 +41,23 @@ class LeagueController extends Controller
         return response()->json(['league' => $league->load('participants')], 201);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $league = League::where('country_id', Auth::user()->country_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name'             => 'sometimes|string|max:100',
+            'type'             => 'sometimes|in:1v1,group',
+            'max_participants' => 'nullable|integer|min:2|max:1000',
+            'starts_at'        => 'nullable|date',
+            'ends_at'          => 'nullable|date|after:starts_at',
+        ]);
+
+        $league->update($validated);
+
+        return response()->json(['league' => $league->loadCount('participants')]);
+    }
+
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $league = League::where('country_id', Auth::user()->country_id)->findOrFail($id);

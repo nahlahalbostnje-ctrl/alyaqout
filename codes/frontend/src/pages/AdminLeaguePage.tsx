@@ -94,6 +94,7 @@ export default function AdminLeaguePage() {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editTarget, setEditTarget] = useState<League | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,18 +117,59 @@ export default function AdminLeaguePage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const toLocalInput = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const openCreate = () => {
+    setEditTarget(null);
+    setForm(emptyForm);
+    setError(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (league: League) => {
+    setEditTarget(league);
+    setForm({
+      name: league.name,
+      type: league.type,
+      max_participants: league.max_participants != null ? String(league.max_participants) : '',
+      starts_at: toLocalInput(league.starts_at),
+      ends_at: toLocalInput(league.ends_at),
+    });
+    setError(null);
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditTarget(null);
+    setForm(emptyForm);
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setError(null);
+    const body = {
+      name: form.name,
+      type: form.type,
+      max_participants: form.max_participants ? parseInt(form.max_participants) : null,
+      starts_at: form.starts_at || null,
+      ends_at: form.ends_at || null,
+    };
     try {
-      await api.post('/admin/leagues', {
-        name: form.name,
-        type: form.type,
-        max_participants: form.max_participants ? parseInt(form.max_participants) : null,
-        starts_at: form.starts_at || null,
-        ends_at: form.ends_at || null,
-      });
-      setForm(emptyForm); setShowForm(false); await load();
+      if (editTarget) {
+        await api.put(`/admin/leagues/${editTarget.id}`, body);
+      } else {
+        await api.post('/admin/leagues', body);
+      }
+      closeForm();
+      await load();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       setError(e.response?.data?.message || 'حدث خطأ');
@@ -200,7 +242,7 @@ export default function AdminLeaguePage() {
             </div>
             <p style={{ color: DK.sub, fontSize: 13, marginRight: 14 }}>إدارة الدوريات التنافسية للطلاب</p>
           </div>
-          <button onClick={() => setShowForm(true)}
+          <button onClick={openCreate}
             style={{ ...btn('gold'), display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 14, boxShadow: '0 4px 14px rgba(197,147,65,0.3)' }}>
             <span style={{ fontSize: 16 }}>+</span> إنشاء بطولة جديدة
           </button>
@@ -276,6 +318,16 @@ export default function AdminLeaguePage() {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => openEdit(league)}
+                      title="تعديل"
+                      style={{
+                        padding: '8px 12px', borderRadius: 10, border: '1px solid #EDE3CE', cursor: 'pointer',
+                        background: '#fff', color: DK.gold, fontSize: 12, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif",
+                      }}>
+                      ✏️
+                    </button>
                     <button
                       onClick={() => openLeaderboard(league)}
                       style={{
@@ -376,10 +428,10 @@ export default function AdminLeaguePage() {
         </Modal>
       )}
 
-      {/* Create League Modal */}
+      {/* Create / Edit League Modal */}
       {showForm && (
-        <Modal title="إنشاء بطولة جديدة" onClose={() => { setShowForm(false); setError(null); setForm(emptyForm); }}>
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal title={editTarget ? `تعديل ${editTarget.name}` : 'إنشاء بطولة جديدة'} onClose={closeForm}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {error && (
               <div style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: DK.red, fontSize: 13 }}>
                 {error}
@@ -438,9 +490,9 @@ export default function AdminLeaguePage() {
                   ...btn('gold'), flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14,
                   boxShadow: '0 4px 14px rgba(197,147,65,0.25)', opacity: saving ? 0.6 : 1,
                 }}>
-                {saving ? 'جاري الإنشاء...' : 'إنشاء البطولة'}
+                {saving ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إنشاء البطولة')}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(null); setForm(emptyForm); }}
+              <button type="button" onClick={closeForm}
                 style={{ ...btn('outline'), flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14 }}>
                 إلغاء
               </button>

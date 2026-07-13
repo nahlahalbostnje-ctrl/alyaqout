@@ -6,6 +6,7 @@ import { fetchUsers } from '../features/admin/usersSlice';
 import {
   fetchCourses,
   addCourse,
+  updateCourse,
   assignTeacher,
   toggleCourse,
   deleteCourse,
@@ -138,6 +139,7 @@ export default function CoursesPage() {
 
   const [filterCat, setFilterCat]         = useState<number | null>(null);
   const [showModal, setShowModal]         = useState(false);
+  const [editTarget, setEditTarget]       = useState<Course | null>(null);
   const [form, setForm]                   = useState<CoursePayload>(emptyForm);
   const [addError, setAddError]           = useState<string | null>(null);
   const [addLoading, setAddLoading]       = useState(false);
@@ -163,20 +165,57 @@ export default function CoursesPage() {
   }, [dispatch, filterCat]);
 
   const openModal = () => {
+    setEditTarget(null);
     setForm({ ...emptyForm, category_id: categories[0]?.id ?? 0 });
     setAddError(null);
     setShowModal(true);
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const openEdit = (course: Course) => {
+    setEditTarget(course);
+    setForm({
+      category_id: course.category_id,
+      title: course.title,
+      description: course.description ?? '',
+      price: Number(course.price),
+      is_free: course.is_free,
+      sort_order: course.sort_order,
+    });
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditTarget(null);
+    setAddError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.category_id) { setAddError('اختر المادة الدراسية'); return; }
+    if (!editTarget && !form.category_id) { setAddError('اختر المادة الدراسية'); return; }
+    if (!form.title.trim()) { setAddError('عنوان الدورة مطلوب'); return; }
     setAddLoading(true);
     setAddError(null);
-    const result = await dispatch(addCourse(form));
+    const result = editTarget
+      ? await dispatch(updateCourse({
+          id: editTarget.id,
+          title: form.title.trim(),
+          description: form.description,
+          price: form.price,
+          is_free: form.is_free,
+          sort_order: form.sort_order,
+        }))
+      : await dispatch(addCourse(form));
     setAddLoading(false);
-    if (addCourse.fulfilled.match(result)) setShowModal(false);
-    else setAddError(result.payload as string);
+    if (
+      (editTarget && updateCourse.fulfilled.match(result)) ||
+      (!editTarget && addCourse.fulfilled.match(result))
+    ) {
+      closeModal();
+    } else {
+      setAddError(result.payload as string);
+    }
   };
 
   const openTeacherModal = (course: Course) => {
@@ -437,6 +476,18 @@ export default function CoursesPage() {
                     {/* Actions */}
                     <td style={TD}>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => openEdit(course)}
+                          title="تعديل"
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
+                            background: '#fff', color: DK.gold,
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif",
+                          }}
+                        >
+                          ✏️ تعديل
+                        </button>
                         <Link
                           to={`/admin/courses/${course.id}/content`}
                           style={{
@@ -485,10 +536,10 @@ export default function CoursesPage() {
         </div>
       </div>
 
-      {/* Add Course Modal */}
+      {/* Add / Edit Course Modal */}
       {showModal && (
-        <Modal title="إضافة دورة تعليمية" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd}>
+        <Modal title={editTarget ? `تعديل ${editTarget.title}` : 'إضافة دورة تعليمية'} onClose={closeModal}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
                 المادة الدراسية
@@ -498,7 +549,8 @@ export default function CoursesPage() {
                 onChange={(e) => setForm({ ...form, category_id: Number(e.target.value) })}
                 onFocus={() => setFocusedInput('cat')}
                 onBlur={() => setFocusedInput(null)}
-                style={{ ...inp('cat'), cursor: 'pointer' }}
+                disabled={!!editTarget}
+                style={{ ...inp('cat'), cursor: editTarget ? 'not-allowed' : 'pointer', opacity: editTarget ? 0.7 : 1 }}
               >
                 <option value={0} disabled>اختر المادة الدراسية</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -584,11 +636,11 @@ export default function CoursesPage() {
                   opacity: addLoading ? 0.6 : 1,
                 }}
               >
-                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+                {addLoading ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 style={{
                   flex: 1, padding: '11px 0', borderRadius: 12,
                   border: '1px solid #EDE3CE', background: '#fff', color: '#6B7280',

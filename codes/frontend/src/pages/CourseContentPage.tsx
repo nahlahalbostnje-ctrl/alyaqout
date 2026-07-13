@@ -4,9 +4,9 @@ import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
-  fetchUnits, addUnit, deleteUnit,
-  fetchLessons, addLesson, deleteLesson,
-  fetchVideos, addVideo, deleteVideo,
+  fetchUnits, addUnit, updateUnit, deleteUnit,
+  fetchLessons, addLesson, updateLesson, deleteLesson,
+  fetchVideos, addVideo, updateVideo, deleteVideo,
   clearContent,
 } from '../features/admin/courseContentSlice';
 
@@ -69,11 +69,14 @@ export default function CourseContentPage() {
 
   const [unitModal, setUnitModal]     = useState(false);
   const [unitTitle, setUnitTitle]     = useState('');
+  const [editingUnitId, setEditingUnitId] = useState<number | null>(null);
 
   const [lessonModal, setLessonModal] = useState<number | null>(null);
   const [lessonTitle, setLessonTitle] = useState('');
+  const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
 
   const [videoModal, setVideoModal]   = useState<number | null>(null);
+  const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
   const [videoForm, setVideoForm]     = useState({ title: '', video_url: '', type: 'video' as ContentType, duration: '' });
   const [pendingDelete, setPendingDelete] = useState<
     | { kind: 'unit'; id: number; label: string; courseId: number }
@@ -125,33 +128,48 @@ export default function CourseContentPage() {
     }
   }
 
-  async function handleAddUnit(e: React.FormEvent) {
+  async function handleSaveUnit(e: React.FormEvent) {
     e.preventDefault();
     if (!unitTitle.trim()) return;
-    await dispatch(addUnit({ courseId: cId, title: unitTitle.trim() }));
+    if (editingUnitId !== null) {
+      await dispatch(updateUnit({ courseId: cId, unitId: editingUnitId, title: unitTitle.trim() }));
+    } else {
+      await dispatch(addUnit({ courseId: cId, title: unitTitle.trim() }));
+    }
     setUnitTitle('');
+    setEditingUnitId(null);
     setUnitModal(false);
   }
 
-  async function handleAddLesson(e: React.FormEvent) {
+  async function handleSaveLesson(e: React.FormEvent) {
     e.preventDefault();
     if (!lessonTitle.trim() || lessonModal === null) return;
-    await dispatch(addLesson({ unitId: lessonModal, title: lessonTitle.trim() }));
+    if (editingLessonId !== null) {
+      await dispatch(updateLesson({ unitId: lessonModal, lessonId: editingLessonId, title: lessonTitle.trim() }));
+    } else {
+      await dispatch(addLesson({ unitId: lessonModal, title: lessonTitle.trim() }));
+    }
     setLessonTitle('');
+    setEditingLessonId(null);
     setLessonModal(null);
   }
 
-  async function handleAddVideo(e: React.FormEvent) {
+  async function handleSaveVideo(e: React.FormEvent) {
     e.preventDefault();
     if (!videoForm.title.trim() || !videoForm.video_url.trim() || videoModal === null) return;
-    await dispatch(addVideo({
-      lessonId: videoModal,
+    const payload = {
       title: videoForm.title.trim(),
       video_url: videoForm.video_url.trim(),
       type: videoForm.type,
       duration: videoForm.duration ? parseInt(videoForm.duration) * 60 : 0,
-    }));
+    };
+    if (editingVideoId !== null) {
+      await dispatch(updateVideo({ lessonId: videoModal, videoId: editingVideoId, ...payload }));
+    } else {
+      await dispatch(addVideo({ lessonId: videoModal, ...payload }));
+    }
     setVideoForm({ title: '', video_url: '', type: 'video', duration: '' });
+    setEditingVideoId(null);
     setVideoModal(null);
   }
 
@@ -171,7 +189,7 @@ export default function CourseContentPage() {
               <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>إدارة الوحدات والدروس والمحتوى</p>
             </div>
             <button
-              onClick={() => setUnitModal(true)}
+              onClick={() => { setEditingUnitId(null); setUnitTitle(''); setUnitModal(true); }}
               className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90 hover:-translate-y-0.5"
               style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff', boxShadow: '0 4px 18px rgba(201,149,42,0.3)' }}
             >
@@ -226,11 +244,19 @@ export default function CourseContentPage() {
                   </div>
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
-                      onClick={() => { setLessonModal(unit.id); if (!openUnits.has(unit.id)) toggleUnit(unit.id); }}
+                      onClick={() => { setLessonModal(unit.id); setEditingLessonId(null); setLessonTitle(''); if (!openUnits.has(unit.id)) toggleUnit(unit.id); }}
                       className="text-xs font-bold px-3 py-1.5 rounded-lg transition hover:opacity-80"
                       style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}
                     >
                       + درس
+                    </button>
+                    <button
+                      onClick={() => { setEditingUnitId(unit.id); setUnitTitle(unit.title); setUnitModal(true); }}
+                      className="text-xs font-bold px-2.5 py-1.5 rounded-lg transition hover:opacity-80"
+                      style={{ background: 'rgba(197,147,65,0.08)', color: DK.gold, border: '1px solid rgba(197,147,65,0.2)' }}
+                      title="تعديل"
+                    >
+                      ✏️
                     </button>
                     <button
                       onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'unit', id: unit.id, label: unit.title, courseId: cId }); }}
@@ -277,11 +303,19 @@ export default function CourseContentPage() {
                             </div>
                             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                               <button
-                                onClick={() => { setVideoModal(lesson.id); if (!openLessons.has(lesson.id)) toggleLesson(lesson.id); }}
+                                onClick={() => { setVideoModal(lesson.id); setEditingVideoId(null); setVideoForm({ title: '', video_url: '', type: 'video', duration: '' }); if (!openLessons.has(lesson.id)) toggleLesson(lesson.id); }}
                                 className="text-xs font-bold px-2.5 py-1 rounded-lg transition hover:opacity-80"
                                 style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.15)' }}
                               >
                                 + محتوى
+                              </button>
+                              <button
+                                onClick={() => { setLessonModal(unit.id); setEditingLessonId(lesson.id); setLessonTitle(lesson.title); }}
+                                className="text-xs font-bold px-2 py-1 rounded-lg transition hover:opacity-80"
+                                style={{ color: DK.gold }}
+                                title="تعديل"
+                              >
+                                ✏️
                               </button>
                               <button
                                 onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'lesson', id: lesson.id, label: lesson.title, unitId: unit.id }); }}
@@ -313,13 +347,32 @@ export default function CourseContentPage() {
                                         <span className="text-xs dir-ltr" style={{ color: DK.dimTxt }}>{fmtDuration(v.duration)}</span>
                                       )}
                                     </div>
-                                    <button
-                                      onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'video', id: v.id, label: v.title, lessonId: lesson.id }); }}
-                                      className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold"
-                                      style={{ color: '#EF4444' }}
-                                    >
-                                      حذف
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => {
+                                          setVideoModal(lesson.id);
+                                          setEditingVideoId(v.id);
+                                          setVideoForm({
+                                            title: v.title,
+                                            video_url: v.video_url,
+                                            type: v.type,
+                                            duration: v.duration ? String(Math.round(v.duration / 60)) : '',
+                                          });
+                                        }}
+                                        className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold"
+                                        style={{ color: DK.gold }}
+                                        title="تعديل"
+                                      >
+                                        ✏️
+                                      </button>
+                                      <button
+                                        onClick={() => { setDeleteError(null); setPendingDelete({ kind: 'video', id: v.id, label: v.title, lessonId: lesson.id }); }}
+                                        className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold"
+                                        style={{ color: '#EF4444' }}
+                                      >
+                                        حذف
+                                      </button>
+                                    </div>
                                   </div>
                                 ))
                               )}
@@ -336,13 +389,13 @@ export default function CourseContentPage() {
         )}
       </div>
 
-      {/* Modal: Add Unit */}
+      {/* Modal: Add / Edit Unit */}
       {unitModal && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
           style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           dir="rtl"
-          onClick={() => setUnitModal(false)}
+          onClick={() => { setUnitModal(false); setEditingUnitId(null); }}
         >
           <div
             className="w-full max-w-md p-6 rounded-2xl"
@@ -350,12 +403,14 @@ export default function CourseContentPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>إضافة وحدة جديدة</h3>
-              <button onClick={() => setUnitModal(false)}
+              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>
+                {editingUnitId !== null ? 'تعديل الوحدة' : 'إضافة وحدة جديدة'}
+              </h3>
+              <button onClick={() => { setUnitModal(false); setEditingUnitId(null); }}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
                 style={{ color: DK.dimTxt }}>×</button>
             </div>
-            <form onSubmit={handleAddUnit} className="space-y-4">
+            <form onSubmit={handleSaveUnit} className="space-y-4">
               <input
                 value={unitTitle}
                 onChange={(e) => setUnitTitle(e.target.value)}
@@ -369,9 +424,9 @@ export default function CourseContentPage() {
                 <button type="submit" disabled={saving || !unitTitle.trim()}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
                   style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}>
-                  {saving ? 'جاري الحفظ...' : 'إضافة'}
+                  {saving ? 'جاري الحفظ...' : (editingUnitId !== null ? 'حفظ التعديلات' : 'إضافة')}
                 </button>
-                <button type="button" onClick={() => setUnitModal(false)}
+                <button type="button" onClick={() => { setUnitModal(false); setEditingUnitId(null); }}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm"
                   style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                   إلغاء
@@ -382,13 +437,13 @@ export default function CourseContentPage() {
         </div>
       )}
 
-      {/* Modal: Add Lesson */}
+      {/* Modal: Add / Edit Lesson */}
       {lessonModal !== null && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
           style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           dir="rtl"
-          onClick={() => setLessonModal(null)}
+          onClick={() => { setLessonModal(null); setEditingLessonId(null); }}
         >
           <div
             className="w-full max-w-md p-6 rounded-2xl"
@@ -396,12 +451,14 @@ export default function CourseContentPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>إضافة درس</h3>
-              <button onClick={() => setLessonModal(null)}
+              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>
+                {editingLessonId !== null ? 'تعديل الدرس' : 'إضافة درس'}
+              </h3>
+              <button onClick={() => { setLessonModal(null); setEditingLessonId(null); }}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
                 style={{ color: DK.dimTxt }}>×</button>
             </div>
-            <form onSubmit={handleAddLesson} className="space-y-4">
+            <form onSubmit={handleSaveLesson} className="space-y-4">
               <input
                 value={lessonTitle}
                 onChange={(e) => setLessonTitle(e.target.value)}
@@ -415,9 +472,9 @@ export default function CourseContentPage() {
                 <button type="submit" disabled={saving || !lessonTitle.trim()}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
                   style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}>
-                  {saving ? 'جاري الحفظ...' : 'إضافة'}
+                  {saving ? 'جاري الحفظ...' : (editingLessonId !== null ? 'حفظ التعديلات' : 'إضافة')}
                 </button>
-                <button type="button" onClick={() => setLessonModal(null)}
+                <button type="button" onClick={() => { setLessonModal(null); setEditingLessonId(null); }}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm"
                   style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}>
                   إلغاء
@@ -428,13 +485,13 @@ export default function CourseContentPage() {
         </div>
       )}
 
-      {/* Modal: Add Video/Content */}
+      {/* Modal: Add / Edit Video/Content */}
       {videoModal !== null && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
           style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
           dir="rtl"
-          onClick={() => setVideoModal(null)}
+          onClick={() => { setVideoModal(null); setEditingVideoId(null); }}
         >
           <div
             className="w-full max-w-lg p-6 rounded-2xl"
@@ -442,12 +499,14 @@ export default function CourseContentPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>إضافة محتوى</h3>
-              <button onClick={() => setVideoModal(null)}
+              <h3 className="text-base font-bold" style={{ color: '#1B2038' }}>
+                {editingVideoId !== null ? 'تعديل المحتوى' : 'إضافة محتوى'}
+              </h3>
+              <button onClick={() => { setVideoModal(null); setEditingVideoId(null); }}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition-all hover:bg-black/5"
                 style={{ color: DK.dimTxt }}>×</button>
             </div>
-            <form onSubmit={handleAddVideo} className="space-y-4">
+            <form onSubmit={handleSaveVideo} className="space-y-4">
               {/* Type selector */}
               <div className="grid grid-cols-3 gap-2">
                 {(['video', 'pdf', 'attachment'] as ContentType[]).map((t) => (
@@ -503,11 +562,11 @@ export default function CourseContentPage() {
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-40"
                   style={{ background: `linear-gradient(135deg, ${DK.gold}, ${DK.goldL})`, color: '#fff' }}
                 >
-                  {saving ? 'جاري الحفظ...' : 'إضافة'}
+                  {saving ? 'جاري الحفظ...' : (editingVideoId !== null ? 'حفظ التعديلات' : 'إضافة')}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setVideoModal(null)}
+                  onClick={() => { setVideoModal(null); setEditingVideoId(null); }}
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm"
                   style={{ background: '#F9FAFB', color: DK.dimTxt, border: '1px solid #EDE3CE' }}
                 >

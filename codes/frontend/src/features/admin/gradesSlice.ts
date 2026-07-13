@@ -40,6 +40,21 @@ export const addGrade = createAsyncThunk(
   }
 );
 
+export const updateGrade = createAsyncThunk(
+  'grades/update',
+  async (payload: { id: number; name: string; sort_order: number }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.put(`/admin/grades/${payload.id}`, {
+        name: payload.name,
+        sort_order: payload.sort_order,
+      });
+      return data.data as Grade;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعديل الصف');
+    }
+  }
+);
+
 export const toggleGrade = createAsyncThunk(
   'grades/toggle',
   async (id: number, { rejectWithValue }) => {
@@ -74,6 +89,10 @@ const gradesSlice = createSlice({
       .addCase(fetchGrades.fulfilled,  (state, action) => { state.loading = false; state.list = action.payload; })
       .addCase(fetchGrades.rejected,   (state, action) => { state.loading = false; state.error = action.payload as string; })
       .addCase(addGrade.fulfilled,     (state, action) => { state.list.push(action.payload); })
+      .addCase(updateGrade.fulfilled,  (state, action) => {
+        const idx = state.list.findIndex((g) => g.id === action.payload.id);
+        if (idx !== -1) state.list[idx] = action.payload;
+      })
       .addCase(toggleGrade.fulfilled,  (state, action) => {
         const idx = state.list.findIndex((g) => g.id === action.payload.id);
         if (idx !== -1) state.list[idx] = action.payload;

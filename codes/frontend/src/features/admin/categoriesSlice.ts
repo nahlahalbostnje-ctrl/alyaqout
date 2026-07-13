@@ -43,6 +43,21 @@ export const addCategory = createAsyncThunk(
   }
 );
 
+export const updateCategory = createAsyncThunk(
+  'categories/update',
+  async (payload: { id: number; name: string; sort_order: number }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.put(`/admin/categories/${payload.id}`, {
+        name: payload.name,
+        sort_order: payload.sort_order,
+      });
+      return data.data as Category;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعديل المادة');
+    }
+  }
+);
+
 export const toggleCategory = createAsyncThunk(
   'categories/toggle',
   async (id: number, { rejectWithValue }) => {
@@ -77,6 +92,10 @@ const categoriesSlice = createSlice({
       .addCase(fetchCategories.fulfilled, (state, action) => { state.loading = false; state.list = action.payload; })
       .addCase(fetchCategories.rejected,  (state, action) => { state.loading = false; state.error = action.payload as string; })
       .addCase(addCategory.fulfilled,     (state, action) => { state.list.push(action.payload); })
+      .addCase(updateCategory.fulfilled,  (state, action) => {
+        const idx = state.list.findIndex((c) => c.id === action.payload.id);
+        if (idx !== -1) state.list[idx] = { ...state.list[idx], ...action.payload };
+      })
       .addCase(toggleCategory.fulfilled,  (state, action) => {
         const idx = state.list.findIndex((c) => c.id === action.payload.id);
         if (idx !== -1) state.list[idx] = action.payload;

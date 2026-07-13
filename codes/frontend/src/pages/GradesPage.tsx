@@ -3,8 +3,10 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchGrades,
   addGrade,
+  updateGrade,
   toggleGrade,
   deleteGrade,
+  type Grade,
 } from '../features/admin/gradesSlice';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -126,6 +128,7 @@ export default function GradesPage() {
   const { list: grades, loading } = useAppSelector((s) => s.grades);
 
   const [showModal, setShowModal]     = useState(false);
+  const [editTarget, setEditTarget]   = useState<Grade | null>(null);
   const [name, setName]               = useState('');
   const [sortOrder, setSortOrder]     = useState(0);
   const [addError, setAddError]       = useState<string | null>(null);
@@ -140,16 +143,43 @@ export default function GradesPage() {
 
   useEffect(() => { dispatch(fetchGrades()); }, [dispatch]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const openAdd = () => {
+    setEditTarget(null);
+    setName('');
+    setSortOrder(0);
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (grade: Grade) => {
+    setEditTarget(grade);
+    setName(grade.name);
+    setSortOrder(grade.sort_order);
+    setAddError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditTarget(null);
+    setName('');
+    setSortOrder(0);
+    setAddError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddLoading(true);
     setAddError(null);
-    const result = await dispatch(addGrade({ name: name.trim(), sort_order: sortOrder }));
+    const result = editTarget
+      ? await dispatch(updateGrade({ id: editTarget.id, name: name.trim(), sort_order: sortOrder }))
+      : await dispatch(addGrade({ name: name.trim(), sort_order: sortOrder }));
     setAddLoading(false);
-    if (addGrade.fulfilled.match(result)) {
-      setShowModal(false);
-      setName('');
-      setSortOrder(0);
+    if (
+      (editTarget && updateGrade.fulfilled.match(result)) ||
+      (!editTarget && addGrade.fulfilled.match(result))
+    ) {
+      closeModal();
     } else {
       setAddError(result.payload as string);
     }
@@ -205,7 +235,7 @@ export default function GradesPage() {
           sub="إدارة الصفوف الدراسية وترتيبها"
           action={
             <button
-              onClick={() => { setShowModal(true); setAddError(null); }}
+              onClick={openAdd}
               style={{
                 padding: '10px 20px',
                 borderRadius: 12,
@@ -265,19 +295,33 @@ export default function GradesPage() {
                       {toggling === grade.id ? '...' : grade.is_active ? 'نشط' : 'معطّل'}
                     </span>
                   </div>
-                  <button
-                    onClick={() => askDelete(grade.id, grade.name)}
-                    disabled={deleting === grade.id}
-                    style={{
-                      padding: '4px 10px', borderRadius: 8, border: 'none',
-                      background: 'rgba(239,68,68,0.08)', color: '#EF4444',
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: "'Cairo',sans-serif",
-                      opacity: deleting === grade.id ? 0.5 : 1,
-                    }}
-                  >
-                    {deleting === grade.id ? '...' : 'حذف'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => openEdit(grade)}
+                      title="تعديل"
+                      style={{
+                        padding: '4px 10px', borderRadius: 8, border: '1px solid #EDE3CE',
+                        background: '#fff', color: DK.gold,
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: "'Cairo',sans-serif",
+                      }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => askDelete(grade.id, grade.name)}
+                      disabled={deleting === grade.id}
+                      style={{
+                        padding: '4px 10px', borderRadius: 8, border: 'none',
+                        background: 'rgba(239,68,68,0.08)', color: '#EF4444',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: "'Cairo',sans-serif",
+                        opacity: deleting === grade.id ? 0.5 : 1,
+                      }}
+                    >
+                      {deleting === grade.id ? '...' : 'حذف'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -355,6 +399,18 @@ export default function GradesPage() {
                     <td style={TD}>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
+                          onClick={() => openEdit(grade)}
+                          title="تعديل"
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
+                            background: '#fff', color: DK.gold,
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            fontFamily: "'Cairo',sans-serif",
+                          }}
+                        >
+                          ✏️ تعديل
+                        </button>
+                        <button
                           onClick={() => handleToggle(grade.id)}
                           disabled={toggling === grade.id}
                           style={{
@@ -392,10 +448,10 @@ export default function GradesPage() {
         </div>
       </div>
 
-      {/* Add Grade Modal */}
+      {/* Add / Edit Grade Modal */}
       {showModal && (
-        <Modal title="إضافة صف دراسي" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd}>
+        <Modal title={editTarget ? `تعديل ${editTarget.name}` : 'إضافة صف دراسي'} onClose={closeModal}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
                 اسم الصف
@@ -447,11 +503,11 @@ export default function GradesPage() {
                   opacity: addLoading ? 0.6 : 1,
                 }}
               >
-                {addLoading ? 'جاري الإضافة...' : 'إضافة'}
+                {addLoading ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 style={{
                   flex: 1, padding: '11px 0', borderRadius: 12,
                   border: '1px solid #EDE3CE', background: '#fff', color: '#6B7280',

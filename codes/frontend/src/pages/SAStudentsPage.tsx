@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
@@ -68,8 +69,12 @@ export default function SAStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -115,11 +120,29 @@ export default function SAStudentsPage() {
   });
 
   const openAdd = () => {
+    setEditingId(null);
     setForm({
       ...emptyForm,
       country_id: countries[0] ? String(countries[0].id) : '',
     });
     setShowModal(true);
+  };
+
+  const openEdit = (u: StudentUser) => {
+    setEditingId(u.id);
+    setForm({
+      name: u.name,
+      phone: u.phone,
+      country_id: u.country_id ? String(u.country_id) : '',
+      role: u.role === 'parent' ? 'parent' : 'student',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    if (saving) return;
+    setShowModal(false);
+    setEditingId(null);
   };
 
   const handleSubmit = async () => {
@@ -129,19 +152,25 @@ export default function SAStudentsPage() {
     }
     setSaving(true);
     try {
-      await api.post('/super-admin/users', {
+      const payload = {
         name: form.name.trim(),
         phone: form.phone.trim(),
         country_id: Number(form.country_id),
         role: form.role,
-      });
+      };
+      if (editingId) {
+        await api.put(`/super-admin/users/${editingId}`, payload);
+      } else {
+        await api.post('/super-admin/users', payload);
+      }
       setShowModal(false);
+      setEditingId(null);
       await loadUsers();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
       const msg = e.response?.data?.message
         ?? (e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(' — ') : null)
-        ?? 'تعذّر إنشاء الحساب';
+        ?? (editingId ? 'تعذّر تحديث الحساب' : 'تعذّر إنشاء الحساب');
       alert(msg);
     } finally {
       setSaving(false);
@@ -157,6 +186,28 @@ export default function SAStudentsPage() {
     }
   };
 
+  const askDelete = (u: StudentUser) => {
+    setDeleteError(null);
+    setPendingDelete({ id: u.id, label: u.name });
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.delete(`/super-admin/users/${pendingDelete.id}`);
+      setPendingDelete(null);
+      await loadUsers();
+    } catch {
+      setDeleteError('تعذّر حذف الحساب');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  const isEdit = editingId !== null;
+
   return (
     <SuperAdminShell>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
@@ -166,6 +217,7 @@ export default function SAStudentsPage() {
         </div>
         <div style={{display:'flex',gap:10}}>
           <button
+            type="button"
             onClick={() => exportCsv(filtered)}
             disabled={filtered.length === 0}
             title={filtered.length === 0 ? 'لا توجد بيانات للتصدير' : 'تصدير CSV'}
@@ -173,7 +225,7 @@ export default function SAStudentsPage() {
           >
             📤 تصدير
           </button>
-          <button onClick={openAdd} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة طالب</button>
+          <button type="button" onClick={openAdd} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة طالب</button>
         </div>
       </div>
 
@@ -237,7 +289,11 @@ export default function SAStudentsPage() {
                   </span>
                 </td>
                 <td style={{ padding:'12px 14px' }}>
-                  <button onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button type="button" onClick={()=>openEdit(u)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>✏️</button>
+                    <button type="button" onClick={()=>toggleUser(u)} title={u.is_active?'إيقاف':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🔒</button>
+                    <button type="button" onClick={()=>askDelete(u)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13 }}>🗑️</button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -246,11 +302,11 @@ export default function SAStudentsPage() {
       </div>
 
       {showModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={()=>setShowModal(false)}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }} onClick={closeModal}>
           <div style={{ background:C.card, borderRadius:20, padding:28, width:440, maxWidth:'90vw' }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-              <h2 style={{ color:C.text, fontWeight:900, fontSize:17 }}>إضافة طالب / ولي أمر</h2>
-              <button onClick={()=>setShowModal(false)} style={{ border:'none', background:'none', cursor:'pointer', fontSize:20, color:C.sub }}>×</button>
+              <h2 style={{ color:C.text, fontWeight:900, fontSize:17 }}>{isEdit ? 'تعديل بيانات الحساب' : 'إضافة طالب / ولي أمر'}</h2>
+              <button type="button" onClick={closeModal} style={{ border:'none', background:'none', cursor:'pointer', fontSize:20, color:C.sub }}>×</button>
             </div>
 
             <div style={{ marginBottom:14 }}>
@@ -284,14 +340,23 @@ export default function SAStudentsPage() {
             </div>
 
             <div style={{ display:'flex', gap:10 }}>
-              <button disabled={saving} onClick={handleSubmit} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>
-                {saving ? 'جارٍ الحفظ...' : 'إنشاء الحساب'}
+              <button type="button" disabled={saving} onClick={() => void handleSubmit()} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>
+                {saving ? 'جارٍ الحفظ...' : (isEdit ? 'حفظ التعديلات' : 'إنشاء الحساب')}
               </button>
-              <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
+              <button type="button" onClick={closeModal} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={!!pendingDelete}
+        itemLabel={pendingDelete?.label}
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
+      />
     </SuperAdminShell>
   );
 }

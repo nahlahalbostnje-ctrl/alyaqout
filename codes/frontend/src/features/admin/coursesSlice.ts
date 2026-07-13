@@ -58,6 +58,20 @@ export const addCourse = createAsyncThunk(
   }
 );
 
+/** Metadata update only — does not send teacher_id (assignTeacher uses the same PUT route). */
+export const updateCourse = createAsyncThunk(
+  'courses/update',
+  async (payload: { id: number } & Omit<CoursePayload, 'category_id'>, { rejectWithValue }) => {
+    try {
+      const { id, ...body } = payload;
+      const { data } = await api.put(`/admin/courses/${id}`, body);
+      return data.data as Course;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل تعديل الدورة');
+    }
+  }
+);
+
 export const toggleCourse = createAsyncThunk(
   'courses/toggle',
   async (id: number, { rejectWithValue }) => {
@@ -106,6 +120,10 @@ const coursesSlice = createSlice({
       .addCase(fetchCourses.fulfilled, (s, a) => { s.loading = false; s.list = a.payload; })
       .addCase(fetchCourses.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
       .addCase(addCourse.fulfilled,    (s, a) => { s.list.push(a.payload); })
+      .addCase(updateCourse.fulfilled, (s, a) => {
+        const i = s.list.findIndex((c) => c.id === a.payload.id);
+        if (i !== -1) s.list[i] = a.payload;
+      })
       .addCase(assignTeacher.fulfilled, (s, a) => {
         const i = s.list.findIndex((c) => c.id === a.payload.id);
         if (i !== -1) s.list[i] = a.payload;
