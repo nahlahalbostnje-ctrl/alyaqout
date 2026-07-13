@@ -36,14 +36,16 @@ class DashboardController extends Controller
 
         $liveNow = LiveClass::where('status', 'live')->count();
 
-        $revenueThisMonth = Subscription::whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
+        $revenueThisMonth = Subscription::query()
             ->join('packages', 'subscriptions.package_id', '=', 'packages.id')
+            ->whereMonth('subscriptions.created_at', now()->month)
+            ->whereYear('subscriptions.created_at', now()->year)
             ->sum('packages.price');
 
-        $revenueLastMonth = Subscription::whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year)
+        $revenueLastMonth = Subscription::query()
             ->join('packages', 'subscriptions.package_id', '=', 'packages.id')
+            ->whereMonth('subscriptions.created_at', now()->subMonth()->month)
+            ->whereYear('subscriptions.created_at', now()->subMonth()->year)
             ->sum('packages.price');
 
         $revenueChange = $revenueLastMonth > 0
