@@ -54,7 +54,7 @@ export default function SuperAdminSecurityPage() {
   const today   = attempts.filter(a => new Date(a.created_at).toDateString() === new Date().toDateString()).length;
 
   return (
-    <AppLayout navItems={navItems} roleLabel="السوبر أدمن">
+    <AppLayout navItems={navItems} roleLabel="السوبر أدمن" profilePath="/super-admin/profile">
       <div style={{ padding:24, fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
 
         {/* Header */}

@@ -46,6 +46,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSuperAdminStats());
@@ -58,12 +59,23 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  useEffect(() => { if (isMobile) setSidebarOpen(false); }, [location.pathname, isMobile]);
+  useEffect(() => { if (isMobile) setSidebarOpen(false); setProfileMenuOpen(false); }, [location.pathname, isMobile]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const onDoc = () => setProfileMenuOpen(false);
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
+  }, [profileMenuOpen]);
+
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const fullName = user?.name ?? 'السوبر أدمن';
-  const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
+  const initials = user?.name
+    ? user.name.split(' ').slice(0, 2).map((w) => w[0]).join('')
+    : 'SA';
+  const handleLogout = () => { setProfileMenuOpen(false); dispatch(logout()); navigate('/login', { replace: true }); };
 
   const pendingApprovals = badges?.approvals
     ?? ((approvals?.exams ?? 0) + (approvals?.homeworks ?? 0));
@@ -145,10 +157,6 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
                 )}
               </div>
             ))}
-            {/* Always-visible logout — no need to open the sidebar drawer */}
-            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:38, height:38, borderRadius:11, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
-              🚪
-            </button>
           </div>
           {!isMobile && (
             <>
@@ -162,14 +170,68 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
               </select>
             </>
           )}
-          <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-            {!isMobile && (
-              <div style={{ textAlign:'left' }}>
-                <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2 }}>مرحباً بك أ. {fullName}</p>
-                <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
+          <div style={{ position:'relative', flexShrink:0 }} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setProfileMenuOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={profileMenuOpen}
+              title="الحساب"
+              style={{
+                display:'flex', alignItems:'center', gap:10,
+                padding:'4px 6px 4px 8px', borderRadius:14,
+                border: profileMenuOpen ? `1.5px solid ${C.gold}` : '1.5px solid transparent',
+                background: profileMenuOpen ? C.goldBg : 'transparent',
+                cursor:'pointer', fontFamily:"'Cairo',sans-serif",
+              }}
+            >
+              {!isMobile && (
+                <div style={{ textAlign:'left' }}>
+                  <p style={{ color:C.text, fontWeight:800, fontSize:13.5, lineHeight:1.2, margin:0 }}>مرحباً بك أ. {fullName}</p>
+                  <span style={{ background:C.goldGrad, color:'#1B2038', fontSize:9.5, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>مالك المنصة</span>
+                </div>
+              )}
+              <div style={{ width:44, height:44, borderRadius:12, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:'#fff', border:'2.5px solid #fff', boxShadow:'0 3px 12px rgba(201,149,42,0.35)', flexShrink:0 }}>
+                {initials}
+              </div>
+              <span style={{ color:C.sub, fontSize:10, transform: profileMenuOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.15s' }}>▼</span>
+            </button>
+            {profileMenuOpen && (
+              <div
+                role="menu"
+                style={{
+                  position:'absolute', top:'calc(100% + 8px)', left:0, minWidth:200,
+                  background:C.card, borderRadius:14, border:`1px solid ${C.border}`,
+                  boxShadow:'0 10px 32px rgba(0,0,0,0.12)', padding:6, zIndex:60,
+                  fontFamily:"'Cairo',sans-serif",
+                }}
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setProfileMenuOpen(false); navigate('/super-admin/profile'); }}
+                  style={{
+                    width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 12px',
+                    borderRadius:10, border:'none', background:'transparent', color:C.text,
+                    fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right',
+                  }}
+                >
+                  <span>👤</span> الملف الشخصي
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                  style={{
+                    width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 12px',
+                    borderRadius:10, border:'none', background:'transparent', color:C.red,
+                    fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right',
+                  }}
+                >
+                  <span>🚪</span> تسجيل الخروج
+                </button>
               </div>
             )}
-            <div style={{ width:44, height:44, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, border:'2.5px solid #fff', boxShadow:'0 3px 12px rgba(201,149,42,0.35)', flexShrink:0 }}>👨‍💼</div>
           </div>
         </header>
         <div style={{ padding:'16px 18px 28px' }}>

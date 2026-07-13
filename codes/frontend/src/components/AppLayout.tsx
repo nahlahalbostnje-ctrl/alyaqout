@@ -17,19 +17,22 @@ interface Props {
   children: ReactNode;
   navItems: NavItem[];
   roleLabel: string;
+  /** مسار صفحة الملف الشخصي — إن وُجد يظهر في القائمة المنسدلة */
+  profilePath?: string;
 }
 
 const SB = '#0D1E3A';
 const GOLD = '#C59341';
 const GOLD_L = '#D4A65A';
 
-export default function AppLayout({ children, navItems, roleLabel }: Props) {
+export default function AppLayout({ children, navItems, roleLabel, profilePath }: Props) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector((s) => s.auth.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -39,14 +42,23 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
 
   useEffect(() => {
     if (sidebarOpen) setSidebarOpen(false);
+    setProfileMenuOpen(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const onDoc = () => setProfileMenuOpen(false);
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
+  }, [profileMenuOpen]);
 
   const initials = user?.name
     ? user.name.split(' ').slice(0, 2).map((w: string) => w[0]).join('')
     : 'م';
 
   const handleLogout = () => {
+    setProfileMenuOpen(false);
     dispatch(logout());
     navigate('/login', { replace: true });
   };
@@ -284,36 +296,126 @@ export default function AppLayout({ children, navItems, roleLabel }: Props) {
 
             <div style={{ width: 1, height: 28, background: '#EDE3CE' }} />
 
-            {/* User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div
+            {/* User profile dropdown */}
+            <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((o) => !o)}
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                title="الحساب"
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: 12,
-                  color: '#fff',
+                  gap: 9,
+                  padding: '4px 6px 4px 8px',
+                  borderRadius: 12,
+                  border: profileMenuOpen ? `1.5px solid ${GOLD}` : '1.5px solid transparent',
+                  background: profileMenuOpen ? 'rgba(197,147,65,0.08)' : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: "'Cairo', sans-serif",
                 }}
               >
-                {initials}
-              </div>
-              {!isMobile && (
-                <div>
-                  <p style={{ color: '#1B2038', fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{user?.name}</p>
-                  <p style={{ color: GOLD, fontSize: 10.5 }}>{roleLabel}</p>
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 900,
+                    fontSize: 12,
+                    color: '#fff',
+                    flexShrink: 0,
+                  }}
+                >
+                  {initials}
+                </div>
+                {!isMobile && (
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ color: '#1B2038', fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>{user?.name}</p>
+                    <p style={{ color: GOLD, fontSize: 10.5, margin: 0 }}>{roleLabel}</p>
+                  </div>
+                )}
+                <span style={{ color: '#9CA3AF', fontSize: 10, transform: profileMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
+              </button>
+
+              {profileMenuOpen && (
+                <div
+                  role="menu"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    left: 0,
+                    minWidth: 200,
+                    background: '#fff',
+                    borderRadius: 14,
+                    border: '1px solid #EDE3CE',
+                    boxShadow: '0 10px 32px rgba(0,0,0,0.12)',
+                    padding: 6,
+                    zIndex: 60,
+                    fontFamily: "'Cairo', sans-serif",
+                  }}
+                >
+                  {profilePath && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setProfileMenuOpen(false); navigate(profilePath); }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '11px 12px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#1B2038',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: "'Cairo', sans-serif",
+                        textAlign: 'right',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(197,147,65,0.1)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: 15 }}>👤</span>
+                      الملف الشخصي
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 12px',
+                      borderRadius: 10,
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#EF4444',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: "'Cairo', sans-serif",
+                      textAlign: 'right',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontSize: 15 }}>🚪</span>
+                    تسجيل الخروج
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Always-visible logout — no need to open the sidebar drawer */}
-            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>
-              🚪
-            </button>
           </div>
         </header>
 

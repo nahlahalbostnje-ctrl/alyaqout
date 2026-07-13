@@ -8,7 +8,7 @@ const navItems = [
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   return (
-    <AppLayout navItems={navItems} roleLabel="السوبر أدمن">
+    <AppLayout navItems={navItems} roleLabel="السوبر أدمن" profilePath="/super-admin/profile">
       {children}
     </AppLayout>
   );
