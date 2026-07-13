@@ -19,6 +19,7 @@ const NAV = [
   { label:'الرئيسية',               to:'/dashboard',                   icon:'🏠', end:true },
   { label:'مؤشرات المنصة',         to:'/dashboard/analytics',         icon:'📊', end:false },
   { label:'الأفرع',                to:'/dashboard/schools',           icon:'🌍', end:false },
+  { label:'الدول',                 to:'/dashboard/countries',         icon:'🗺️', end:false },
   { label:'المعلمون والموظفون',     to:'/dashboard/staff',             icon:'👨‍🏫', end:false },
   { label:'الطلاب وأولياء الأمور', to:'/dashboard/students',          icon:'👥', end:false },
   { label:'المحتوى والاعتمادات',    to:'/dashboard/content-approvals', icon:'✅', end:false },
@@ -54,7 +55,7 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const fullName = user?.name ?? 'عبد الله الشمري';
+  const fullName = user?.name ?? 'السوبر أدمن';
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
 
   return (

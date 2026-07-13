@@ -67,6 +67,7 @@ import CountryAdminsPage          from './pages/CountryAdminsPage';
 import SuperAdminProfilePage      from './pages/SuperAdminProfilePage';
 import SAAnalyticsPage            from './pages/SAAnalyticsPage';
 import SASchoolsPage              from './pages/SASchoolsPage';
+import SACountriesPage            from './pages/SACountriesPage';
 import SAStaffPage                from './pages/SAStaffPage';
 import SAStudentsPage             from './pages/SAStudentsPage';
 import SAContentApprovalsPage     from './pages/SAContentApprovalsPage';
@@ -148,6 +149,9 @@ export default function App() {
         } />
         <Route path="/dashboard/schools" element={
           <PrivateRoute roles={['super_admin']}><SASchoolsPage /></PrivateRoute>
+        } />
+        <Route path="/dashboard/countries" element={
+          <PrivateRoute roles={['super_admin']}><SACountriesPage /></PrivateRoute>
         } />
         <Route path="/dashboard/staff" element={
           <PrivateRoute roles={['super_admin']}><SAStaffPage /></PrivateRoute>

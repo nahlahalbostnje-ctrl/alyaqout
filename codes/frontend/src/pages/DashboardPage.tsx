@@ -21,6 +21,7 @@ const SW = 222;
 const NAV = [
   { label:'الرئيسية',                to:'/dashboard',                    icon:'🏠', end:true  },
   { label:'مؤشرات المنصة',           to:'/dashboard/analytics',          icon:'📊', end:false },
+  { label:'الدول',                   to:'/dashboard/countries',          icon:'🗺️', end:false },
   { label:'المعلمون والموظفون',       to:'/dashboard/staff',              icon:'👨‍🏫', end:false },
   { label:'الطلاب وأولياء الأمور',   to:'/dashboard/students',           icon:'👥', end:false },
   { label:'المحتوى والاعتمادات',      to:'/dashboard/content-approvals',  icon:'✅', end:false },
