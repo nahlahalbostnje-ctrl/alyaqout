@@ -21,6 +21,11 @@ interface BranchRow {
   courses: number;
 }
 
+interface CountryOpt {
+  id: number;
+  name: string;
+}
+
 function countryFlag(name: string): string {
   if (name.includes('فلسطين') || /palestine/i.test(name)) return '🇵🇸';
   if (name.includes('سعود') || /saudi/i.test(name)) return '🇸🇦';
@@ -40,6 +45,7 @@ function fmt(n: number): string {
 export default function SASchoolsPage() {
   const toast = useToast();
   const [branches,     setBranches]     = useState<BranchRow[]>([]);
+  const [countries,    setCountries]    = useState<CountryOpt[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState<string | null>(null);
   const [search,       setSearch]       = useState('');
@@ -73,17 +79,27 @@ export default function SASchoolsPage() {
     }
   }, []);
 
-  useEffect(() => { loadBranches(); }, [loadBranches]);
+  const loadCountries = useCallback(async () => {
+    try {
+      const { data } = await api.get('/super-admin/countries');
+      const list = (data.data ?? []) as Array<{ id: number; name: string }>;
+      setCountries(Array.isArray(list) ? list.map((c) => ({ id: c.id, name: c.name })) : []);
+    } catch {
+      setCountries([]);
+    }
+  }, []);
+
+  useEffect(() => { void loadBranches(); void loadCountries(); }, [loadBranches, loadCountries]);
 
   const realBranches = useMemo(
     () => branches.filter((b): b is BranchRow & { id: number } => b.id != null),
     [branches]
   );
 
-  const unbranchedCountries = useMemo(
-    () => branches.filter(b => b.id == null),
-    [branches]
-  );
+  const availableCountries = useMemo(() => {
+    const taken = new Set(realBranches.map((b) => b.country_id));
+    return countries.filter((c) => !taken.has(c.id));
+  }, [countries, realBranches]);
 
   const totalStudents = realBranches.reduce((s, b) => s + (b.students ?? 0), 0);
   const totalTeachers = realBranches.reduce((s, b) => s + (b.teachers ?? 0), 0);
@@ -99,7 +115,7 @@ export default function SASchoolsPage() {
   const openAdd = () => {
     setEditTarget(null);
     setForm({
-      country_id: unbranchedCountries[0] ? String(unbranchedCountries[0].country_id) : '',
+      country_id: availableCountries[0] ? String(availableCountries[0].id) : '',
       admin_name: '',
       admin_email: '',
       admin_phone: '',
@@ -312,12 +328,18 @@ export default function SASchoolsPage() {
               {editTarget ? (
                 <input value={editTarget.country} disabled
                   style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box' }}/>
+              ) : availableCountries.length === 0 ? (
+                <p style={{ color:C.orange, fontSize:12, fontWeight:700, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.25)', borderRadius:10, padding:'10px 12px', margin:0 }}>
+                  {countries.length === 0
+                    ? 'تعذّر تحميل الدول. أعد تحميل الصفحة أو أضف دولة أولاً من صفحة الدول.'
+                    : 'كل الدول لديها فرع بالفعل. أضف دولة جديدة من صفحة الدول ثم أنشئ الفرع.'}
+                </p>
               ) : (
                 <select value={form.country_id} onChange={e=>setForm(f=>({...f, country_id:e.target.value}))}
-                  style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', cursor:'pointer' }}>
+                  style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
                   <option value="">اختر الدولة</option>
-                  {unbranchedCountries.map(c => (
-                    <option key={c.country_id} value={c.country_id}>{c.country}</option>
+                  {availableCountries.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               )}
