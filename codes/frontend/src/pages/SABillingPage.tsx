@@ -17,9 +17,9 @@ export default function SABillingPage() {
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>إدارة الإيرادات والعمليات المالية</p>
         </div>
         <div style={{display:'flex',gap:10}}>
-          <button onClick={()=>alert('استيراد الفواتير من ملف خارجي قيد التطوير.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.bg,color:C.text,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'pointer'}}>📥 استيراد</button>
-          <button onClick={()=>alert('تصدير PDF قيد التطوير — يحتاج بناء مولّد تقرير مالي مخصص.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>📄 PDF</button>
-          <button onClick={()=>alert('تصدير Excel قيد التطوير — يحتاج مكتبة توليد Excel غير مثبّتة بعد.')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'pointer'}}>📊 Excel</button>
+          <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.bg,color:C.dim,fontWeight:700,fontSize:12,border:`1px solid ${C.border}`,cursor:'not-allowed',opacity:0.55}}>📥 استيراد</button>
+          <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'not-allowed',opacity:0.55}}>📄 PDF</button>
+          <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:12,border:'none',cursor:'not-allowed',opacity:0.55}}>📊 Excel</button>
         </div>
       </div>
 

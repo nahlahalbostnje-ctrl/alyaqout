@@ -61,7 +61,7 @@ export default function SASupportPage() {
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>الدعم الفني</h1>
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>{TICKETS.filter(t=>t.status!=='مغلقة').length} تذكرة مفتوحة بانتظار الرد</p>
         </div>
-        <button style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ فتح تذكرة جديدة</button>
+        <button disabled title="غير متاح بعد — لا يوجد نظام تذاكر بعد" style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55}}>+ فتح تذكرة جديدة</button>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',gap:14,height: isMobile ? 'auto' : 'calc(100vh - 200px)',minHeight:500}}>
@@ -112,8 +112,8 @@ export default function SASupportPage() {
                 <p style={{color:C.sub,fontSize:12}}>{current.subject}</p>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>alert(`تذكرة ${current.id}\n${current.user} — ${current.role}\n${current.subject}\nالحالة: ${current.status} | الأولوية: ${current.priority}`)} style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer'}}>📋 التفاصيل</button>
-                <button onClick={()=>alert('إغلاق التذكرة قيد التطوير.')} style={{padding:'7px 14px',borderRadius:10,border:'none',background:'rgba(22,163,74,0.12)',color:C.green,fontSize:12,fontWeight:700,cursor:'pointer'}}>✓ إغلاق التذكرة</button>
+                <button disabled title="غير متاح بعد" style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.dim,fontSize:12,cursor:'not-allowed',opacity:0.55}}>📋 التفاصيل</button>
+                <button disabled title="غير متاح بعد" style={{padding:'7px 14px',borderRadius:10,border:'none',background:'rgba(22,163,74,0.12)',color:C.green,fontSize:12,fontWeight:700,cursor:'not-allowed',opacity:0.55}}>✓ إغلاق التذكرة</button>
               </div>
             </div>
           )}
@@ -138,9 +138,9 @@ export default function SASupportPage() {
 
           {/* Input */}
           <div style={{padding:'12px 16px',borderTop:`1px solid ${C.border}`,display:'flex',gap:10,alignItems:'center'}}>
-            <button title="مرفق" onClick={()=>alert('إرفاق ملفات بالمحادثة قيد التطوير.')} style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>📎</button>
+            <button title="غير متاح بعد" disabled style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'not-allowed',fontSize:18,flexShrink:0,opacity:0.55}}>📎</button>
             <input value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="اكتب ردك هنا..." style={{flex:1,padding:'10px 14px',borderRadius:11,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:13,outline:'none',fontFamily:"'Cairo',sans-serif"}}/>
-            <button title="إرسال صوتي" onClick={()=>alert('الرسائل الصوتية قيد التطوير.')} style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'pointer',fontSize:18,flexShrink:0}}>🎤</button>
+            <button title="غير متاح بعد" disabled style={{width:40,height:40,borderRadius:11,border:`1px solid ${C.border}`,background:'transparent',cursor:'not-allowed',fontSize:18,flexShrink:0,opacity:0.55}}>🎤</button>
             <button onClick={sendMsg} style={{width:42,height:42,borderRadius:12,border:'none',background:C.goldGrad,cursor:'pointer',fontSize:20,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>📤</button>
           </div>
         </div>

@@ -110,7 +110,7 @@ export default function SARolesPage() {
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>الصلاحيات والأدوار</h1>
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>إدارة أدوار المستخدمين وصلاحياتهم</p>
         </div>
-        <button onClick={()=>alert('إضافة أدوار مخصصة جديدة تتطلب تعديل بنية الأدوار الأساسية بالنظام (enum + الحماية البرمجية) — غير مفعّلة بعد.')} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة دور جديد</button>
+        <button disabled title="غير متاح بعد" style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55}}>+ إضافة دور جديد</button>
       </div>
 
       {/* Roles Cards */}

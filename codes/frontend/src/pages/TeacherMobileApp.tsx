@@ -435,7 +435,7 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
                   <p style={{ color: T.text, fontWeight: 700, fontSize: 18 }}>{exam.submissions_count}</p>
                 </div>
               </div>
-              <button onClick={()=>alert(`${exam.title}\nالأسئلة: ${exam.questions_count} | التسليمات: ${exam.submissions_count}\nإدارة الامتحان (تعديل الأسئلة/التصحيح) قيد التطوير.`)} style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>إدارة الامتحان</button>
+              <button disabled title="غير متاح بعد" style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'not-allowed', opacity: 0.55 }}>إدارة الامتحان</button>
             </div>
           ))}
         </div>
@@ -480,14 +480,14 @@ function ReportsScreen() {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🎓</div>
           <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تحليل ذكي للطلاب</p>
           <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>احصل على رأي ذكاء اصطناعي لتحسين أداء الطلاب في هذا الصف</p>
-          <button onClick={()=>alert('تحليل الذكاء الاصطناعي لأداء الطلاب قيد التطوير.')} style={{ padding: '13px 24px', borderRadius: 12, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تشغيل التحليل</button>
+          <button disabled title="غير متاح بعد" style={{ padding: '13px 24px', borderRadius: 12, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 14, cursor: 'not-allowed', marginTop: 4, opacity: 0.55 }}>تشغيل التحليل</button>
         </div>
 
         <div style={{ ...card(), display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>📤</div>
           <p style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>تصدير تقرير شامل</p>
           <p style={{ color: T.sub, fontSize: 12.5, lineHeight: 1.7 }}>تصدير تقرير أداء الصف كاملاً بصيغة PDF أو Excel</p>
-          <button onClick={()=>alert('تصدير تقرير الأداء بصيغة PDF/Excel قيد التطوير.')} style={{ padding: '13px 24px', borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: T.blue, fontWeight: 800, fontSize: 14, cursor: 'pointer', marginTop: 4 }}>تصدير التقرير</button>
+          <button disabled title="غير متاح بعد" style={{ padding: '13px 24px', borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: T.blue, fontWeight: 800, fontSize: 14, cursor: 'not-allowed', marginTop: 4, opacity: 0.55 }}>تصدير التقرير</button>
         </div>
       </div>
     </div>
@@ -793,7 +793,7 @@ function StudentsScreen() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث عن طالب…" dir="rtl" style={{ background: 'none', border: 'none', color: T.text, fontSize: 13.5, outline: 'none', flex: 1, fontFamily: "'Cairo',sans-serif" }}/>
         </div>
-        <button onClick={()=>alert('فلترة متقدمة (حسب الصف/الأداء) قيد التطوير — استخدم البحث بالاسم حالياً.')} style={{ padding: '0 20px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button disabled title="غير متاح بعد" style={{ padding: '0 20px', borderRadius: 14, background: T.card, border: `1px solid ${T.border}`, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: 8, opacity: 0.55 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           <span style={{ color: T.gold, fontSize: 12.5, fontWeight: 600 }}>فلتر</span>
         </button>

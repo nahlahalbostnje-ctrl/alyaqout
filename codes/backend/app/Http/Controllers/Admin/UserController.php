@@ -64,6 +64,8 @@ class UserController extends Controller
             'parent_id' => 'nullable|exists:users,id',
             'address'   => 'nullable|string|max:500',
             'city_id'   => 'nullable|exists:cities,id',
+            'email'     => 'nullable|email|max:255|unique:users,email',
+            'password'  => 'nullable|string|min:6|max:100',
         ]);
 
         $parentId = null;
@@ -80,6 +82,8 @@ class UserController extends Controller
         $user = User::create([
             'name'       => $request->name,
             'phone'      => $request->phone,
+            'email'      => $request->filled('email') ? strtolower(trim($request->email)) : null,
+            'password'   => $request->filled('password') ? $request->password : null,
             'role'       => $request->role,
             'country_id' => $this->countryId(),
             'parent_id'  => $parentId,
@@ -91,7 +95,7 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم إنشاء الحساب بنجاح.',
-            'data'    => $user->only(['id', 'name', 'phone', 'role', 'address', 'city_id', 'parent_id', 'is_active', 'created_at']),
+            'data'    => $user->only(['id', 'name', 'phone', 'email', 'role', 'address', 'city_id', 'parent_id', 'is_active', 'created_at']),
         ], 201);
     }
 

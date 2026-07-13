@@ -151,7 +151,7 @@ export default function StudentPointsPage() {
           </div>
         )}
 
-        <button onClick={()=>alert('تحميل تقرير النقاط والأداء بصيغة PDF قيد التطوير.')} style={{ width:'100%', padding:'14px', borderRadius:15, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 16px rgba(201,149,42,0.4)', marginBottom:16 }}>
+        <button disabled title="غير متاح بعد" style={{ width:'100%', padding:'14px', borderRadius:15, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'none', marginBottom:16, opacity:0.55 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
@@ -164,7 +164,7 @@ export default function StudentPointsPage() {
             <p style={{ color:C.sub, fontSize:12, marginBottom:2 }}>مجموع نقاطك</p>
             <p style={{ color:C.navy2, fontWeight:900, fontSize:22 }}>{(totalPoints||0).toLocaleString()} نقطة</p>
           </div>
-          <button onClick={()=>alert('متجر المكافآت قريباً — سيتم تفعيله عند ربط كتالوج الجوائز الفعلي.')} style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'pointer' }}>
+          <button disabled title="غير متاح بعد" style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'not-allowed', opacity:0.55 }}>
             متجر المكافآت
           </button>
         </div>

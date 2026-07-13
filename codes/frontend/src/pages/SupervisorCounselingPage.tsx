@@ -62,7 +62,7 @@ export default function SupervisorCounselingPage() {
               <p style={{ color:'#fff', fontWeight:800, fontSize:16, marginBottom:2 }}>{activeNow.parent} — {activeNow.student}</p>
               <p style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>{activeNow.topic}</p>
             </div>
-            <button onClick={()=>alert('غرفة جلسات الإرشاد المباشرة قريباً — لم تُربط بعد بخدمة البث.')} style={{ padding:'12px 24px', borderRadius:12, border:'none', background:C.goldGrad, color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:"'Cairo',sans-serif", boxShadow:'0 4px 14px rgba(197,147,65,0.4)' }}>
+            <button disabled title="غير متاح بعد" style={{ padding:'12px 24px', borderRadius:12, border:'none', background:C.goldGrad, color:'#fff', fontWeight:800, fontSize:14, cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", boxShadow:'none', opacity:0.55 }}>
               دخول الجلسة →
             </button>
           </div>
@@ -128,8 +128,8 @@ export default function SupervisorCounselingPage() {
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8, flexShrink:0 }}>
                   <span style={{ padding:'3px 12px', borderRadius:20, fontSize:11.5, fontWeight:700, background:st.bg, color:st.color }}>{st.label}</span>
                   {s.status !== 'done' && (
-                    <button onClick={()=>alert('غرفة جلسات الإرشاد المباشرة قريباً — لم تُربط بعد بخدمة البث.')} style={{ padding:'8px 18px', borderRadius:10, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontWeight:700, fontSize:12,
-                      background:s.status==='active'?C.goldGrad:C.navy, color:'#fff',
+                    <button disabled title="غير متاح بعد" style={{ padding:'8px 18px', borderRadius:10, border:'none', cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", fontWeight:700, fontSize:12,
+                      background:s.status==='active'?C.goldGrad:C.navy, color:'#fff', opacity:0.55,
                     }}>
                       {s.status==='active' ? 'دخول الجلسة' : 'الانضمام عند الموعد'}
                     </button>

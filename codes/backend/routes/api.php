@@ -32,6 +32,7 @@ use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\SuperAdmin\BranchController as SuperAdminBranchController;
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\PersonalItemController as AdminPersonalItemController;
 use App\Http\Controllers\Teacher\PersonalItemController as TeacherPersonalItemController;
 use App\Http\Controllers\ParentPortal\PersonalItemController as ParentPersonalItemController;
@@ -129,6 +130,12 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     Route::put('branches/{branch}',                 [SuperAdminBranchController::class, 'update']);
     Route::patch('branches/{branch}/toggle',        [SuperAdminBranchController::class, 'toggle']);
     Route::delete('branches/{branch}',              [SuperAdminBranchController::class, 'destroy']);
+
+    // Platform users (teachers, supervisors, students, parents) — cross-country
+    Route::get('users',                    [SuperAdminUserController::class, 'index']);
+    Route::post('users',                   [SuperAdminUserController::class, 'store']);
+    Route::patch('users/{user}/toggle',   [SuperAdminUserController::class, 'toggle']);
+    Route::delete('users/{user}',         [SuperAdminUserController::class, 'destroy']);
 
     // Security center
     Route::get('security/login-attempts',   [SecurityController::class, 'loginAttempts']);

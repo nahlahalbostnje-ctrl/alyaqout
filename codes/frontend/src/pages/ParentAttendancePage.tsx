@@ -289,10 +289,10 @@ export default function ParentAttendancePage() {
                       </td>
                       <td style={{ padding: '10px 14px', color: C.sub }}>{row.note}</td>
                       <td style={{ padding: '10px 14px' }}>
-                        <button onClick={()=>alert(`تقديم عذر عن غياب/تأخر يوم ${row.date} قيد التطوير — سيتوفر نموذج تقديم الأعذار قريباً.`)} style={{
+                        <button disabled title="غير متاح بعد" style={{
                           padding: '5px 12px', borderRadius: 8, border: `1px solid ${C.goldBdr}`,
                           background: C.goldBg, color: C.gold, fontSize: 11, fontWeight: 700,
-                          cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+                          cursor: 'not-allowed', fontFamily: "'Cairo',sans-serif", opacity: 0.55,
                         }}>
                           تقديم عذر
                         </button>

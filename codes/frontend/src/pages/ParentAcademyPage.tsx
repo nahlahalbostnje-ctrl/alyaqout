@@ -93,10 +93,10 @@ function CourseCard({ course, compact }: { course: Course; compact?: boolean }) 
             <div style={{ height: '100%', width: `${course.progress}%`, borderRadius: 3, background: course.color, transition: 'width 0.5s ease' }} />
           </div>
         </div>
-        <button onClick={()=>alert(`تشغيل درس "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
+        <button disabled title="غير متاح بعد" style={{
           background: course.color, color: '#fff', border: 'none',
           borderRadius: 8, padding: '7px 0', fontFamily: "'Cairo',sans-serif",
-          fontWeight: 700, fontSize: 12, cursor: 'pointer', width: '100%',
+          fontWeight: 700, fontSize: 12, cursor: 'not-allowed', width: '100%', opacity: 0.55,
         }}>متابعة التعلم</button>
       </div>
     );
@@ -185,28 +185,19 @@ function CourseCard({ course, compact }: { course: Course; compact?: boolean }) 
               <div style={{ height: 5, borderRadius: 3, background: `${course.color}18`, overflow: 'hidden', marginBottom: 10 }}>
                 <div style={{ height: '100%', width: `${course.progress}%`, borderRadius: 3, background: course.color }} />
               </div>
-              <button onClick={()=>alert(`تشغيل درس "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
+              <button disabled title="غير متاح بعد" style={{
                 background: course.color, color: '#fff', border: 'none', width: '100%',
                 borderRadius: 8, padding: '8px 0', fontFamily: "'Cairo',sans-serif",
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                fontWeight: 700, fontSize: 13, cursor: 'not-allowed', opacity: 0.55,
               }}>متابعة التعلم</button>
             </>
           ) : (
-            <button onClick={()=>alert(`بدء دورة "${course.title}" قيد التطوير — سيتوفر مشغّل محتوى الأكاديمية قريباً.`)} style={{
+            <button disabled title="غير متاح بعد" style={{
               background: 'transparent', color: course.color,
               border: `1.5px solid ${course.color}`, width: '100%',
               borderRadius: 8, padding: '8px 0', fontFamily: "'Cairo',sans-serif",
-              fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
-            }}
-              onMouseEnter={ev => {
-                (ev.currentTarget as HTMLButtonElement).style.background = course.color;
-                (ev.currentTarget as HTMLButtonElement).style.color = '#fff';
-              }}
-              onMouseLeave={ev => {
-                (ev.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                (ev.currentTarget as HTMLButtonElement).style.color = course.color;
-              }}
-            >البدء الآن</button>
+              fontWeight: 700, fontSize: 13, cursor: 'not-allowed', opacity: 0.55,
+            }}>البدء الآن</button>
           )}
         </div>
       </div>
@@ -324,7 +315,7 @@ export default function ParentAcademyPage() {
                 <p style={{ color: C.text, fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>{act.title}</p>
                 <p style={{ color: C.sub, fontSize: 11, margin: '0 0 12px' }}>{act.sub}</p>
                 <p style={{ color: C.dim, fontSize: 11, marginBottom: 12 }}>👥 {act.students.toLocaleString('ar-EG')} طالب مسجّل</p>
-                <button onClick={()=>alert(`التسجيل في نشاط "${act.title}" قيد التطوير.`)} style={{ background: `${act.color}15`, color: act.color, border: `1px solid ${act.color}30`, borderRadius: 8, padding: '7px 0', width: '100%', fontFamily: "'Cairo',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                <button disabled title="غير متاح بعد" style={{ background: `${act.color}15`, color: act.color, border: `1px solid ${act.color}30`, borderRadius: 8, padding: '7px 0', width: '100%', fontFamily: "'Cairo',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'not-allowed', opacity: 0.55 }}>
                   سجّل ابنك الآن
                 </button>
               </div>

@@ -1479,6 +1479,24 @@
 
 ## 2026-07-13
 
+### [2026-07-13] — تفعيل أزرار Stub: سوبر أدمن مستخدمين + تعطيل بلا Backend
+
+- **ما تم:**
+  - Backend: `SuperAdmin\UserController` — `GET/POST /api/super-admin/users` + toggle/destroy
+  - Frontend: `SAStaffPage` / `SAStudentsPage` ديناميكية (قائمة + مودال إضافة + CSV للطلاب)
+  - ربط تنقل «عرض الكل» في Analytics/Plans؛ تعطيل أزرار بلا Backend (دعم، webhooks، PDF…)
+  - نفس سياسة التعطيل لـ Parent/Teacher/Student stubs المتبقية
+  - Admin teachers: زر «إضافة معلم» → `/admin/users`
+
+- **الملفات المتأثرة:**
+  - `codes/backend/app/Http/Controllers/SuperAdmin/UserController.php`
+  - `codes/backend/routes/api.php`, `Admin/UserController.php` (email/password)
+  - `SAStaffPage.tsx`, `SAStudentsPage.tsx`, صفحات SA/Parent/Teacher stubs
+
+- **معايير قبول A:** إضافة معلم من سوبر أدمن يظهر في الجدول ويمكنه الدخول
+
+---
+
 ### [2026-07-13] — Mock → Dynamic: empty states لصفحات الميزات بدون Backend
 
 - **ما تم:**

@@ -17,7 +17,7 @@ export default function SAActivityLogPage() {
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>سجل العمليات</h1>
           <p style={{color:C.sub,fontSize:12,marginTop:2}}>تتبع كل عملية تجري على المنصة</p>
         </div>
-        <button onClick={()=>alert('تصدير سجل العمليات كملف قيد التطوير.')} style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>📥 تصدير السجل</button>
+        <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55}}>📥 تصدير السجل</button>
       </div>
 
       {/* Filters */}

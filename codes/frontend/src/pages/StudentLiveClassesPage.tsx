@@ -117,7 +117,7 @@ export default function StudentLiveClassesPage() {
 
       {/* Bottom Button */}
       <div style={{ padding:'6px 16px 16px' }}>
-        <button onClick={()=>alert('عرض الجدول الأسبوعي الكامل قيد التطوير.')} style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'pointer' }}>
+        <button disabled title="غير متاح بعد" style={{ width:'100%', padding:'13px', borderRadius:14, background:C.card, border:`1.5px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:14, cursor:'not-allowed', opacity:0.55 }}>
           عرض الجدول الكامل
         </button>
       </div>

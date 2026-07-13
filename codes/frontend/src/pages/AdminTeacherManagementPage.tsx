@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, toggleUser } from '../features/admin/usersSlice';
@@ -44,6 +45,7 @@ const STATUS_LABEL: Record<Teacher['status'], { label: string; color: string; bg
 };
 
 export default function AdminTeacherManagementPage() {
+  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -121,9 +123,15 @@ export default function AdminTeacherManagementPage() {
       <div dir="rtl" style={{ padding:'24px', fontFamily:"'Cairo',sans-serif", background:C.bg, minHeight:'100vh' }}>
 
         {/* Header */}
-        <div style={{ marginBottom:24 }}>
-          <h1 style={{ color:C.navy, fontWeight:900, fontSize:22 }}>إدارة المعلمين الموسعة</h1>
-          <p style={{ color:C.sub, fontSize:13, marginTop:4 }}>إدارة صلاحيات وساعات وحوافز المعلمين</p>
+        <div style={{ marginBottom:24, display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+          <div>
+            <h1 style={{ color:C.navy, fontWeight:900, fontSize:22 }}>إدارة المعلمين الموسعة</h1>
+            <p style={{ color:C.sub, fontSize:13, marginTop:4 }}>إدارة صلاحيات وساعات وحوافز المعلمين</p>
+          </div>
+          <button onClick={() => navigate('/admin/users')}
+            style={{ padding:'9px 18px', borderRadius:12, background:C.goldGrad, color:'#fff', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+            + إضافة معلم
+          </button>
         </div>
 
         {/* KPI Row */}

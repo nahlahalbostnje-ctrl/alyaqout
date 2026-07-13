@@ -156,7 +156,7 @@ export default function AdminApprovalsPage() {
                 <div style={{ display:'flex', gap:8, marginTop:6 }}>
                   <button onClick={() => handleApprove(req.id)} style={{ padding:'8px 18px', borderRadius:9, background:C.greenBg, border:`1px solid ${C.green}30`, color:C.green, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>الموافقة</button>
                   <button onClick={() => setRejectingId(req.id)} style={{ padding:'8px 18px', borderRadius:9, background:C.redBg, border:`1px solid ${C.red}30`, color:C.red, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>الرفض</button>
-                  <button onClick={()=>alert(`تم إرسال طلب توضيح إلى ${req.requestedBy} (سيناريو تجريبي — الطلبات هنا بيانات عرض وليست مرتبطة بمستخدمين حقيقيين بعد).`)} style={{ padding:'8px 18px', borderRadius:9, background:'#F3F4F6', border:`1px solid ${C.border}`, color:C.sub, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>طلب مزيد من المعلومات</button>
+                  <button disabled title="غير متاح بعد" style={{ padding:'8px 18px', borderRadius:9, background:'#F3F4F6', border:`1px solid ${C.border}`, color:C.dim, fontSize:12, fontWeight:700, cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", opacity:0.55 }}>طلب مزيد من المعلومات</button>
                 </div>
               )}
             </div>

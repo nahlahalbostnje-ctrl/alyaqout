@@ -273,7 +273,7 @@ export default function LiveRoomPage() {
           </div>
 
           {/* AI Teacher button */}
-          <button onClick={()=>alert('سؤال المعلم الذكي المباشر أثناء الحصة قيد التطوير — استخدم المساعد الذكي من لوحة الطالب حالياً.')} style={{ width:'100%', padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 14px rgba(201,149,42,0.4)' }}>
+          <button disabled title="غير متاح بعد" style={{ width:'100%', padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'none', opacity:0.55 }}>
             <span style={{ fontSize:18 }}>🤖</span>
             اسأل معلمي الذكي
           </button>

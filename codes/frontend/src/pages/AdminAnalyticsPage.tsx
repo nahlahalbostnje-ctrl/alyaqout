@@ -297,10 +297,10 @@ export default function AdminAnalyticsPage() {
                 <AIEvaluation teacher={selectedTeacher} />
 
                 <div style={{ marginTop:12, display:'flex', gap:8 }}>
-                  <button onClick={()=>alert('إرسال تقرير أداء المعلم عبر البريد/واتساب قيد التطوير.')} style={{ flex:1, padding:'11px', borderRadius:12, background: C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                  <button disabled title="غير متاح بعد" style={{ flex:1, padding:'11px', borderRadius:12, background: C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:13, border:'none', cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", opacity:0.55 }}>
                     📧 إرسال تقرير
                   </button>
-                  <button onClick={()=>alert('تحميل تقرير أداء المعلم كـPDF قيد التطوير.')} style={{ flex:1, padding:'11px', borderRadius:12, background:'transparent', border:`1.5px solid ${C.border}`, color: C.text, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                  <button disabled title="غير متاح بعد" style={{ flex:1, padding:'11px', borderRadius:12, background:'transparent', border:`1.5px solid ${C.border}`, color: C.dim, fontWeight:700, fontSize:13, cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", opacity:0.55 }}>
                     📥 تحميل PDF
                   </button>
                 </div>

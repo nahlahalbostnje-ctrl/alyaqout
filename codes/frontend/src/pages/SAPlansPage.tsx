@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchPackages } from '../features/admin/packagesSlice';
@@ -8,6 +9,7 @@ const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', bo
 export default function SAPlansPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly'|'yearly'>('monthly');
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { list: packages, loading } = useAppSelector((s) => s.packages);
 
   useEffect(() => { dispatch(fetchPackages()); }, [dispatch]);
@@ -78,8 +80,8 @@ export default function SAPlansPage() {
                 <p style={{color:C.sub,fontSize:12,textAlign:'center',marginBottom:14,lineHeight:1.5}}>{plan.description}</p>
               )}
               <p style={{color:C.dim,fontSize:11,textAlign:'center',marginBottom:14}}>المدة: {plan.duration_days} يوم</p>
-              <button onClick={()=>alert(`إدارة خطة "${plan.name}" قيد التطوير.`)} style={{width:'100%',padding:'11px',borderRadius:13,border:'none',cursor:'pointer',fontWeight:800,fontSize:13,background:C.goldGrad,color:'#1B2038',boxShadow:'0 4px 14px rgba(201,149,42,0.3)'}}>
-                إدارة الخطة
+              <button onClick={()=>navigate('/dashboard/billing')} style={{width:'100%',padding:'11px',borderRadius:13,border:'none',cursor:'pointer',fontWeight:800,fontSize:13,background:C.goldGrad,color:'#1B2038',boxShadow:'0 4px 14px rgba(201,149,42,0.3)'}}>
+                عرض المالية
               </button>
             </div>
           ))}
@@ -90,7 +92,7 @@ export default function SAPlansPage() {
       <div style={card()}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
           <p style={{color:C.text,fontWeight:800,fontSize:14}}>الاشتراكات النشطة</p>
-          <button onClick={()=>alert('صفحة تفصيلية لكل الاشتراكات عبر الدول قيد التطوير.')} style={{color:C.gold,fontSize:11,fontWeight:600,border:'none',background:'none',cursor:'pointer'}}>عرض الكل</button>
+          <button disabled title="غير متاح بعد" style={{color:C.dim,fontSize:11,fontWeight:600,border:'none',background:'none',cursor:'not-allowed',opacity:0.55}}>عرض الكل</button>
         </div>
         <div style={{overflowX:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse',minWidth:560}}>

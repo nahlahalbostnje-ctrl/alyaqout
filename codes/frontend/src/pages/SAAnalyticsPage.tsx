@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
@@ -84,6 +85,7 @@ function DonutChart({ segs, total }: { segs: DonutSeg[]; total: number }) {
 
 export default function SAAnalyticsPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { stats, countryStats, growthChart, loading, error } = useAppSelector(s => s.superAdmin);
   const [period, setPeriod] = useState('6');
   const [isMobile, setIsMobile] = useState(false);
@@ -208,7 +210,7 @@ export default function SAAnalyticsPage() {
           </div>
         </div>
         <div style={card()}>
-          {sH('توزيع المستخدمين')}
+          {sH('توزيع المستخدمين', 'عرض الكل', () => navigate('/dashboard/students'))}
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <DonutChart segs={donutSegs} total={totalUsers}/>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -230,7 +232,7 @@ export default function SAAnalyticsPage() {
 
       {/* Country breakdown */}
       <div style={card()}>
-        {sH('توزيع الأفرع حسب الدولة')}
+        {sH('توزيع الأفرع حسب الدولة', 'عرض الكل', () => navigate('/dashboard/schools'))}
         {countries.length === 0 ? (
           <div style={{ textAlign:'center', padding:'32px', color:C.sub, fontSize:13 }}>لا توجد بيانات</div>
         ) : (

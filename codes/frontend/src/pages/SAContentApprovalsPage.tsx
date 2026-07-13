@@ -122,7 +122,7 @@ export default function SAContentApprovalsPage() {
                   </td>
                   <td style={{padding:'12px 14px'}}>
                     <div style={{display:'flex',gap:5}}>
-                      <button title="معاينة" onClick={()=>alert(`معاينة الملف: ${item.name}\nالنوع: ${TYPE_INFO[item.type].label} — بواسطة ${item.teacher}`)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:C.navy,color:'#fff',cursor:'pointer',fontSize:12}}>👁️</button>
+                      <button title="غير متاح بعد" disabled style={{width:30,height:30,borderRadius:8,border:`1px solid ${C.border}`,background:C.navy,color:'#fff',cursor:'not-allowed',fontSize:12,opacity:0.55}}>👁️</button>
                       {item.status==='pending'&&<>
                         <button onClick={()=>approve(item.id)} title="اعتماد" style={{width:30,height:30,borderRadius:8,border:'none',background:'rgba(22,163,74,0.15)',color:C.green,cursor:'pointer',fontSize:14,fontWeight:700}}>✓</button>
                         <button onClick={()=>setRejectModal(item.id)} title="رفض" style={{width:30,height:30,borderRadius:8,border:'none',background:'rgba(239,68,68,0.12)',color:C.red,cursor:'pointer',fontSize:14,fontWeight:700}}>✕</button>

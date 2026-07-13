@@ -75,7 +75,7 @@ export default function SADevCenterPage() {
       {tab==='webhooks'&&(
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
-            <button onClick={()=>alert('نظام Webhooks قيد التطوير — لا توجد بنية بث أحداث فعلية بالباك اند بعد.')} style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer'}}>+ إضافة Webhook</button>
+            <button disabled title="غير متاح بعد" style={{padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55}}>+ إضافة Webhook</button>
           </div>
           <div style={card()}>
             <p style={{ textAlign:'center', color:'#6B7280', padding:40 }}>لا توجد Webhooks حالياً.</p>

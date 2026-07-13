@@ -345,8 +345,8 @@ export default function ParentReportsPage() {
                   </td>
                   <td style={{ padding:'11px 14px' }}>
                     <div style={{ display:'flex', gap:8 }}>
-                      <button onClick={()=>alert(`عرض تقرير ${r.type} بتاريخ ${r.date} لـ${r.child} قيد التطوير — أرشيف التقارير السابقة غير مفعّل بعد، استخدم "بناء تقرير جديد" أعلاه.`)} style={{ padding:'5px 12px', borderRadius:8, border:`1px solid ${C.border}`, background:C.card, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>عرض</button>
-                      <button onClick={()=>alert(`تحميل تقرير ${r.type} بتاريخ ${r.date} لـ${r.child} قيد التطوير — أرشيف التقارير السابقة غير مفعّل بعد، استخدم "بناء تقرير جديد" أعلاه.`)} style={{ padding:'5px 12px', borderRadius:8, border:`1px solid ${C.goldBdr}`, background:C.goldBg, color:C.gold, fontSize:11.5, fontWeight:600, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>تحميل</button>
+                      <button disabled title="غير متاح بعد" style={{ padding:'5px 12px', borderRadius:8, border:`1px solid ${C.border}`, background:C.card, color:C.dim, fontSize:11.5, fontWeight:600, cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", opacity:0.55 }}>عرض</button>
+                      <button disabled title="غير متاح بعد" style={{ padding:'5px 12px', borderRadius:8, border:`1px solid ${C.goldBdr}`, background:C.goldBg, color:C.gold, fontSize:11.5, fontWeight:600, cursor:'not-allowed', fontFamily:"'Cairo',sans-serif", opacity:0.55 }}>تحميل</button>
                     </div>
                   </td>
                 </tr>

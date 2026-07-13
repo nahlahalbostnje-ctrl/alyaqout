@@ -80,7 +80,7 @@ export default function SASettingsPage() {
                 </div>
               </div>
               <div style={{display:'flex',gap:10,marginTop:8}}>
-                <button onClick={()=>alert('حفظ معلومات المنصة العامة (الاسم/البريد/الوصف...) قيد التطوير.')} style={{padding:'11px 24px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer',boxShadow:'0 3px 10px rgba(201,149,42,0.3)'}}>💾 حفظ التغييرات</button>
+                <button disabled title="غير متاح بعد" style={{padding:'11px 24px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55,boxShadow:'none'}}>💾 حفظ التغييرات</button>
                 <button style={{padding:'11px 24px',borderRadius:12,background:C.bg,color:C.sub,fontWeight:600,fontSize:13,border:`1px solid ${C.border}`,cursor:'pointer'}}>إلغاء</button>
               </div>
             </div>
@@ -129,12 +129,12 @@ export default function SASettingsPage() {
                     </div>
                   </div>
                   <div style={{display:'flex',gap:8}}>
-                    <button onClick={()=>alert(`تعديل مدينة "${city}" عبر لوحة السوبر أدمن قيد التطوير — إدارة المدن حالياً متاحة من لوحة الأدمن الخاصة بكل دولة.`)} style={{padding:'6px 14px',borderRadius:9,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer'}}>تعديل</button>
-                    <button onClick={()=>alert(`إدارة مدارس "${city}" قيد التطوير.`)} style={{padding:'6px 14px',borderRadius:9,border:'none',background:C.goldBg,color:C.gold,fontSize:12,fontWeight:700,cursor:'pointer'}}>إدارة</button>
+                    <button disabled title="غير متاح بعد" style={{padding:'6px 14px',borderRadius:9,border:`1px solid ${C.border}`,background:'transparent',color:C.dim,fontSize:12,cursor:'not-allowed',opacity:0.55}}>تعديل</button>
+                    <button disabled title="غير متاح بعد" style={{padding:'6px 14px',borderRadius:9,border:'none',background:C.goldBg,color:C.gold,fontSize:12,fontWeight:700,cursor:'not-allowed',opacity:0.55}}>إدارة</button>
                   </div>
                 </div>
               ))}
-              <button onClick={()=>alert('إضافة مناطق عبر كل الدول من لوحة السوبر أدمن قيد التطوير — استخدم لوحة الأدمن الخاصة بكل دولة حالياً.')} style={{width:'100%',padding:'11px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'pointer',marginTop:8}}>+ إضافة منطقة جديدة</button>
+              <button disabled title="غير متاح بعد" style={{width:'100%',padding:'11px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:800,fontSize:13,border:'none',cursor:'not-allowed',opacity:0.55,marginTop:8}}>+ إضافة منطقة جديدة</button>
             </div>
           )}
 
@@ -157,7 +157,7 @@ export default function SASettingsPage() {
                     </div>
                     {s.key&&<p style={{color:C.dim,fontSize:11,fontFamily:'monospace'}}>{s.key.substring(0,20)}...</p>}
                   </div>
-                  <button onClick={()=>alert(`${s.status==='متصل'?'إعادة ضبط':'ربط'} ${s.name} يتطلب تدفق OAuth/مفاتيح API حقيقي — غير مفعّل بعد.`)} style={{padding:'7px 14px',borderRadius:9,border:`1px solid ${C.border}`,background:'transparent',color:C.sub,fontSize:12,cursor:'pointer',flexShrink:0}}>{s.status==='متصل'?'إعادة الضبط':'ربط'}</button>
+                  <button disabled title="غير متاح بعد" style={{padding:'7px 14px',borderRadius:9,border:`1px solid ${C.border}`,background:'transparent',color:C.dim,fontSize:12,cursor:'not-allowed',opacity:0.55,flexShrink:0}}>{s.status==='متصل'?'إعادة الضبط':'ربط'}</button>
                 </div>
               ))}
             </div>

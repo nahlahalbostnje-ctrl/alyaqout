@@ -34,12 +34,6 @@ export default function SAReportsPage() {
   const [dateFrom, setDateFrom] = useState('2026-06-01');
   const [dateTo, setDateTo] = useState('2026-06-23');
   const [period, setPeriod] = useState('هذا الشهر');
-  const [generating, setGenerating] = useState<string|null>(null);
-
-  const handleGenerate = (id:string) => {
-    setGenerating(id);
-    setTimeout(()=>setGenerating(null), 2000);
-  };
 
   return (
     <SuperAdminShell>
@@ -72,10 +66,10 @@ export default function SAReportsPage() {
           </>}
           <div style={{flex:1}}/>
           <div style={{display:'flex',gap:10}}>
-            <button style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12.5,border:'none',cursor:'pointer',boxShadow:'0 3px 10px rgba(13,21,53,0.3)'}}>
+            <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12.5,border:'none',cursor:'not-allowed',opacity:0.55,boxShadow:'none'}}>
               📄 تنزيل PDF
             </button>
-            <button style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:700,fontSize:12.5,border:'none',cursor:'pointer',boxShadow:'0 3px 10px rgba(201,149,42,0.3)'}}>
+            <button disabled title="غير متاح بعد" style={{display:'flex',alignItems:'center',gap:7,padding:'9px 18px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:700,fontSize:12.5,border:'none',cursor:'not-allowed',opacity:0.55,boxShadow:'none'}}>
               📊 تنزيل Excel
             </button>
           </div>
@@ -95,10 +89,10 @@ export default function SAReportsPage() {
             </div>
             <p style={{ textAlign:'center', color:'#6B7280', padding:'16px 8px', marginBottom:14 }}>لا توجد بيانات حالياً.</p>
             <div style={{display:'flex',gap:8,marginTop:'auto'}}>
-              <button onClick={()=>handleGenerate(r.id)} style={{flex:1,padding:'10px',borderRadius:12,background:generating===r.id?C.bg:C.goldGrad,color:generating===r.id?C.sub:'#1B2038',fontWeight:700,fontSize:12,border:generating===r.id?`1px solid ${C.border}`:'none',cursor:'pointer',transition:'all 0.2s'}}>
-                {generating===r.id?'⏳ جاري التوليد...':'📊 Excel'}
+              <button disabled title="غير متاح بعد" style={{flex:1,padding:'10px',borderRadius:12,background:C.goldGrad,color:'#1B2038',fontWeight:700,fontSize:12,border:'none',cursor:'not-allowed',opacity:0.55}}>
+                📊 Excel
               </button>
-              <button onClick={()=>alert('تصدير PDF لهذا التقرير قيد التطوير.')} style={{flex:1,padding:'10px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>
+              <button disabled title="غير متاح بعد" style={{flex:1,padding:'10px',borderRadius:12,background:C.navy,color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'not-allowed',opacity:0.55}}>
                 📄 PDF
               </button>
             </div>

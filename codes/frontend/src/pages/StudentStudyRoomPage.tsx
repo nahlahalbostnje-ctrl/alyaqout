@@ -130,7 +130,7 @@ export default function StudentStudyRoomPage() {
 
       {/* Input */}
       <div style={{ flexShrink:0, background:C.card, borderTop:`1px solid ${C.border}`, padding:'10px 14px', display:'flex', gap:8, alignItems:'flex-end' }}>
-        <button onClick={()=>alert('السؤال الصوتي عبر الميكروفون قيد التطوير — يرجى الكتابة حالياً.')} style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:17 }}>🎙️</button>
+        <button disabled title="غير متاح بعد" style={{ width:38, height:38, borderRadius:'50%', background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'not-allowed', flexShrink:0, fontSize:17, opacity:0.55 }}>🎙️</button>
         <textarea
           value={text} onChange={e=>setText(e.target.value)} onKeyDown={handleKey}
           rows={1} placeholder="اكتب سؤالك هنا..."
