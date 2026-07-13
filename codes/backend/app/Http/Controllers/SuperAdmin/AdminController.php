@@ -9,19 +9,24 @@ use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
     public function store(Request $request, Country $country): JsonResponse
     {
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'phone' => 'required|string|max:20|unique:users,phone',
+            'name'     => 'required|string|max:255',
+            'phone'    => 'required|string|max:20|unique:users,phone',
+            'email'    => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6|max:100',
         ]);
 
         $admin = User::create([
             'name'       => $request->name,
             'phone'      => $request->phone,
+            'email'      => strtolower(trim($request->email)),
+            'password'   => $request->password,
             'role'       => 'admin',
             'country_id' => $country->id,
             'is_active'  => true,
@@ -53,16 +58,34 @@ class AdminController extends Controller
         }
 
         $request->validate([
-            'name'  => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|max:20|unique:users,phone,' . $admin->id,
+            'name'     => 'sometimes|string|max:255',
+            'phone'    => ['sometimes', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($admin->id)],
+            'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($admin->id)],
+            'password' => 'nullable|string|min:6|max:100',
         ]);
 
-        $admin->update($request->only('name', 'phone'));
+        $data = [];
+        if ($request->filled('name')) {
+            $data['name'] = $request->name;
+        }
+        if ($request->filled('phone')) {
+            $data['phone'] = $request->phone;
+        }
+        if ($request->has('email')) {
+            $data['email'] = $request->filled('email')
+                ? strtolower(trim((string) $request->email))
+                : null;
+        }
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+        }
+
+        $admin->update($data);
 
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث بيانات المدير.',
-            'data'    => $this->formatAdmin($admin),
+            'data'    => $this->formatAdmin($admin->fresh()),
         ]);
     }
 
@@ -97,6 +120,7 @@ class AdminController extends Controller
             'id'        => $admin->id,
             'name'      => $admin->name,
             'phone'     => $admin->phone,
+            'email'     => $admin->email,
             'is_active' => $admin->is_active,
         ];
     }

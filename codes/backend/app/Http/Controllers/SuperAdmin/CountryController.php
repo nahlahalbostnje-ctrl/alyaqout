@@ -107,11 +107,12 @@ class CountryController extends Controller
             ->where('role', 'admin')
             ->whereNull('deleted_at')
             ->orderBy('created_at')
-            ->get(['id', 'name', 'phone', 'is_active'])
+            ->get(['id', 'name', 'phone', 'email', 'is_active'])
             ->map(fn (User $u) => [
                 'id'        => $u->id,
                 'name'      => $u->name,
                 'phone'     => $u->phone,
+                'email'     => $u->email,
                 'is_active' => (bool) $u->is_active,
             ])->values()->all();
 

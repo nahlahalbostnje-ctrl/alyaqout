@@ -9,8 +9,6 @@ import {
   toggleCountryAdmin,
   deleteCountryAdmin,
 } from '../features/countries/countriesSlice';
-import { impersonate } from '../features/auth/authSlice';
-import api from '../services/axios';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useToast } from '../components/Toast';
@@ -60,7 +58,7 @@ export default function CountryAdminsPage() {
 
   const country = list.find((c) => c.id === Number(countryId));
 
-  const [form, setForm] = useState({ name: '', phone: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' });
   const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState('');
   const [showAdd, setShowAdd] = useState(false);
@@ -68,11 +66,10 @@ export default function CountryAdminsPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const [editAdmin, setEditAdmin] = useState<CountryAdmin | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', phone: '' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', password: '' });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState('');
   const [toggling, setToggling] = useState<number | null>(null);
-  const [enteringId, setEnteringId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -82,14 +79,26 @@ export default function CountryAdminsPage() {
   const admins = country?.admins ?? [];
   const activeCount = useMemo(() => admins.filter((a) => a.is_active).length, [admins]);
   const filtered = useMemo(() => {
-    const q = search.trim();
+    const q = search.trim().toLowerCase();
     if (!q) return admins;
-    return admins.filter((a) => a.name.includes(q) || a.phone.includes(q));
+    return admins.filter((a) =>
+      a.name.toLowerCase().includes(q)
+      || a.phone.includes(q)
+      || (a.email ?? '').toLowerCase().includes(q),
+    );
   }, [admins, search]);
 
   async function handleAdd() {
     if (!form.name.trim() || !form.phone.trim()) {
       setFormErr('الاسم ورقم الهاتف مطلوبان');
+      return;
+    }
+    if (!form.email.trim() || !form.password.trim()) {
+      setFormErr('البريد الإلكتروني وكلمة المرور مطلوبان لتسجيل الدخول');
+      return;
+    }
+    if (form.password.trim().length < 6) {
+      setFormErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
     setSaving(true);
@@ -99,8 +108,10 @@ export default function CountryAdminsPage() {
         countryId: Number(countryId),
         name: form.name.trim(),
         phone: form.phone.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password.trim(),
       })).unwrap();
-      setForm({ name: '', phone: '' });
+      setForm({ name: '', phone: '', email: '', password: '' });
       setShowAdd(false);
       toast.success('تم إضافة المسؤول بنجاح');
       await dispatch(fetchCountries());
@@ -125,22 +136,9 @@ export default function CountryAdminsPage() {
     }
   }
 
-  async function handleEnterAsAdmin(adminId: number) {
-    setEnteringId(adminId);
-    try {
-      const { data } = await api.post(`/super-admin/impersonate/${adminId}`);
-      dispatch(impersonate({ token: data.token, user: data.user }));
-      navigate('/admin/dashboard');
-    } catch (e: unknown) {
-      toast.error(getApiError(e, 'تعذّر الدخول كهذا المسؤول'));
-    } finally {
-      setEnteringId(null);
-    }
-  }
-
   function openEdit(admin: CountryAdmin) {
     setEditAdmin(admin);
-    setEditForm({ name: admin.name, phone: admin.phone });
+    setEditForm({ name: admin.name, phone: admin.phone, email: admin.email ?? '', password: '' });
     setEditErr('');
   }
 
@@ -148,6 +146,14 @@ export default function CountryAdminsPage() {
     if (!editAdmin) return;
     if (!editForm.name.trim() || !editForm.phone.trim()) {
       setEditErr('الاسم ورقم الهاتف مطلوبان');
+      return;
+    }
+    if (!editForm.email.trim()) {
+      setEditErr('البريد الإلكتروني مطلوب لتسجيل الدخول');
+      return;
+    }
+    if (editForm.password.trim() && editForm.password.trim().length < 6) {
+      setEditErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
     setEditSaving(true);
@@ -158,6 +164,8 @@ export default function CountryAdminsPage() {
         adminId: editAdmin.id,
         name: editForm.name.trim(),
         phone: editForm.phone.trim(),
+        email: editForm.email.trim().toLowerCase(),
+        ...(editForm.password.trim() ? { password: editForm.password.trim() } : {}),
       })).unwrap();
       setEditAdmin(null);
       toast.success('تم تحديث بيانات المسؤول');
@@ -245,7 +253,7 @@ export default function CountryAdminsPage() {
         </div>
         <button
           type="button"
-          onClick={() => { setShowAdd(true); setFormErr(''); setForm({ name: '', phone: '' }); }}
+          onClick={() => { setShowAdd(true); setFormErr(''); setForm({ name: '', phone: '', email: '', password: '' }); }}
           style={{
             display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 12,
             background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13, border: 'none',
@@ -302,7 +310,7 @@ export default function CountryAdminsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
           <thead>
             <tr style={{ background: 'rgba(0,0,0,0.03)' }}>
-              {['المسؤول', 'الهاتف', 'الحالة', 'إجراءات'].map((h) => (
+              {['المسؤول', 'الهاتف', 'البريد', 'الحالة', 'إجراءات'].map((h) => (
                 <th key={h} style={{
                   padding: '12px 14px', textAlign: 'right', color: C.sub, fontSize: 11,
                   fontWeight: 700, borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap',
@@ -315,7 +323,7 @@ export default function CountryAdminsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4}>
+                <td colSpan={5}>
                   <p style={{ textAlign: 'center', color: C.sub, padding: 40 }}>
                     {admins.length === 0 ? 'لا يوجد مسؤولون لهذه الدولة بعد.' : 'لا نتائج للبحث.'}
                   </p>
@@ -338,6 +346,9 @@ export default function CountryAdminsPage() {
                 <td style={{ padding: '12px 14px', color: C.text, fontSize: 12, direction: 'ltr', textAlign: 'right' }}>
                   {admin.phone}
                 </td>
+                <td style={{ padding: '12px 14px', color: C.sub, fontSize: 12, direction: 'ltr', textAlign: 'right' }}>
+                  {admin.email || '—'}
+                </td>
                 <td style={{ padding: '12px 14px' }}>
                   <span style={{
                     padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
@@ -349,15 +360,6 @@ export default function CountryAdminsPage() {
                 </td>
                 <td style={{ padding: '12px 14px' }}>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={() => void handleEnterAsAdmin(admin.id)}
-                      disabled={enteringId === admin.id}
-                      title="دخول كلوحة أدمن الدولة"
-                      style={{ ...btnIcon(), background: C.goldBg, color: C.gold, border: `1px solid ${C.goldBdr}` }}
-                    >
-                      {enteringId === admin.id ? '...' : '🔑 دخول'}
-                    </button>
                     <button type="button" onClick={() => openEdit(admin)} title="تعديل" style={{ ...btnIcon(), width: 30, padding: 0, fontSize: 13 }}>
                       ✏️
                     </button>
@@ -392,7 +394,7 @@ export default function CountryAdminsPage() {
           onClick={() => { if (!saving) setShowAdd(false); }}
         >
           <div
-            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw' }}
+            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -406,6 +408,14 @@ export default function CountryAdminsPage() {
             <div style={{ marginBottom: 14 }}>
               <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>رقم الهاتف</label>
               <input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>البريد الإلكتروني (لتسجيل الدخول)</label>
+              <input type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="admin@example.com" dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>كلمة المرور</label>
+              <input type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="6 أحرف على الأقل" dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
             </div>
             {formErr && (
               <p style={{ color: C.red, fontSize: 12, fontWeight: 700, marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 12px' }}>
@@ -447,7 +457,7 @@ export default function CountryAdminsPage() {
           onClick={() => { if (!editSaving) setEditAdmin(null); }}
         >
           <div
-            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw' }}
+            style={{ background: C.card, borderRadius: 20, padding: 28, width: 440, maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -461,6 +471,14 @@ export default function CountryAdminsPage() {
             <div style={{ marginBottom: 14 }}>
               <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>رقم الهاتف</label>
               <input value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>البريد الإلكتروني</label>
+              <input type="email" value={editForm.email} onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))} dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ color: C.sub, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 5 }}>كلمة المرور (اتركها فارغة للإبقاء)</label>
+              <input type="password" value={editForm.password} onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))} placeholder="••••••••" dir="ltr" style={{ ...inp(), textAlign: 'right' }} />
             </div>
             {editErr && (
               <p style={{ color: C.red, fontSize: 12, fontWeight: 700, marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 12px' }}>

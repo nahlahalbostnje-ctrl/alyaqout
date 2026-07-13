@@ -5,6 +5,7 @@ export interface CountryAdmin {
   id:        number;
   name:      string;
   phone:     string;
+  email:     string | null;
   is_active: boolean;
 }
 
@@ -72,10 +73,19 @@ export const toggleCountry = createAsyncThunk('countries/toggle', async (id: num
 
 export const createCountryAdmin = createAsyncThunk(
   'countries/createAdmin',
-  async (payload: { countryId: number; name: string; phone: string }, { rejectWithValue }) => {
+  async (payload: {
+    countryId: number;
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+  }, { rejectWithValue }) => {
     try {
       const { data } = await api.post(`/super-admin/countries/${payload.countryId}/admins`, {
-        name: payload.name, phone: payload.phone,
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        password: payload.password,
       });
       return { countryId: payload.countryId, admin: data.data as CountryAdmin };
     } catch (err: any) { return rejectWithValue(err.response?.data?.message || 'فشل إنشاء المدير'); }
@@ -84,11 +94,25 @@ export const createCountryAdmin = createAsyncThunk(
 
 export const updateCountryAdmin = createAsyncThunk(
   'countries/updateAdmin',
-  async (payload: { countryId: number; adminId: number; name: string; phone: string }, { rejectWithValue }) => {
+  async (payload: {
+    countryId: number;
+    adminId: number;
+    name: string;
+    phone: string;
+    email: string;
+    password?: string;
+  }, { rejectWithValue }) => {
     try {
-      const { data } = await api.put(`/super-admin/countries/${payload.countryId}/admins/${payload.adminId}`, {
-        name: payload.name, phone: payload.phone,
-      });
+      const body: Record<string, string> = {
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+      };
+      if (payload.password) body.password = payload.password;
+      const { data } = await api.put(
+        `/super-admin/countries/${payload.countryId}/admins/${payload.adminId}`,
+        body,
+      );
       return { countryId: payload.countryId, admin: data.data as CountryAdmin };
     } catch (err: any) { return rejectWithValue(err.response?.data?.message || 'فشل تعديل المدير'); }
   }
