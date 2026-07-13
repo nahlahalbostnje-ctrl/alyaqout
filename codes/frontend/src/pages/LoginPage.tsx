@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { login } from '../features/auth/authSlice';
+import { loginWithEmail, sendOtp, verifyOtp, clearAuthError } from '../features/auth/authSlice';
 import {
   motion, AnimatePresence,
   useMotionValue, useSpring,
@@ -17,24 +17,10 @@ const ROLE_ROUTES: Record<string, string> = {
   parent:      '/parent/dashboard',
   supervisor:  '/supervisor/students',
 };
-const KEYWORD_MAP: Record<string, string> = {
-  // الأردن
-  super:         '00962100000000',
-  admin:         '00962200000000',
-  teacher:       '00962300000000',
-  student:       '00962400000000',
-  parent:        '00962500000000',
-  supervisor:    '00962600000000',
-  // فلسطين
-  ps_admin:      '00970444444444',
-  ps_teacher:    '00970111111111',
-  ps_student:    '00970222222221',
-  ps_parent:     '00970333333331',
-  ps_supervisor: '00970555555551',
-};
 
-const SP  = [0.16, 1, 0.3, 1]     as const;
 const POP = [0.34, 1.56, 0.64, 1] as const;
+
+type LoginTab = 'email' | 'phone';
 
 /* ── Background particles ───────────────────── */
 function BgParticles() {
@@ -137,14 +123,13 @@ function RippleButton({ children, disabled, type = 'button' }: {
           fontSize: 17, fontWeight: 900,
           fontFamily: "'Cairo','Tajawal',sans-serif",
           letterSpacing: '-0.01em',
-          cursor: disabled ? 'not-allowed' : 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer',
           boxShadow: disabled ? 'none' : '0 16px 48px -8px rgba(245,166,35,0.55)',
           transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease',
         }}
         onMouseEnter={e => { if (!disabled) { const b = e.currentTarget; b.style.transform = 'translateY(-3px) scale(1.025)'; b.style.boxShadow = '0 22px 60px -6px rgba(245,166,35,0.82)'; } }}
         onMouseLeave={e => { const b = e.currentTarget; b.style.transform = ''; b.style.boxShadow = disabled ? 'none' : '0 16px 48px -8px rgba(245,166,35,0.55)'; }}>
 
-        {/* shimmer */}
         {!disabled && (
           <motion.div className="absolute inset-0 pointer-events-none"
             style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.28),transparent)', width: '45%', borderRadius: 16 }}
@@ -152,7 +137,6 @@ function RippleButton({ children, disabled, type = 'button' }: {
             transition={{ duration: 3, repeat: Infinity, repeatDelay: 1.5, ease: 'easeInOut' }} />
         )}
 
-        {/* ripples */}
         {ripples.map(r => (
           <motion.span key={r.id}
             style={{
@@ -171,15 +155,15 @@ function RippleButton({ children, disabled, type = 'button' }: {
 }
 
 /* ── Floating label input ───────────────────── */
-function FloatingInput({ value, onChange, hasError }: {
+function FloatingInput({ value, onChange, hasError, label, type = 'text', autoComplete, dir }: {
   value: string; onChange: (v: string) => void; hasError: boolean;
+  label: string; type?: string; autoComplete?: string; dir?: 'rtl' | 'ltr';
 }) {
   const [focused, setFocused] = useState(false);
   const floated = focused || value.length > 0;
 
   return (
     <div style={{ position: 'relative', marginBottom: 4 }}>
-      {/* floating label */}
       <motion.label
         animate={{
           top:      floated ? 9  : 20,
@@ -188,39 +172,25 @@ function FloatingInput({ value, onChange, hasError }: {
         }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
         style={{
-          position: 'absolute', insetInlineEnd: 46, zIndex: 2,
+          position: 'absolute', insetInlineEnd: 16, zIndex: 2,
           fontWeight: 600, lineHeight: 1, pointerEvents: 'none',
           fontFamily: "'Cairo','Tajawal',sans-serif",
         }}>
-        الكلمة المفتاحية
+        {label}
       </motion.label>
 
-      {/* lock icon */}
-      <div style={{
-        position: 'absolute', top: '50%', insetInlineEnd: 15,
-        transform: 'translateY(-50%)', zIndex: 2, pointerEvents: 'none',
-        color: hasError ? '#f87171' : focused ? '#f5a623' : 'rgba(255,255,255,0.28)',
-        transition: 'color 0.22s ease',
-      }}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0110 0v4"/>
-        </svg>
-      </div>
-
-      {/* input */}
       <input
-        type="text"
+        type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        autoComplete="off"
-        dir="rtl"
+        autoComplete={autoComplete}
+        dir={dir ?? 'rtl'}
         style={{
           width: '100%', height: 60,
           paddingTop: 20, paddingBottom: 6,
-          paddingInlineEnd: 44, paddingInlineStart: 16,
+          paddingInlineEnd: 16, paddingInlineStart: 16,
           background: 'rgba(255,255,255,0.055)',
           border: `1.5px solid ${hasError ? 'rgba(248,113,113,0.65)' : focused ? 'rgba(245,166,35,0.65)' : 'rgba(255,255,255,0.1)'}`,
           borderRadius: 14,
@@ -232,17 +202,6 @@ function FloatingInput({ value, onChange, hasError }: {
           transition: 'border-color 0.22s ease, box-shadow 0.22s ease',
         }}
       />
-
-      {/* focus glow line */}
-      <motion.div
-        animate={{ scaleX: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: SP }}
-        style={{
-          position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1,
-          background: 'linear-gradient(90deg,transparent,#f5a623,transparent)',
-          borderRadius: 99, originX: 0.5, filter: 'blur(2px)',
-          pointerEvents: 'none',
-        }} />
     </div>
   );
 }
@@ -255,10 +214,17 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { loading, error, token, user } = useAppSelector(s => s.auth);
 
-  const [keyword,    setKeyword]    = useState('');
+  const [tab, setTab] = useState<LoginTab>('email');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [debugOtp, setDebugOtp] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState('');
   const [localError, setLocalError] = useState('');
-  const [shake,      setShake]      = useState(false);
-  const [success,    setSuccess]    = useState(false);
+  const [shake, setShake] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (token && user?.role) {
@@ -269,17 +235,77 @@ export default function LoginPage() {
 
   const hasError = !!(localError || error);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 650);
+  };
+
+  const switchTab = (next: LoginTab) => {
+    setTab(next);
+    setLocalError('');
+    setInfoMsg('');
+    setDebugOtp(null);
+    setOtpSent(false);
+    setOtp('');
+    dispatch(clearAuthError());
+  };
+
+  const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
-    const phone = KEYWORD_MAP[keyword.trim().toLowerCase()];
-    if (!phone) {
-      setLocalError('الكلمة المفتاحية غير صحيحة');
-      setShake(true);
-      setTimeout(() => setShake(false), 650);
+    if (!email.trim() || !password) {
+      setLocalError('أدخل البريد الإلكتروني وكلمة المرور');
+      triggerShake();
       return;
     }
-    dispatch(login(phone));
+    dispatch(loginWithEmail({ email: email.trim(), password }));
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+    setInfoMsg('');
+    setDebugOtp(null);
+    if (!phone.trim()) {
+      setLocalError('أدخل رقم الجوال');
+      triggerShake();
+      return;
+    }
+    const result = await dispatch(sendOtp(phone.trim()));
+    if (sendOtp.fulfilled.match(result)) {
+      setOtpSent(true);
+      setInfoMsg(result.payload.message);
+      if (result.payload.debug_otp) setDebugOtp(result.payload.debug_otp);
+    } else {
+      triggerShake();
+    }
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+    if (!otp.trim() || otp.trim().length !== 6) {
+      setLocalError('أدخل رمز التحقق المكوّن من 6 أرقام');
+      triggerShake();
+      return;
+    }
+    dispatch(verifyOtp({ phone: phone.trim(), otp: otp.trim() }));
+  };
+
+  const tabBtn = (id: LoginTab, label: string) => {
+    const active = tab === id;
+    return (
+      <button type="button" onClick={() => switchTab(id)}
+        style={{
+          flex: 1, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer',
+          fontFamily: "'Cairo','Tajawal',sans-serif", fontWeight: 800, fontSize: 13,
+          background: active ? 'linear-gradient(135deg,#f5a623,#ffd166)' : 'rgba(255,255,255,0.04)',
+          color: active ? '#0d1b4b' : 'rgba(255,255,255,0.55)',
+          transition: 'all 0.25s ease',
+        }}>
+        {label}
+      </button>
+    );
   };
 
   return (
@@ -288,14 +314,10 @@ export default function LoginPage() {
       position: 'relative', overflow: 'hidden',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-
-      {/* Base gradient */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
         background: 'linear-gradient(155deg,#0d1b4b 0%,#060d1f 52%,#091424 100%)',
       }} />
-
-      {/* Aurora orbs */}
       <div style={{
         position: 'absolute', width: 800, height: 600, borderRadius: '50%',
         background: 'radial-gradient(ellipse,rgba(245,166,35,0.2) 0%,transparent 68%)',
@@ -308,32 +330,14 @@ export default function LoginPage() {
         bottom: -180, left: -150, filter: 'blur(110px)', zIndex: 1,
         animation: 'au2 17s ease-in-out infinite alternate',
       }} />
-      <div style={{
-        position: 'absolute', width: 450, height: 450, borderRadius: '50%',
-        background: 'radial-gradient(ellipse,rgba(139,92,246,0.13) 0%,transparent 68%)',
-        top: '40%', left: '25%', filter: 'blur(90px)', zIndex: 1,
-        animation: 'au3 14s ease-in-out infinite alternate',
-      }} />
-
-      {/* Grid */}
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)',
-        backgroundSize: '60px 60px',
-        animation: 'yq-grid-scroll 5s linear infinite',
-      }} />
-
-      {/* Particles */}
       <BgParticles />
 
-      {/* ════ CARD — entrance wrapper ════ */}
       <motion.div
         initial={{ opacity: 0, y: 70, scale: 0.88 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, ease: POP }}
         style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 460, margin: '0 24px' }}>
 
-        {/* shake wrapper — separate from entrance */}
         <motion.div
           animate={shake ? { x: [0,-12,12,-9,9,-5,5,0] } : { x: 0 }}
           transition={{ duration: 0.55 }}
@@ -342,16 +346,10 @@ export default function LoginPage() {
             background: 'rgba(8,16,40,0.84)',
             backdropFilter: 'blur(28px) saturate(160%)',
             border: `1.5px solid ${success ? 'rgba(34,197,94,0.55)' : hasError ? 'rgba(248,113,113,0.45)' : 'rgba(245,166,35,0.22)'}`,
-            boxShadow: success
-              ? '0 0 55px rgba(34,197,94,0.18), 0 32px 80px -16px rgba(0,0,0,0.75)'
-              : hasError
-              ? '0 0 40px rgba(248,113,113,0.12), 0 32px 80px -16px rgba(0,0,0,0.75)'
-              : '0 0 55px rgba(245,166,35,0.1), 0 32px 80px -16px rgba(0,0,0,0.75)',
-            transition: 'border-color 0.35s ease, box-shadow 0.35s ease',
+            boxShadow: '0 0 55px rgba(245,166,35,0.1), 0 32px 80px -16px rgba(0,0,0,0.75)',
             overflow: 'hidden',
           }}>
 
-          {/* Gold top accent line */}
           <div style={{
             height: 3,
             background: 'linear-gradient(90deg,transparent,#f5a623,#ffd166,#f5a623,transparent)',
@@ -359,139 +357,168 @@ export default function LoginPage() {
             animation: 'yq-shimmer 3.5s linear infinite',
           }} />
 
-          {/* Logo section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: SP, delay: 0.25 }}
-            style={{ padding: '36px 36px 24px', textAlign: 'center' }}>
-
-            <div style={{ position: 'relative', display: 'inline-block', marginBottom: 20 }}>
-              {/* halo glow */}
+          <div style={{ padding: '32px 36px 20px', textAlign: 'center' }}>
+            <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
               <div style={{
                 position: 'absolute', inset: -16, borderRadius: '50%',
-                background: 'radial-gradient(circle,rgba(245,166,35,0.42) 0%,rgba(245,166,35,0.1) 48%,transparent 68%)',
+                background: 'radial-gradient(circle,rgba(245,166,35,0.42) 0%,transparent 68%)',
                 filter: 'blur(18px)', transform: 'scale(1.8)', pointerEvents: 'none',
-                animation: 'yq-breathe 3.2s ease-in-out infinite alternate',
               }} />
-              {/* pulse rings */}
-              {[0, 0.7].map((delay, i) => (
-                <div key={i} style={{
-                  position: 'absolute', inset: -8, borderRadius: '50%',
-                  border: '1px solid rgba(245,166,35,0.28)',
-                  animation: `yq-pulse-ring 2.2s ease-out ${delay}s infinite`,
-                  pointerEvents: 'none',
-                }} />
-              ))}
-              {/* orbit ring */}
-              <div style={{
-                position: 'absolute', inset: -14, borderRadius: '50%',
-                border: '1.5px solid transparent',
-                background: 'linear-gradient(rgba(8,16,40,0),rgba(8,16,40,0)) padding-box, linear-gradient(90deg,#f5a623,#ffd166,transparent,#ffd166,#f5a623) border-box',
-                animation: 'yq-spin-slow 9s linear infinite',
-                pointerEvents: 'none',
-              }} />
-              <motion.div
-                initial={{ scale: 0.3, opacity: 0, rotate: -15 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ duration: 0.9, ease: POP, delay: 0.35 }}
-                whileHover={{ scale: 1.08 }}
-                style={{
-                  position: 'relative', zIndex: 1,
-                  filter: 'drop-shadow(0 0 28px rgba(245,166,35,0.6))',
-                }}>
-                <BrandLogo size={150} style={{ width: 150, height: 'auto' }} />
-              </motion.div>
+              <BrandLogo size={130} style={{ width: 130, height: 'auto', position: 'relative', zIndex: 1 }} />
             </div>
-          </motion.div>
+            <p style={{
+              color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600,
+              fontFamily: "'Cairo','Tajawal',sans-serif", margin: 0,
+            }}>
+              سجّل الدخول حسب صلاحياتك
+            </p>
+          </div>
 
-          {/* Divider */}
           <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(245,166,35,0.2),transparent)', margin: '0 28px' }} />
 
-          {/* Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: SP, delay: 0.42 }}
-            style={{ padding: '28px 32px 32px' }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ padding: '24px 32px 32px' }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, padding: 4, borderRadius: 14, background: 'rgba(255,255,255,0.03)' }}>
+              {tabBtn('email', 'إيميل وكلمة سر')}
+              {tabBtn('phone', 'جوال وواتساب')}
+            </div>
 
-              <FloatingInput
-                value={keyword}
-                onChange={v => { setKeyword(v); setLocalError(''); }}
-                hasError={hasError}
-              />
+            <AnimatePresence mode="wait">
+              {tab === 'email' ? (
+                <motion.form key="email"
+                  initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.25 }}
+                  onSubmit={handleEmailLogin}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <FloatingInput
+                    label="البريد الإلكتروني"
+                    type="email"
+                    autoComplete="username"
+                    dir="ltr"
+                    value={email}
+                    onChange={v => { setEmail(v); setLocalError(''); }}
+                    hasError={hasError}
+                  />
+                  <FloatingInput
+                    label="كلمة المرور"
+                    type="password"
+                    autoComplete="current-password"
+                    dir="ltr"
+                    value={password}
+                    onChange={v => { setPassword(v); setLocalError(''); }}
+                    hasError={hasError}
+                  />
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, margin: 0, fontFamily: "'Cairo',sans-serif" }}>
+                    للسوبر أدمن، الأدمن، المعلم، والمشرف
+                  </p>
 
-              {/* Error */}
-              <AnimatePresence>
-                {hasError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, height: 0 }}
-                    animate={{ opacity: 1, y: 0,  height: 'auto' }}
-                    exit={{ opacity: 0, y: -8,   height: 0 }}
-                    transition={{ duration: 0.28, ease: SP }}
-                    style={{
-                      background: 'rgba(248,113,113,0.1)',
-                      border: '1px solid rgba(248,113,113,0.3)',
-                      borderRadius: 12, padding: '10px 16px',
-                      fontSize: 13, fontWeight: 600,
-                      color: '#f87171', textAlign: 'center',
-                      fontFamily: "'Cairo','Tajawal',sans-serif",
-                      overflow: 'hidden',
+                  {/* Error / success / info inside forms below */}
+                  {hasError && (
+                    <div style={{
+                      background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                      color: '#f87171', textAlign: 'center', fontFamily: "'Cairo',sans-serif",
                     }}>
-                    {localError || error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Success */}
-              <AnimatePresence>
-                {success && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.88 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ ease: POP }}
-                    style={{
-                      background: 'rgba(34,197,94,0.1)',
-                      border: '1px solid rgba(34,197,94,0.32)',
-                      borderRadius: 12, padding: '10px 16px',
-                      fontSize: 13, fontWeight: 700,
-                      color: '#4ade80', textAlign: 'center',
-                      fontFamily: "'Cairo','Tajawal',sans-serif",
+                      {localError || error}
+                    </div>
+                  )}
+                  {success && (
+                    <div style={{
+                      background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.32)',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 700,
+                      color: '#4ade80', textAlign: 'center', fontFamily: "'Cairo',sans-serif",
                     }}>
-                    ✓ تم الدخول بنجاح، جاري التحويل...
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      ✓ تم الدخول بنجاح، جاري التحويل...
+                    </div>
+                  )}
 
-              {/* Submit */}
-              <RippleButton type="submit" disabled={loading || !keyword.trim() || success}>
-                {loading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
-                      style={{ display: 'inline-block', width: 18, height: 18, border: '2.5px solid rgba(13,27,75,0.3)', borderTopColor: '#0d1b4b', borderRadius: '50%' }} />
-                    جاري الدخول...
-                  </span>
-                ) : '🔐 تسجيل الدخول'}
-              </RippleButton>
+                  <RippleButton type="submit" disabled={loading || success || !email.trim() || !password}>
+                    {loading ? 'جاري الدخول...' : 'تسجيل الدخول'}
+                  </RippleButton>
+                </motion.form>
+              ) : (
+                <motion.form key="phone"
+                  initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.25 }}
+                  onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <FloatingInput
+                    label="رقم الجوال"
+                    type="tel"
+                    autoComplete="tel"
+                    dir="ltr"
+                    value={phone}
+                    onChange={v => { setPhone(v); setLocalError(''); setOtpSent(false); setDebugOtp(null); }}
+                    hasError={hasError}
+                  />
+                  {otpSent && (
+                    <FloatingInput
+                      label="رمز التحقق (OTP)"
+                      type="text"
+                      autoComplete="one-time-code"
+                      dir="ltr"
+                      value={otp}
+                      onChange={v => { setOtp(v.replace(/\D/g, '').slice(0, 6)); setLocalError(''); }}
+                      hasError={hasError}
+                    />
+                  )}
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, margin: 0, fontFamily: "'Cairo',sans-serif" }}>
+                    للطالب وولي الأمر — يُرسل الرمز عبر واتساب
+                  </p>
+                  {otpSent && (
+                    <button type="button"
+                      onClick={() => { setOtpSent(false); setOtp(''); setDebugOtp(null); setInfoMsg(''); }}
+                      style={{
+                        background: 'none', border: 'none', color: '#f5a623', fontSize: 12,
+                        fontWeight: 700, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+                      }}>
+                      تغيير الرقم / إعادة إرسال
+                    </button>
+                  )}
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.85 }}
-                style={{
-                  textAlign: 'center', fontSize: 12, fontWeight: 400,
-                  color: 'rgba(245,166,35,0.4)',
-                  fontFamily: "'Cairo','Tajawal',sans-serif",
-                  lineHeight: 1.6, marginTop: 4,
-                }}>
-                انضم لآلاف الطلاب المتفوقين في المنطقة العربية
-              </motion.p>
+                  {(infoMsg || debugOtp) && !hasError && (
+                    <div style={{
+                      background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 12, fontWeight: 600,
+                      color: '#93c5fd', textAlign: 'center', fontFamily: "'Cairo',sans-serif",
+                    }}>
+                      {infoMsg}
+                      {debugOtp && (
+                        <div style={{ marginTop: 6, fontSize: 18, fontWeight: 900, color: '#f5a623', letterSpacing: 4 }}>
+                          {debugOtp}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-            </form>
-          </motion.div>
+                  {hasError && (
+                    <div style={{
+                      background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                      color: '#f87171', textAlign: 'center', fontFamily: "'Cairo',sans-serif",
+                    }}>
+                      {localError || error}
+                    </div>
+                  )}
+                  {success && (
+                    <div style={{
+                      background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.32)',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 13, fontWeight: 700,
+                      color: '#4ade80', textAlign: 'center', fontFamily: "'Cairo',sans-serif",
+                    }}>
+                      ✓ تم الدخول بنجاح، جاري التحويل...
+                    </div>
+                  )}
+
+                  <RippleButton type="submit" disabled={loading || success || !phone.trim() || (otpSent && otp.length !== 6)}>
+                    {loading
+                      ? (otpSent ? 'جاري التحقق...' : 'جاري الإرسال...')
+                      : (otpSent ? 'تأكيد الرمز والدخول' : 'إرسال رمز واتساب')}
+                  </RippleButton>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
       </motion.div>
     </div>

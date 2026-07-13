@@ -18,6 +18,8 @@ class TestUsersSeeder extends Seeder
             [
                 'name'       => 'مدير الأردن',
                 'phone'      => '00962200000000',
+                'email'      => 'admin@alyaqout.net',
+                'password'   => 'Yaqoot@123',
                 'role'       => 'admin',
                 'country_id' => $jordan?->id,
                 'is_active'  => true,
@@ -25,6 +27,8 @@ class TestUsersSeeder extends Seeder
             [
                 'name'       => 'معلم تجريبي',
                 'phone'      => '00962300000000',
+                'email'      => 'teacher@alyaqout.net',
+                'password'   => 'Yaqoot@123',
                 'role'       => 'teacher',
                 'country_id' => $jordan?->id,
                 'is_active'  => true,
@@ -32,6 +36,8 @@ class TestUsersSeeder extends Seeder
             [
                 'name'       => 'طالب تجريبي',
                 'phone'      => '00962400000000',
+                'email'      => null,
+                'password'   => null,
                 'role'       => 'student',
                 'country_id' => $jordan?->id,
                 'is_active'  => true,
@@ -39,6 +45,8 @@ class TestUsersSeeder extends Seeder
             [
                 'name'       => 'ولي أمر تجريبي',
                 'phone'      => '00962500000000',
+                'email'      => null,
+                'password'   => null,
                 'role'       => 'parent',
                 'country_id' => $jordan?->id,
                 'is_active'  => true,
@@ -46,6 +54,8 @@ class TestUsersSeeder extends Seeder
             [
                 'name'       => 'مشرف تجريبي',
                 'phone'      => '00962600000000',
+                'email'      => 'supervisor@alyaqout.net',
+                'password'   => 'Yaqoot@123',
                 'role'       => 'supervisor',
                 'country_id' => $jordan?->id,
                 'is_active'  => true,
@@ -53,7 +63,7 @@ class TestUsersSeeder extends Seeder
         ];
 
         foreach ($users as $data) {
-            User::firstOrCreate(['phone' => $data['phone']], $data);
+            User::updateOrCreate(['phone' => $data['phone']], $data);
         }
     }
 }

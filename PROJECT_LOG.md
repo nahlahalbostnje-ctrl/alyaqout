@@ -1437,4 +1437,44 @@
 
 ---
 
+## 2026-07-06
+
+### [2026-07-06] — نشر تحديثات لوحات الطالب/ولي الأمر + إصلاح build الإنتاج
+
+- **ما تم:**
+  - سحب `1389a94` على `server1` — ملاحظات العميل: لوحات الطالب/ولي الأمر، إشعارات واتساب، مصطلحات، Responsive
+  - تحديثات Backend: `AuditLogController`, `NotificationService`
+  - تحديثات Frontend: 30+ ملف (Layouts، Dashboards، LandingPage، LiveClassesPage...)
+  - **فشل build على الإنتاج:** `TS6133` — ثابت `GOALS` غير مستخدم في `ParentDashboardPage.tsx`
+  - **إصلاح:** حذف `GOALS` — commit `e933993`
+  - نشر ناجح: `npm run build` + `cp dist/. public/`
+  - تحقق: `alyaqoutgroup.net` → Home/Health/API = 200
+
+- **المشكلة والحل:**
+  | المشكلة | السبب | الإصلاح |
+  |---------|-------|---------|
+  | `npm run build` فشل | `GOALS` معرّف وغير مستخدم (بقي بعد refactor) | حذف الثابت — `e933993` |
+  | `/api` 404 على `.com` | `alyaqoutgroup.com` غير مُعدّ في Webuzo | استخدم `.net` أو اربط `.com` بنفس Document Root |
+
+- **الملفات المتأثرة:**
+  - `codes/frontend/src/pages/ParentDashboardPage.tsx` ← إصلاح build
+  - `codes/frontend/src/pages/StudentDashboardPage.tsx` ← refactor كبير
+  - `codes/backend/app/Services/NotificationService.php`
+  - `codes/backend/app/Http/Controllers/Api/AuditLogController.php`
+  - `DEPLOYMENT.md` ← توثيق أخطاء `.com` و TS6133
+
+- **Commits:**
+  - `1389a94` — feat: ملاحظات العميل
+  - `e933993` — fix: إزالة GOALS غير المستخدم
+
+- **الإنتاج:**
+  - URL: https://alyaqoutgroup.net
+  - Build: `index-CJSZcNCU.js` (2026-07-06)
+  - `alyaqoutgroup.com` — React فقط (بدون API) — يحتاج إعداد Webuzo
+
+- **توصية للمبرمج:**
+  - تشغيل `npm run build` قبل كل push لتجنب TS6133 على الإنتاج
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

@@ -1,6 +1,6 @@
 # دليل النشر والتشغيل — منصة الياقوت
 
-> آخر تحديث: **2026-07-01**  
+> آخر تحديث: **2026-07-06**  
 > الحالة: **منشور ويعمل** على `https://alyaqoutgroup.net`
 
 ---
@@ -237,18 +237,40 @@ curl -s https://alyaqoutgroup.net/api/public/countries | head -c 200
 
 **الرابط:** https://alyaqoutgroup.net/login
 
-**الآلية:** حقل «الكلمة المفتاحية» → يُحوَّل إلى رقم هاتف → JWT. **لا كلمة مرور** (OTP معطّل حالياً للاختبار).
+**طريقتان:**
 
-### حسابات الأردن (موجودة على الإنتاج)
+| الطريقة | لمن | التدفق |
+|---------|-----|--------|
+| **إيميل + كلمة سر** | سوبر أدمن، أدمن، معلم، مشرف | `POST /api/auth/login` |
+| **جوال + OTP واتساب** | طالب، ولي أمر (وأي مستخدم له رقم) | `POST /api/auth/send-otp` ثم `POST /api/auth/verify-otp` |
 
-| الدور | الكلمة المفتاحية | الهاتف | الصفحة بعد الدخول |
-|--------|------------------|--------|-------------------|
-| سوبر أدمن | `super` | `00962100000000` | `/dashboard` |
-| أدمن دولة | `admin` | `00962200000000` | `/admin/dashboard` |
-| معلم | `teacher` | `00962300000000` | `/teacher/dashboard` |
-| طالب | `student` | `00962400000000` | `/student/dashboard` |
-| ولي أمر | `parent` | `00962500000000` | `/parent/dashboard` |
-| مشرف | `supervisor` | `00962600000000` | `/supervisor/students` |
+التوجيه بعد الدخول حسب `role` (PrivateRoute + ROLE_ROUTES).
+
+### حسابات الاختبار (بعد seed)
+
+| الدور | إيميل | كلمة السر | جوال (OTP) |
+|--------|--------|-----------|------------|
+| سوبر أدمن | `super@alyaqout.net` | `Yaqoot@123` | `00962100000000` |
+| أدمن | `admin@alyaqout.net` | `Yaqoot@123` | `00962200000000` |
+| معلم | `teacher@alyaqout.net` | `Yaqoot@123` | `00962300000000` |
+| مشرف | `supervisor@alyaqout.net` | `Yaqoot@123` | `00962600000000` |
+| طالب | — | — | `00962400000000` |
+| ولي أمر | — | — | `00962500000000` |
+
+> بدون `WASENDER_API_KEY`: يظهر `debug_otp` في الاستجابة للاختبار. مع المفتاح: الرمز يُرسل واتساب فقط.
+
+### API
+
+```http
+POST /api/auth/login
+{ "email": "super@alyaqout.net", "password": "Yaqoot@123" }
+
+POST /api/auth/send-otp
+{ "phone": "00962400000000" }
+
+POST /api/auth/verify-otp
+{ "phone": "00962400000000", "otp": "123456" }
+```
 
 ### حسابات فلسطين (تحتاج PalestineSeeder)
 
@@ -259,20 +281,6 @@ curl -s https://alyaqoutgroup.net/api/public/countries | head -c 200
 | طالب | `ps_student` | `00970222222221` |
 | ولي أمر | `ps_parent` | `00970333333331` |
 | مشرف | `ps_supervisor` | `00970555555551` |
-
-### API المصادقة
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{ "phone": "00962100000000" }
-```
-
-```http
-GET /api/auth/me
-Authorization: Bearer <token>
-```
 
 ---
 
@@ -358,6 +366,24 @@ npm run dev   # http://localhost:5175 — proxy /api → :8000
 - المشروع يستخدم `lcobucci/jwt` 5.x — متوافق مع PHP 8.4
 - إذا فشل: `git pull` لآخر `composer.lock`
 
+### 404 على `/api` أو `/up` — الدومين خاطئ
+
+- الدومين الإنتاجي المعتمد: **`https://alyaqoutgroup.net`** (مُعدّ في Webuzo → `/home/baitpait/alyaqoutgroup`)
+- **`alyaqoutgroup.com`** غير مُعدّ في Webuzo — يخدم `index.html` فقط (React) بدون توجيه `/api` و `/up` إلى Laravel
+- تحقق:
+  ```bash
+  curl -s -o /dev/null -w "Health: %{http_code}\n" https://alyaqoutgroup.net/up
+  curl -s -o /dev/null -w "API: %{http_code}\n" https://alyaqoutgroup.net/api/public/countries
+  ```
+- لربط `.com`: أضف addon في Webuzo بنفس Document Root، أو حوّل `.com` → `.net`
+
+### `npm run build` — TS6133 متغير غير مستخدم
+
+- مثال: `GOALS is declared but its value is never read` في `ParentDashboardPage.tsx`
+- TypeScript strict يرفض build الإنتاج — احذف المتغير/الـ import غير المستخدم أو استخدمه
+- **قبل push:** شغّل `npm run build` محلياً
+- إصلاح مرجعي: commit `e933993`
+
 ### `npm ci` — lock file out of sync
 
 ```bash
@@ -408,6 +434,9 @@ tail -50 /home/baitpait/public_html/alyaqoutgroup/codes/backend/storage/logs/lar
 | 2026-06-25 | `TestUsersSeeder` على الإنتاج |
 | 2026-07-01 | Pull `06de54d` — migrations جديدة + صفحات |
 | 2026-07-01 | Pull `fd314de` — إصلاح TypeScript + build `index-Wl-VvKzH.js` |
+| 2026-07-06 | Pull `1389a94` — لوحات الطالب/ولي الأمر + إشعارات واتساب + Responsive |
+| 2026-07-06 | فشل build: `GOALS` غير مستخدم في `ParentDashboardPage.tsx` (TS6133) |
+| 2026-07-06 | إصلاح `e933993` — حذف `GOALS` + نشر ناجح على `alyaqoutgroup.net` |
 
 ---
 
@@ -420,6 +449,8 @@ tail -50 /home/baitpait/public_html/alyaqoutgroup/codes/backend/storage/logs/lar
 | `b98482a` | `DirectoryIndex index.html` |
 | `06de54d` | ميزات: مدن، أمان، صفحات جديدة |
 | `fd314de` | إصلاح build TypeScript |
+| `1389a94` | لوحات الطالب/ولي الأمر + إشعارات واتساب + Responsive |
+| `e933993` | إصلاح build — حذف `GOALS` غير المستخدم من `ParentDashboardPage.tsx` |
 
 ---
 

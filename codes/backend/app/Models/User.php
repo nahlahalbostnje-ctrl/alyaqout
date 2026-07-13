@@ -20,6 +20,8 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'phone',
+        'email',
+        'password',
         'role',
         'country_id',
         'address',
@@ -32,12 +34,14 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $hidden = [
+        'password',
         'otp_code',
     ];
 
     protected $casts = [
         'otp_expires_at' => 'datetime',
         'is_active'      => 'boolean',
+        'password'       => 'hashed',
     ];
 
     public function getJWTIdentifier(): mixed

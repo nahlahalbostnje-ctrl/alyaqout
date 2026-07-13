@@ -5,6 +5,7 @@ interface AuthUser {
   id: number;
   name: string;
   phone: string;
+  email?: string | null;
   role: string;
   country_id: number | null;
 }
@@ -23,17 +24,44 @@ const initialState: AuthState = {
   error:   null,
 };
 
-export const login = createAsyncThunk(
-  'auth/login',
-  async (phone: string, { rejectWithValue }) => {
+export const loginWithEmail = createAsyncThunk(
+  'auth/loginWithEmail',
+  async (payload: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post('/auth/login', { phone });
+      const { data } = await api.post('/auth/login', payload);
       return data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || 'رقم الهاتف غير مسجل أو الحساب غير نشط.');
+      return rejectWithValue(err.response?.data?.message || 'البريد أو كلمة المرور غير صحيحة.');
     }
   }
 );
+
+export const sendOtp = createAsyncThunk(
+  'auth/sendOtp',
+  async (phone: string, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post('/auth/send-otp', { phone });
+      return data as { success: boolean; message: string; debug_otp?: string; expires_in?: number };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'تعذّر إرسال رمز التحقق.');
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async (payload: { phone: string; otp: string }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post('/auth/verify-otp', payload);
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'رمز التحقق غير صحيح.');
+    }
+  }
+);
+
+/** @deprecated استخدم loginWithEmail أو verifyOtp */
+export const login = loginWithEmail;
 
 export const fetchMe = createAsyncThunk(
   'auth/me',
@@ -49,7 +77,7 @@ export const fetchMe = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
-  async (payload: { name?: string; phone?: string }, { rejectWithValue }) => {
+  async (payload: { name?: string; phone?: string; email?: string; password?: string; password_confirmation?: string }, { rejectWithValue }) => {
     try {
       const { data } = await api.put('/auth/profile', payload);
       return data.data as AuthUser;
@@ -59,6 +87,14 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+function applyAuthSuccess(state: AuthState, payload: { token: string; user: AuthUser }) {
+  state.loading = false;
+  state.error   = null;
+  state.token   = payload.token;
+  state.user    = payload.user;
+  localStorage.setItem('yaqoot_token', payload.token);
+}
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -66,6 +102,7 @@ const authSlice = createSlice({
     logout(state) {
       state.user  = null;
       state.token = null;
+      state.error = null;
       localStorage.removeItem('yaqoot_token');
     },
     setToken(state, action: PayloadAction<string>) {
@@ -77,20 +114,44 @@ const authSlice = createSlice({
       state.user  = action.payload.user;
       localStorage.setItem('yaqoot_token', action.payload.token);
     },
+    clearAuthError(state) {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => {
+      .addCase(loginWithEmail.pending, (state) => {
         state.loading = true;
         state.error   = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-        state.token   = action.payload.token;
-        state.user    = action.payload.user;
-        localStorage.setItem('yaqoot_token', action.payload.token);
+      .addCase(loginWithEmail.fulfilled, (state, action) => {
+        applyAuthSuccess(state, action.payload);
       })
-      .addCase(login.rejected, (state, action) => {
+      .addCase(loginWithEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error   = action.payload as string;
+      })
+
+      .addCase(sendOtp.pending, (state) => {
+        state.loading = true;
+        state.error   = null;
+      })
+      .addCase(sendOtp.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(sendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error   = action.payload as string;
+      })
+
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+        state.error   = null;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        applyAuthSuccess(state, action.payload);
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
         state.error   = action.payload as string;
       })
@@ -109,5 +170,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, setToken, impersonate } = authSlice.actions;
+export const { logout, setToken, impersonate, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;
