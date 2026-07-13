@@ -41,6 +41,13 @@ return [
         'test_recipient' => env('WASENDER_TEST_RECIPIENT'),
     ],
 
+    'otp' => [
+        // Temporary fixed 6-digit code for staging/test (e.g. 123456). Empty = random OTP in production.
+        'fixed_code' => env('OTP_FIXED_CODE'),
+        // When true: always return debug_otp in API so login UI can show the code (current phase only).
+        'show_in_response' => env('OTP_SHOW_IN_RESPONSE', false),
+    ],
+
     'phone' => [
         // Platform default today: Palestine. Change when multi-country signup/login is enabled.
         'default_country' => env('PHONE_DEFAULT_COUNTRY', 'PS'),

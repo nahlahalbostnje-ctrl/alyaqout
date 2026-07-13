@@ -110,28 +110,38 @@ WASENDER_TEST_RECIPIENT=
 PHONE_DEFAULT_COUNTRY=PS
 ```
 
-### اختبار OTP برقم واتساب واحد
+### تثبيت OTP — المرحلة الحالية فقط (فلسطين + اختبار)
 
-1. في `.env` على السيرفر ضع مفتاح WaSender ورقم اختبارك:
+على السيرفر في `codes/backend/.env`:
 
 ```bash
-WASENDER_API_KEY=your_key_here
+# اختياري — إن وُجد يُرسل واتساب لرقم واحد فقط
+WASENDER_API_KEY=
 WASENDER_TEST_RECIPIENT=+97059xxxxxxx
+
+# المرحلة الحالية: رمز ثابت + إظهاره في شاشة الدخول
+OTP_FIXED_CODE=123456
+OTP_SHOW_IN_RESPONSE=true
+PHONE_DEFAULT_COUNTRY=PS
 ```
 
-2. امسح الكاش:
+ثم:
 
 ```bash
+cd /home/baitpait/public_html/alyaqoutgroup
+sudo -u baitpait git pull origin master
+cd codes/backend
 sudo -u baitpait php artisan config:clear
 sudo -u baitpait php artisan optimize:clear
 ```
 
-3. من صفحة الدخول اطلب OTP بأي رقم مستخدم مسجّل — الرسالة تصل **فقط** إلى `WASENDER_TEST_RECIPIENT`.
-4. أدخل الرمز الذي وصلك على رقم الاختبار لإكمال تسجيل الدخول بالحساب الذي طلبت له OTP.
-5. بعد انتهاء الاختبار: احذف قيمة `WASENDER_TEST_RECIPIENT` (أو اتركها فارغة) وأعد `config:clear` حتى يُرسل كل مستخدم لنفسه.
+**الاستخدام الآن:** دخول → جوال وواتساب → أي رقم مسجّل → الرمز `123456` يظهر في الشاشة (أو يُرسل لرقم الاختبار إن وُجد WaSender).
 
-> بدون `WASENDER_API_KEY`: يظهر `debug_otp` في الواجهة/الاستجابة (لا واتساب).
-> مع المفتاح وبدون `WASENDER_TEST_RECIPIENT`: الإرسال للرقم الحقيقي (فلسطين: فحص 970 ثم 972).
+**عند الإنتاج الحقيقي:** امسح `OTP_FIXED_CODE` و`OTP_SHOW_IN_RESPONSE` و`WASENDER_TEST_RECIPIENT`، وأبقِ `WASENDER_API_KEY` فقط، ثم `config:clear`.
+
+> بدون WaSender: الرمز يظهر في الواجهة.
+> مع `WASENDER_TEST_RECIPIENT`: كل OTP يذهب لرقم واحد.
+> فلسطين: تخزين `00970` وفحص `972` عند الإرسال الحقيقي.
 
 ### توليد المفاتيح (مرة واحدة)
 
@@ -284,9 +294,9 @@ curl -s https://alyaqoutgroup.net/api/public/countries | head -c 200
 
 > بدون `WASENDER_API_KEY`: يظهر `debug_otp` في الاستجابة للاختبار. مع المفتاح: الرمز يُرسل واتساب فقط.
 >
-> **اختبار برقم واحد:** عيّن `WASENDER_TEST_RECIPIENT=+97059…` — كل OTP يذهب لهذا الرقم فقط (انظر قسم «اختبار OTP برقم واتساب واحد» أعلاه).
+> **المرحلة الحالية:** `OTP_FIXED_CODE=123456` + `OTP_SHOW_IN_RESPONSE=true` (انظر قسم «تثبيت OTP» أعلاه). اختياري: `WASENDER_TEST_RECIPIENT` لرقم واتساب واحد.
 >
-> **فلسطين (`970` / `972`):** الأرقام المحلية `05…` تُخزَّن كـ `00970…`. قبل الإرسال (خارج وضع الاختبار) يُفحص واتساب بـ 970 ثم 972. إن لم يوجد على الاثنين → رفض OTP برسالة واضحة.
+> **فلسطين (`970` / `972`):** الأرقام المحلية `05…` → `00970…`. الإرسال الحقيقي يفحص 970 ثم 972.
 > **دولة افتراضية:** `PHONE_DEFAULT_COUNTRY=PS` حتى تُفعَّل دول أخرى.
 
 ### API
@@ -489,5 +499,5 @@ tail -50 /home/baitpait/public_html/alyaqoutgroup/codes/backend/storage/logs/lar
 - `.env` chmod `600` — لا يُرفع إلى Git
 - `APP_DEBUG=false` على الإنتاج
 - JWT + `SESSION_DOMAIN=.alyaqoutgroup.net`
-- OTP/WaSender غير مفعّل حالياً — تفعيله لاحقاً للإنتاج الحقيقي
+- OTP: مرحلة حالية عبر `OTP_FIXED_CODE` / `WASENDER_TEST_RECIPIENT` — الإنتاج الحقيقي لاحقاً (مسح الرمز الثابت)
 - لا تشغّل `DatabaseSeeder` الكامل على الإنتاج

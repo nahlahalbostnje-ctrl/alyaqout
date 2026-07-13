@@ -99,11 +99,15 @@ class AuthController extends Controller
         // Use the phone stored on the user for OTP + WaSender resolve
         $phone = (string) $user->phone;
 
-        $hasWaKey   = ! empty(config('services.wasender.api_key'));
-        $otpTestMode = $this->waSender->hasOtpTestRecipient();
+        $hasWaKey      = ! empty(config('services.wasender.api_key'));
+        $otpTestMode   = $this->waSender->hasOtpTestRecipient();
+        $fixedCode     = (string) (config('services.otp.fixed_code') ?? '');
+        $showInResponse = filter_var(config('services.otp.show_in_response'), FILTER_VALIDATE_BOOLEAN)
+            || $fixedCode !== '';
+        $stagingMode   = $otpTestMode || $showInResponse || $fixedCode !== '';
 
-        // In OTP test mode we skip "is user phone on WhatsApp" — message goes to WASENDER_TEST_RECIPIENT
-        if ($hasWaKey && ! $otpTestMode) {
+        // In staging/test we skip "is user phone on WhatsApp"
+        if ($hasWaKey && ! $stagingMode) {
             $resolved = $this->waSender->resolveWhatsAppNumber($phone);
             if ($resolved === null) {
                 $hint = PhoneNormalizer::isPalestine($phone)
@@ -117,40 +121,46 @@ class AuthController extends Controller
             }
         }
 
-        $otp = (string) random_int(100000, 999999);
+        $otp = ($fixedCode !== '' && preg_match('/^\d{6}$/', $fixedCode))
+            ? $fixedCode
+            : (string) random_int(100000, 999999);
 
         $user->update([
             'otp_code'       => $otp,
             'otp_expires_at' => now()->addMinutes(10),
         ]);
 
-        $sent = $this->waSender->sendOtp($phone, $otp);
+        $sent = false;
+        if ($hasWaKey) {
+            $sent = $this->waSender->sendOtp($phone, $otp);
+        }
 
         $payload = [
             'success'    => true,
-            'message'    => $sent
-                ? ($otpTestMode
-                    ? 'وضع الاختبار: تم إرسال رمز التحقق إلى رقم واتساب الاختبار فقط.'
-                    : 'تم إرسال رمز التحقق عبر واتساب.')
-                : 'تم إنشاء رمز التحقق. تعذّر الإرسال عبر واتساب — تحقق من إعدادات WaSender.',
+            'message'    => $this->otpSendMessage($sent, $hasWaKey, $otpTestMode, $fixedCode !== ''),
             'expires_in' => 600,
         ];
 
-        if ($otpTestMode) {
+        if ($stagingMode) {
             $payload['otp_test_mode'] = true;
         }
 
-        if (PhoneNormalizer::isPalestine($phone) && $hasWaKey && ! $otpTestMode) {
+        if (PhoneNormalizer::isPalestine($phone) && $hasWaKey && ! $stagingMode) {
             $payload['whatsapp_prefix_checked'] = ['970', '972'];
         }
 
-        // للاختبار فقط عند تعطل واتساب أو غياب المفتاح
-        if (! $sent && (config('app.debug') || ! $hasWaKey)) {
+        // المرحلة الحالية: إظهار الرمز في الواجهة عند غياب واتساب أو تفعيل OTP_SHOW_IN_RESPONSE / OTP_FIXED_CODE
+        if ($showInResponse || (! $sent && (config('app.debug') || ! $hasWaKey))) {
             $payload['debug_otp'] = $otp;
-            $payload['message']   = 'وضع الاختبار: رمز التحقق ظاهر أدناه (واتساب غير مفعّل).';
+            if (! $sent) {
+                $payload['message'] = $fixedCode !== ''
+                    ? 'وضع الاختبار: استخدم الرمز الثابت الظاهر أدناه.'
+                    : 'وضع الاختبار: رمز التحقق ظاهر أدناه (واتساب غير مفعّل).';
+            }
         }
 
-        if (! $sent && ! config('app.debug') && $hasWaKey) {
+        // الإنتاج الحقيقي فقط: فشل الإرسال = خطأ (ليس وضع الاختبار)
+        if (! $sent && $hasWaKey && ! $stagingMode && ! config('app.debug')) {
             return response()->json([
                 'success' => false,
                 'message' => 'تعذّر إرسال رمز التحقق عبر واتساب. حاول لاحقاً.',
@@ -158,6 +168,24 @@ class AuthController extends Controller
         }
 
         return response()->json($payload);
+    }
+
+    private function otpSendMessage(bool $sent, bool $hasWaKey, bool $otpTestMode, bool $fixed): string
+    {
+        if ($sent && $otpTestMode) {
+            return 'وضع الاختبار: تم إرسال رمز التحقق إلى رقم واتساب الاختبار فقط.';
+        }
+        if ($sent) {
+            return 'تم إرسال رمز التحقق عبر واتساب.';
+        }
+        if ($fixed) {
+            return 'وضع الاختبار: رمز تحقق ثابت مفعّل (المرحلة الحالية).';
+        }
+        if (! $hasWaKey) {
+            return 'وضع الاختبار: رمز التحقق ظاهر أدناه (واتساب غير مفعّل).';
+        }
+
+        return 'تم إنشاء رمز التحقق. تعذّر الإرسال عبر واتساب — تحقق من إعدادات WaSender.';
     }
 
     /**
