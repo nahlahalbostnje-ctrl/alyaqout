@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\LoginAttempt;
 use App\Models\User;
+use App\Services\PhoneNormalizer;
 use App\Services\WaSenderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,7 +63,7 @@ class AuthController extends Controller
     {
         $request->validate(['phone' => 'required|string|max:20']);
 
-        $phone = $this->normalizePhone($request->phone);
+        $phone = PhoneNormalizer::toStorage($request->phone);
         $key   = 'otp-send:'.$phone.':'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -76,9 +77,7 @@ class AuthController extends Controller
 
         RateLimiter::hit($key, 3600);
 
-        $user = User::where('phone', $phone)
-            ->where('is_active', true)
-            ->first();
+        $user = $this->findUserByPhone($phone);
 
         if (! $user) {
             LoginAttempt::create([
@@ -95,6 +94,24 @@ class AuthController extends Controller
             ], 404);
         }
 
+        // Use the phone stored on the user for OTP + WaSender resolve
+        $phone = (string) $user->phone;
+
+        $hasWaKey = ! empty(config('services.wasender.api_key'));
+        if ($hasWaKey) {
+            $resolved = $this->waSender->resolveWhatsAppNumber($phone);
+            if ($resolved === null) {
+                $hint = PhoneNormalizer::isPalestine($phone)
+                    ? ' تم فحص مقدّمتي 970 و 972.'
+                    : '';
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذا الرقم غير مسجّل على واتساب.'.$hint.' تأكد من الرقم ثم أعد المحاولة.',
+                ], 422);
+            }
+        }
+
         $otp = (string) random_int(100000, 999999);
 
         $user->update([
@@ -105,20 +122,24 @@ class AuthController extends Controller
         $sent = $this->waSender->sendOtp($phone, $otp);
 
         $payload = [
-            'success' => true,
-            'message' => $sent
+            'success'    => true,
+            'message'    => $sent
                 ? 'تم إرسال رمز التحقق عبر واتساب.'
                 : 'تم إنشاء رمز التحقق. تعذّر الإرسال عبر واتساب — تحقق من إعدادات WaSender.',
             'expires_in' => 600,
         ];
 
+        if (PhoneNormalizer::isPalestine($phone) && $hasWaKey) {
+            $payload['whatsapp_prefix_checked'] = ['970', '972'];
+        }
+
         // للاختبار فقط عند تعطل واتساب أو غياب المفتاح
-        if (! $sent && (config('app.debug') || empty(config('services.wasender.api_key')))) {
+        if (! $sent && (config('app.debug') || ! $hasWaKey)) {
             $payload['debug_otp'] = $otp;
             $payload['message']   = 'وضع الاختبار: رمز التحقق ظاهر أدناه (واتساب غير مفعّل).';
         }
 
-        if (! $sent && ! config('app.debug') && ! empty(config('services.wasender.api_key'))) {
+        if (! $sent && ! config('app.debug') && $hasWaKey) {
             return response()->json([
                 'success' => false,
                 'message' => 'تعذّر إرسال رمز التحقق عبر واتساب. حاول لاحقاً.',
@@ -138,7 +159,7 @@ class AuthController extends Controller
             'otp'   => 'required|string|size:6',
         ]);
 
-        $phone = $this->normalizePhone($request->phone);
+        $phone = PhoneNormalizer::toStorage($request->phone);
         $key   = 'otp-verify:'.$phone;
 
         if (RateLimiter::tooManyAttempts($key, 10)) {
@@ -148,9 +169,7 @@ class AuthController extends Controller
             ], 429);
         }
 
-        $user = User::where('phone', $phone)
-            ->where('is_active', true)
-            ->first();
+        $user = $this->findUserByPhone($phone);
 
         $valid = $user
             && $user->otp_code
@@ -173,6 +192,8 @@ class AuthController extends Controller
                 'message' => 'رمز التحقق غير صحيح أو منتهي الصلاحية.',
             ], 401);
         }
+
+        $phone = (string) $user->phone;
 
         RateLimiter::clear($key);
 
@@ -273,37 +294,23 @@ class AuthController extends Controller
         ];
     }
 
-    private function normalizePhone(string $phone): string
+    /**
+     * Find active user by phone; for Palestine also try 970↔972 alternate storage form.
+     */
+    private function findUserByPhone(string $phone): ?User
     {
-        $phone = preg_replace('/\s+/', '', trim($phone)) ?? '';
+        $variants = [$phone];
 
-        // Allow demo keywords → phone (server-side, for OTP path)
-        $map = [
-            'super'         => '00962100000000',
-            'admin'         => '00962200000000',
-            'teacher'       => '00962300000000',
-            'student'       => '00962400000000',
-            'parent'        => '00962500000000',
-            'supervisor'    => '00962600000000',
-            'ps_admin'      => '00970444444444',
-            'ps_teacher'    => '00970111111111',
-            'ps_student'    => '00970222222221',
-            'ps_parent'     => '00970333333331',
-            'ps_supervisor' => '00970555555551',
-        ];
-
-        $key = strtolower($phone);
-        if (isset($map[$key])) {
-            return $map[$key];
+        if (PhoneNormalizer::isPalestine($phone)) {
+            $national = PhoneNormalizer::palestineNational($phone);
+            if ($national) {
+                $variants[] = '00970'.$national;
+                $variants[] = '00972'.$national;
+            }
         }
 
-        // Convert +962... or 962... to 00962...
-        if (str_starts_with($phone, '+')) {
-            $phone = '00'.substr($phone, 1);
-        } elseif (preg_match('/^[1-9]/', $phone) && ! str_starts_with($phone, '00')) {
-            $phone = '00'.$phone;
-        }
-
-        return $phone;
+        return User::whereIn('phone', array_unique($variants))
+            ->where('is_active', true)
+            ->first();
     }
 }
