@@ -15,7 +15,7 @@ const C = {
   shadow:'0 2px 14px rgba(0,0,0,0.06)', green:'#16A34A', orange:'#D97706',
   red:'#EF4444', blue:'#2563EB', purple:'#7C3AED', teal:'#0E7490',
 };
-const SW = 222;
+const SW = 248;
 
 // ─── Sidebar nav ──────────────────────────────────────────────────────────────
 const NAV = [
@@ -257,12 +257,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto', minHeight:0 }}>
+        <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:4, overflowY:'auto', minHeight:0 }}>
           {NAV.map((item,i)=>{
             const inner=(active=false)=>(
-              <div style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 10px', borderRadius:10, fontSize:12, fontWeight:active?700:500, background:active?C.goldGrad:'transparent', color:active?'#fff':'rgba(255,255,255,0.55)', cursor:'pointer' }}>
-                <span style={{ fontSize:13, flexShrink:0 }}>{item.icon}</span>
-                <span>{item.label}</span>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:14, fontWeight:active?800:600, lineHeight:1.35, background:active?C.goldGrad:'transparent', color:active?'#1B2038':'rgba(255,255,255,0.82)', cursor:'pointer' }}>
+                <span style={{ fontSize:17, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
+                <span style={{ flex:1 }}>{item.label}</span>
               </div>
             );
             return (
@@ -273,19 +273,14 @@ export default function DashboardPage() {
           })}
         </nav>
 
-        {/* Pinned footer — always visible regardless of nav scroll position */}
-        <div onClick={handleLogout} style={{ flexShrink:0, margin:'4px 8px 0', display:'flex', alignItems:'center', gap:7, padding:'10px', borderRadius:10, fontSize:12, fontWeight:700, color:'rgba(239,68,68,0.85)', cursor:'pointer', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
-          <span style={{ fontSize:13 }}>🚪</span>تسجيل الخروج
-        </div>
-
         {/* Bottom card */}
-        <div style={{ flexShrink:0, margin:'8px 8px 10px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
+        <div style={{ flexShrink:0, margin:'10px 10px 12px', padding:'14px 12px', background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:14, border:`1px solid ${C.goldBdr}`, textAlign:'center' }}>
           <BrandLogo size={40} style={{ margin:'0 auto 8px', borderRadius:8 }} />
-          <p style={{ color:C.goldL, fontSize:10, marginBottom:10 }}>التميز في التعليم</p>
+          <p style={{ color:C.goldL, fontSize:11, marginBottom:10 }}>التميز في التعليم</p>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
             <div style={{ width:7, height:7, borderRadius:'50%', background:C.green }}/>
-            <span style={{ color:'rgba(255,255,255,0.6)', fontSize:10 }}>حالة المنصة:</span>
-            <span style={{ color:C.green, fontSize:10, fontWeight:700 }}>ممتاز</span>
+            <span style={{ color:'rgba(255,255,255,0.6)', fontSize:11 }}>حالة المنصة:</span>
+            <span style={{ color:C.green, fontSize:11, fontWeight:700 }}>ممتاز</span>
           </div>
         </div>
       </aside>
