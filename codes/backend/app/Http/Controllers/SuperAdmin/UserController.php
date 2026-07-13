@@ -19,6 +19,7 @@ class UserController extends Controller
         $request->validate([
             'role'       => 'nullable|in:teacher,supervisor,student,parent,admin',
             'country_id' => 'nullable|exists:countries,id',
+            'parent_id'  => 'nullable|exists:users,id',
             'q'          => 'nullable|string|max:100',
         ]);
 
@@ -34,6 +35,10 @@ class UserController extends Controller
 
         if ($request->filled('country_id')) {
             $query->where('country_id', (int) $request->country_id);
+        }
+
+        if ($request->filled('parent_id')) {
+            $query->where('parent_id', (int) $request->parent_id);
         }
 
         if ($request->filled('q')) {

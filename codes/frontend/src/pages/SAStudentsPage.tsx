@@ -100,6 +100,10 @@ export default function SAStudentsPage() {
   const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [childrenParent, setChildrenParent] = useState<StudentUser | null>(null);
+  const [children, setChildren] = useState<StudentUser[]>([]);
+  const [childrenLoading, setChildrenLoading] = useState(false);
+  const [childrenError, setChildrenError] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -259,6 +263,29 @@ export default function SAStudentsPage() {
   const askDelete = (u: StudentUser) => {
     setDeleteError(null);
     setPendingDelete({ id: u.id, label: u.name });
+  };
+
+  const openChildren = async (parent: StudentUser) => {
+    setChildrenParent(parent);
+    setChildren([]);
+    setChildrenError(null);
+    setChildrenLoading(true);
+    try {
+      const { data } = await api.get('/super-admin/users', {
+        params: { role: 'student', parent_id: parent.id },
+      });
+      setChildren(data.data ?? []);
+    } catch (err: unknown) {
+      setChildrenError(getApiError(err, 'تعذّر جلب طلاب ولي الأمر'));
+    } finally {
+      setChildrenLoading(false);
+    }
+  };
+
+  const closeChildren = () => {
+    setChildrenParent(null);
+    setChildren([]);
+    setChildrenError(null);
   };
 
   const confirmDelete = async () => {
@@ -439,6 +466,21 @@ export default function SAStudentsPage() {
                 </td>
                 <td style={{ padding: '12px 14px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
+                    {tab === 'parents' && (
+                      <button
+                        type="button"
+                        onClick={() => void openChildren(u)}
+                        title="عرض الطلاب"
+                        style={{
+                          height: 30, padding: '0 10px', borderRadius: 8,
+                          border: `1px solid ${C.border}`, background: C.goldBg,
+                          color: C.gold, cursor: 'pointer', fontSize: 11, fontWeight: 800,
+                          fontFamily: "'Cairo',sans-serif", whiteSpace: 'nowrap',
+                        }}
+                      >
+                        👥 الطلاب
+                      </button>
+                    )}
                     <button type="button" onClick={() => openEdit(u)} title="تعديل" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', fontSize: 13 }}>✏️</button>
                     <button type="button" onClick={() => void toggleUser(u)} title={u.is_active ? 'إيقاف' : 'تفعيل'} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', fontSize: 13 }}>🔒</button>
                     <button type="button" onClick={() => askDelete(u)} title="حذف" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
@@ -580,6 +622,83 @@ export default function SAStudentsPage() {
                 إلغاء
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {childrenParent && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 210, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={closeChildren}
+        >
+          <div
+            style={{ background: C.card, borderRadius: 20, padding: 24, width: 520, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <h2 style={{ color: C.text, fontWeight: 900, fontSize: 17, margin: 0 }}>طلاب ولي الأمر</h2>
+                <p style={{ color: C.sub, fontSize: 12, marginTop: 4 }}>
+                  {childrenParent.name}
+                  <span style={{ direction: 'ltr', marginRight: 8 }}>{childrenParent.phone}</span>
+                </p>
+              </div>
+              <button type="button" onClick={closeChildren} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: C.sub }}>×</button>
+            </div>
+
+            {childrenError && (
+              <p style={{ color: C.red, fontSize: 12, fontWeight: 700, marginBottom: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 12px' }}>
+                {childrenError}
+              </p>
+            )}
+
+            {childrenLoading ? (
+              <p style={{ textAlign: 'center', color: C.sub, padding: 28 }}>جارٍ التحميل...</p>
+            ) : children.length === 0 ? (
+              <p style={{ textAlign: 'center', color: C.sub, padding: 28 }}>لا يوجد طلاب مرتبطون بهذا الولي بعد.</p>
+            ) : (
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(0,0,0,0.03)' }}>
+                      {['الاسم', 'الهاتف', 'الدولة', 'الحالة'].map((h) => (
+                        <th key={h} style={{ padding: '10px 12px', textAlign: 'right', color: C.sub, fontWeight: 700 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {children.map((s) => (
+                      <tr key={s.id} style={{ borderTop: `1px solid ${C.border}` }}>
+                        <td style={{ padding: '10px 12px', color: C.text, fontWeight: 700 }}>{s.name}</td>
+                        <td style={{ padding: '10px 12px', color: C.text, direction: 'ltr', textAlign: 'right' }}>{s.phone}</td>
+                        <td style={{ padding: '10px 12px', color: C.sub }}>{s.country || '—'}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{
+                            padding: '3px 8px', borderRadius: 16, fontSize: 11, fontWeight: 700,
+                            background: s.is_active ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)',
+                            color: s.is_active ? C.green : C.orange,
+                          }}>
+                            {s.is_active ? 'نشط' : 'موقوف'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={closeChildren}
+              style={{
+                marginTop: 16, width: '100%', padding: '11px', borderRadius: 12,
+                border: `1px solid ${C.border}`, background: C.bg, color: C.sub,
+                fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+              }}
+            >
+              إغلاق
+            </button>
           </div>
         </div>
       )}
