@@ -1477,4 +1477,25 @@
 
 ---
 
+## 2026-07-13
+
+### [2026-07-13] — Mock → Dynamic: empty states لصفحات الميزات بدون Backend
+
+- **ما تم:**
+  - إزالة مصفوفات المحتوى الوهمي (mock) من صفحات الميزات التي لا تملك API بعد
+  - عرض حالة فارغة موحّدة: «لا توجد بيانات حالياً» + رسالة تفعيل لاحقاً
+  - الإبقاء على أغلفة التخطيط/التنقل (`StudentLayout` / `ParentLayout`) وعناوين الصفحات
+
+- **الملفات المتأثرة:**
+  - `StudentLibraryPage.tsx`, `StudentChallengesPage.tsx`, `StudentPeerLeaguePage.tsx`
+  - `StudentTalentsPage.tsx`, `StudentCounselorPage.tsx`, `StudentTeacherContactPage.tsx`
+  - `StudentStudy24Page.tsx`, `StudentTimeCapsulePage.tsx`, `StudentReviewVideosPage.tsx`
+  - `StudentStudyBuddyPage.tsx` (لا يوجد chat API — فارغ)
+  - `ParentAchievementsPage.tsx`, `ParentCounselingPage.tsx`
+
+- **Backend TODO:**
+  - library, talents, counseling, challenges, time capsule, review videos
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

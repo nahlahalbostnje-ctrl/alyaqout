@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchAdminStats } from '../features/admin/adminSlice';
+import { fetchUsers } from '../features/admin/usersSlice';
 
 const C = {
   gold:'#C59341', goldL:'#D4A65A', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -16,26 +19,12 @@ const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
   background: C.card, borderRadius: 18, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.border}`, ...e,
 });
 
-const TEACHERS = [
-  { id:1, name:'أ. محمد السالم',   subject:'الرياضيات',  students:184, avgScore:88, attendance:96, engagement:92, homeworkRate:89, rating:4.9, trend:'up'   },
-  { id:2, name:'أ. سارة العمر',    subject:'الفيزياء',   students:142, avgScore:82, attendance:91, engagement:78, homeworkRate:74, rating:4.6, trend:'up'   },
-  { id:3, name:'أ. خالد النجار',   subject:'العلوم',     students:167, avgScore:71, attendance:84, engagement:65, homeworkRate:61, rating:4.1, trend:'down' },
-  { id:4, name:'أ. فاطمة علي',     subject:'اللغة العربية', students:201, avgScore:85, attendance:94, engagement:88, homeworkRate:82, rating:4.7, trend:'up' },
-  { id:5, name:'أ. نورة القحطاني', subject:'الكيمياء',   students:98,  avgScore:76, attendance:88, engagement:72, homeworkRate:69, rating:4.3, trend:'stable'},
-];
+type TeacherRow = { id:number; name:string; subject:string; students:number; avgScore:number; attendance:number; engagement:number; homeworkRate:number; rating:number; trend:'up'|'down'|'stable' };
+const TEACHERS: TeacherRow[] = [];
+const MONTHLY_DATA: { month:string; activeStudents:number; revenue:number; coursesCompleted:number }[] = [];
+const maxRevenue = 1;
 
-const MONTHLY_DATA = [
-  { month:'يناير', activeStudents:1240, revenue:48500, coursesCompleted:312 },
-  { month:'فبراير',activeStudents:1380, revenue:52100, coursesCompleted:358 },
-  { month:'مارس',  activeStudents:1520, revenue:61800, coursesCompleted:401 },
-  { month:'أبريل', activeStudents:1690, revenue:69400, coursesCompleted:445 },
-  { month:'مايو',  activeStudents:1840, revenue:78200, coursesCompleted:512 },
-  { month:'يونيو', activeStudents:2010, revenue:84600, coursesCompleted:567 },
-];
-
-const maxRevenue = Math.max(...MONTHLY_DATA.map(d => d.revenue));
-
-function AIEvaluation({ teacher }: { teacher: typeof TEACHERS[0] }) {
+function AIEvaluation({ teacher }: { teacher: TeacherRow }) {
   const score = Math.round((teacher.avgScore + teacher.attendance + teacher.engagement + teacher.homeworkRate) / 4);
   const strong: string[] = [];
   const improve: string[] = [];
@@ -107,8 +96,18 @@ function AIEvaluation({ teacher }: { teacher: typeof TEACHERS[0] }) {
 }
 
 export default function AdminAnalyticsPage() {
-  const [selectedTeacher, setSelectedTeacher] = useState<typeof TEACHERS[0] | null>(null);
+  const dispatch = useAppDispatch();
+  const { dashboard, loading } = useAppSelector(s => s.admin);
+  const { list: users } = useAppSelector(s => s.adminUsers);
+  useEffect(() => { dispatch(fetchAdminStats()); dispatch(fetchUsers('teacher')); }, [dispatch]);
+  const stats = dashboard?.stats;
+  const teacherRows: TeacherRow[] = users.filter(u => u.role === 'teacher').map(u => ({
+    id: u.id, name: u.name, subject: '—', students: 0, avgScore: 0, attendance: 0,
+    engagement: 0, homeworkRate: 0, rating: 0, trend: 'stable' as const,
+  }));
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherRow | null>(null);
   const [activeTab, setActiveTab] = useState<'platform'|'teachers'>('platform');
+  void loading;
 
   return (
     <AdminLayout>
@@ -139,17 +138,15 @@ export default function AdminAnalyticsPage() {
             {/* KPI Row */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14, marginBottom:22 }}>
               {[
-                { icon:'👥', val:'2,010',  label:'طلاب نشطون',     color: C.blue,  trend:'+12%'  },
-                { icon:'🎓', val:'142',    label:'دورة منشورة',    color: C.green, trend:'+8%'   },
-                { icon:'💰', val:'84,600', label:'إيرادات (ر.س)',  color: C.gold,  trend:'+18%'  },
-                { icon:'⭐', val:'4.7',    label:'تقييم المنصة',   color: C.amber, trend:'+0.2'  },
+                { icon:'👥', val:String(stats?.students ?? 0),  label:'طلاب',     color: C.blue,  trend:''  },
+                { icon:'🎓', val:String(stats?.courses ?? 0),    label:'دورات',    color: C.green, trend:''   },
+                { icon:'👨‍🏫', val:String(stats?.teachers ?? 0), label:'معلمون',  color: C.gold,  trend:''  },
+                { icon:'👪', val:String(stats?.parents ?? 0),    label:'أولياء أمور',   color: C.amber, trend:''  },
               ].map((kpi,i) => (
                 <div key={i} style={card()}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
                     <span style={{ fontSize:26 }}>{kpi.icon}</span>
-                    <span style={{ padding:'3px 9px', borderRadius:20, fontSize:11, fontWeight:700, background:'rgba(16,185,129,0.08)', color: C.green }}>
-                      {kpi.trend}
-                    </span>
+                    {kpi.trend ? <span style={{ padding:'3px 9px', borderRadius:20, fontSize:11, fontWeight:700, background:'rgba(16,185,129,0.08)', color: C.green }}>{kpi.trend}</span> : null}
                   </div>
                   <p style={{ color: kpi.color, fontWeight:900, fontSize:26, lineHeight:1, marginBottom:4 }}>{kpi.val}</p>
                   <p style={{ color: C.sub, fontSize:12 }}>{kpi.label}</p>
@@ -163,52 +160,36 @@ export default function AdminAnalyticsPage() {
                 <p style={{ color: C.text, fontWeight:800, fontSize:15 }}>الإيرادات الشهرية (ر.س)</p>
                 <span style={{ fontSize:11, color: C.gold, fontWeight:700 }}>يناير — يونيو 2026</span>
               </div>
+              {MONTHLY_DATA.length === 0 ? (
+                <p style={{ color: C.sub, textAlign:'center', padding:'40px 0' }}>لا تتوفر بيانات إيرادات شهرية</p>
+              ) : (
               <div style={{ display:'flex', alignItems:'flex-end', gap:10, height:160 }}>
                 {MONTHLY_DATA.map((d,i) => (
                   <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                    <p style={{ fontSize:10, color: C.sub, fontWeight:700 }}>
-                      {(d.revenue/1000).toFixed(0)}k
-                    </p>
-                    <div style={{ width:'100%', borderRadius:'6px 6px 0 0', background: i===5 ? C.goldGrad : C.goldBg, height: `${(d.revenue / maxRevenue) * 110}px`, transition:'height 0.6s' }} />
+                    <p style={{ fontSize:10, color: C.sub, fontWeight:700 }}>{(d.revenue/1000).toFixed(0)}k</p>
+                    <div style={{ width:'100%', borderRadius:'6px 6px 0 0', background: C.goldBg, height: `${(d.revenue / maxRevenue) * 110}px` }} />
                     <p style={{ fontSize:10, color: C.sub }}>{d.month}</p>
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Platform Stats */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:14 }}>
               <div style={card()}>
                 <p style={{ color: C.text, fontWeight:800, fontSize:14, marginBottom:14 }}>توزيع الدورات بالمادة</p>
-                {[
-                  { label:'الرياضيات', pct:32, color: C.blue },
-                  { label:'اللغة العربية', pct:24, color: C.gold },
-                  { label:'العلوم', pct:20, color: C.green },
-                  { label:'اللغة الإنجليزية', pct:14, color: C.amber },
-                  { label:'أخرى', pct:10, color: C.dim },
-                ].map((item, i) => (
-                  <div key={i} style={{ marginBottom:10 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
-                      <span style={{ color: C.text, fontWeight:600 }}>{item.label}</span>
-                      <span style={{ color: item.color, fontWeight:700 }}>{item.pct}%</span>
-                    </div>
-                    <div style={{ height:7, borderRadius:4, background:'rgba(0,0,0,0.06)' }}>
-                      <div style={{ width:`${item.pct}%`, height:'100%', borderRadius:4, background: item.color }} />
-                    </div>
-                  </div>
-                ))}
+                <p style={{ color: C.sub, fontSize:13, textAlign:'center', padding:'20px 0' }}>لا تتوفر بيانات توزيع المواد</p>
               </div>
 
               <div style={card()}>
                 <p style={{ color: C.text, fontWeight:800, fontSize:14, marginBottom:14 }}>مؤشرات الأداء الرئيسية</p>
                 {[
-                  { icon:'📊', label:'معدل إتمام الدورات',    val:'73%',  color: C.green  },
-                  { icon:'⚡', label:'معدل التفاعل اليومي',   val:'89%',  color: C.blue   },
-                  { icon:'📝', label:'معدل تسليم الواجبات',   val:'81%',  color: C.gold   },
-                  { icon:'🏆', label:'نسبة النجاح في الامتحانات', val:'87%', color: C.amber },
-                  { icon:'👤', label:'متوسط جلسات الطالب/أسبوع', val:'4.2', color: C.sub  },
+                  { icon:'📚', label:'صفوف', val:String(stats?.grades ?? 0), color: C.green },
+                  { icon:'📹', label:'حصص مجدولة', val:String(stats?.live_scheduled ?? 0), color: C.blue },
+                  { icon:'🔴', label:'حصص مباشرة', val:String(stats?.live_active ?? 0), color: C.gold },
                 ].map((kpi,i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, paddingBlock:8, borderBottom:i<4?`1px solid ${C.border}`:'none' }}>
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, paddingBlock:8, borderBottom:i<2?`1px solid ${C.border}`:'none' }}>
                     <span style={{ fontSize:18 }}>{kpi.icon}</span>
                     <p style={{ color: C.text, fontSize:12.5, flex:1 }}>{kpi.label}</p>
                     <p style={{ color: kpi.color, fontWeight:800, fontSize:15 }}>{kpi.val}</p>
@@ -239,7 +220,7 @@ export default function AdminAnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {TEACHERS.map(t => (
+                    {(teacherRows.length ? teacherRows : TEACHERS).map(t => (
                       <tr key={t.id}
                         onClick={() => setSelectedTeacher(t.id === selectedTeacher?.id ? null : t)}
                         style={{ cursor:'pointer', background: selectedTeacher?.id === t.id ? C.goldBg : 'transparent', borderBottom:`1px solid ${C.border}` }}

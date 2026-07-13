@@ -87,6 +87,7 @@ Route::prefix('public')->group(function () {
     Route::get('banners',   [PublicController::class, 'banners']);
     Route::get('faqs',      [PublicController::class, 'faqs']);
     Route::get('social',    [PublicController::class, 'social']);
+    Route::get('stats',     [PublicController::class, 'stats']);
 });
 
 /*

@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
 import api from '../services/axios';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
-const ROLES = [
-  {id:'super_admin',  name:'السوبر أدمن',       icon:'👑', color:C.gold,   users:1,   desc:'صلاحيات كاملة وغير محدودة على المنصة'},
-  {id:'admin',        name:'مدير المنصة',        icon:'🛡️', color:C.blue,   users:12,  desc:'إدارة المدارس والمحتوى والمستخدمين'},
-  {id:'teacher',      name:'المعلم',             icon:'👨‍🏫', color:C.teal,   users:936, desc:'رفع المحتوى وإدارة الدورات والطلاب'},
-  {id:'student',      name:'الطالب',             icon:'🎓', color:C.purple, users:12842,desc:'الوصول للمحتوى التعليمي والاختبارات'},
-  {id:'parent',       name:'ولي الأمر',          icon:'👨‍👩‍👦', color:C.orange, users:399, desc:'متابعة أداء الأبناء وتقاريرهم'},
-  {id:'supervisor',   name:'المشرف الأكاديمي',  icon:'🔍', color:C.green,  users:58,  desc:'متابعة الطلاب وغرف الدراسة'},
+const ROLE_META = [
+  {id:'super_admin',  name:'السوبر أدمن',       icon:'👑', color:C.gold,   desc:'صلاحيات كاملة وغير محدودة على المنصة'},
+  {id:'admin',        name:'مدير المنصة',        icon:'🛡️', color:C.blue,   desc:'إدارة المدارس والمحتوى والمستخدمين'},
+  {id:'teacher',      name:'المعلم',             icon:'👨‍🏫', color:C.teal,   desc:'رفع المحتوى وإدارة الدورات والطلاب'},
+  {id:'student',      name:'الطالب',             icon:'🎓', color:C.purple, desc:'الوصول للمحتوى التعليمي والاختبارات'},
+  {id:'parent',       name:'ولي الأمر',          icon:'👨‍👩‍👦', color:C.orange, desc:'متابعة أداء الأبناء وتقاريرهم'},
+  {id:'supervisor',   name:'المشرف الأكاديمي',  icon:'🔍', color:C.green,  desc:'متابعة الطلاب وغرف الدراسة'},
 ];
 
 const SCREENS = [
@@ -35,11 +37,29 @@ const DEFAULT_ACCESS:Record<string,Record<string,Record<string,boolean>>> = {
 interface PermRow { role:string; screen:string; permission:string; allowed:boolean; }
 
 export default function SARolesPage() {
+  const dispatch = useAppDispatch();
+  const { stats } = useAppSelector(s => s.superAdmin);
   const [editRole, setEditRole] = useState<string|null>(null);
   const [access, setAccess] = useState(DEFAULT_ACCESS);
   const [saveBusy, setSaveBusy] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [loadingPerms, setLoadingPerms] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchSuperAdminStats());
+  }, [dispatch]);
+
+  const roles = useMemo(() => {
+    const counts: Record<string, number> = {
+      super_admin: 0,
+      admin: 0,
+      teacher: stats?.total_teachers ?? 0,
+      student: stats?.total_students ?? 0,
+      parent: stats?.total_parents ?? 0,
+      supervisor: 0,
+    };
+    return ROLE_META.map(r => ({ ...r, users: counts[r.id] ?? 0 }));
+  }, [stats]);
 
   useEffect(() => {
     if (!editRole) return;
@@ -95,7 +115,7 @@ export default function SARolesPage() {
 
       {/* Roles Cards */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:16}}>
-        {ROLES.map(role=>(
+        {roles.map(role=>(
           <div key={role.id} style={card({cursor:'pointer',border:editRole===role.id?`2px solid ${role.color}`:`1px solid ${C.border}`,background:editRole===role.id?`${role.color}06`:C.card})} onClick={()=>setEditRole(editRole===role.id?null:role.id)}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <div style={{width:44,height:44,borderRadius:14,background:`${role.color}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{role.icon}</div>
@@ -116,9 +136,9 @@ export default function SARolesPage() {
       {editRole&&(
         <div style={card()}>
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
-            <span style={{fontSize:24}}>{ROLES.find(r=>r.id===editRole)?.icon}</span>
+            <span style={{fontSize:24}}>{roles.find(r=>r.id===editRole)?.icon}</span>
             <div>
-              <p style={{color:C.text,fontWeight:800,fontSize:15}}>صلاحيات: {ROLES.find(r=>r.id===editRole)?.name}</p>
+              <p style={{color:C.text,fontWeight:800,fontSize:15}}>صلاحيات: {roles.find(r=>r.id===editRole)?.name}</p>
               <p style={{color:C.sub,fontSize:12}}>حدد الصلاحيات الممنوحة لهذا الدور</p>
             </div>
             <div style={{flex:1}}/>
@@ -145,7 +165,7 @@ export default function SARolesPage() {
                       const checked=access[editRole]?.[screen]?.[perm]??false;
                       return (
                         <td key={perm} style={{padding:'10px 16px',textAlign:'center'}}>
-                          <input type="checkbox" checked={checked} onChange={()=>togglePerm(screen,perm)} style={{width:16,height:16,cursor:'pointer',accentColor:ROLES.find(r=>r.id===editRole)?.color}}/>
+                          <input type="checkbox" checked={checked} onChange={()=>togglePerm(screen,perm)} style={{width:16,height:16,cursor:'pointer',accentColor:roles.find(r=>r.id===editRole)?.color}}/>
                         </td>
                       );
                     })}

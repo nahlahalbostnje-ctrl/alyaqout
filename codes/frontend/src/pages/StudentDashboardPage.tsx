@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentDashboard } from '../features/student/studentSlice';
-import { fetchMyPoints } from '../features/student/gamificationSlice';
+import { fetchMyPoints, fetchLeaderboard } from '../features/student/gamificationSlice';
 import StudentLayout from '../components/StudentLayout';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -31,80 +31,6 @@ const C = {
 // The WhatsApp reminder is sent via NotificationService::sendWhatsApp() on the backend
 // (triggered by a scheduled job) to inform students of pending tasks.
 const SHOW_DAILY_TASKS_CARD = true;
-
-// ─── Smart Recommendations with dynamic contact buttons ───────────────────────
-const RECS = [
-  {
-    type: 'teacher' as const,
-    color: '#2563EB', bg: 'rgba(37,99,235,0.07)',
-    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
-    label: 'واجب متأخر',
-    title: 'واجب غير مُسلَّم',
-    desc: 'لديك واجبان لم يُسلَّما — راجع مع أستاذك لتحديد الموعد البديل',
-    contactLabel: 'تواصل مع الأستاذ',
-    contactTo: '/student/teacher-contact',
-  },
-  {
-    type: 'supervisor' as const,
-    color: '#7C3AED', bg: 'rgba(124,58,237,0.07)',
-    icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
-    label: 'إرشاد معلق',
-    title: 'طلب إرشاد بانتظارك',
-    desc: 'جلسة إرشاد مجدولة لم تُؤكَّد — تابع مع المشرف المخصص',
-    contactLabel: 'تواصل مع المشرف',
-    contactTo: '/student/messages',
-  },
-  {
-    type: 'admin' as const,
-    color: '#C9952A', bg: 'rgba(201,149,42,0.07)',
-    icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
-    label: 'اشتراك',
-    title: 'اشتراكك ينتهي قريباً',
-    desc: 'يتبقى 7 أيام — تواصل مع الإدارة لتجديد اشتراكك في الوقت المناسب',
-    contactLabel: 'تواصل مع الإدارة',
-    contactTo: '/student/messages',
-  },
-];
-
-// ─── Static data ──────────────────────────────────────────────────────────────
-const SUBJECTS = [
-  { name:'الرياضيات',  pct:90, color:'#2563EB' },
-  { name:'الإنجليزية', pct:88, color:'#7C3AED' },
-  { name:'العلوم',     pct:85, color:'#16A34A' },
-  { name:'العربية',    pct:76, color:'#D97706' },
-  { name:'التربية',   pct:92, color:'#DC2626' },
-];
-
-const LEAGUE = [
-  { rank:2, name:'سارة محمد', pts:5210, avatar:'👩' },
-  { rank:1, name:'أحمد سالم', pts:5820, avatar:'👦' },
-  { rank:3, name:'علي خالد',  pts:4980, avatar:'🧒'  },
-];
-
-const CHALLENGES = [
-  { text:'حل 20 سؤال رياضيات', xp:150, emoji:'📐' },
-  { text:'قراءة 30 دقيقة',      xp:100, emoji:'📖' },
-  { text:'تسليم واجب اليوم',    xp:100, emoji:'✅' },
-];
-
-// ─── CircProg ─────────────────────────────────────────────────────────────────
-function CircProg({ pct, size=78 }: { pct:number; size?:number }) {
-  const r = size/2 - 8;
-  const c = 2 * Math.PI * r;
-  return (
-    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
-      <svg width={size} height={size} style={{ transform:'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#EEE8D8" strokeWidth="8"/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.gold} strokeWidth="8"
-          strokeDasharray={c} strokeDashoffset={c-(pct/100)*c} strokeLinecap="round"/>
-      </svg>
-      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-        <span style={{ color:C.text, fontWeight:900, fontSize:16, lineHeight:1 }}>{pct}%</span>
-        <span style={{ color:C.dim, fontSize:8, marginTop:2 }}>ممتاز ◆</span>
-      </div>
-    </div>
-  );
-}
 
 // ─── WarriorShield ───────────────────────────────────────────────────────────
 function WarriorShield({ level }: { level:number }) {
@@ -159,8 +85,8 @@ const SecH = ({ title, sub }: { title:string; sub?:string }) => (
 export default function StudentDashboardPage() {
   const dispatch  = useAppDispatch();
   const navigate  = useNavigate();
-  const { student, upcoming, dashStats } = useAppSelector(s => s.student);
-  const { totalPoints } = useAppSelector(s => s.gamification);
+  const { student, upcoming, courses, dashStats, subscription } = useAppSelector(s => s.student);
+  const { totalPoints, leaderboard, history } = useAppSelector(s => s.gamification);
   const user = useAppSelector(s => s.auth.user);
 
   // Responsive: detect mobile viewport
@@ -172,15 +98,49 @@ export default function StudentDashboardPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  useEffect(() => { dispatch(fetchStudentDashboard()); dispatch(fetchMyPoints()); }, [dispatch]);
+  useEffect(() => { dispatch(fetchStudentDashboard()); dispatch(fetchMyPoints()); dispatch(fetchLeaderboard()); }, [dispatch]);
 
   const firstName = student?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? '...';
   const pts    = dashStats?.total_points ?? totalPoints ?? 0;
   const level  = dashStats?.level ?? Math.floor(pts / 500) + 1;
   const xpIn   = dashStats?.xp_in_level ?? (pts % 500);
   const xpNext = dashStats?.xp_for_next ?? 500;
-  const live   = upcoming[0];
-  const nextClass = upcoming[1] ?? null;
+  const live   = upcoming.find(c => c.status === 'live') ?? null;
+  const nextClass = upcoming.find(c => c.status === 'scheduled') ?? upcoming[0] ?? null;
+  const leagueTop = [...leaderboard].sort((a, b) => a.rank - b.rank).slice(0, 3);
+  const recentHistory = history.slice(0, 3);
+  const pendingHw = dashStats?.pending_homework ?? 0;
+  const upcomingExams = dashStats?.upcoming_exams ?? 0;
+  const daysLeft = subscription?.days_remaining;
+  type Rec = { color: string; bg: string; icon: string; label: string; title: string; desc: string; contactLabel: string; contactTo: string };
+  const recs: Rec[] = [];
+  if (pendingHw > 0) {
+    recs.push({
+      color: '#2563EB', bg: 'rgba(37,99,235,0.07)',
+      icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+      label: 'واجب متأخر', title: 'واجبات بانتظار التسليم',
+      desc: `لديك ${pendingHw} واجب${pendingHw > 1 ? 'ات' : ''} لم يُسلَّم — راجع مع أستاذك`,
+      contactLabel: 'تواصل مع الأستاذ', contactTo: '/student/teacher-contact',
+    });
+  }
+  if (upcomingExams > 0) {
+    recs.push({
+      color: '#7C3AED', bg: 'rgba(124,58,237,0.07)',
+      icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+      label: 'امتحان قادم', title: 'امتحانات قادمة',
+      desc: `لديك ${upcomingExams} امتحان${upcomingExams > 1 ? 'ات' : ''} قادم${upcomingExams > 1 ? 'ة' : ''} — استعد جيداً`,
+      contactLabel: 'عرض الامتحانات', contactTo: '/student/exams',
+    });
+  }
+  if (daysLeft != null && daysLeft <= 14) {
+    recs.push({
+      color: '#C9952A', bg: 'rgba(201,149,42,0.07)',
+      icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+      label: 'اشتراك', title: 'اشتراكك ينتهي قريباً',
+      desc: `يتبقى ${daysLeft} يوم — تواصل مع الإدارة لتجديد اشتراكك`,
+      contactLabel: 'تواصل مع الإدارة', contactTo: '/student/messages',
+    });
+  }
 
   const card: CSSProperties = {
     background:C.card, borderRadius:18, padding:'14px 16px',
@@ -198,7 +158,7 @@ export default function StudentDashboardPage() {
 
           {/* ── Welcome + Warrior Level Card ── */}
           <div style={{ background:'linear-gradient(160deg,#162144,#0D1535)', borderRadius:20, padding: isMobile ? '16px' : '18px 22px', marginBottom:12, border:'1px solid rgba(201,149,42,0.3)', boxShadow:'0 6px 20px rgba(13,21,53,0.45)', display:'flex', alignItems:'center', gap:16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-            <WarriorShield level={12} />
+            <WarriorShield level={level} />
             <div style={{ flex:1, minWidth:180 }}>
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                 <span style={{ fontSize:18 }}>👋</span>
@@ -261,8 +221,11 @@ export default function StudentDashboardPage() {
               <div style={{ width:4, height:18, borderRadius:2, background:C.goldGrad }}/>
               <p style={{ color:C.text, fontWeight:800, fontSize:13 }}>توصيات ذكية</p>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:8 }}>
-              {RECS.map((rec, i) => (
+            {recs.length === 0 ? (
+              <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0', background:C.card, borderRadius:14, border:`1px solid ${C.border}` }}>لا توجد توصيات حالياً</p>
+            ) : (
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${Math.min(recs.length, 3)},1fr)`, gap:8 }}>
+              {recs.map((rec, i) => (
                 <div key={i} style={{ background:rec.bg, border:`1px solid ${rec.color}22`, borderRadius:14, padding:'12px 14px', display:'flex', flexDirection:'column', gap:8 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <div style={{ width:34, height:34, borderRadius:10, background:rec.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -282,6 +245,7 @@ export default function StudentDashboardPage() {
                 </div>
               ))}
             </div>
+            )}
           </div>
 
           {/* ── 3 Info Cards ── */}
@@ -319,13 +283,15 @@ export default function StudentDashboardPage() {
             <div style={{ ...card }}>
               <SecH title="تحديات اليوم" sub="🎯" />
               <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:8 }}>
-                {CHALLENGES.map((ch,i) => (
+                {recentHistory.length === 0 ? (
+                  <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'10px 0' }}>لا توجد تحديات حالياً</p>
+                ) : recentHistory.map((ch,i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <div style={{ width:24, height:24, borderRadius:7, background:'linear-gradient(135deg,#1B2038,#2D3561)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, flexShrink:0 }}>{ch.emoji}</div>
-                      <span style={{ color:C.text, fontSize:10.5 }}>{ch.text}</span>
+                      <div style={{ width:24, height:24, borderRadius:7, background:'linear-gradient(135deg,#1B2038,#2D3561)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, flexShrink:0 }}>⭐</div>
+                      <span style={{ color:C.text, fontSize:10.5 }}>{ch.label || ch.description || ch.action}</span>
                     </div>
-                    <span style={{ color:C.green, fontSize:10.5, fontWeight:700, flexShrink:0 }}>+{ch.xp} XP</span>
+                    <span style={{ color:C.green, fontSize:10.5, fontWeight:700, flexShrink:0 }}>+{ch.points} XP</span>
                   </div>
                 ))}
               </div>
@@ -339,14 +305,14 @@ export default function StudentDashboardPage() {
               <SecH title="إنجازاتك" />
               <div style={{ textAlign:'center', marginBottom:6 }}>
                 <div style={{ width:44, height:44, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 5px', fontSize:22, boxShadow:'0 4px 14px rgba(201,149,42,0.4)' }}>⭐</div>
-                <p style={{ color:C.text, fontWeight:700, fontSize:12 }}>شارة المتفوق</p>
+                <p style={{ color:C.text, fontWeight:700, fontSize:12 }}>المستوى {level}</p>
               </div>
               <div style={{ marginBottom:8 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:9.5, color:C.dim, marginBottom:3 }}>
-                  <span>التقدم</span><span>75%</span>
+                  <span>التقدم</span><span>{Math.min(100, Math.round((xpIn/xpNext)*100))}%</span>
                 </div>
                 <div style={{ height:5, borderRadius:3, background:`${C.gold}1A` }}>
-                  <div style={{ height:'100%', width:'75%', borderRadius:3, background:C.goldGrad }}/>
+                  <div style={{ height:'100%', width:`${Math.min(100,(xpIn/xpNext)*100)}%`, borderRadius:3, background:C.goldGrad }}/>
                 </div>
               </div>
               <button onClick={()=>navigate('/student/points')} style={{ width:'100%', padding:'8px', borderRadius:10, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:11, cursor:'pointer', minHeight:36 }}>
@@ -361,22 +327,25 @@ export default function StudentDashboardPage() {
             {/* Development */}
             <div style={{ ...card }}>
               <SecH title="مستوى التطور" />
-              <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                <div style={{ flex:1 }}>
-                  {SUBJECTS.map(s => (
-                    <div key={s.name} style={{ marginBottom:6 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                        <span style={{ color:C.sub, fontSize:9.5 }}>{s.name}</span>
-                        <span style={{ color:s.color, fontSize:9.5, fontWeight:700 }}>{s.pct}%</span>
+              {courses.length === 0 ? (
+                <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0' }}>لا توجد بيانات مواد بعد</p>
+              ) : (
+                <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                  <div style={{ flex:1 }}>
+                    {courses.slice(0, 5).map(c => (
+                      <div key={c.id} style={{ marginBottom:6 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                          <span style={{ color:C.sub, fontSize:9.5 }}>{c.category?.name ?? c.title}</span>
+                          <span style={{ color:C.gold, fontSize:9.5, fontWeight:700 }}>{c.is_free ? 'مجاني' : `${c.price}`}</span>
+                        </div>
+                        <div style={{ height:4, borderRadius:3, background:`${C.gold}18` }}>
+                          <div style={{ height:'100%', width:'100%', borderRadius:3, background:C.gold }}/>
+                        </div>
                       </div>
-                      <div style={{ height:4, borderRadius:3, background:`${s.color}18` }}>
-                        <div style={{ height:'100%', width:`${s.pct}%`, borderRadius:3, background:s.color }}/>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-                <CircProg pct={87} size={72}/>
-              </div>
+              )}
               <button onClick={()=>navigate('/student/report')} style={{ width:'100%', marginTop:8, padding:'8px', borderRadius:10, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:11, border:'none', cursor:'pointer', minHeight:36 }}>
                 عرض التقرير الكامل
               </button>
@@ -385,18 +354,22 @@ export default function StudentDashboardPage() {
             {/* League */}
             <div style={{ ...card }}>
               <SecH title="ترتيب الصف" />
+              {leagueTop.length === 0 ? (
+                <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0' }}>لا يوجد ترتيب بعد</p>
+              ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
-                {[...LEAGUE].sort((a,b)=>a.rank-b.rank).map(p => (
+                {leagueTop.map(p => (
                   <div key={p.rank} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 8px', borderRadius:10, background: p.rank===1 ? C.goldBg : 'transparent' }}>
                     <span style={{ width:20, textAlign:'center', color: p.rank===1?C.gold:C.sub, fontSize:11, fontWeight:800 }}>#{p.rank}</span>
                     <div style={{ width:26, height:26, borderRadius:'50%', background:C.goldGrad, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, flexShrink:0 }}>
                       {p.name.charAt(0)}
                     </div>
                     <span style={{ flex:1, color:C.text, fontSize:10.5, fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</span>
-                    <span style={{ color:C.sub, fontSize:9.5, fontWeight:700 }}>{p.pts.toLocaleString()}</span>
+                    <span style={{ color:C.sub, fontSize:9.5, fontWeight:700 }}>{p.points.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
+              )}
               <button onClick={()=>navigate('/student/league')} style={{ width:'100%', padding:'8px', borderRadius:10, background:'linear-gradient(135deg,#162144,#0D1535)', color:'#fff', fontWeight:700, fontSize:11, border:'none', cursor:'pointer', minHeight:36 }}>
                 عرض الترتيب الكامل
               </button>

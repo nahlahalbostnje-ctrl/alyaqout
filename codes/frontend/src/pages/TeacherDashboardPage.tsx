@@ -32,27 +32,7 @@ const NAV = [
   { label:'الإعدادات',             to:null,                    icon:'⚙️',  badge:0 },
 ];
 
-// ─── Static data ──────────────────────────────────────────────────────────────
-const SCHEDULE = [
-  { time:'06:00 م', subject:'اللغة الإنجليزية', cls:'الصف الخامس A', live:true  },
-  { time:'07:00 م', subject:'اللغة الإنجليزية', cls:'الصف الخامس B', live:false },
-  { time:'08:00 م', subject:'مراجعة وتدريب',    cls:'الصف الخامس A', live:false },
-  { time:'09:00 م', subject:'استشارة طلابية',   cls:'جميع الصفوف',   live:false },
-];
-
-const UPCOMING = [
-  { subject:'اللغة الإنجليزية', cls:'الصف الخامس B', time:'غداً 06:00 م' },
-  { subject:'اللغة الإنجليزية', cls:'الصف الخامس A', time:'غداً 07:00 م' },
-  { subject:'مراجعة عامة',       cls:'جميع الصفوف',   time:'بعد غد 08:00 م' },
-];
-
-const APPROVALS = [
-  { title:'واجب الدرس 3',           sub:'اللغة الإنجليزية',  status:'قيد المراجعة', sc:'#D97706', sbg:'rgba(217,119,6,0.09)' },
-  { title:'اختبار قصير 2 - Unit 2', sub:'اللغة الإنجليزية',  status:'معتمد',        sc:'#16A34A', sbg:'rgba(22,163,74,0.09)' },
-  { title:'رسالة لولي أمر',          sub:'الصف الخامس A',    status:'يحتاج تعديل',  sc:'#EF4444', sbg:'rgba(239,68,68,0.09)' },
-  { title:'ورقة عمل تفاعلية',        sub:'اللغة الإنجليزية',  status:'قيد المراجعة', sc:'#D97706', sbg:'rgba(217,119,6,0.09)' },
-];
-
+// ─── Static UI helpers (no fake student/schedule lists) ───────────────────────
 const AI_TASKS = [
   { label:'مراجعة قاعدة Future Simple', emoji:'📄' },
   { label:'اختبار قصير (5 دقائق)',      emoji:'⏱️' },
@@ -73,23 +53,6 @@ const QUICK_TOOLS = [
   { label:'بنك الأسئلة',  emoji:'❓', to:'/teacher/exams' },
   { label:'استيراد محتوى',emoji:'📥', to:'/teacher/courses' },
   { label:'نسخ حصة سابقة',emoji:'📋', to:'/teacher/live-classes' },
-];
-
-const STUDENTS = [
-  { name:'محمد أحمد',   status:'ممتاز',          color:'#16A34A', avatar:'👦' },
-  { name:'أحمد خالد',   status:'ممتاز',          color:'#16A34A', avatar:'👦' },
-  { name:'سارة خالد',   status:'يحتاج متابعة',   color:'#D97706', avatar:'👩' },
-  { name:'علي حسن',     status:'يحتاج متابعة',   color:'#D97706', avatar:'👦' },
-  { name:'نور عبدالله', status:'ممتاز',          color:'#16A34A', avatar:'👩' },
-  { name:'عبدالله محمد',status:'ممتاز',          color:'#16A34A', avatar:'👦' },
-  { name:'منى علي',     status:'يحتاج متابعة',   color:'#D97706', avatar:'👩' },
-  { name:'يوسف سامي',   status:'ممتاز',          color:'#16A34A', avatar:'👦' },
-  { name:'ليلى محمد',   status:'يحتاج متابعة',   color:'#D97706', avatar:'👩' },
-  { name:'فهد أحمد',    status:'خطر',            color:'#EF4444', avatar:'👦' },
-  { name:'رنا خالد',    status:'يحتاج متابعة',   color:'#D97706', avatar:'👩' },
-  { name:'طلال ماجد',   status:'يحتاج متابعة',   color:'#D97706', avatar:'👦' },
-  { name:'جود محمد',    status:'ممتاز',          color:'#16A34A', avatar:'👩' },
-  { name:'محمد سعيد',   status:'خطر',            color:'#EF4444', avatar:'👦' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,9 +89,9 @@ export default function TeacherDashboardPage() {
   const dispatch  = useAppDispatch();
   const navigate  = useNavigate();
   const user      = useAppSelector(s => s.auth.user);
-  const { teacher, upcoming, stats, recentSubmissions, courses } = useAppSelector(s => s.teacher);
+  const { teacher, upcoming, stats, recentSubmissions, courses, liveClasses, liveNow } = useAppSelector(s => s.teacher);
   const [aiInput, setAiInput] = useState('');
-  const [timer] = useState('00:35:42');
+  const [timer] = useState('00:00:00');
 
   useEffect(() => { dispatch(fetchTeacherDashboard()); }, [dispatch]);
 
@@ -137,6 +100,18 @@ export default function TeacherDashboardPage() {
   const fullName  = teacher?.name ?? user?.name ?? '...';
 
   const pendingTotal = (stats?.pending_homework_subs ?? 0) + (stats?.pending_exam_subs ?? 0);
+  const todaySchedule = (liveClasses.length > 0 ? liveClasses : upcoming).slice(0, 6).map(c => ({
+    time: c.scheduled_at ? new Date(c.scheduled_at).toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' }) : '—',
+    subject: c.title,
+    cls: c.course?.title ?? '—',
+    live: c.status === 'live',
+  }));
+  const upcomingList = upcoming.slice(0, 5).map(c => ({
+    subject: c.title,
+    cls: c.course?.title ?? '—',
+    time: c.scheduled_at ? new Date(c.scheduled_at).toLocaleString('ar-EG', { weekday:'short', hour:'2-digit', minute:'2-digit' }) : '—',
+  }));
+  void liveNow; void firstName;
 
   return (
     <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif" }}>
@@ -433,7 +408,9 @@ export default function TeacherDashboardPage() {
             <div style={card()}>
               {secTitle('الحصص القادمة', 'عرض الكل')}
               <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-                {UPCOMING.map((u,i)=>(
+                {upcomingList.length === 0 ? (
+                  <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0' }}>لا توجد حصص قادمة</p>
+                ) : upcomingList.map((u,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}` }}>
                     <div style={{ width:34, height:34, borderRadius:10, background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2038" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -461,7 +438,9 @@ export default function TeacherDashboardPage() {
             <div style={card()}>
               {secTitle('جدول حصصي اليوم', 'عرض الجدول الكامل')}
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {SCHEDULE.map((s,i)=>(
+                {todaySchedule.length === 0 ? (
+                  <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0' }}>لا توجد حصص اليوم</p>
+                ) : todaySchedule.map((s,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, background:s.live?'linear-gradient(135deg,#0D1535,#1B2038)':C.bg, border:`1px solid ${s.live?'rgba(22,163,74,0.4)':C.border}` }}>
                     <span style={{ color:s.live?C.goldL:C.sub, fontWeight:700, fontSize:12, width:45, flexShrink:0 }}>{s.time}</span>
                     <div style={{ flex:1, minWidth:0 }}>
@@ -504,13 +483,15 @@ export default function TeacherDashboardPage() {
             <div style={card()}>
               {secTitle('اعتماداتي')}
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {APPROVALS.map((a,i)=>(
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:11, background:a.sbg, border:`1px solid ${a.sc}22` }}>
+                {recentSubmissions.length === 0 ? (
+                  <p style={{ color:C.sub, fontSize:12, textAlign:'center', padding:'16px 0' }}>لا توجد اعتمادات معلقة</p>
+                ) : recentSubmissions.slice(0,4).map((a,i)=>(
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:11, background:'rgba(217,119,6,0.09)', border:`1px solid rgba(217,119,6,0.22)` }}>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ color:C.text, fontWeight:700, fontSize:12.5, lineHeight:1.3 }}>{a.title}</p>
-                      <p style={{ color:C.sub, fontSize:11 }}>{a.sub}</p>
+                      <p style={{ color:C.text, fontWeight:700, fontSize:12.5, lineHeight:1.3 }}>{a.homework}</p>
+                      <p style={{ color:C.sub, fontSize:11 }}>{a.student_name}</p>
                     </div>
-                    <span style={{ color:a.sc, fontSize:10.5, fontWeight:700, flexShrink:0, padding:'3px 8px', borderRadius:20, background:`${a.sc}15` }}>{a.status}</span>
+                    <span style={{ color:C.orange, fontSize:10.5, fontWeight:700, flexShrink:0, padding:'3px 8px', borderRadius:20, background:`${C.orange}15` }}>قيد المراجعة</span>
                   </div>
                 ))}
               </div>
@@ -541,19 +522,8 @@ export default function TeacherDashboardPage() {
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:8, marginBottom:12 }}>
-              {STUDENTS.map((s,i)=>(
-                <div key={i} style={{ background:C.bg, borderRadius:12, padding:'10px 8px', textAlign:'center', border:`1.5px solid ${s.color}40`, cursor:'pointer' }}>
-                  <div style={{ width:36, height:36, borderRadius:'50%', background:`${s.color}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, margin:'0 auto 6px', border:`1.5px solid ${s.color}40` }}>{s.avatar}</div>
-                  <p style={{ color:C.text, fontSize:10.5, fontWeight:600, lineHeight:1.3, marginBottom:4 }}>{s.name}</p>
-                  <span style={{ color:s.color, fontSize:9.5, fontWeight:700, padding:'2px 6px', borderRadius:20, background:`${s.color}15` }}>{s.status}</span>
-                </div>
-              ))}
-              {/* Add note */}
-              <div style={{ background:C.bg, borderRadius:12, padding:'10px 8px', textAlign:'center', border:`1.5px dashed ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-                <div>
-                  <p style={{ color:C.dim, fontSize:22, marginBottom:4 }}>+</p>
-                  <p style={{ color:C.dim, fontSize:10 }}>إضافة ملاحظة</p>
-                </div>
+              <div style={{ gridColumn:'1 / -1', textAlign:'center', padding:'24px 0', color:C.sub, fontSize:13 }}>
+                لا توجد بيانات طلاب — سيتم عرض خريطة الصف عند توفر واجهة الطلاب
               </div>
             </div>
 

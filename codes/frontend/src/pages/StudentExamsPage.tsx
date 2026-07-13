@@ -120,13 +120,7 @@ export default function StudentExamsPage() {
     e.status === 'trial'
   );
 
-  const MOCK_EXAMS = [
-    { id:1, subject_name:'الرياضيات',         date:'25/05/2026', time:'10:00 صباحاً', duration:60  },
-    { id:2, subject_name:'اللغة الإنجليزية',  date:'26/05/2026', time:'11:00 صباحاً', duration:60  },
-    { id:3, subject_name:'العلوم',             date:'27/05/2026', time:'09:00 صباحاً', duration:30  },
-  ];
-
-  const display = filtered.length > 0 ? filtered : (tab === 'القادمة' ? MOCK_EXAMS : []);
+  const display = filtered;
 
   return (
     <StudentLayout>

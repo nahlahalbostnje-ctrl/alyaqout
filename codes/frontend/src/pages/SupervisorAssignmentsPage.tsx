@@ -21,13 +21,7 @@ interface Assignment {
   grade: string; feedback: string; hasFile: boolean;
 }
 
-const MOCK: Assignment[] = [
-  { id:1, student:'أحمد محمد',    title:'تمارين الكسور العشرية',     subject:'الرياضيات',      submitted:'2026-06-20', status:'pending',  grade:'', feedback:'', hasFile:true  },
-  { id:2, student:'سارة علي',     title:'قراءة قصيدة المطر',          subject:'اللغة العربية',  submitted:'2026-06-19', status:'pending',  grade:'', feedback:'', hasFile:true  },
-  { id:3, student:'خالد أحمد',    title:'تجربة الكيمياء الفصل 3',    subject:'العلوم',          submitted:'2026-06-18', status:'reviewed', grade:'88', feedback:'ممتاز، أكمل شرح الخطوة الأخيرة', hasFile:false },
-  { id:4, student:'نورة سلمان',   title:'تمارين Present Perfect',     subject:'اللغة الإنجليزية', submitted:'2026-06-17', status:'approved', grade:'95', feedback:'عمل رائع!', hasFile:true  },
-  { id:5, student:'فيصل ناصر',   title:'مسائل هندسية الفصل 4',      subject:'الرياضيات',      submitted:'2026-06-16', status:'pending',  grade:'', feedback:'', hasFile:true  },
-];
+const MOCK: Assignment[] = [];
 
 const STATUS_MAP = { pending:{ label:'معلق', color:C.amber, bg:C.amberBg }, reviewed:{ label:'مراجع', color:C.gold, bg:C.goldBg }, approved:{ label:'مقبول', color:C.green, bg:C.greenBg } };
 

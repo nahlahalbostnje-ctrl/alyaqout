@@ -20,14 +20,6 @@ const DAYS = [
   { label:'الخميس',  num:30 },
 ];
 
-const MOCK_CLASSES = [
-  { time:'08:00 - 09:00', subject:'الرياضيات',         teacher:'أ. أحمد الحربي',   status:'live'      },
-  { time:'09:00 - 10:00', subject:'اللغة الإنجليزية',  teacher:'Sarah Johnson',     status:'scheduled' },
-  { time:'11:00 - 12:00', subject:'العلوم',             teacher:'أ. خالد النجار',   status:'scheduled' },
-  { time:'12:30 - 01:30', subject:'اللغة العربية',      teacher:'أ. فاطمة علي',     status:'scheduled' },
-  { time:'02:00 - 03:00', subject:'التربية الإسلامية', teacher:'أ. محمد سليمان',   status:'scheduled' },
-];
-
 const SUBJ_COLORS: Record<string, string> = {
   'الرياضيات':         '#4F46E5',
   'اللغة الإنجليزية': '#2563EB',
@@ -44,18 +36,16 @@ export default function StudentLiveClassesPage() {
 
   useEffect(() => { dispatch(fetchStudentLiveClasses()); }, [dispatch]);
 
-  const display = liveClasses.length > 0
-    ? liveClasses.map(c => ({
-        time: c.scheduled_at
-          ? new Date(c.scheduled_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-          : '',
-        subject: c.title ?? '',
-        teacher: c.teacher?.name ?? '',
-        status: c.status,
-        id: c.id,
-        channel: c.agora_channel,
-      }))
-    : MOCK_CLASSES;
+  const display = liveClasses.map(c => ({
+    time: c.scheduled_at
+      ? new Date(c.scheduled_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+      : '',
+    subject: c.title ?? '',
+    teacher: c.teacher?.name ?? '',
+    status: c.status,
+    id: c.id,
+    channel: c.agora_channel,
+  }));
 
   return (
     <StudentLayout>
@@ -90,6 +80,9 @@ export default function StudentLiveClassesPage() {
 
       {/* Class Cards */}
       <div style={{ padding:'0 16px' }}>
+        {display.length === 0 && (
+          <p style={{ color:C.dim, textAlign:'center', padding:'40px 0', fontSize:14 }}>لا توجد حصص مجدولة</p>
+        )}
         {display.map((cls: any, i: number) => {
           const color = SUBJ_COLORS[Object.keys(SUBJ_COLORS).find(k=>cls.subject?.includes(k.split(' ')[0]))??''] ?? C.blue;
           const isLive = cls.status === 'live';

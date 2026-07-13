@@ -25,18 +25,11 @@ interface LoginAttempt {
   user?: { name: string; role: string } | null;
 }
 
-const MOCK_ATTEMPTS: LoginAttempt[] = [
-  { id:1, phone:'00962200000000', ip_address:'192.168.1.1', device_info:'Chrome/Windows', success:true, created_at:'2026-06-30T09:00:00Z', user:{ name:'الأدمن الرئيسي', role:'admin' } },
-  { id:2, phone:'00962999999999', ip_address:'10.0.0.5', device_info:'Firefox/Linux', success:false, created_at:'2026-06-30T09:05:00Z', user:null },
-  { id:3, phone:'00962300000000', ip_address:'192.168.1.2', device_info:'Safari/iOS', success:true, created_at:'2026-06-30T09:30:00Z', user:{ name:'المعلم أحمد', role:'teacher' } },
-  { id:4, phone:'00962111111111', ip_address:'10.0.0.99', device_info:'Chrome/Android', success:false, created_at:'2026-06-30T10:00:00Z', user:null },
-  { id:5, phone:'00962400000000', ip_address:'192.168.1.3', device_info:'Chrome/Windows', success:true, created_at:'2026-06-30T10:15:00Z', user:{ name:'الطالب محمد', role:'student' } },
-  { id:6, phone:'00962777777777', ip_address:'185.220.101.5', device_info:'Python-requests', success:false, created_at:'2026-06-30T10:20:00Z', user:null },
-];
+
 
 export default function SuperAdminSecurityPage() {
   const token = useAppSelector(s => s.auth.token) ?? '';
-  const [attempts, setAttempts] = useState<LoginAttempt[]>(MOCK_ATTEMPTS);
+  const [attempts, setAttempts] = useState<LoginAttempt[]>([]);
   const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all');
   const [search, setSearch] = useState('');
 
@@ -47,7 +40,7 @@ export default function SuperAdminSecurityPage() {
     })
       .then(r => r.json())
       .then(j => { if (j.data?.data) setAttempts(j.data.data); })
-      .catch(() => {});
+      .catch(() => { setAttempts([]); });
   }, [token, filter]);
 
   const filtered = attempts.filter(a =>

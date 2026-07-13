@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchUsers, toggleUser } from '../features/admin/usersSlice';
 
 const C = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -35,44 +37,6 @@ const ALL_PERMS = [
   'التواصل مع أولياء الأمور', 'تقارير الطلاب',
 ];
 
-const MOCK_TEACHERS: Teacher[] = [
-  {
-    id:1, name:'أحمد محمد الشهراني', subject:'الرياضيات', phone:'0501234567',
-    email:'ahmed@yaqoot.sa', status:'active', hoursPerWeek:18,
-    studentsCount:142, coursesCount:4, joinDate:'2024-09-01',
-    salary:8500, incentives:1200, rating:4.8,
-    permissions:['إنشاء دورات','إنشاء امتحانات','إنشاء واجبات','الحصص المباشرة','تسجيل الحضور','رفع مواد'],
-  },
-  {
-    id:2, name:'فاطمة علي الزهراني', subject:'اللغة العربية', phone:'0507654321',
-    email:'fatima@yaqoot.sa', status:'active', hoursPerWeek:15,
-    studentsCount:98, coursesCount:3, joinDate:'2024-10-15',
-    salary:7800, incentives:900, rating:4.9,
-    permissions:['إنشاء دورات','إنشاء امتحانات','إنشاء واجبات','الحصص المباشرة','تسجيل الحضور'],
-  },
-  {
-    id:3, name:'خالد إبراهيم المالكي', subject:'العلوم', phone:'0509876543',
-    email:'khalid@yaqoot.sa', status:'inactive', hoursPerWeek:12,
-    studentsCount:76, coursesCount:2, joinDate:'2025-01-20',
-    salary:7200, incentives:500, rating:4.2,
-    permissions:['إنشاء دورات','إنشاء واجبات','تسجيل الحضور'],
-  },
-  {
-    id:4, name:'نورة سعد القحطاني', subject:'اللغة الإنجليزية', phone:'0503456789',
-    email:'noura@yaqoot.sa', status:'active', hoursPerWeek:20,
-    studentsCount:165, coursesCount:5, joinDate:'2024-08-01',
-    salary:9200, incentives:1800, rating:4.7,
-    permissions:ALL_PERMS,
-  },
-  {
-    id:5, name:'عمر عبدالله الغامدي', subject:'الفيزياء', phone:'0501122334',
-    email:'omar@yaqoot.sa', status:'suspended', hoursPerWeek:0,
-    studentsCount:0, coursesCount:1, joinDate:'2024-12-01',
-    salary:7500, incentives:0, rating:3.8,
-    permissions:[],
-  },
-];
-
 const STATUS_LABEL: Record<Teacher['status'], { label: string; color: string; bg: string }> = {
   active:    { label:'نشط',     color:C.green, bg:C.greenBg },
   inactive:  { label:'غير نشط', color:C.amber, bg:C.amberBg },
@@ -88,8 +52,23 @@ export default function AdminTeacherManagementPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
+  const dispatch = useAppDispatch();
+  const { list: users, loading } = useAppSelector(s => s.adminUsers);
+  useEffect(() => { dispatch(fetchUsers('teacher')); }, [dispatch]);
+
+  const mapUser = (u: { id:number; name:string; phone:string; is_active:boolean; created_at:string }): Teacher => ({
+    id: u.id, name: u.name, subject: '—', phone: u.phone, email: '—',
+    status: u.is_active ? 'active' : 'inactive',
+    hoursPerWeek: 0, studentsCount: 0, coursesCount: 0,
+    joinDate: u.created_at?.slice(0, 10) ?? '—',
+    salary: 0, incentives: 0, rating: 0, permissions: [],
+  });
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  useEffect(() => {
+    setTeachers(users.filter(u => u.role === 'teacher').map(mapUser));
+  }, [users]);
   const [selected, setSelected] = useState<Teacher | null>(null);
+  void loading;
   const [tab, setTab] = useState<'info' | 'permissions' | 'financial'>('info');
   const [editPerms, setEditPerms] = useState<string[]>([]);
   const [editHours, setEditHours] = useState(0);
@@ -119,11 +98,7 @@ export default function AdminTeacherManagementPage() {
   };
 
   const toggleStatus = (id: number) => {
-    setTeachers(p => p.map(t => {
-      if (t.id !== id) return t;
-      const next: Teacher['status'] = t.status === 'active' ? 'inactive' : 'active';
-      return { ...t, status: next };
-    }));
+    dispatch(toggleUser(id));
   };
 
   const filtered = teachers.filter(t =>
@@ -133,7 +108,7 @@ export default function AdminTeacherManagementPage() {
   const activeCount    = teachers.filter(t => t.status === 'active').length;
   const totalStudents  = teachers.reduce((a, t) => a + t.studentsCount, 0);
   const totalHours     = teachers.reduce((a, t) => a + t.hoursPerWeek, 0);
-  const avgRating      = +(teachers.reduce((a, t) => a + t.rating, 0) / teachers.length).toFixed(1);
+  const avgRating      = teachers.length ? +(teachers.reduce((a, t) => a + t.rating, 0) / teachers.length).toFixed(1) : 0;
 
   const inp = (style: React.CSSProperties = {}): React.CSSProperties => ({
     width:'100%', padding:'9px 12px', borderRadius:10, border:`1px solid ${C.border}`,
@@ -190,6 +165,9 @@ export default function AdminTeacherManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={7} style={{ padding:32, textAlign:'center', color:C.sub }}>لا يوجد معلمون</td></tr>
+                  )}
                   {filtered.map((t, i) => {
                     const st = STATUS_LABEL[t.status];
                     return (

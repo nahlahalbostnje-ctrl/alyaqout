@@ -17,11 +17,6 @@ const C = {
   purple:'#8B5CF6', amber:'#F59E0B', amberBg:'rgba(245,158,11,0.08)',
 };
 
-const CHILDREN_STATIC = [
-  { id:1, name:'محمد أحمد', initials:'مأ', color:'#C59341', grade:'الصف الخامس' },
-  { id:2, name:'سارة أحمد', initials:'سأ', color:'#3B82F6', grade:'الصف السادس' },
-  { id:3, name:'علي أحمد',  initials:'عأ', color:'#10B981', grade:'الصف الثالث' },
-];
 const CHILD_COLORS = ['#C59341', '#3B82F6', '#10B981', '#8B5CF6'];
 
 const REPORT_TYPES = [
@@ -32,27 +27,15 @@ const REPORT_TYPES = [
 ];
 
 const REPORT_DATA = {
-  child:'محمد أحمد', grade:'الصف الخامس', period:'مايو 2025',
-  overall_avg: 88, attendance_rate: 94, homework_completion: 90, behavior_score: 95,
-  strengths: ['الرياضيات','العلوم','اللغة العربية'],
-  improvements: ['اللغة الإنجليزية','التاريخ'],
-  subjects: [
-    { name:'الرياضيات',        avg:92, grade:'ممتاز',    trend:'up'     },
-    { name:'اللغة الإنجليزية', avg:76, grade:'جيد جداً', trend:'up'     },
-    { name:'العلوم',            avg:88, grade:'ممتاز',    trend:'stable' },
-    { name:'اللغة العربية',    avg:91, grade:'ممتاز',    trend:'up'     },
-    { name:'التاريخ',           avg:80, grade:'جيد جداً', trend:'down'   },
-  ],
-  teacher_notes:'محمد طالب مجتهد ويُبدي تقدماً ملحوظاً في جميع المواد. يُنصح بمزيد من التدريب على مهارات الكتابة الإنجليزية وزيادة القراءة خارج المنهج.',
+  child:'', grade:'', period:'',
+  overall_avg: 0, attendance_rate: 0, homework_completion: 0, behavior_score: 0,
+  strengths: [] as string[],
+  improvements: [] as string[],
+  subjects: [] as { name:string; avg:number; grade:string; trend:string }[],
+  teacher_notes:'',
 };
 
-const PREV_REPORTS = [
-  { date:'2025-04-30', type:'شهري', child:'محمد أحمد', status:'جاهز' },
-  { date:'2025-04-30', type:'شهري', child:'سارة أحمد', status:'جاهز' },
-  { date:'2025-03-31', type:'شهري', child:'محمد أحمد', status:'جاهز' },
-  { date:'2025-02-28', type:'فصلي', child:'محمد أحمد', status:'جاهز' },
-  { date:'2025-02-28', type:'فصلي', child:'سارة أحمد', status:'جاهز' },
-];
+const PREV_REPORTS: { date:string; type:string; child:string; status:string }[] = [];
 
 function RingChart({ value, label, color, bg }: { value: number; label: string; color: string; bg: string }) {
   const r = 36, circ = 2 * Math.PI * r, dash = (value / 100) * circ;
@@ -79,13 +62,11 @@ export default function ParentReportsPage() {
 
   useEffect(() => { if (children.length === 0) dispatch(fetchParentDashboard()); }, [dispatch, children.length]);
 
-  const CHILDREN = children.length > 0
-    ? children.map((c, i) => ({
+  const CHILDREN = children.map((c, i) => ({
         id: c.id, name: c.name,
         initials: c.name.split(' ').slice(0, 2).map(w => w[0]).join(''),
         color: CHILD_COLORS[i % CHILD_COLORS.length], grade: 'طالب',
-      }))
-    : CHILDREN_STATIC;
+      }));
 
   const [selectedChild, setSelectedChild] = useState(0);
   const [selectedType, setSelectedType] = useState('monthly');

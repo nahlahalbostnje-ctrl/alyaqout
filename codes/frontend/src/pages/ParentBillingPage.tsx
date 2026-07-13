@@ -27,28 +27,7 @@ const C = {
   amber: '#F59E0B', amberBg: 'rgba(245,158,11,0.08)',
 };
 
-const INVOICES = [
-  { id: 'INV-2025-001', child: 'محمد أحمد', desc: 'دورة اللغة الإنجليزية', amount: 500, status: 'paid', date: '2025-05-01', dueDate: '2025-05-15' },
-  { id: 'INV-2025-002', child: 'سارة أحمد', desc: 'دورة الرياضيات المتقدمة', amount: 450, status: 'paid', date: '2025-05-01', dueDate: '2025-05-15' },
-  { id: 'INV-2025-003', child: 'علي أحمد', desc: 'اشتراك المنصة الشهري', amount: 200, status: 'pending', date: '2025-06-01', dueDate: '2025-06-10' },
-  { id: 'INV-2025-004', child: 'محمد أحمد', desc: 'دورة العلوم', amount: 380, status: 'overdue', date: '2025-05-15', dueDate: '2025-05-30' },
-  { id: 'INV-2025-005', child: 'سارة أحمد', desc: 'باقة الاشتراك السنوي', amount: 2000, status: 'paid', date: '2025-04-01', dueDate: '2025-04-10' },
-];
-
-const MONTHLY_DATA = [
-  { month: 'يناير', محمد: 300, سارة: 250, علي: 200 },
-  { month: 'فبراير', محمد: 350, سارة: 300, علي: 150 },
-  { month: 'مارس', محمد: 400, سارة: 280, علي: 220 },
-  { month: 'أبريل', محمد: 320, سارة: 2000, علي: 180 },
-  { month: 'مايو', محمد: 880, سارة: 450, علي: 0 },
-  { month: 'يونيو', محمد: 0, سارة: 0, علي: 200 },
-];
-
-const CHILD_COLORS: Record<string, string> = {
-  'محمد': C.gold,
-  'سارة': C.blue,
-  'علي': C.green,
-};
+const CHILD_COLORS: Record<string, string> = {};
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
@@ -83,75 +62,13 @@ function ChildPill({ name }: { name: string }) {
   );
 }
 
-const DEVICE_PLANS = [
-  { name:'جهاز لوحي أساسي', price:299, installments:6, monthly:50, emoji:'📱' },
-  { name:'جهاز لوحي متقدم', price:499, installments:12, monthly:42, emoji:'💻' },
-  { name:'جهاز لوحي + قلم ذكي', price:699, installments:12, monthly:58, emoji:'✏️' },
-];
-
 function DeviceRequestModal({ onClose }: { onClose: () => void }) {
-  const [selectedPlan, setSelectedPlan] = useState('');
-  const [childName, setChildName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = () => {
-    if (!selectedPlan || !childName) return;
-    setSubmitted(true);
-  };
-
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:28, width:480, maxWidth:'92vw', maxHeight:'90vh', overflowY:'auto', fontFamily:"'Cairo',sans-serif", direction:'rtl' }}>
-        {submitted ? (
-          <div style={{ textAlign:'center', padding:'20px 0' }}>
-            <div style={{ fontSize:56, marginBottom:12 }}>✅</div>
-            <h3 style={{ color:C.text, fontWeight:800, fontSize:18, marginBottom:8 }}>تم تقديم طلبك!</h3>
-            <p style={{ color:C.sub, fontSize:13, lineHeight:1.7, marginBottom:20 }}>سيتواصل معك فريقنا خلال 24 ساعة لإتمام الطلب وترتيب التقسيط.</p>
-            <button onClick={onClose} style={{ padding:'10px 24px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>إغلاق</button>
-          </div>
-        ) : (
-          <>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
-              <h3 style={{ color:C.text, fontWeight:900, fontSize:17, margin:0 }}>طلب جهاز بالتقسيط 📦</h3>
-              <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:20, color:C.dim }}>✕</button>
-            </div>
-            <p style={{ color:C.sub, fontSize:12.5, marginBottom:16 }}>احصل على جهاز لوحي مخصص للدراسة مع إمكانية التقسيط المريح</p>
-            <div style={{ marginBottom:16 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:8 }}>اختر الباقة</label>
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {DEVICE_PLANS.map((p,i) => (
-                  <div key={i} onClick={() => setSelectedPlan(p.name)} style={{ padding:'12px 14px', borderRadius:12, border:`1.5px solid ${selectedPlan===p.name ? C.gold : C.border}`, background: selectedPlan===p.name ? C.goldBg : '#fff', cursor:'pointer', transition:'all 0.15s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                      <span style={{ fontSize:22 }}>{p.emoji}</span>
-                      <div>
-                        <p style={{ color: selectedPlan===p.name ? C.gold : C.text, fontWeight:700, fontSize:13 }}>{p.name}</p>
-                        <p style={{ color:C.dim, fontSize:11 }}>{p.installments} شهر · {p.monthly} د.أ/شهر</p>
-                      </div>
-                    </div>
-                    <span style={{ color:C.text, fontWeight:800, fontSize:14 }}>{p.price} د.أ</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>اسم الابن/البنت</label>
-              <input value={childName} onChange={e=>setChildName(e.target.value)} placeholder="الاسم الكامل" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box' }} />
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>رقم الهاتف للتواصل</label>
-              <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="رقم الهاتف" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box' }} />
-            </div>
-            <div style={{ marginBottom:18 }}>
-              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:6 }}>ملاحظات إضافية</label>
-              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2} placeholder="أي متطلبات خاصة؟" style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', resize:'none', boxSizing:'border-box' }} />
-            </div>
-            <button onClick={handleSubmit} style={{ width:'100%', padding:'11px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:14, fontWeight:800, border:'none', cursor:'pointer', opacity: selectedPlan && childName ? 1 : 0.5 }}>
-              تقديم الطلب
-            </button>
-          </>
-        )}
+      <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, maxWidth:'92vw', fontFamily:"'Cairo',sans-serif", direction:'rtl', textAlign:'center' }}>
+        <h3 style={{ color:C.text, fontWeight:900, fontSize:17, marginBottom:10 }}>طلب جهاز بالتقسيط</h3>
+        <p style={{ color:C.sub, fontSize:13, marginBottom:20 }}>لا توجد باقات أجهزة متاحة حالياً</p>
+        <button onClick={onClose} style={{ padding:'10px 24px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>إغلاق</button>
       </div>
     </div>
   );
@@ -174,22 +91,12 @@ export default function ParentBillingPage() {
       .finally(() => setInstallmentsLoading(false));
   }, []);
 
-  const totalPaid = INVOICES.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
-  const totalPending = INVOICES.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
-  const totalOverdue = INVOICES.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
+  const totalPaid = installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
+  const totalPending = installments.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
+  const totalOverdue = installments.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
   const hasPending = totalPending + totalOverdue > 0;
 
-  const filtered = filter === 'all' ? INVOICES : INVOICES.filter(i => i.status === filter);
-
-  // SVG bar chart
-  const chartW = 580;
-  const chartH = 140;
-  const barW = 22;
-  const gap = 14;
-  const groupGap = 36;
-  const months = MONTHLY_DATA;
-  const maxVal = Math.max(...months.flatMap(m => [m['محمد'], m['سارة'], m['علي']]));
-  const childKeys: Array<'محمد' | 'سارة' | 'علي'> = ['محمد', 'سارة', 'علي'];
+  const filtered = filter === 'all' ? installments : installments.filter(i => i.status === filter);
 
   return (
     <ParentLayout>
@@ -396,7 +303,7 @@ export default function ParentBillingPage() {
         {/* Filter Tabs + Table */}
         <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>سجل الفواتير</h2>
+            <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>سجل الأقساط</h2>
             <div style={{ display: 'flex', gap: 6 }}>
               {(['all', 'paid', 'pending', 'overdue'] as const).map(f => {
                 const labels: Record<string, string> = { all: 'الكل', paid: 'مدفوع', pending: 'معلق', overdue: 'متأخر' };
@@ -414,126 +321,41 @@ export default function ParentBillingPage() {
             </div>
           </div>
 
-          {/* Table */}
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {['#', 'رقم الفاتورة', 'الطفل', 'البيان', 'المبلغ (ريال)', 'تاريخ الإصدار', 'تاريخ الاستحقاق', 'الحالة', 'إجراءات'].map(h => (
+                  {['#', 'القسط', 'الطفل', 'الباقة', 'المبلغ (ريال)', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
                     <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((inv, idx) => (
-                  <tr key={inv.id} style={{ borderBottom: `1px solid ${C.border}`, transition: 'background 0.1s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = C.goldBg; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}>
+                  <tr key={inv.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                     <td style={{ padding: '12px 12px', color: C.dim, fontSize: 12 }}>{idx + 1}</td>
-                    <td style={{ padding: '12px 12px', fontFamily: 'monospace', fontSize: 12, color: C.navy, fontWeight: 700 }}>{inv.id}</td>
+                    <td style={{ padding: '12px 12px', fontSize: 12, color: C.navy, fontWeight: 700 }}>{inv.installment_no}</td>
                     <td style={{ padding: '12px 12px' }}><ChildPill name={inv.child} /></td>
-                    <td style={{ padding: '12px 12px', color: C.text, fontSize: 13 }}>{inv.desc}</td>
-                    <td style={{ padding: '12px 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{inv.amount.toLocaleString('ar-SA')}</td>
-                    <td style={{ padding: '12px 12px', color: C.sub, fontSize: 12 }}>{inv.date}</td>
-                    <td style={{ padding: '12px 12px', color: C.sub, fontSize: 12 }}>{inv.dueDate}</td>
+                    <td style={{ padding: '12px 12px', color: C.text, fontSize: 13 }}>{inv.package}</td>
+                    <td style={{ padding: '12px 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{Number(inv.amount).toLocaleString('ar-SA')}</td>
+                    <td style={{ padding: '12px 12px', color: C.sub, fontSize: 12 }}>{inv.due_date}</td>
                     <td style={{ padding: '12px 12px' }}><StatusBadge status={inv.status} /></td>
-                    <td style={{ padding: '12px 12px' }}>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <button onClick={()=>alert(`تحميل فاتورة PDF لـ"${inv.id}" قيد التطوير.`)} style={{
-                          background: C.goldBg, border: `1px solid ${C.goldBdr}`, borderRadius: 7,
-                          padding: '5px 8px', cursor: 'pointer', color: C.gold, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, fontFamily: "'Cairo',sans-serif",
-                        }}>
-                          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          PDF
-                        </button>
-                        {(inv.status === 'pending' || inv.status === 'overdue') && (
-                          <button onClick={()=>alert(`دفع فاتورة "${inv.id}" بمبلغ ${inv.amount.toLocaleString('ar-SA')} ر.س عبر بوابة الدفع قيد التطوير.`)} style={{
-                            background: inv.status === 'overdue' ? C.red : C.goldGrad,
-                            border: 'none', borderRadius: 7, padding: '5px 10px',
-                            cursor: 'pointer', color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: "'Cairo',sans-serif",
-                          }}>
-                            دفع الآن
-                          </button>
-                        )}
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {filtered.length === 0 && (
               <div style={{ textAlign: 'center', padding: '30px 0', color: C.dim, fontSize: 14 }}>
-                لا توجد فواتير في هذا التصنيف
+                لا توجد أقساط في هذا التصنيف
               </div>
             )}
           </div>
         </div>
 
-        {/* Monthly Chart */}
+        {/* Monthly Chart placeholder */}
         <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow }}>
           <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: '0 0 4px' }}>المصروفات الشهرية</h2>
-          <p style={{ color: C.sub, fontSize: 12, margin: '0 0 20px' }}>إجمالي الإنفاق لكل طفل خلال الأشهر الماضية (ريال)</p>
-
-          {/* Legend */}
-          <div style={{ display: 'flex', gap: 18, marginBottom: 16 }}>
-            {childKeys.map(k => (
-              <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: CHILD_COLORS[k] }} />
-                <span style={{ color: C.sub, fontSize: 12 }}>{k}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* SVG Bar Chart */}
-          <div style={{ overflowX: 'auto' }}>
-            <svg width={chartW} height={chartH + 30} style={{ display: 'block' }}>
-              {/* Grid lines */}
-              {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
-                const y = chartH - pct * chartH;
-                return (
-                  <g key={pct}>
-                    <line x1={0} y1={y} x2={chartW} y2={y} stroke={C.border} strokeWidth={1} strokeDasharray="3,3" />
-                    <text x={chartW - 4} y={y - 3} fontSize={9} fill={C.dim} textAnchor="end">
-                      {Math.round(pct * maxVal)}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {months.map((m, mi) => {
-                const groupX = mi * (3 * barW + 2 * gap + groupGap) + 16;
-                return (
-                  <g key={m.month}>
-                    {childKeys.map((k, ki) => {
-                      const val = m[k];
-                      const barH = maxVal > 0 ? (val / maxVal) * chartH : 0;
-                      const x = groupX + ki * (barW + gap);
-                      const y = chartH - barH;
-                      return (
-                        <g key={k}>
-                          <rect
-                            x={x} y={y} width={barW} height={barH}
-                            rx={5} fill={CHILD_COLORS[k]}
-                            opacity={val === 0 ? 0.15 : 0.85}
-                          />
-                          {val > 0 && (
-                            <text x={x + barW / 2} y={y - 4} fontSize={8} fill={CHILD_COLORS[k]} textAnchor="middle" fontWeight="bold">
-                              {val}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-                    <text x={groupX + (3 * barW + 2 * gap) / 2} y={chartH + 18} fontSize={10} fill={C.sub} textAnchor="middle">
-                      {m.month}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
+          <p style={{ color: C.sub, fontSize: 13, textAlign: 'center', padding: '30px 0' }}>لا تتوفر بيانات مصروفات شهرية بعد</p>
         </div>
       </div>
     </ParentLayout>

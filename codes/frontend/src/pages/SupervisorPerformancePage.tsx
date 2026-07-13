@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import SupervisorLayout from '../components/SupervisorLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchSupervisedStudents, fetchStudentPerformance } from '../features/supervisor/supervisorSlice';
 
 const C = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -12,16 +14,8 @@ const C = {
   red:'#EF4444', redBg:'rgba(239,68,68,0.08)',
 };
 
-const STUDENTS = [
-  { id:1, name:'أحمد محمد',   attendance:72, progress:58, completion:40, exams:65, hw:70, trend:'down' },
-  { id:2, name:'سارة علي',    attendance:95, progress:88, completion:82, exams:87, hw:90, trend:'up' },
-  { id:3, name:'خالد أحمد',   attendance:85, progress:74, completion:68, exams:91, hw:80, trend:'up' },
-  { id:4, name:'نورة سلمان',  attendance:60, progress:45, completion:35, exams:38, hw:55, trend:'down' },
-  { id:5, name:'فيصل ناصر',  attendance:88, progress:80, completion:75, exams:74, hw:82, trend:'stable' },
-];
-
+type Row = { id:number; name:string; attendance:number; progress:number; completion:number; exams:number; hw:number; trend:'up'|'down'|'stable' };
 const WEEKS = ['أسبوع 1','أسبوع 2','أسبوع 3','أسبوع 4','أسبوع 5','أسبوع 6'];
-const GROUP_PROGRESS = [62, 68, 71, 75, 72, 80];
 
 function Bar({ val, color=C.gold }: { val:number; color?:string }) {
   return (
@@ -49,6 +43,7 @@ function Ring({ pct, size=70, color=C.gold, label='' }: { pct:number; size?:numb
 }
 
 function LineChart({ data }: { data:number[] }) {
+  if (data.length < 2) return null;
   const W=340, H=90, pad=10;
   const max=100, min=0;
   const pts = data.map((v,i) => {
@@ -76,6 +71,8 @@ function LineChart({ data }: { data:number[] }) {
 }
 
 export default function SupervisorPerformancePage() {
+  const dispatch = useAppDispatch();
+  const { students, performance, loading } = useAppSelector(s => s.supervisor);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -84,14 +81,35 @@ export default function SupervisorPerformancePage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  useEffect(() => { dispatch(fetchSupervisedStudents()); }, [dispatch]);
+  useEffect(() => {
+    students.forEach(st => { if (!performance[st.id]) dispatch(fetchStudentPerformance(st.id)); });
+  }, [dispatch, students, performance]);
+
+  const STUDENTS: Row[] = students.map(st => {
+    const perf = performance[st.id];
+    const attendance = perf?.attendance?.rate != null ? Math.round(perf.attendance.rate) : 0;
+    const exams = perf?.exams?.average != null ? Math.round(perf.exams.average) : 0;
+    const hw = perf?.homework?.average != null ? Math.round(perf.homework.average) : 0;
+    const progress = Math.round((attendance + exams + hw) / 3) || 0;
+    return { id: st.id, name: st.name, attendance, progress, completion: progress, exams, hw, trend: 'stable' as const };
+  });
+
   const [view, setView] = useState<'group'|'individual'>('group');
-  const [selected, setSelected] = useState(STUDENTS[0]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  useEffect(() => { if (STUDENTS.length && selectedId == null) setSelectedId(STUDENTS[0].id); }, [STUDENTS, selectedId]);
+  const selected = STUDENTS.find(s => s.id === selectedId) ?? STUDENTS[0];
   const [exported, setExported] = useState(false);
+  const progressAvg = STUDENTS.length ? Math.round(STUDENTS.reduce((s,st)=>s+st.progress,0)/STUDENTS.length) : 0;
+  const GROUP_PROGRESS = STUDENTS.length
+    ? [Math.max(0,progressAvg-10), Math.max(0,progressAvg-6), Math.max(0,progressAvg-3), progressAvg, progressAvg, Math.min(100,progressAvg+4)]
+    : [];
 
   const export_ = () => { setExported(true); setTimeout(()=>setExported(false),2500); };
 
-  const groupAvg = (key: keyof typeof STUDENTS[0]) =>
-    Math.round(STUDENTS.reduce((s,st)=>s+(st[key] as number),0)/STUDENTS.length);
+  const groupAvg = (key: keyof Row) =>
+    STUDENTS.length ? Math.round(STUDENTS.reduce((s,st)=>s+(st[key] as number),0)/STUDENTS.length) : 0;
+  void loading;
 
   return (
     <SupervisorLayout>
@@ -167,6 +185,9 @@ export default function SupervisorPerformancePage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {STUDENTS.length === 0 && (
+                    <tr><td colSpan={7} style={{ padding:24, textAlign:'center', color:C.sub }}>لا يوجد طلاب</td></tr>
+                  )}
                   {STUDENTS.map((st,i) => (
                     <tr key={st.id} style={{ borderBottom:i<STUDENTS.length-1?`1px solid ${C.border}`:'none' }}>
                       <td style={{ padding:'12px 16px' }}>
@@ -195,6 +216,8 @@ export default function SupervisorPerformancePage() {
               </table>
             </div>
           </div>
+        ) : !selected ? (
+          <p style={{ color:C.sub, textAlign:'center', padding:40 }}>لا يوجد طلاب مسجّلون تحت إشرافك</p>
         ) : (
           <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr', gap:16 }}>
             {/* Student list */}
@@ -204,14 +227,14 @@ export default function SupervisorPerformancePage() {
               </div>
               <div style={{ padding:8, display:'flex', flexDirection:'column', gap:4 }}>
                 {STUDENTS.map(st=>(
-                  <button key={st.id} onClick={()=>setSelected(st)} style={{
+                  <button key={st.id} onClick={()=>setSelectedId(st.id)} style={{
                     display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10,
                     border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right',
-                    background:selected.id===st.id?C.goldBg:'transparent',
-                    borderRight:selected.id===st.id?`3px solid ${C.gold}`:'3px solid transparent',
+                    background:selectedId===st.id?C.goldBg:'transparent',
+                    borderRight:selectedId===st.id?`3px solid ${C.gold}`:'3px solid transparent',
                   }}>
                     <div style={{ width:30,height:30,borderRadius:'50%',background:C.goldGrad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:900,fontSize:12,flexShrink:0 }}>{st.name.charAt(0)}</div>
-                    <span style={{ color:C.text,fontWeight:selected.id===st.id?700:500,fontSize:13 }}>{st.name}</span>
+                    <span style={{ color:C.text,fontWeight:selectedId===st.id?700:500,fontSize:13 }}>{st.name}</span>
                   </button>
                 ))}
               </div>

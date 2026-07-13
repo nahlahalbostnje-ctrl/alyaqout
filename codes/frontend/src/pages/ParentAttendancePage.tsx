@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchParentDashboard } from '../features/parent/parentSlice';
 
 const C = {
   gold: '#C59341', goldL: '#D4A65A',
@@ -32,22 +34,9 @@ function PageHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
-const CHILDREN = [
-  { id: 1, name: 'محمد أحمد', initials: 'مأ', color: '#C59341' },
-  { id: 2, name: 'سارة أحمد', initials: 'سأ', color: '#3B82F6' },
-  { id: 3, name: 'علي أحمد', initials: 'عأ', color: '#10B981' },
-];
-
-const YEAR = 2025, MONTH = 4; // May 2025 (0-indexed)
-
-const ATTENDANCE_MAP: Record<number, string> = {
-  1: 'present', 2: 'present', 3: 'weekend', 4: 'weekend',
-  5: 'present', 6: 'absent', 7: 'present', 8: 'late', 9: 'present', 10: 'present',
-  11: 'weekend', 12: 'weekend', 13: 'present', 14: 'present', 15: 'present',
-  16: 'present', 17: 'holiday', 18: 'weekend', 19: 'weekend', 20: 'present',
-  21: 'absent', 22: 'present', 23: 'present', 24: 'late', 25: 'present',
-  26: 'weekend', 27: 'weekend', 28: 'present', 29: 'present', 30: 'present', 31: 'present',
-};
+const CHILD_COLORS = ['#C59341', '#3B82F6', '#10B981', '#8B5CF6'];
+const YEAR = new Date().getFullYear(), MONTH = new Date().getMonth();
+const ATTENDANCE_MAP: Record<number, string> = {};
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; border?: string }> = {
   present: { label: 'حاضر', bg: 'rgba(16,185,129,0.15)', text: '#10B981' },
@@ -58,26 +47,29 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; b
   weekend: { label: 'عطلة', bg: '#F3F4F6', text: '#9CA3AF' },
 };
 
-const HISTORY = [
-  { date: '2025-05-21', status: 'absent', note: 'لم يحضر دون إشعار' },
-  { date: '2025-05-08', status: 'late', note: 'تأخر 20 دقيقة' },
-  { date: '2025-05-06', status: 'absent', note: 'غياب بدون عذر' },
-  { date: '2025-05-24', status: 'late', note: 'تأخر 10 دقائق' },
-];
+const HISTORY: { date: string; status: string; note: string }[] = [];
 
 const DAY_NAMES = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
 
 export default function ParentAttendancePage() {
-  const [selectedChild, setSelectedChild] = useState(1);
+  const dispatch = useAppDispatch();
+  const { children } = useAppSelector(s => s.parent);
+  useEffect(() => { if (children.length === 0) dispatch(fetchParentDashboard()); }, [dispatch, children.length]);
+  const CHILDREN = children.map((c, i) => ({
+    id: c.id, name: c.name,
+    initials: c.name.split(' ').slice(0, 2).map(w => w[0]).join(''),
+    color: CHILD_COLORS[i % CHILD_COLORS.length],
+  }));
+  const [selectedChild, setSelectedChild] = useState<number | null>(null);
+  useEffect(() => { if (CHILDREN.length && selectedChild == null) setSelectedChild(CHILDREN[0].id); }, [CHILDREN, selectedChild]);
   const [_tooltip, setTooltip] = useState<{ day: number; x: number; y: number } | null>(null);
   const [excuseDate, setExcuseDate] = useState('');
   const [excuseReason, setExcuseReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  // Build calendar
-  const firstDay = new Date(YEAR, MONTH, 1).getDay(); // 0=Sun
+  const firstDay = new Date(YEAR, MONTH, 1).getDay();
   const daysInMonth = new Date(YEAR, MONTH + 1, 0).getDate();
-  const today = 23; // mock today
+  const today = new Date().getDate();
 
   // Stats
   const presentCount = Object.values(ATTENDANCE_MAP).filter(s => s === 'present').length;

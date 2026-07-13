@@ -15,12 +15,6 @@ const C = {
 const TABS = ['الجديدة', 'المنتهية'] as const;
 type Tab = typeof TABS[number];
 
-const MOCK_HW = [
-  { id:1, subject:'الرياضيات',         desc:'حل تمارين الوحدة 3',                  due:'25/05/2026', status:'new' },
-  { id:2, subject:'اللغة الإنجليزية',  desc:'كتابة فقرة عن هواياتك',               due:'26/05/2026', status:'new' },
-  { id:3, subject:'العلوم',             desc:'مشروع دورة حياة النبات',             due:'27/05/2026', status:'new' },
-];
-
 const HW_COLORS: Record<string, { bg:string; color:string }> = {
   'الرياضيات':         { bg:'#EEF2FF', color:'#4F46E5' },
   'اللغة الإنجليزية': { bg:'#DBEAFE', color:'#2563EB' },
@@ -50,7 +44,7 @@ export default function StudentHomeworkPage() {
 
   const newHw   = homeworks.filter(h => !h.submitted);
   const doneHw  = homeworks.filter(h => h.submitted);
-  const display = tab === 'الجديدة' ? (newHw.length  > 0 ? newHw  : MOCK_HW) : (doneHw.length > 0 ? doneHw : []);
+  const display = tab === 'الجديدة' ? newHw : doneHw;
 
   return (
     <StudentLayout>
@@ -71,7 +65,7 @@ export default function StudentHomeworkPage() {
             {t}
             {t==='الجديدة' && (
               <span style={{ width:20, height:20, borderRadius:'50%', background:C.goldGrad, color:'#1B2038', fontSize:9, fontWeight:800, display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
-                {newHw.length || 5}
+                {newHw.length || 0}
               </span>
             )}
           </button>

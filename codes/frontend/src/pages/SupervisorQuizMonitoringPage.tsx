@@ -18,14 +18,7 @@ interface QuizResult {
   status: 'struggling' | 'average' | 'excellent';
 }
 
-const MOCK: QuizResult[] = [
-  { id:1, student:'أحمد محمد',   quiz:'اختبار الوحدة 3',        subject:'الرياضيات',      score:45,  maxScore:100, hasEssay:false, essayGraded:true,  status:'struggling' },
-  { id:2, student:'سارة علي',    quiz:'اختبار الفصل الثاني',    subject:'اللغة العربية',  score:82,  maxScore:100, hasEssay:true,  essayGraded:false, status:'average' },
-  { id:3, student:'خالد أحمد',   quiz:'اختبار الكيمياء',        subject:'العلوم',          score:91,  maxScore:100, hasEssay:false, essayGraded:true,  status:'excellent' },
-  { id:4, student:'نورة سلمان',  quiz:'Grammar Test Unit 5',    subject:'الإنجليزية',     score:38,  maxScore:100, hasEssay:true,  essayGraded:false, status:'struggling' },
-  { id:5, student:'فيصل ناصر',  quiz:'اختبار الوحدة 3',        subject:'الرياضيات',      score:74,  maxScore:100, hasEssay:false, essayGraded:true,  status:'average' },
-  { id:6, student:'ريم الشمري', quiz:'اختبار الفصل الثاني',    subject:'اللغة العربية',  score:95,  maxScore:100, hasEssay:true,  essayGraded:true,  status:'excellent' },
-];
+const MOCK: QuizResult[] = [];
 
 const STATUS_MAP = {
   struggling:{ label:'متعثر',  color:C.red,   bg:C.redBg },
@@ -49,7 +42,7 @@ export default function SupervisorQuizMonitoringPage() {
   const [essayScores, setEssayScores] = useState<Record<number,string>>({});
   const [essayApproved, setEssayApproved] = useState<Set<number>>(new Set());
 
-  const avg = Math.round(MOCK.reduce((s,r)=>s+r.score,0)/MOCK.length);
+  const avg = MOCK.length ? Math.round(MOCK.reduce((s,r)=>s+r.score,0)/MOCK.length) : 0;
   const struggling = MOCK.filter(r=>r.status==='struggling').length;
   const needEssay = MOCK.filter(r=>r.hasEssay && !r.essayGraded && !essayApproved.has(r.id)).length;
 

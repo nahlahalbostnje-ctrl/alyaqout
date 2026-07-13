@@ -20,14 +20,6 @@ const SUBJECT_EMOJI: Record<string, string> = {
   'اللغة العربية': '📜', 'التربية الإسلامية': '🕌',
 };
 
-const MOCK_COURSES = [
-  { id:1, title:'الرياضيات — الوحدة 3', teacher:{ name:'أ. أحمد الحربي' }, category:{ name:'الرياضيات', grade:{ name:'الصف الخامس' } }, is_free:false, price:120, progress:74, emoji:'📐' },
-  { id:2, title:'اللغة الإنجليزية المتقدمة', teacher:{ name:'Sarah Johnson' }, category:{ name:'اللغات', grade:{ name:'الصف الخامس' } }, is_free:true, price:0, progress:52, emoji:'🌐' },
-  { id:3, title:'العلوم — الأحياء', teacher:{ name:'أ. خالد النجار' }, category:{ name:'العلوم', grade:{ name:'الصف الخامس' } }, is_free:false, price:90, progress:88, emoji:'🧪' },
-  { id:4, title:'اللغة العربية النحو', teacher:{ name:'أ. فاطمة علي' }, category:{ name:'اللغات', grade:{ name:'الصف الخامس' } }, is_free:true, price:0, progress:61, emoji:'📜' },
-  { id:5, title:'التربية الإسلامية', teacher:{ name:'أ. محمد سليمان' }, category:{ name:'التربية الإسلامية', grade:{ name:'الصف الخامس' } }, is_free:true, price:0, progress:95, emoji:'🕌' },
-];
-
 export default function StudentCoursesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -37,11 +29,11 @@ export default function StudentCoursesPage() {
 
   useEffect(() => { dispatch(fetchStudentCourses()); }, [dispatch]);
 
-  const display = (courses.length > 0 ? courses.map(c => ({
+  const display = courses.map(c => ({
     ...c,
-    progress: Math.floor(Math.random() * 80) + 10,
+    progress: 0,
     emoji: SUBJECT_EMOJI[c.category?.name ?? ''] ?? '📚',
-  })) : MOCK_COURSES).filter(c => {
+  })).filter(c => {
     const matchCat = cat === 'الكل' || c.category?.name?.includes(cat) || cat === 'اللغات' && (c.category?.name?.includes('اللغة') || c.category?.name === 'اللغات');
     const matchSearch = !search || c.title?.includes(search) || c.teacher?.name?.includes(search);
     return matchCat && matchSearch;

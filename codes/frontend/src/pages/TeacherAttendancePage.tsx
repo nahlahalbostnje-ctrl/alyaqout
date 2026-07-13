@@ -12,18 +12,8 @@ const C = {
   amber:'#D97706', amberBg:'rgba(217,119,6,0.08)',
 };
 
-const CLASSES = ['10أ - رياضيات', '10ب - رياضيات', '11أ - فيزياء'];
-
-const STUDENTS = [
-  { id:1, name:'أحمد محمد السالم', absences:2, behavior:'ممتاز', attention:'عالي' },
-  { id:2, name:'سارة خالد العمر', absences:0, behavior:'جيد جداً', attention:'متوسط' },
-  { id:3, name:'محمد علي النجار', absences:5, behavior:'يحتاج متابعة', attention:'منخفض' },
-  { id:4, name:'نورة سعد المالك', absences:1, behavior:'ممتاز', attention:'عالي' },
-  { id:5, name:'خالد فيصل الغامدي', absences:3, behavior:'جيد', attention:'متوسط' },
-  { id:6, name:'لينا أحمد الزهراني', absences:0, behavior:'ممتاز', attention:'عالي' },
-  { id:7, name:'يوسف عمر الحارثي', absences:7, behavior:'يحتاج متابعة', attention:'منخفض' },
-  { id:8, name:'منى فهد الشهري', absences:1, behavior:'جيد جداً', attention:'عالي' },
-];
+const CLASSES: string[] = [];
+const STUDENTS: { id:number; name:string; absences:number; behavior:string; attention:string }[] = [];
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | '';
 
@@ -45,7 +35,7 @@ const BEHAVIOR_OPTIONS = ['ممتاز', 'جيد جداً', 'جيد', 'يحتاج
 const ATTENTION_OPTIONS = ['عالي', 'متوسط', 'منخفض', 'غائب ذهنياً'];
 
 export default function TeacherAttendancePage() {
-  const [selectedClass, setSelectedClass] = useState(CLASSES[0]);
+  const [selectedClass, setSelectedClass] = useState('');
   const [today] = useState(new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' }));
   const [rows, setRows] = useState<StudentRow[]>(
     STUDENTS.map(s => ({ ...s, attendance:'' as AttendanceStatus, behaviorNote:'', attentionNote:'' }))

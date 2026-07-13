@@ -25,14 +25,7 @@ const ACTION_ICON: Record<string, string> = {
   approve: '✅', reject: '❌', default: '📝',
 };
 
-const MOCK_LOGS: LogEntry[] = [
-  { id:1, action:'create_user', target_type:'User', target_label:'أحمد محمد (طالب)', ip_address:'192.168.1.1', created_at:'2026-06-30T09:00:00Z' },
-  { id:2, action:'toggle_user', target_type:'User', target_label:'سارة علي (معلم)', ip_address:'192.168.1.1', created_at:'2026-06-30T09:15:00Z' },
-  { id:3, action:'delete_user', target_type:'User', target_label:'محمد حسن (ولي أمر)', ip_address:'192.168.1.2', created_at:'2026-06-30T10:00:00Z' },
-  { id:4, action:'approve', target_type:'Exam', target_label:'اختبار الرياضيات النهائي', ip_address:'192.168.1.1', created_at:'2026-06-30T10:30:00Z' },
-  { id:5, action:'update_city', target_type:'City', target_label:'رام الله', ip_address:'192.168.1.3', created_at:'2026-06-30T11:00:00Z' },
-  { id:6, action:'reject', target_type:'Homework', target_label:'واجب اللغة العربية', ip_address:'192.168.1.1', created_at:'2026-06-30T11:45:00Z' },
-];
+
 
 const ACTION_LABEL: Record<string, string> = {
   create_user:'إنشاء مستخدم', delete_user:'حذف مستخدم', toggle_user:'تغيير حالة',
@@ -42,7 +35,7 @@ const ACTION_LABEL: Record<string, string> = {
 
 export default function AdminAuditLogPage() {
   const token = useAppSelector(s => s.auth.token) ?? '';
-  const [logs, setLogs] = useState<LogEntry[]>(MOCK_LOGS);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -52,7 +45,7 @@ export default function AdminAuditLogPage() {
     })
       .then(r => r.json())
       .then(j => { if (j.data?.data) setLogs(j.data.data); })
-      .catch(() => {})
+      .catch(() => { setLogs([]); })
       .finally(() => setLoading(false));
   }, [token]);
 

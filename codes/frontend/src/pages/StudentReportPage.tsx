@@ -16,22 +16,9 @@ const C = {
 const BH = 60;
 const font = { fontFamily:"'Cairo', sans-serif" };
 
-// ── Mock fallback ─────────────────────────────────────────────────────────────
-const MOCK_SUBJECTS = [
-  { name:'الرياضيات',          pct:90, color:'#2563EB' },
-  { name:'اللغة الإنجليزية',  pct:87, color:'#7C3AED' },
-  { name:'العلوم',              pct:85, color:'#16A34A' },
-  { name:'اللغة العربية',       pct:76, color:'#D97706' },
-  { name:'التربية الإسلامية',  pct:92, color:'#DC2626' },
-];
-
-const MOCK_EXAMS = [
-  { title:'امتحان الرياضيات',         pct:90, date:'٢٠٢٦/٦/١٠' },
-  { title:'امتحان اللغة الإنجليزية', pct:85, date:'٢٠٢٦/٦/٥'  },
-  { title:'امتحان العلوم',            pct:92, date:'٢٠٢٦/٥/٢٨' },
-];
-
 const PERIODS = ['هذا الشهر', 'الفصل الأول', 'الفصل الثاني', 'العام الكامل'] as const;
+
+const SUBJECT_COLORS = ['#2563EB', '#7C3AED', '#16A34A', '#D97706', '#DC2626'];
 
 // ── Circular Progress ─────────────────────────────────────────────────────────
 function CircProgress({ pct, size=130 }: { pct:number; size?:number }) {
@@ -62,21 +49,25 @@ export default function StudentReportPage() {
 
   useEffect(() => { dispatch(fetchMyReport()); }, [dispatch]);
 
-  // Build subject list from real data or mock
-  const subjects = myReport?.exams?.recent && myReport.exams.recent.length > 0
-    ? MOCK_SUBJECTS  // API returns exam history not per-subject %, use mock for bars
-    : MOCK_SUBJECTS;
+  // Build subject list from exam history (group by title) when available
+  const subjects = (myReport?.exams?.recent ?? []).map((e, i) => ({
+    name: e.title ?? `امتحان ${i + 1}`,
+    pct: e.pct ?? 0,
+    color: SUBJECT_COLORS[i % SUBJECT_COLORS.length],
+  }));
 
-  const overall = Math.round(subjects.reduce((a,s)=>a+s.pct,0)/subjects.length);
+  const overall = subjects.length > 0
+    ? Math.round(subjects.reduce((a, s) => a + s.pct, 0) / subjects.length)
+    : (myReport?.exams?.average != null ? Math.round(myReport.exams.average) : 0);
 
-  // Real stats from API
+  // Real stats from API — no fake defaults
   const attendance = myReport?.attendance;
   const exams      = myReport?.exams;
   const homework   = myReport?.homework;
 
-  const attRate  = attendance?.rate !== null && attendance?.rate !== undefined ? Math.round(attendance.rate) : 95;
-  const examAvg  = exams?.average !== null && exams?.average !== undefined ? Math.round(exams.average) : 88;
-  const hwAvg    = homework?.average !== null && homework?.average !== undefined ? Math.round(homework.average) : 82;
+  const attRate  = attendance?.rate != null ? Math.round(attendance.rate) : 0;
+  const examAvg  = exams?.average != null ? Math.round(exams.average) : 0;
+  const hwAvg    = homework?.average != null ? Math.round(homework.average) : 0;
 
   const cardS = { background:C.card, borderRadius:18, padding:'18px', boxShadow:C.shadow, border:`1px solid ${C.border}` } as React.CSSProperties;
 
@@ -154,7 +145,9 @@ export default function StudentReportPage() {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:20 }}>
             <div style={{ flex:1 }}>
-              {subjects.map((s,i)=>(
+              {subjects.length === 0 ? (
+                <p style={{ color:C.sub, fontSize:13, textAlign:'center', padding:'20px 0' }}>لا توجد بيانات أداء بالمواد بعد</p>
+              ) : subjects.map((s,i)=>(
                 <div key={i} style={{ marginBottom:14 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
                     <span style={{ color:C.text, fontWeight:600 }}>{s.name}</span>
@@ -166,7 +159,7 @@ export default function StudentReportPage() {
                 </div>
               ))}
             </div>
-            <CircProgress pct={overall} />
+            {subjects.length > 0 && <CircProgress pct={overall} />}
           </div>
         </div>
 
@@ -175,9 +168,9 @@ export default function StudentReportPage() {
           <p style={{ color:C.text, fontWeight:900, fontSize:15, marginBottom:14 }}>📅 الحضور والغياب</p>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))', gap:10 }}>
             {[
-              { label:'أيام الحضور', val:attendance?.present ?? 48, color:C.green   },
-              { label:'أيام الغياب', val:attendance?.absent  ?? 2,  color:C.red     },
-              { label:'التأخر',      val:attendance?.late    ?? 1,  color:'#D97706' },
+              { label:'أيام الحضور', val:attendance?.present ?? 0, color:C.green   },
+              { label:'أيام الغياب', val:attendance?.absent  ?? 0,  color:C.red     },
+              { label:'التأخر',      val:attendance?.late    ?? 0,  color:'#D97706' },
             ].map((s,i)=>(
               <div key={i} style={{ textAlign:'center', padding:'14px 10px', borderRadius:14, background:`${s.color}0D`, border:`1px solid ${s.color}22` }}>
                 <p style={{ color:s.color, fontWeight:900, fontSize:24 }}>{s.val}</p>
@@ -203,10 +196,9 @@ export default function StudentReportPage() {
             <button onClick={()=>navigate('/student/exams')} style={{ color:C.gold, fontSize:12, fontWeight:700, background:'none', border:'none', cursor:'pointer', ...font }}>عرض الكل</button>
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {(exams?.recent && exams.recent.length > 0
-              ? exams.recent.map((e,i)=>({ title:e.title??`امتحان ${i+1}`, pct:e.pct, date:e.submitted_at?.slice(0,10)??'—' }))
-              : MOCK_EXAMS
-            ).map((e,i)=>(
+            {!(exams?.recent && exams.recent.length > 0) ? (
+              <p style={{ color:C.sub, fontSize:13, textAlign:'center', padding:'16px 0' }}>لا توجد امتحانات حديثة</p>
+            ) : exams.recent.map((e,i)=>({ title:e.title??`امتحان ${i+1}`, pct:e.pct, date:e.submitted_at?.slice(0,10)??'—' })).map((e,i)=>(
               <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:14, background:'#F9FAFB', border:`1px solid ${C.border}` }}>
                 <div style={{ width:44, height:44, borderRadius:12, background:e.pct>=85 ? 'rgba(22,163,74,0.1)' : e.pct>=70 ? C.goldBg : 'rgba(239,68,68,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <span style={{ fontWeight:900, fontSize:14, color:e.pct>=85 ? C.green : e.pct>=70 ? C.gold : C.red }}>{e.pct}%</span>
@@ -228,8 +220,8 @@ export default function StudentReportPage() {
           <p style={{ color:C.text, fontWeight:900, fontSize:15, marginBottom:14 }}>📚 الواجبات المنزلية</p>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
             {[
-              { label:'واجبات مُسلَّمة', val:homework?.submitted??18, icon:'✅', color:C.green  },
-              { label:'واجبات متأخرة',  val:homework?.late??2,        icon:'⏰', color:'#D97706' },
+              { label:'واجبات مُسلَّمة', val:homework?.submitted??0, icon:'✅', color:C.green  },
+              { label:'واجبات متأخرة',  val:homework?.late??0,        icon:'⏰', color:'#D97706' },
             ].map((s,i)=>(
               <div key={i} style={{ textAlign:'center', padding:'14px 10px', borderRadius:14, background:`${s.color}0D`, border:`1px solid ${s.color}22` }}>
                 <div style={{ fontSize:26, marginBottom:6 }}>{s.icon}</div>
@@ -257,7 +249,9 @@ export default function StudentReportPage() {
             <span style={{ marginRight:'auto', padding:'3px 10px', borderRadius:20, background:C.goldBg, color:C.goldL, fontSize:11, fontWeight:700, border:`1px solid ${C.goldBdr}` }}>AI</span>
           </div>
           <p style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7, marginBottom:16 }}>
-            أنت تتقدم بشكل رائع! مستوى الحضور ممتاز {attRate}%. ننصحك بمراجعة دروس اللغة العربية لتحسين نتيجتك من {subjects.find(s=>s.name==='اللغة العربية')?.pct}% إلى هدف 85%.
+            {myReport
+              ? `مستوى الحضور ${attRate}%. متوسط الامتحانات ${examAvg}%. متوسط الواجبات ${hwAvg}%.`
+              : 'لا تتوفر بيانات كافية للتحليل بعد.'}
           </p>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={()=>navigate('/student/points')}

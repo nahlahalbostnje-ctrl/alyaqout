@@ -20,16 +20,7 @@ interface ClassSlot {
   grade: string; room: string; status: 'active' | 'cancelled' | 'done';
 }
 
-const MOCK_SCHEDULE: ClassSlot[] = [
-  { id:1, day:'الأحد',    time:'08:00', subject:'رياضيات', grade:'الصف العاشر',  room:'A101', status:'active' },
-  { id:2, day:'الأحد',    time:'10:00', subject:'رياضيات', grade:'الصف التاسع',  room:'A102', status:'active' },
-  { id:3, day:'الاثنين',  time:'09:00', subject:'رياضيات', grade:'الصف الحادي عشر', room:'B201', status:'done' },
-  { id:4, day:'الثلاثاء', time:'08:00', subject:'رياضيات', grade:'الصف العاشر',  room:'A101', status:'active' },
-  { id:5, day:'الثلاثاء', time:'11:00', subject:'رياضيات', grade:'الصف التاسع',  room:'A102', status:'cancelled' },
-  { id:6, day:'الأربعاء', time:'10:00', subject:'رياضيات', grade:'الصف الحادي عشر', room:'B201', status:'active' },
-  { id:7, day:'الخميس',   time:'08:00', subject:'رياضيات', grade:'الصف العاشر',  room:'A101', status:'active' },
-  { id:8, day:'الخميس',   time:'13:00', subject:'رياضيات', grade:'الصف التاسع',  room:'A102', status:'active' },
-];
+const SCHEDULE: ClassSlot[] = [];
 
 const STATUS_COLOR: Record<string, string> = { active:C.blue, done:C.green, cancelled:C.red };
 const STATUS_BG: Record<string, string> = { active:C.blueBg, done:C.greenBg, cancelled:C.redBg };
@@ -43,12 +34,12 @@ export default function TeacherSchedulePage() {
   const [form, setForm] = useState({ day: DAYS[0], time: TIMES[0], grade: '', room: '' });
 
   const getSlot = (day: string, time: string) =>
-    MOCK_SCHEDULE.find(s => s.day === day && s.time === time);
+    SCHEDULE.find(s => s.day === day && s.time === time);
 
-  const total   = MOCK_SCHEDULE.length;
-  const active  = MOCK_SCHEDULE.filter(s => s.status === 'active').length;
-  const done    = MOCK_SCHEDULE.filter(s => s.status === 'done').length;
-  const cancelled = MOCK_SCHEDULE.filter(s => s.status === 'cancelled').length;
+  const total   = SCHEDULE.length;
+  const active  = SCHEDULE.filter(s => s.status === 'active').length;
+  const done    = SCHEDULE.filter(s => s.status === 'done').length;
+  const cancelled = SCHEDULE.filter(s => s.status === 'cancelled').length;
 
   return (
     <TeacherLayout>
@@ -136,7 +127,7 @@ export default function TeacherSchedulePage() {
         ) : (
           /* List View */
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {MOCK_SCHEDULE.map(slot => (
+            {SCHEDULE.map(slot => (
               <div key={slot.id} style={{ background:C.card, borderRadius:14, padding:'14px 18px', border:`1px solid ${C.border}`, boxShadow:C.shadow, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <div style={{ width:50, height:50, borderRadius:12, background:STATUS_BG[slot.status], display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>

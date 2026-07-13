@@ -14,13 +14,12 @@ const C = {
 
 const SEMESTERS = ['الفصل الدراسي الثاني', 'الفصل الدراسي الأول', 'العام الكامل'] as const;
 
-const MOCK_RESULTS = [
-  { subject:'الرياضيات',         pct:95, grade:'ممتاز',    color:'#16A34A' },
-  { subject:'اللغة الإنجليزية',  pct:88, grade:'جيد جداً', color:'#2563EB' },
-  { subject:'العلوم',             pct:92, grade:'ممتاز',    color:'#16A34A' },
-  { subject:'اللغة العربية',      pct:90, grade:'ممتاز',    color:'#16A34A' },
-  { subject:'التربية الإسلامية', pct:94, grade:'ممتاز',    color:'#16A34A' },
-];
+function gradeLabel(pct: number) {
+  if (pct >= 90) return 'ممتاز';
+  if (pct >= 80) return 'جيد جداً';
+  if (pct >= 70) return 'جيد';
+  return 'مقبول';
+}
 
 const GRADE_BADGE: Record<string, { bg:string; color:string }> = {
   'ممتاز':    { bg:'rgba(22,163,74,0.1)',   color:'#16A34A' },
@@ -29,10 +28,9 @@ const GRADE_BADGE: Record<string, { bg:string; color:string }> = {
   'مقبول':    { bg:'rgba(220,38,38,0.1)',   color:'#DC2626' },
 };
 
-
 export default function StudentPointsPage() {
   const dispatch = useAppDispatch();
-  const { totalPoints } = useAppSelector(s => s.gamification);
+  const { totalPoints, history, leaderboard, myRank, loading } = useAppSelector(s => s.gamification);
   const [sem, setSem]     = useState(0);
   const [picker, setPicker] = useState(false);
   const { show: celebrate, element: toastEl } = useEncouragement();
@@ -43,13 +41,27 @@ export default function StudentPointsPage() {
     celebrate('points_earned');
   }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const overall = Math.round(MOCK_RESULTS.reduce((a,s)=>a+s.pct,0)/MOCK_RESULTS.length);
+  // Derive subject-like rows from points history (grouped by action/label)
+  const results = history.map(h => {
+    const pct = Math.min(100, Math.max(0, Math.round((h.points / 100) * 100)));
+    return {
+      subject: h.label || h.description || h.action,
+      pct,
+      grade: gradeLabel(pct),
+      points: h.points,
+      earned_at: h.earned_at,
+    };
+  });
+
+  const overall = results.length > 0
+    ? Math.round(results.reduce((a, s) => a + s.pct, 0) / results.length)
+    : 0;
+  const overallGrade = gradeLabel(overall);
 
   return (
     <StudentLayout>
     <div dir="rtl" style={{ fontFamily:"'Cairo',sans-serif" }}>
 
-      {/* Page Header */}
       <div style={{ padding:'20px 16px 4px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <div style={{ width:4, height:22, borderRadius:2, background:C.goldGrad }} />
@@ -59,7 +71,6 @@ export default function StudentPointsPage() {
 
       <div style={{ padding:'14px 16px 0' }}>
 
-        {/* Semester Picker */}
         <div style={{ position:'relative', marginBottom:16 }}>
           <button onClick={()=>setPicker(p=>!p)} style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 16px', borderRadius:12, background:C.card, border:`1px solid ${C.border}`, cursor:'pointer', fontFamily:"'Cairo',sans-serif", fontSize:13, color:C.text, fontWeight:600, boxShadow:C.shadow }}>
             <span>{SEMESTERS[sem]}</span>
@@ -79,38 +90,67 @@ export default function StudentPointsPage() {
           )}
         </div>
 
-        {/* Overall Grade */}
         <div style={{ background:C.card, borderRadius:20, padding:'24px', marginBottom:14, boxShadow:C.shadow, border:`1px solid ${C.border}`, textAlign:'center' }}>
           <div style={{ width:70, height:70, borderRadius:'50%', background:C.goldGrad, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', fontSize:36, boxShadow:'0 6px 18px rgba(201,149,42,0.4)' }}>🏅</div>
-          <p style={{ color:C.sub, fontSize:12.5, marginBottom:5 }}>المعدل العام</p>
-          <p style={{ color:C.navy2, fontWeight:900, fontSize:40, lineHeight:1, marginBottom:8 }}>{overall}%</p>
-          <span style={{ display:'inline-block', padding:'5px 18px', borderRadius:20, background:'rgba(22,163,74,0.1)', color:'#16A34A', fontSize:14, fontWeight:700 }}>ممتاز</span>
+          <p style={{ color:C.sub, fontSize:12.5, marginBottom:5 }}>مجموع نقاطك</p>
+          <p style={{ color:C.navy2, fontWeight:900, fontSize:40, lineHeight:1, marginBottom:8 }}>{(totalPoints || 0).toLocaleString()}</p>
+          {myRank != null && (
+            <span style={{ display:'inline-block', padding:'5px 18px', borderRadius:20, background:C.goldBg, color:C.gold, fontSize:14, fontWeight:700 }}>المركز #{myRank}</span>
+          )}
+          {results.length > 0 && (
+            <p style={{ color:C.sub, fontSize:12, marginTop:10 }}>متوسط النشاط: {overall}% — {overallGrade}</p>
+          )}
         </div>
 
-        {/* Subject Results */}
-        <div style={{ background:C.card, borderRadius:20, overflow:'hidden', boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:16 }}>
-          {MOCK_RESULTS.map((s,i) => {
-            const badge = GRADE_BADGE[s.grade] ?? GRADE_BADGE['ممتاز'];
-            return (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:i<MOCK_RESULTS.length-1?`1px solid ${C.border}`:'none' }}>
-                <div style={{ width:38, height:38, borderRadius:12, background:C.goldBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
+        {loading && (
+          <p style={{ color:C.dim, textAlign:'center', padding:'20px 0', fontSize:14 }}>جاري التحميل...</p>
+        )}
+
+        {!loading && results.length === 0 && (
+          <div style={{ background:C.card, borderRadius:20, padding:'40px 18px', boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:16, textAlign:'center' }}>
+            <div style={{ fontSize:40, marginBottom:10 }}>🏅</div>
+            <p style={{ color:C.sub, fontSize:14, fontWeight:600 }}>لا توجد سجلات نقاط بعد</p>
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div style={{ background:C.card, borderRadius:20, overflow:'hidden', boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:16 }}>
+            {results.map((s,i) => {
+              const badge = GRADE_BADGE[s.grade] ?? GRADE_BADGE['ممتاز'];
+              return (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:i<results.length-1?`1px solid ${C.border}`:'none' }}>
+                  <div style={{ width:38, height:38, borderRadius:12, background:C.goldBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ color:C.navy2, fontWeight:700, fontSize:14 }}>{s.subject}</p>
+                    {s.earned_at && <p style={{ color:C.dim, fontSize:11 }}>{s.earned_at}</p>}
+                  </div>
+                  <div style={{ textAlign:'center', marginLeft:10 }}>
+                    <p style={{ color:C.navy2, fontWeight:800, fontSize:17, lineHeight:1, marginBottom:3 }}>+{s.points}</p>
+                  </div>
+                  <span style={{ padding:'4px 12px', borderRadius:20, background:badge.bg, color:badge.color, fontSize:11.5, fontWeight:700 }}>{s.grade}</span>
                 </div>
-                <div style={{ flex:1 }}>
-                  <p style={{ color:C.navy2, fontWeight:700, fontSize:14 }}>{s.subject}</p>
-                </div>
-                <div style={{ textAlign:'center', marginLeft:10 }}>
-                  <p style={{ color:C.navy2, fontWeight:800, fontSize:17, lineHeight:1, marginBottom:3 }}>{s.pct}%</p>
-                </div>
-                <span style={{ padding:'4px 12px', borderRadius:20, background:badge.bg, color:badge.color, fontSize:11.5, fontWeight:700 }}>{s.grade}</span>
+              );
+            })}
+          </div>
+        )}
+
+        {leaderboard.length > 0 && (
+          <div style={{ background:C.card, borderRadius:18, padding:'16px 18px', boxShadow:C.shadow, border:`1px solid ${C.border}`, marginBottom:16 }}>
+            <p style={{ color:C.text, fontWeight:800, fontSize:14, marginBottom:12 }}>لوحة المتصدرين</p>
+            {leaderboard.slice(0, 5).map((e, i) => (
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:i<4?`1px solid ${C.border}`:'none' }}>
+                <span style={{ color:e.is_me?C.gold:C.sub, fontWeight:800, width:28 }}>#{e.rank}</span>
+                <span style={{ flex:1, color:C.text, fontWeight:e.is_me?700:500, fontSize:13 }}>{e.name}{e.is_me?' (أنت)':''}</span>
+                <span style={{ color:C.gold, fontWeight:800, fontSize:13 }}>{e.points.toLocaleString()}</span>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {/* Download */}
         <button onClick={()=>alert('تحميل تقرير النقاط والأداء بصيغة PDF قيد التطوير.')} style={{ width:'100%', padding:'14px', borderRadius:15, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:'0 4px 16px rgba(201,149,42,0.4)', marginBottom:16 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
@@ -118,12 +158,11 @@ export default function StudentPointsPage() {
           تحميل التقرير
         </button>
 
-        {/* Points summary */}
         <div style={{ background:C.card, borderRadius:18, padding:'16px 18px', boxShadow:C.shadow, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:14 }}>
           <span style={{ fontSize:32 }}>⭐</span>
           <div>
             <p style={{ color:C.sub, fontSize:12, marginBottom:2 }}>مجموع نقاطك</p>
-            <p style={{ color:C.navy2, fontWeight:900, fontSize:22 }}>{(totalPoints||5420).toLocaleString()} نقطة</p>
+            <p style={{ color:C.navy2, fontWeight:900, fontSize:22 }}>{(totalPoints||0).toLocaleString()} نقطة</p>
           </div>
           <button onClick={()=>alert('متجر المكافآت قريباً — سيتم تفعيله عند ربط كتالوج الجوائز الفعلي.')} style={{ marginRight:'auto', padding:'8px 16px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, color:C.gold, fontWeight:700, fontSize:12, cursor:'pointer' }}>
             متجر المكافآت

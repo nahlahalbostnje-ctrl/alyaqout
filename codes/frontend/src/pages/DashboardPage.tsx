@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
+import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 import BrandLogo from '../components/BrandLogo';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -35,89 +36,36 @@ const NAV = [
   { label:'مركز التطوير',            to:'/dashboard/dev-center',         icon:'🛠️', end:false },
 ];
 
-// ─── Static data ──────────────────────────────────────────────────────────────
-const STATS = [
-  { label:'إجمالي الأفرع',           value:'8',        sub:'+1 هذا الشهر',             icon:'🌍', color:C.blue   },
-  { label:'إجمالي الطلاب',           value:'12,842',   sub:'+1,250 هذا الشهر',         icon:'🎓', color:C.purple },
-  { label:'إجمالي المعلمين',         value:'936',      sub:'+82 هذا الشهر',            icon:'👨‍🏫', color:C.teal  },
-  { label:'المحتوى المعتمد',          value:'2,451',    sub:'+215 هذا الشهر',           icon:'✅', color:C.green  },
-  { label:'نسبة رضا المستخدمين',     value:'94.6%',    sub:'+3.2% عن الشهر السابق',   icon:'⭐', color:C.orange },
-  { label:'الإيرادات هذا الشهر',     value:'245,680',  sub:'+18% عن الشهر الماضي',    icon:'💰', color:C.green, currency:'ريال سعودي' },
-];
+function countryFlag(name: string): string {
+  if (name.includes('فلسطين') || /palestine/i.test(name)) return '🇵🇸';
+  if (name.includes('سعود') || /saudi/i.test(name)) return '🇸🇦';
+  if (name.includes('مصر') || /egypt/i.test(name)) return '🇪🇬';
+  if (name.includes('أردن') || name.includes('الاردن') || /jordan/i.test(name)) return '🇯🇴';
+  if (name.includes('إمارات') || name.includes('الامارات') || /emirates|uae/i.test(name)) return '🇦🇪';
+  if (name.includes('كويت') || /kuwait/i.test(name)) return '🇰🇼';
+  if (name.includes('قطر') || /qatar/i.test(name)) return '🇶🇦';
+  if (name.includes('بحرين') || /bahrain/i.test(name)) return '🇧🇭';
+  return '🌍';
+}
 
-const APPROVALS = [
-  { type:'واجبات بانتظار الاعتماد',  count:24, icon:'📚', color:C.orange },
-  { type:'اختبارات بانتظار الاعتماد',count:18, icon:'📝', color:C.blue   },
-  { type:'ملفات بانتظار الاعتماد',   count:36, icon:'📂', color:C.purple },
-  { type:'رسائل بانتظار الاعتماد',   count:15, icon:'✉️', color:C.teal   },
-  { type:'درجات بانتظار الاعتماد',   count:27, icon:'📊', color:C.red    },
-];
-
-const GROWTH_DATA = [
-  { month:'ديسمبر 2025', v:8450  },
-  { month:'يناير 2026',  v:9120  },
-  { month:'فبراير 2026', v:9850  },
-  { month:'مارس 2026',   v:10421 },
-  { month:'أبريل 2026',  v:11612 },
-  { month:'مايو 2026',   v:12842 },
-];
-
-const DONUT_SEGS = [
-  { label:'طلاب',                pct:90.2, count:12842, color:'#3B82F6' },
-  { label:'معلمون',               pct:6.6,  count:936,   color:'#10B981' },
-  { label:'أولياء أمور',          pct:2.8,  count:399,   color:'#F59E0B' },
-  { label:'إدارة وموظفون',        pct:0.4,  count:58,    color:'#8B5CF6' },
-];
-
-const ALERTS_DATA = [
-  { text:'انخفاض في حضور الطلاب',          sub:'18 طالب بحاجة متابعة',             color:C.red,    bg:'rgba(239,68,68,0.07)',    icon:'🚨', time:'منذ 30 دقيقة' },
-  { text:'اعتمادات بانتظار المراجعة',       sub:'120 عنصر بانتظار اعتمادك',         color:C.orange, bg:'rgba(217,119,6,0.07)',    icon:'⚠️', time:'منذ ساعتين'   },
-  { text:'نسخ احتياطي',                     sub:'تم إجراء النسخ الاحتياطي بنجاح',   color:C.blue,   bg:'rgba(37,99,235,0.07)',    icon:'ℹ️', time:'منذ 5 ساعات'  },
-  { text:'تحديث النظام',                    sub:'تم تحديث النظام بنجاح',             color:C.green,  bg:'rgba(22,163,74,0.07)',    icon:'✅', time:'منذ يوم'       },
-];
-
-const TOP_BRANCHES = [
-  { rank:1, flag:'🇸🇦', name:'فرع السعودية',  loc:'3,410 طالب', pct:97.1 },
-  { rank:2, flag:'🇵🇸', name:'فرع فلسطين',    loc:'2,840 طالب', pct:98.7 },
-  { rank:3, flag:'🇪🇬', name:'فرع مصر',       loc:'2,980 طالب', pct:94.8 },
-  { rank:4, flag:'🇯🇴', name:'فرع الأردن',    loc:'2,120 طالب', pct:96.2 },
-  { rank:5, flag:'🇦🇪', name:'فرع الإمارات',  loc:'1,620 طالب', pct:95.3 },
-];
-
-const ACTIVITY = [
-  { name:'محمد أحمد',   action:'رفع واجب جديد',       sub:'الصف الخامس - اللغة الإنجليزية',       time:'الآن',           avatar:'👦', live:false },
-  { name:'سارة خالد',   action:'بدأت حصة مباشرة',    sub:'الرياضيات - الصف الثالث المتوسط',       time:'منذ 2 دقيقة',   avatar:'👩', live:true  },
-  { name:'أحمد محمد',   action:'رفع ملف جديد',        sub:'العلوم - الصف الأول ثانوي',            time:'منذ 5 دقائق',   avatar:'👦', live:false },
-  { name:'نورة عبدالله',action:'أرسلت رسالة',         sub:'الطلاب - علي حسن',                     time:'منذ 7 دقائق',   avatar:'👩', live:false },
-  { name:'اختبار شهري', action:'تم إنشاؤه',           sub:'الفيزياء - الصف الثاني ثانوي',         time:'منذ 10 دقائق',  avatar:'📋', live:false },
-];
-
-const SERVERS = [
-  { name:'الخادم الرئيسي',       icon:'🖥️' },
-  { name:'خدمة السيرفرات',      icon:'⚙️' },
-  { name:'قاعدة البيانات',       icon:'🗄️' },
-  { name:'خدمة التخزين',         icon:'💾' },
-  { name:'نظام النسخ الاحتياطي', icon:'🔄' },
-];
-
-const REVENUE_DATA = [
-  { month:'ديسمبر', v:580000  },
-  { month:'يناير',  v:720000  },
-  { month:'فبراير', v:850000  },
-  { month:'مارس',   v:990000  },
-  { month:'أبريل',  v:1100000 },
-  { month:'مايو',   v:1245680 },
-];
+function fmt(n: number | undefined | null): string {
+  return (n ?? 0).toLocaleString('en-US');
+}
 
 // ─── SVG Line Chart ───────────────────────────────────────────────────────────
 function LineChart({ data }: { data:{month:string;v:number}[] }) {
+  if (data.length === 0) {
+    return <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:C.sub, fontSize:13 }}>لا توجد بيانات</div>;
+  }
   const W=420,H=160,PX=28,PY=16;
-  const max=Math.max(...data.map(d=>d.v)); const min=0;
+  const max=Math.max(...data.map(d=>d.v), 1); const min=0;
   const range=max-min||1;
-  const gx=(i:number)=>PX+(i/(data.length-1))*(W-PX*2);
+  const denom = Math.max(data.length - 1, 1);
+  const gx=(i:number)=>PX+(i/denom)*(W-PX*2);
   const gy=(v:number)=>H-PY-((v-min)/range)*(H-PY*2);
   const pts=data.map((d,i)=>`${gx(i)},${gy(d.v)}`).join(' ');
   const area=`M${gx(0)},${gy(data[0].v)} ${data.map((d,i)=>`L${gx(i)},${gy(d.v)}`).join(' ')} L${gx(data.length-1)},${H-PY} L${gx(0)},${H-PY}Z`;
+  const label = (v: number) => v >= 1000 ? `${(v/1000).toFixed(v >= 10000 ? 0 : 1)}K` : String(v);
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ overflow:'visible' }}>
       {[0,1,2,3,4].map(i=>{
@@ -130,7 +78,7 @@ function LineChart({ data }: { data:{month:string;v:number}[] }) {
         <g key={i}>
           <circle cx={gx(i)} cy={gy(d.v)} r="4.5" fill={C.gold} stroke="#fff" strokeWidth="2"/>
           <text x={gx(i)} y={gy(d.v)-10} textAnchor="middle" fontSize="9.5" fill={C.text} fontWeight="700" fontFamily="Cairo,sans-serif">
-            {(d.v/1000).toFixed(0)}K
+            {label(d.v)}
           </text>
           <text x={gx(i)} y={H-2} textAnchor="middle" fontSize="8" fill={C.dim} fontFamily="Cairo,sans-serif">{d.month}</text>
         </g>
@@ -139,14 +87,24 @@ function LineChart({ data }: { data:{month:string;v:number}[] }) {
   );
 }
 
+type DonutSeg = { label:string; pct:number; count:number; color:string };
+
 // ─── SVG Donut Chart ──────────────────────────────────────────────────────────
-function DonutChart() {
+function DonutChart({ segs, total }: { segs: DonutSeg[]; total: number }) {
   const R=68; const cx=95; const cy=95; const circ=2*Math.PI*R;
   let rot=-90;
+  if (total === 0 || segs.every(s => s.pct === 0)) {
+    return (
+      <svg width="190" height="190" viewBox="0 0 190 190">
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke="#F3EDE4" strokeWidth="26"/>
+        <text x={cx} y={cy-4} textAnchor="middle" fontSize="14" fontWeight="900" fill={C.sub} fontFamily="Cairo,sans-serif">لا توجد بيانات</text>
+      </svg>
+    );
+  }
   return (
     <svg width="190" height="190" viewBox="0 0 190 190">
       <circle cx={cx} cy={cy} r={R} fill="none" stroke="#F3EDE4" strokeWidth="26"/>
-      {DONUT_SEGS.map((s,i)=>{
+      {segs.map((s,i)=>{
         const dash=(s.pct/100)*circ;
         const el=(
           <circle key={i} cx={cx} cy={cy} r={R} fill="none" stroke={s.color} strokeWidth="26"
@@ -155,31 +113,8 @@ function DonutChart() {
         );
         rot+=(s.pct/100)*360; return el;
       })}
-      <text x={cx} y={cy-10} textAnchor="middle" fontSize="17" fontWeight="900" fill={C.text} fontFamily="Cairo,sans-serif">14,234</text>
+      <text x={cx} y={cy-10} textAnchor="middle" fontSize="17" fontWeight="900" fill={C.text} fontFamily="Cairo,sans-serif">{fmt(total)}</text>
       <text x={cx} y={cy+8}  textAnchor="middle" fontSize="9"  fill={C.sub}  fontFamily="Cairo,sans-serif">إجمالي المستخدمين</text>
-    </svg>
-  );
-}
-
-// ─── SVG Bar Chart ────────────────────────────────────────────────────────────
-function BarChart({ data }: { data:{month:string;v:number}[] }) {
-  const W=360,H=130,PX=10,PY=20;
-  const max=Math.max(...data.map(d=>d.v))||1;
-  const bW=32; const gap=(W-PX*2)/data.length;
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
-      {data.map((d,i)=>{
-        const bH=(d.v/max)*(H-PY*2);
-        const bx=PX+i*gap+(gap-bW)/2;
-        const by=H-PY-bH;
-        return (
-          <g key={i}>
-            <rect x={bx} y={by} width={bW} height={bH} rx="5" fill={C.blue}/>
-            <text x={bx+bW/2} y={H-4} textAnchor="middle" fontSize="8.5" fill={C.dim} fontFamily="Cairo,sans-serif">{d.month}</text>
-            {i===data.length-1&&<text x={bx+bW/2} y={by-5} textAnchor="middle" fontSize="8" fill={C.sub} fontFamily="Cairo,sans-serif">{(d.v/1000000).toFixed(1)}M</text>}
-          </g>
-        );
-      })}
     </svg>
   );
 }
@@ -194,6 +129,9 @@ const sH=(t:string,a?:string,onAction?:()=>void)=>(
 );
 const medalColor=(r:number)=>r===1?C.gold:r===2?'#9CA3AF':'#B45309';
 const medalEmoji=(r:number)=>r===1?'🥇':r===2?'🥈':r===3?'🥉':`${r}`;
+const emptyBox = (
+  <div style={{ padding:'28px 12px', textAlign:'center', color:C.sub, fontSize:13 }}>لا توجد بيانات</div>
+);
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
@@ -201,9 +139,15 @@ export default function DashboardPage() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const user      = useAppSelector(s=>s.auth.user);
+  const { stats, approvals, countryStats, growthChart, loading, error } = useAppSelector(s => s.superAdmin);
   const [sem, setSem] = useState('الفصل الدراسي الثاني 2025-2026');
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchSuperAdminStats());
+  }, [dispatch]);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -211,12 +155,69 @@ export default function DashboardPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
   useEffect(() => { if (isMobile) setSidebarOpen(false); }, [location.pathname, isMobile]);
+
   const now = new Date();
   const timeStr  = now.toLocaleTimeString('en-US',{ hour:'2-digit', minute:'2-digit' });
   const dateStr  = now.toLocaleDateString('ar-EG',{ weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const fullName = user?.name ?? 'عبد الله الشمري';
 
   const handleLogout = ()=>{ dispatch(logout()); navigate('/login',{ replace:true }); };
+
+  const kpiCards = useMemo(() => {
+    const s = stats;
+    const revChange = s?.revenue_change_pct ?? 0;
+    const stuDelta = (s?.students_this_month ?? 0) - (s?.students_last_month ?? 0);
+    return [
+      { label:'إجمالي الأفرع',           value: fmt(s?.total_countries),     sub: loading ? 'جارٍ التحميل...' : 'أفرع / دول', icon:'🌍', color:C.blue },
+      { label:'إجمالي الطلاب',           value: fmt(s?.total_students),      sub: stuDelta >= 0 ? `+${fmt(stuDelta)} هذا الشهر` : `${fmt(stuDelta)} هذا الشهر`, icon:'🎓', color:C.purple },
+      { label:'إجمالي المعلمين',         value: fmt(s?.total_teachers),      sub: 'معلمون مسجّلون', icon:'👨‍🏫', color:C.teal },
+      { label:'إجمالي الدورات',          value: fmt(s?.total_courses),       sub: 'دورات معتمدة', icon:'✅', color:C.green },
+      { label:'الاشتراكات',              value: fmt(s?.total_subscriptions), sub: 'اشتراكات نشطة', icon:'⭐', color:C.orange },
+      { label:'الإيرادات هذا الشهر',     value: fmt(s?.revenue_this_month),  sub: `${revChange >= 0 ? '+' : ''}${revChange}% عن الشهر الماضي`, icon:'💰', color:C.green, currency:'ريال سعودي' as string | undefined },
+    ];
+  }, [stats, loading]);
+
+  const growthData = useMemo(
+    () => (growthChart ?? []).map(g => ({ month: g.month, v: g.total })),
+    [growthChart]
+  );
+
+  const donutSegs = useMemo((): DonutSeg[] => {
+    const students = stats?.total_students ?? 0;
+    const teachers = stats?.total_teachers ?? 0;
+    const parents  = stats?.total_parents ?? 0;
+    const total = students + teachers + parents;
+    const pct = (n: number) => total === 0 ? 0 : Math.round((n / total) * 1000) / 10;
+    return [
+      { label:'طلاب',        pct: pct(students), count: students, color:'#3B82F6' },
+      { label:'معلمون',      pct: pct(teachers), count: teachers, color:'#10B981' },
+      { label:'أولياء أمور', pct: pct(parents),  count: parents,  color:'#F59E0B' },
+    ];
+  }, [stats]);
+
+  const donutTotal = (stats?.total_students ?? 0) + (stats?.total_teachers ?? 0) + (stats?.total_parents ?? 0);
+
+  const approvalItems = useMemo(() => {
+    const exams = approvals?.exams ?? 0;
+    const homeworks = approvals?.homeworks ?? 0;
+    return [
+      { type:'واجبات بانتظار الاعتماد',   count: homeworks, icon:'📚', color:C.orange },
+      { type:'اختبارات بانتظار الاعتماد', count: exams,     icon:'📝', color:C.blue },
+    ].filter(a => a.count > 0);
+  }, [approvals]);
+
+  const topBranches = useMemo(() => {
+    return [...(countryStats ?? [])]
+      .sort((a, b) => b.students - a.students)
+      .slice(0, 5)
+      .map((c, i) => ({
+        rank: i + 1,
+        flag: countryFlag(c.name),
+        name: `فرع ${c.name}`,
+        loc: `${fmt(c.students)} طالب`,
+        students: c.students,
+      }));
+  }, [countryStats]);
 
   return (
     <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:C.bg, fontFamily:"'Cairo',sans-serif" }}>
@@ -306,16 +307,17 @@ export default function DashboardPage() {
           {/* Notification icons */}
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             {[
-              { e:'🔔', n:12, to:'/dashboard/notifications' },
-              { e:'✉️', n:7,  to:'/dashboard/messages' },
-              { e:'🚩', n:5,  to:'/dashboard/content-approvals' },
+              { e:'🔔', n: approvals ? (approvals.exams + approvals.homeworks) : 0, to:'/dashboard/notifications' },
+              { e:'✉️', n:0,  to:'/dashboard/messages' },
+              { e:'🚩', n: approvals ? (approvals.exams + approvals.homeworks) : 0,  to:'/dashboard/content-approvals' },
             ].map((ic,i)=>(
               <div key={i} onClick={()=>navigate(ic.to)} style={{ position:'relative', width:38, height:38, borderRadius:11, background:C.bg, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
                 {ic.e}
-                <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
+                {ic.n > 0 && (
+                  <div style={{ position:'absolute', top:-5, right:-5, width:18, height:18, borderRadius:'50%', background:i===0?C.red:i===1?C.blue:C.orange, color:'#fff', fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{ic.n}</div>
+                )}
               </div>
             ))}
-            {/* Always-visible logout — no need to open the sidebar drawer */}
             <button onClick={handleLogout} title="تسجيل الخروج" style={{ width:38, height:38, borderRadius:11, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, cursor:'pointer' }}>
               🚪
             </button>
@@ -323,13 +325,11 @@ export default function DashboardPage() {
 
           {!isMobile && (
             <>
-              {/* Time + date */}
               <div style={{ textAlign:'center', flexShrink:0 }}>
                 <p style={{ color:C.text, fontWeight:800, fontSize:16 }}>{timeStr}</p>
                 <p style={{ color:C.sub, fontSize:10 }}>{dateStr}</p>
               </div>
 
-              {/* Semester dropdown */}
               <select value={sem} onChange={e=>setSem(e.target.value)}
                 style={{ padding:'7px 12px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:11.5, fontWeight:600, cursor:'pointer', outline:'none', flexShrink:0 }}>
                 <option>الفصل الدراسي الثاني 2025-2026</option>
@@ -354,15 +354,21 @@ export default function DashboardPage() {
 
         <div style={{ padding:'14px 18px 24px' }}>
 
+          {error && (
+            <div style={{ ...card(), marginBottom:12, background:'rgba(239,68,68,0.08)', border:`1px solid rgba(239,68,68,0.25)`, color:C.red, fontSize:13, fontWeight:600 }}>
+              {error}
+            </div>
+          )}
+
           {/* ── 6 STATS CARDS ── */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:10, marginBottom:14 }}>
-            {STATS.map((s,i)=>(
+            {kpiCards.map((s,i)=>(
               <div key={i} style={{ ...card(), padding:'14px 12px' }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
                   <p style={{ color:C.sub, fontSize:10.5, lineHeight:1.3 }}>{s.label}</p>
                   <div style={{ width:32, height:32, borderRadius:10, background:`${s.color}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{s.icon}</div>
                 </div>
-                <p style={{ color:C.text, fontWeight:900, fontSize:i===5?18:22, lineHeight:1 }}>{s.value}</p>
+                <p style={{ color:C.text, fontWeight:900, fontSize:i===5?18:22, lineHeight:1 }}>{loading && !stats ? '—' : s.value}</p>
                 {s.currency&&<p style={{ color:C.sub, fontSize:9.5, marginTop:1 }}>{s.currency}</p>}
                 <p style={{ color:s.color, fontSize:10.5, fontWeight:600, marginTop:5 }}>{s.sub}</p>
               </div>
@@ -374,9 +380,9 @@ export default function DashboardPage() {
 
             {/* Approvals */}
             <div style={card()}>
-              {sH('مراقبة الاعتمادات', 'عرض الكل')}
+              {sH('مراقبة الاعتمادات', 'عرض الكل', () => navigate('/dashboard/content-approvals'))}
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {APPROVALS.map((a,i)=>(
+                {approvalItems.length === 0 ? emptyBox : approvalItems.map((a,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 11px', borderRadius:11, background:`${a.color}09`, border:`1px solid ${a.color}22` }}>
                     <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                       <span style={{ fontSize:14 }}>{a.icon}</span>
@@ -395,49 +401,28 @@ export default function DashboardPage() {
             <div style={card()}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
                 <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>نمو المنصة</p>
-                <div style={{ display:'flex', gap:7 }}>
-                  <select style={{ padding:'4px 8px', borderRadius:8, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:10.5, cursor:'pointer', outline:'none' }}>
-                    <option>آخر 6 أشهر</option><option>آخر 3 أشهر</option>
-                  </select>
-                  <select style={{ padding:'4px 8px', borderRadius:8, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:10.5, cursor:'pointer', outline:'none' }}>
-                    <option>الطلاب</option><option>المعلمون</option>
-                  </select>
-                </div>
               </div>
               <div style={{ height:185 }}>
-                <LineChart data={GROWTH_DATA}/>
+                <LineChart data={growthData}/>
               </div>
             </div>
 
             {/* Alerts + Donut stacked */}
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
-              {/* Alerts */}
+              {/* Alerts — no live data source yet */}
               <div style={{ ...card(), flex:1 }}>
                 {sH('تنبيهات مهمة')}
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {ALERTS_DATA.map((a,i)=>(
-                    <div key={i} style={{ display:'flex', gap:9, padding:'9px 10px', borderRadius:11, background:a.bg, border:`1px solid ${a.color}25` }}>
-                      <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>{a.icon}</span>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <p style={{ color:C.text, fontWeight:700, fontSize:11.5 }}>{a.text}</p>
-                          <span style={{ color:C.dim, fontSize:9.5, flexShrink:0, marginRight:4 }}>{a.time}</span>
-                        </div>
-                        <p style={{ color:C.sub, fontSize:10.5, marginTop:2 }}>{a.sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {emptyBox}
               </div>
 
               {/* Donut */}
               <div style={card()}>
-                {sH('توزيع المستخدمين', 'تفاصيل المستخدمين')}
+                {sH('توزيع المستخدمين', 'تفاصيل المستخدمين', () => navigate('/dashboard/students'))}
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <DonutChart/>
+                  <DonutChart segs={donutSegs} total={donutTotal}/>
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    {DONUT_SEGS.map((s,i)=>(
+                    {donutSegs.map((s,i)=>(
                       <div key={i} style={{ display:'flex', alignItems:'center', gap:6 }}>
                         <div style={{ width:9, height:9, borderRadius:'50%', background:s.color, flexShrink:0 }}/>
                         <div>
@@ -457,9 +442,9 @@ export default function DashboardPage() {
 
             {/* Top Branches */}
             <div style={card()}>
-              {sH('أعلى الأفرع أداءً', 'عرض الكل')}
+              {sH('أعلى الأفرع أداءً', 'عرض الكل', () => navigate('/dashboard/schools'))}
               <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-                {TOP_BRANCHES.map((s,i)=>(
+                {topBranches.length === 0 ? emptyBox : topBranches.map((s,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:9, padding:'9px 11px', borderRadius:12, background:i<3?`${medalColor(s.rank)}09`:'transparent', border:`1px solid ${i<3?`${medalColor(s.rank)}22`:C.border}` }}>
                     <span style={{ fontSize:18, flexShrink:0 }}>{medalEmoji(s.rank)}</span>
                     <span style={{ fontSize:20, flexShrink:0 }}>{s.flag}</span>
@@ -467,74 +452,45 @@ export default function DashboardPage() {
                       <p style={{ color:C.text, fontWeight:700, fontSize:11.5, lineHeight:1.3 }}>{s.name}</p>
                       <p style={{ color:C.sub, fontSize:10 }}>{s.loc}</p>
                     </div>
-                    <span style={{ color:i<3?medalColor(s.rank):C.text, fontWeight:800, fontSize:13.5, flexShrink:0 }}>{s.pct}%</span>
+                    <span style={{ color:i<3?medalColor(s.rank):C.text, fontWeight:800, fontSize:13.5, flexShrink:0 }}>{fmt(s.students)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Live Activity */}
+            {/* Live Activity — no live data source yet */}
             <div style={card()}>
-              {sH('نشاط المنصة المباشر', 'عرض الكل')}
-              <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
-                {ACTIVITY.map((a,i)=>(
-                  <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 0', borderBottom:i<ACTIVITY.length-1?`1px solid ${C.border}`:'none' }}>
-                    <div style={{ width:38, height:38, borderRadius:'50%', background:a.live?'linear-gradient(135deg,#DC2626,#EF4444)':C.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, border:`1px solid ${C.border}` }}>{a.avatar}</div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                        <span style={{ color:C.text, fontWeight:700, fontSize:12.5 }}>{a.name}</span>
-                        {a.live&&<span style={{ background:'rgba(239,68,68,0.85)', color:'#fff', fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:20 }}>مباشر</span>}
-                        <span style={{ color:a.live?C.red:C.sub, fontSize:12 }}>{a.action}</span>
-                      </div>
-                      <p style={{ color:C.dim, fontSize:10.5, marginTop:2 }}>{a.sub}</p>
-                    </div>
-                    <span style={{ color:C.dim, fontSize:10, flexShrink:0 }}>{a.time}</span>
-                  </div>
-                ))}
-              </div>
+              {sH('نشاط المنصة المباشر', 'عرض الكل', () => navigate('/dashboard/activity-log'))}
+              {emptyBox}
             </div>
 
             {/* Servers + Revenue stacked */}
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
-              {/* Servers */}
               <div style={card()}>
                 {sH('حالة الخوادم والنظام')}
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {SERVERS.map((s,i)=>(
-                    <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 11px', borderRadius:11, background:'rgba(22,163,74,0.06)', border:'1px solid rgba(22,163,74,0.18)' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                        <span style={{ fontSize:14 }}>{s.icon}</span>
-                        <span style={{ color:C.text, fontSize:11.5 }}>{s.name}</span>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                        <div style={{ width:7, height:7, borderRadius:'50%', background:C.green }}/>
-                        <span style={{ color:C.green, fontSize:10, fontWeight:600 }}>يعمل بشكل طبيعي</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {emptyBox}
                 <button onClick={()=>navigate('/dashboard/reports')} style={{ width:'100%', marginTop:10, padding:'9px', borderRadius:12, background:C.navy2, color:'#fff', fontWeight:700, fontSize:11.5, border:'none', cursor:'pointer' }}>
                   عرض تقرير النظام الكامل
                 </button>
               </div>
 
-              {/* Revenue */}
               <div style={card()}>
-                {sH('الإيرادات والمبيعات', 'عرض التفاصيل')}
-                <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
-                  <span style={{ color:C.text, fontWeight:900, fontSize:22, lineHeight:1 }}>1,245,680</span>
-                  <span style={{ color:C.sub, fontSize:11 }}>ريال سعودي</span>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:10 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
-                  </svg>
-                  <span style={{ color:C.green, fontSize:11, fontWeight:700 }}>+18% عن الشهر الماضي</span>
-                </div>
-                <div style={{ height:115 }}>
-                  <BarChart data={REVENUE_DATA}/>
-                </div>
+                {sH('الإيرادات والمبيعات', 'عرض التفاصيل', () => navigate('/dashboard/billing'))}
+                {(stats?.revenue_this_month ?? 0) === 0 && (stats?.revenue_last_month ?? 0) === 0 ? emptyBox : (
+                  <>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
+                      <span style={{ color:C.text, fontWeight:900, fontSize:22, lineHeight:1 }}>{fmt(stats?.revenue_this_month)}</span>
+                      <span style={{ color:C.sub, fontSize:11 }}>ريال سعودي</span>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:10 }}>
+                      <span style={{ color:(stats?.revenue_change_pct ?? 0) >= 0 ? C.green : C.red, fontSize:11, fontWeight:700 }}>
+                        {(stats?.revenue_change_pct ?? 0) >= 0 ? '+' : ''}{stats?.revenue_change_pct ?? 0}% عن الشهر الماضي
+                      </span>
+                    </div>
+                    <div style={{ padding:'16px 8px', textAlign:'center', color:C.sub, fontSize:12 }}>لا توجد بيانات</div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -542,27 +498,21 @@ export default function DashboardPage() {
           {/* ── BOTTOM ROW: 4 sections ── */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))', gap:12 }}>
 
-            {/* Quick Reports */}
             <div style={card()}>
               {sH('التقارير السريعة')}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:8, marginBottom:12 }}>
                 {[{e:'📋',l:'تقرير المنصة'},{e:'👨‍🏫',l:'تقرير المعلمين'},{e:'🎓',l:'تقرير الطلاب'},{e:'💰',l:'التقرير المالي'},{e:'✅',l:'تقرير الاعتمادات'}].map((r,i)=>(
-                  <button key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
+                  <button key={i} onClick={()=>navigate('/dashboard/reports')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>
                     <span style={{ fontSize:20 }}>{r.e}</span>
                     <span style={{ color:C.text, fontSize:10, fontWeight:600, textAlign:'center', lineHeight:1.3 }}>{r.l}</span>
                   </button>
                 ))}
-                <button style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'11px 6px', borderRadius:12, background:C.goldBg, border:`1px solid ${C.goldBdr}`, cursor:'pointer' }}>
-                  <span style={{ fontSize:20 }}>+</span>
-                  <span style={{ color:C.gold, fontSize:10, fontWeight:600 }}>المزيد</span>
-                </button>
               </div>
               <button onClick={()=>navigate('/dashboard/reports')} style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 جميع التقارير
               </button>
             </div>
 
-            {/* Quick Admin Tools */}
             <div style={card()}>
               {sH('أدوات الإدارة السريعة')}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(90px,1fr))', gap:8, marginBottom:12 }}>
@@ -584,37 +534,22 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Subscriptions */}
             <div style={card()}>
               {sH('نظرة عامة على الاشتراكات')}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:9, marginBottom:12 }}>
-                {[
-                  { n:42, l:'اشتراكات نشطة', c:C.green,  bg:'rgba(22,163,74,0.09)'  },
-                  { n:6,  l:'منتهية',          c:C.sub,    bg:C.bg                    },
-                  { n:2,  l:'متأخرة',          c:C.orange, bg:'rgba(217,119,6,0.09)'  },
-                  { n:3,  l:'ملغاة',           c:C.red,    bg:'rgba(239,68,68,0.09)'  },
-                ].map((s,i)=>(
-                  <div key={i} style={{ textAlign:'center', padding:'12px 8px', borderRadius:14, background:s.bg, border:`1px solid ${s.c}22` }}>
-                    <p style={{ color:s.c, fontWeight:900, fontSize:26, lineHeight:1 }}>{s.n}</p>
-                    <p style={{ color:C.sub, fontSize:10.5, marginTop:4, lineHeight:1.3 }}>{s.l}</p>
-                  </div>
-                ))}
+                <div style={{ textAlign:'center', padding:'12px 8px', borderRadius:14, background:'rgba(22,163,74,0.09)', border:`1px solid ${C.green}22` }}>
+                  <p style={{ color:C.green, fontWeight:900, fontSize:26, lineHeight:1 }}>{fmt(stats?.total_subscriptions)}</p>
+                  <p style={{ color:C.sub, fontSize:10.5, marginTop:4, lineHeight:1.3 }}>اشتراكات نشطة</p>
+                </div>
               </div>
               <button onClick={()=>navigate('/dashboard/plans')} style={{ width:'100%', padding:'9px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:700, fontSize:12, border:'none', cursor:'pointer' }}>
                 إدارة الاشتراكات
               </button>
             </div>
 
-            {/* Support */}
             <div style={card()}>
               {sH('الدعم والمساعدة')}
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'12px', borderRadius:14, background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.18)', marginBottom:12 }}>
-                <span style={{ fontSize:24 }}>🎫</span>
-                <div>
-                  <p style={{ color:C.red, fontWeight:800, fontSize:22, lineHeight:1 }}>7</p>
-                  <p style={{ color:C.sub, fontSize:11 }}>تذاكر دعم مفتوحة</p>
-                </div>
-              </div>
+              {emptyBox}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:8, marginBottom:12 }}>
                 {[{e:'❓',l:'الأسئلة الشائعة'},{e:'🏠',l:'مركز المساعدة'}].map((t,i)=>(
                   <button key={i} onClick={()=>navigate('/dashboard/support')} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px', borderRadius:12, background:C.bg, border:`1px solid ${C.border}`, cursor:'pointer' }}>

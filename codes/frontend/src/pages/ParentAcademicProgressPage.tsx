@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { fetchParentDashboard } from '../features/parent/parentSlice';
 
 const C = {
   gold: '#C59341', goldL: '#D4A65A',
@@ -32,65 +34,36 @@ function PageHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
-const CHILDREN = [
-  { id: 1, name: 'محمد أحمد', initials: 'مأ', color: '#C59341' },
-  { id: 2, name: 'سارة أحمد', initials: 'سأ', color: '#3B82F6' },
-  { id: 3, name: 'علي أحمد', initials: 'عأ', color: '#10B981' },
-];
-
-const SUBJECTS = ['الرياضيات', 'اللغة الإنجليزية', 'العلوم', 'العربية', 'التاريخ'];
-const SUBJECT_ICONS = ['📐', '🔤', '🔬', '📖', '🏛️'];
-const MONTHS = ['سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'];
-
-// Mock scores per child (subjectIdx -> monthIdx -> score)
-const SCORES: Record<number, number[][]> = {
-  1: [
-    [72, 75, 78, 80, 82, 85, 87, 90, 92],
-    [68, 70, 73, 75, 78, 80, 82, 84, 86],
-    [80, 83, 85, 86, 88, 89, 91, 92, 95],
-    [65, 68, 70, 72, 75, 77, 79, 81, 83],
-    [60, 63, 66, 68, 70, 72, 75, 77, 80],
-  ],
-  2: [
-    [88, 90, 91, 93, 94, 95, 96, 97, 98],
-    [75, 78, 80, 82, 84, 85, 87, 88, 90],
-    [70, 72, 75, 77, 79, 81, 83, 85, 87],
-    [82, 84, 85, 87, 88, 90, 91, 93, 95],
-    [78, 80, 82, 84, 85, 87, 88, 90, 92],
-  ],
-  3: [
-    [55, 58, 62, 65, 68, 70, 72, 75, 78],
-    [60, 63, 65, 67, 70, 72, 74, 76, 79],
-    [75, 77, 79, 81, 83, 85, 87, 89, 91],
-    [58, 61, 64, 66, 69, 71, 73, 76, 78],
-    [50, 53, 56, 59, 62, 65, 67, 70, 73],
-  ],
-};
-
-const EXAMS = [
-  { name: 'اختبار الوحدة 1 - رياضيات', subject: 'الرياضيات', date: '2025-10-15', score: 88, total: 100 },
-  { name: 'اختبار منتصف الفصل - علوم', subject: 'العلوم', date: '2025-11-02', score: 76, total: 100 },
-  { name: 'اختبار قواعد اللغة - عربية', subject: 'العربية', date: '2025-11-20', score: 92, total: 100 },
-  { name: 'اختبار الوحدة 2 - إنجليزي', subject: 'اللغة الإنجليزية', date: '2025-12-05', score: 58, total: 100 },
-  { name: 'اختبار نهاية الفصل - تاريخ', subject: 'التاريخ', date: '2026-01-12', score: 81, total: 100 },
-  { name: 'اختبار الوحدة 3 - رياضيات', subject: 'الرياضيات', date: '2026-02-08', score: 95, total: 100 },
-];
+const CHILD_COLORS = ['#C59341', '#3B82F6', '#10B981', '#8B5CF6'];
+const SUBJECTS: string[] = [];
+const SUBJECT_ICONS: string[] = [];
+const MONTHS: string[] = [];
+const SCORES: Record<number, number[][]> = {};
+const EXAMS: { name: string; subject: string; date: string; score: number; total: number }[] = [];
 
 const SUBJECT_COLORS = [C.gold, C.blue, C.green, C.purple, C.amber];
 
 export default function ParentAcademicProgressPage() {
-  const [selectedChild, setSelectedChild] = useState(1);
+  const dispatch = useAppDispatch();
+  const { children } = useAppSelector(s => s.parent);
+  useEffect(() => { if (children.length === 0) dispatch(fetchParentDashboard()); }, [dispatch, children.length]);
+  const CHILDREN = children.map((c, i) => ({
+    id: c.id, name: c.name,
+    initials: c.name.split(' ').slice(0, 2).map(w => w[0]).join(''),
+    color: CHILD_COLORS[i % CHILD_COLORS.length],
+  }));
+  const [selectedChild, setSelectedChild] = useState<number | null>(null);
+  useEffect(() => { if (CHILDREN.length && selectedChild == null) setSelectedChild(CHILDREN[0].id); }, [CHILDREN, selectedChild]);
   const [selectedSubject, setSelectedSubject] = useState('الكل');
   const [selectedSemester, setSelectedSemester] = useState('الفصل الأول');
 
-  const scores = SCORES[selectedChild] || SCORES[1];
-  const lastMonth = MONTHS.length - 1;
+  const scores = (selectedChild != null ? SCORES[selectedChild] : undefined) ?? [];
+  const lastMonth = Math.max(0, MONTHS.length - 1);
 
-  // KPIs
   const allScores = scores.flat();
-  const avg = Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length);
-  const max = Math.max(...allScores);
-  const min = Math.min(...allScores);
+  const avg = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+  const max = allScores.length ? Math.max(...allScores) : 0;
+  const min = allScores.length ? Math.min(...allScores) : 0;
   const examCount = EXAMS.length;
 
   // Chart

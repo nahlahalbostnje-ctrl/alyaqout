@@ -9,9 +9,17 @@ import { useLenis } from '../hooks/useLenis';
 import BrandLogo from '../components/BrandLogo';
 
 /* ── Types ──────────────────────────────────── */
-interface Country    { id: number; name: string; }
+interface Country    { id: number; name: string; code?: string; }
 interface Faq        { id: number; question: string; answer: string; }
 interface SocialLink { id: number; platform: string; url: string; }
+interface Banner     { id: number; title: string; image_url: string | null; link_url: string | null; }
+interface PublicStats { students: number; teachers: number; countries: number; courses: number; }
+
+const CODE_FLAG: Record<string, string> = {
+  PS:'🇵🇸', JO:'🇯🇴', EG:'🇪🇬', SA:'🇸🇦', AE:'🇦🇪', KW:'🇰🇼', QA:'🇶🇦', BH:'🇧🇭',
+  OM:'🇴🇲', IQ:'🇮🇶', SY:'🇸🇾', LB:'🇱🇧', YE:'🇾🇪', LY:'🇱🇾', SD:'🇸🇩', MA:'🇲🇦', TN:'🇹🇳', DZ:'🇩🇿',
+};
+const flagFor = (c: Country) => (c.code && CODE_FLAG[c.code.toUpperCase()]) || '🌍';
 
 /* ── Design Tokens ──────────────────────────── */
 const C = {
@@ -38,27 +46,6 @@ const FONT = "'Cairo','Tajawal',sans-serif";
 /* ── Constants ──────────────────────────────── */
 const SUBJECTS = ['رياضيات','علوم','لغة عربية','لغة إنجليزية','فيزياء','كيمياء','أحياء','تاريخ','جغرافيا','تربية إسلامية'];
 
-const ARAB_COUNTRIES = [
-  { flag:'🇵🇸', name:'فلسطين' },
-  { flag:'🇯🇴', name:'الأردن' },
-  { flag:'🇪🇬', name:'مصر' },
-  { flag:'🇸🇦', name:'السعودية' },
-  { flag:'🇦🇪', name:'الإمارات' },
-  { flag:'🇰🇼', name:'الكويت' },
-  { flag:'🇶🇦', name:'قطر' },
-  { flag:'🇧🇭', name:'البحرين' },
-  { flag:'🇴🇲', name:'عُمان' },
-  { flag:'🇮🇶', name:'العراق' },
-  { flag:'🇸🇾', name:'سوريا' },
-  { flag:'🇱🇧', name:'لبنان' },
-  { flag:'🇾🇪', name:'اليمن' },
-  { flag:'🇱🇾', name:'ليبيا' },
-  { flag:'🇸🇩', name:'السودان' },
-  { flag:'🇲🇦', name:'المغرب' },
-  { flag:'🇹🇳', name:'تونس' },
-  { flag:'🇩🇿', name:'الجزائر' },
-];
-
 const FEATURES = [
   { icon: '🏆', title: 'دوري ياقوت للتلعيب',    desc: 'محرك Gamification يمنح نقاطاً على كل إنجاز مع تحديات 1v1 ولوحة صدارة حية تُشعل روح التنافس' },
   { icon: '📊', title: 'تتبع التقدم الدراسي',    desc: 'تقارير تحليلية شهرية لولي الأمر عبر واتساب — تشمل الحضور والدرجات ونقاط القوة والضعف' },
@@ -71,30 +58,6 @@ const STEPS = [
   { num: '01', title: 'احجز مكانك',  desc: 'أرسل بياناتك عبر نموذج التسجيل البسيط في دقيقتين فقط' },
   { num: '02', title: 'تواصل معنا',  desc: 'فريقنا يتواصل معك لتحديد المستوى والمادة والموعد المناسب' },
   { num: '03', title: 'ابدأ التعلّم', desc: 'انضم لفصلك المباشر وانطلق نحو التفوق مع أفضل المعلمين' },
-];
-
-const STATIC_FAQS: Faq[] = [
-  { id:1, question:'كيف يتم التحقق من الهوية عند التسجيل؟',
-    answer:'يصلك رمز OTP فوري عبر واتساب عند التسجيل أو تسجيل الدخول — بدون كلمة سر، لضمان أمان حسابك وسهولة الوصول.' },
-  { id:2, question:'هل يوجد نسخة مجانية أو تجريبية؟',
-    answer:'نعم، تحصل على حصة تجريبية مجانية كاملة مع معلم متخصص بدون التزام أو بيانات بنكية مسبقة.' },
-  { id:3, question:'كيف يتم الدفع وما طرق السداد المتاحة؟',
-    answer:'ندعم Visa / Mastercard والمدى وApple Pay وحوالات واتساب لبعض الدول — جميع المعاملات مشفّرة وآمنة.' },
-  { id:4, question:'هل تُسجَّل الحصص المباشرة؟',
-    answer:'نعم، كل حصة تُسجَّل تلقائياً عبر Agora Cloud Recording وتبقى متاحة لمراجعتها 90 يوماً للطالب ولولي الأمر.' },
-  { id:5, question:'كيف يتم التواصل بين الطالب والمعلم وولي الأمر؟',
-    answer:'نظام الرسائل يعمل على Firebase Realtime Database — مراسلة فورية داخل المنصة مع إشعارات للجميع عند وصول رسائل جديدة.' },
-  { id:6, question:'ما نظام النقاط ودوري ياقوت؟',
-    answer:'يكسب الطالب نقاطاً على كل حضور وواجب واختبار، ويتنافس في بطولات 1v1 على لوحة الصدارة الحية للحصول على جوائز فعلية.' },
-  { id:7, question:'ما هو البوت الذكي وماذا يفعل زر الطوارئ؟',
-    answer:'البوت مدعوم بـ Claude AI ويُقدّم مفاتيح تفكير بدل الإجابات الجاهزة. زر الطوارئ يُنبّه المشرف الأكاديمي فوراً عند تعثّر الطالب.' },
-];
-
-const STATS = [
-  { value:500, suffix:'+', label:'طالب مسجّل' },
-  { value:50,  suffix:'+', label:'معلم محترف'  },
-  { value:10,  suffix:'+', label:'دولة عربية'  },
-  { value:98,  suffix:'%', label:'رضا الطلاب'  },
 ];
 
 /* ── Easings & Variants ──────────────────────── */
@@ -231,8 +194,10 @@ export default function LandingPage() {
   useLenis();
 
   const [countries,       setCountries]       = useState<Country[]>([]);
-  const [navCountry,      setNavCountry]      = useState(0);
+  const [navCountryId,    setNavCountryId]    = useState<number | ''>('');
   const [faqs,            setFaqs]            = useState<Faq[]>([]);
+  const [banners,         setBanners]         = useState<Banner[]>([]);
+  const [publicStats,     setPublicStats]     = useState<PublicStats | null>(null);
   const [social,          setSocial]          = useState<SocialLink[]>([]);
   const [openFaq,         setOpenFaq]         = useState<number|null>(null);
   const [menuOpen,        setMenuOpen]        = useState(false);
@@ -245,13 +210,27 @@ export default function LandingPage() {
   const [form, setForm] = useState({ country_id:'', student_name:'', phone:'', school:'', region:'', subjects:[] as string[] });
 
   useEffect(() => {
-    api.get('/public/countries').then(({data})=>{ const l:Country[]=data.countries??[]; setCountries(l); }).catch(()=>{});
+    api.get('/public/countries').then(({data})=>{
+      const l:Country[]=data.countries??[];
+      setCountries(l);
+      if (l[0]) setNavCountryId(l[0].id);
+    }).catch(()=>{});
     api.get('/public/faqs').then(({data})=>setFaqs(data.faqs??[])).catch(()=>{});
     api.get('/public/social').then(({data})=>setSocial(data.links??[])).catch(()=>{});
+    api.get('/public/banners').then(({data})=>setBanners(data.banners??[])).catch(()=>{});
+    api.get('/public/stats').then(({data})=>setPublicStats(data.stats??null)).catch(()=>{});
     const onScroll=()=>setScrolled(window.scrollY>8);
     window.addEventListener('scroll',onScroll,{passive:true});
     return ()=>window.removeEventListener('scroll',onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!navCountryId) return;
+    const q = `?country_id=${navCountryId}`;
+    api.get(`/public/faqs${q}`).then(({data})=>setFaqs(data.faqs??[])).catch(()=>{});
+    api.get(`/public/banners${q}`).then(({data})=>setBanners(data.banners??[])).catch(()=>{});
+    api.get(`/public/social${q}`).then(({data})=>setSocial(data.links??[])).catch(()=>{});
+  }, [navCountryId]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -262,7 +241,7 @@ export default function LandingPage() {
 
   const openModal=(src:'book_now'|'free_class')=>{
     setSource(src); setSuccess('');
-    setForm({country_id:String(countries[0]?.id??''),student_name:'',phone:'',school:'',region:'',subjects:[]});
+    setForm({country_id:String(navCountryId || countries[0]?.id || ''),student_name:'',phone:'',school:'',region:'',subjects:[]});
     setModalOpen(true);
   };
   const toggleSubject=(s:string)=>setForm(f=>({...f,subjects:f.subjects.includes(s)?f.subjects.filter(x=>x!==s):[...f.subjects,s]}));
@@ -273,7 +252,14 @@ export default function LandingPage() {
     finally { setSubmitting(false); }
   };
   const socialIcon=(p:string)=>({facebook:'f',instagram:'ig',twitter:'x',youtube:'YT',tiktok:'TK',whatsapp:'WA',telegram:'TG',linkedin:'in'})[p.toLowerCase()]??p[0].toUpperCase();
-  const displayFaqs = faqs.length ? faqs : STATIC_FAQS;
+  const displayFaqs = faqs;
+  const selectedCountry = countries.find(c => c.id === navCountryId);
+  const dynamicStats = publicStats ? [
+    { value: publicStats.students,  suffix: '', label: 'طالب مسجّل' },
+    { value: publicStats.teachers,  suffix: '', label: 'معلم' },
+    { value: publicStats.countries, suffix: '', label: 'دولة نشطة' },
+    { value: publicStats.courses,   suffix: '', label: 'دورة نشطة' },
+  ] : [];
 
   /* ─── Render ─────────────────────────────── */
   return (
@@ -295,13 +281,13 @@ export default function LandingPage() {
               <BrandLogo size={56} style={{ borderRadius:12 }} />
             </div>
 
-            {/* Country indicator — right side, next to logo */}
+            {/* Country indicator — from API */}
             <div className="hidden md:block" style={{ position:'relative' }}>
               <div style={{ display:'flex', alignItems:'center', gap:1 }}>
                 <div style={{ width:9, height:9, borderRadius:'50%', background:'#22C55E', boxShadow:'0 0 0 2px rgba(34,197,94,0.3)', flexShrink:0 }} />
                 <select
-                  value={navCountry}
-                  onChange={e => setNavCountry(Number(e.target.value))}
+                  value={navCountryId === '' ? '' : String(navCountryId)}
+                  onChange={e => setNavCountryId(e.target.value ? Number(e.target.value) : '')}
                   style={{
                     background:'rgba(255,255,255,0.07)',
                     border:`1.5px solid ${C.goldBdr}`,
@@ -316,16 +302,20 @@ export default function LandingPage() {
                     appearance:'none',
                     WebkitAppearance:'none',
                     paddingLeft:32,
+                    minWidth:120,
                   }}
                 >
-                  {ARAB_COUNTRIES.map((c, i) => (
-                    <option key={i} value={i} style={{ background:C.navy, color:'#fff' }}>
-                      {c.flag} {c.name}
+                  {countries.length === 0 && (
+                    <option value="" style={{ background:C.navy, color:'#fff' }}>لا دول</option>
+                  )}
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id} style={{ background:C.navy, color:'#fff' }}>
+                      {flagFor(c)} {c.name}
                     </option>
                   ))}
                 </select>
                 <span style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:C.gold, fontSize:13, pointerEvents:'none' }}>
-                  {ARAB_COUNTRIES[navCountry].flag}
+                  {selectedCountry ? flagFor(selectedCountry) : '🌍'}
                 </span>
                 <span style={{ position:'absolute', left:28, top:'50%', transform:'translateY(-50%)', color:'rgba(197,147,65,0.7)', fontSize:10, pointerEvents:'none' }}>▼</span>
               </div>
@@ -462,12 +452,31 @@ export default function LandingPage() {
       {/* Wave: navy → cream */}
       <WaveDivider from={C.navy3} to={C.bg} />
 
-      {/* ════════ STATS FLOATING CARD ════════ */}
+      {/* ════════ BANNERS (API) ════════ */}
+      {banners.length > 0 && (
+        <div style={{ background:C.bg, padding:'24px 24px 0' }}>
+          <div style={{ maxWidth:1024, margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
+            {banners.map(b => (
+              <a key={b.id} href={b.link_url || '#'}
+                style={{ display:'block', borderRadius:16, overflow:'hidden', border:`1px solid ${C.border}`, textDecoration:'none' }}>
+                {b.image_url ? (
+                  <img src={b.image_url} alt={b.title} style={{ width:'100%', maxHeight:220, objectFit:'cover', display:'block' }} />
+                ) : (
+                  <div style={{ padding:24, background:C.card, color:C.text, fontWeight:800, textAlign:'center' }}>{b.title}</div>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ════════ STATS (API — real counts) ════════ */}
+      {dynamicStats.length > 0 && (
       <div style={{ background:C.bg }}>
         <div style={{ maxWidth:1024, margin:'0 auto', padding:'0 24px' }}>
           <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once:true }}
-            style={{ background:C.card, borderRadius:20, boxShadow:`0 12px 60px rgba(13,30,58,0.12)`, border:`1px solid ${C.border}`, display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', marginTop:-60, position:'relative', zIndex:10 }}>
-            {STATS.map((s,i)=>(
+            style={{ background:C.card, borderRadius:20, boxShadow:`0 12px 60px rgba(13,30,58,0.12)`, border:`1px solid ${C.border}`, display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', marginTop: banners.length ? 24 : -60, position:'relative', zIndex:10 }}>
+            {dynamicStats.map((s,i)=>(
               <div key={i} style={{ padding:'32px 16px', textAlign:'center', borderLeft: !isMobile && i<3 ? `1px solid ${C.border}` : 'none' }}>
                 <p style={{ fontSize:'clamp(1.8rem,3vw,2.6rem)', fontWeight:900, lineHeight:1, background:C.goldGrad, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontFamily:FONT }}>
                   <Counter target={s.value} suffix={s.suffix} />
@@ -478,6 +487,7 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </div>
+      )}
 
 
       {/* Wave: cream → navy */}
@@ -566,6 +576,9 @@ export default function LandingPage() {
           </motion.div>
           <motion.div style={{ display:'flex', flexDirection:'column', gap:10 }}
             variants={stagger} initial="hidden" whileInView="visible" viewport={{ once:true, amount:0.1 }}>
+            {displayFaqs.length === 0 && (
+              <p style={{ textAlign:'center', color:C.sub, fontSize:14, padding:24 }}>لا توجد أسئلة شائعة حالياً.</p>
+            )}
             {displayFaqs.map((faq,i)=>(
               <motion.div key={faq.id} variants={cardItem}
                 style={{ background:C.card, borderRadius:16, overflow:'hidden', border:`1px solid ${openFaq===i ? C.goldBdr : C.border}`, transition:'border-color 0.2s' }}>

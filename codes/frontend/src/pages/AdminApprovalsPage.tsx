@@ -28,14 +28,6 @@ interface ApprovalRequest {
   status: Status;
 }
 
-const MOCK_REQUESTS: ApprovalRequest[] = [
-  { id:1, title:'إضافة دورة رياضيات جديدة', description:'طلب إضافة دورة رياضيات متقدمة للصف العاشر مع 24 درس فيديو', requestedBy:'أ. محمد السالم', role:'معلم', category:'content', priority:'medium', date:'2026-06-28', status:'pending' },
-  { id:2, title:'رفع سعر باقة الرياضيات', description:'تغيير سعر باقة الرياضيات الشهرية من 50 إلى 65 دينار', requestedBy:'أ. سارة الأمين', role:'أدمن', category:'financial', priority:'high', date:'2026-06-27', status:'pending' },
-  { id:3, title:'إعادة ضبط كلمة مرور طالب', description:'طلب إعادة ضبط حساب الطالب: أحمد علي (رقم: 10452)', requestedBy:'أ. خالد العمر', role:'مشرف', category:'account', priority:'low', date:'2026-06-26', status:'pending' },
-  { id:4, title:'حذف محتوى مخالف', description:'حذف تعليقات غير لائقة في غرفة الدراسة — تم الإبلاغ 3 مرات', requestedBy:'أ. منى النور', role:'مشرف', category:'content', priority:'high', date:'2026-06-25', status:'approved' },
-  { id:5, title:'تفعيل ميزة الدردشة الجماعية', description:'تفعيل ميزة الدردشة في غرف الدراسة للصف التاسع', requestedBy:'أ. فيصل الغامدي', role:'أدمن', category:'system', priority:'medium', date:'2026-06-24', status:'rejected' },
-];
-
 const PRIORITY_COLOR: Record<string, string> = { high: C.red, medium: C.amber, low: C.green };
 const PRIORITY_BG: Record<string, string> = { high: C.redBg, medium: C.amberBg, low: C.greenBg };
 const PRIORITY_LABEL: Record<string, string> = { high: 'عالية', medium: 'متوسطة', low: 'منخفضة' };
@@ -43,7 +35,7 @@ const CAT_EMOJI: Record<Category, string> = { content:'📚', account:'👤', fi
 const CAT_LABEL: Record<Category, string> = { content:'محتوى', account:'حساب', financial:'مالي', system:'نظام' };
 
 export default function AdminApprovalsPage() {
-  const [requests, setRequests] = useState<ApprovalRequest[]>(MOCK_REQUESTS);
+  const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('pending');
   const [filterCat, setFilterCat] = useState<Category | 'all'>('all');
   const [rejectionNote, setRejectionNote] = useState('');

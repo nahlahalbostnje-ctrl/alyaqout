@@ -1,36 +1,176 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import SuperAdminShell, { C } from '../components/SuperAdminShell';
+import api from '../services/axios';
 
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
-const BRANCHES = [
-  { id:1, flag:'🇵🇸', country:'فلسطين',       currency:'شيكل',  courses:48, students:2840, teachers:186, admin:'أ. أحمد الخطيب',   status:'نشط',  perf:98.7 },
-  { id:2, flag:'🇯🇴', country:'الأردن',        currency:'دينار', courses:36, students:2120, teachers:142, admin:'أ. سامي الزعبي',    status:'نشط',  perf:96.2 },
-  { id:3, flag:'🇸🇦', country:'السعودية',      currency:'ريال',  courses:54, students:3410, teachers:224, admin:'أ. عمر الشهري',     status:'نشط',  perf:97.1 },
-  { id:4, flag:'🇪🇬', country:'مصر',           currency:'جنيه',  courses:41, students:2980, teachers:198, admin:'أ. محمود حسن',      status:'نشط',  perf:94.8 },
-  { id:5, flag:'🇦🇪', country:'الإمارات',      currency:'درهم',  courses:29, students:1620, teachers:108, admin:'أ. خالد المنصوري',  status:'نشط',  perf:95.3 },
-  { id:6, flag:'🇰🇼', country:'الكويت',        currency:'دينار', courses:22, students:980,  teachers:76,  admin:'أ. نواف العجمي',    status:'نشط',  perf:92.4 },
-  { id:7, flag:'🇶🇦', country:'قطر',           currency:'ريال',  courses:18, students:760,  teachers:54,  admin:'أ. ريم الثاني',     status:'معلق', perf:88.1 },
-  { id:8, flag:'🇧🇭', country:'البحرين',       currency:'دينار', courses:14, students:540,  teachers:40,  admin:'أ. فاطمة الدوسري',  status:'معلق', perf:85.6 },
-];
+interface BranchRow {
+  id: number | null;
+  country_id: number;
+  country: string;
+  admin_name: string | null;
+  admin_email: string | null;
+  admin_phone: string | null;
+  is_active: boolean;
+  notes: string | null;
+  students: number;
+  teachers: number;
+  courses: number;
+}
 
-const totalStudents = BRANCHES.reduce((s,b)=>s+b.students,0);
-const totalTeachers = BRANCHES.reduce((s,b)=>s+b.teachers,0);
-const activeCount   = BRANCHES.filter(b=>b.status==='نشط').length;
+function countryFlag(name: string): string {
+  if (name.includes('فلسطين') || /palestine/i.test(name)) return '🇵🇸';
+  if (name.includes('سعود') || /saudi/i.test(name)) return '🇸🇦';
+  if (name.includes('مصر') || /egypt/i.test(name)) return '🇪🇬';
+  if (name.includes('أردن') || name.includes('الاردن') || /jordan/i.test(name)) return '🇯🇴';
+  if (name.includes('إمارات') || name.includes('الامارات') || /emirates|uae/i.test(name)) return '🇦🇪';
+  if (name.includes('كويت') || /kuwait/i.test(name)) return '🇰🇼';
+  if (name.includes('قطر') || /qatar/i.test(name)) return '🇶🇦';
+  if (name.includes('بحرين') || /bahrain/i.test(name)) return '🇧🇭';
+  return '🌍';
+}
+
+function fmt(n: number): string {
+  return n.toLocaleString('en-US');
+}
 
 export default function SASchoolsPage() {
+  const [branches,     setBranches]     = useState<BranchRow[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState<string | null>(null);
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('الكل');
   const [showModal,    setShowModal]    = useState(false);
-  const [editTarget,   setEditTarget]   = useState<typeof BRANCHES[0]|null>(null);
+  const [editTarget,   setEditTarget]   = useState<BranchRow | null>(null);
+  const [saving,       setSaving]       = useState(false);
+  const [form, setForm] = useState({
+    country_id: '',
+    admin_name: '',
+    admin_email: '',
+    admin_phone: '',
+    notes: '',
+    is_active: true,
+  });
 
-  const filtered = BRANCHES.filter(b =>
-    (search===''||b.country.includes(search)||b.admin.includes(search)) &&
-    (statusFilter==='الكل'||b.status===statusFilter)
+  const loadBranches = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get('/super-admin/branches');
+      setBranches(data.branches ?? []);
+    } catch {
+      setError('فشل جلب الأفرع');
+      setBranches([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadBranches(); }, [loadBranches]);
+
+  const realBranches = useMemo(
+    () => branches.filter((b): b is BranchRow & { id: number } => b.id != null),
+    [branches]
   );
 
-  const openAdd  = () => { setEditTarget(null); setShowModal(true); };
-  const openEdit = (b: typeof BRANCHES[0]) => { setEditTarget(b); setShowModal(true); };
+  const unbranchedCountries = useMemo(
+    () => branches.filter(b => b.id == null),
+    [branches]
+  );
+
+  const totalStudents = realBranches.reduce((s, b) => s + (b.students ?? 0), 0);
+  const totalTeachers = realBranches.reduce((s, b) => s + (b.teachers ?? 0), 0);
+  const activeCount   = realBranches.filter(b => b.is_active).length;
+
+  const filtered = realBranches.filter(b => {
+    const statusLabel = b.is_active ? 'نشط' : 'معلق';
+    const admin = b.admin_name ?? '';
+    return (search === '' || b.country.includes(search) || admin.includes(search))
+      && (statusFilter === 'الكل' || statusLabel === statusFilter);
+  });
+
+  const openAdd = () => {
+    setEditTarget(null);
+    setForm({
+      country_id: unbranchedCountries[0] ? String(unbranchedCountries[0].country_id) : '',
+      admin_name: '',
+      admin_email: '',
+      admin_phone: '',
+      notes: '',
+      is_active: true,
+    });
+    setShowModal(true);
+  };
+
+  const openEdit = (b: BranchRow) => {
+    setEditTarget(b);
+    setForm({
+      country_id: String(b.country_id),
+      admin_name: b.admin_name ?? '',
+      admin_email: b.admin_email ?? '',
+      admin_phone: b.admin_phone ?? '',
+      notes: b.notes ?? '',
+      is_active: b.is_active,
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      if (editTarget?.id != null) {
+        await api.put(`/super-admin/branches/${editTarget.id}`, {
+          admin_name: form.admin_name || null,
+          admin_email: form.admin_email || null,
+          admin_phone: form.admin_phone || null,
+          notes: form.notes || null,
+          is_active: form.is_active,
+        });
+      } else {
+        if (!form.country_id) {
+          alert('يرجى اختيار الدولة');
+          setSaving(false);
+          return;
+        }
+        await api.post('/super-admin/branches', {
+          country_id: Number(form.country_id),
+          admin_name: form.admin_name || null,
+          admin_email: form.admin_email || null,
+          admin_phone: form.admin_phone || null,
+          notes: form.notes || null,
+          is_active: form.is_active,
+        });
+      }
+      setShowModal(false);
+      await loadBranches();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      alert(e.response?.data?.message ?? 'تعذّر حفظ الفرع');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleBranch = async (b: BranchRow) => {
+    if (b.id == null) return;
+    try {
+      await api.patch(`/super-admin/branches/${b.id}/toggle`);
+      await loadBranches();
+    } catch {
+      alert('تعذّر تغيير حالة الفرع');
+    }
+  };
+
+  const deleteBranch = async (b: BranchRow) => {
+    if (b.id == null) return;
+    if (!confirm(`هل تريد حذف فرع ${b.country}؟`)) return;
+    try {
+      await api.delete(`/super-admin/branches/${b.id}`);
+      await loadBranches();
+    } catch {
+      alert('تعذّر حذف الفرع');
+    }
+  };
 
   return (
     <SuperAdminShell>
@@ -39,7 +179,7 @@ export default function SASchoolsPage() {
         <div>
           <h1 style={{ color:C.text, fontWeight:900, fontSize:20 }}>إدارة الأفرع</h1>
           <p style={{ color:C.sub, fontSize:12, marginTop:2 }}>
-            {BRANCHES.length} فرع — كل فرع يمثّل دولة واحدة في المنصة
+            {loading ? 'جارٍ التحميل...' : `${realBranches.length} فرع — كل فرع يمثّل دولة واحدة في المنصة`}
           </p>
         </div>
         <button onClick={openAdd}
@@ -48,18 +188,24 @@ export default function SASchoolsPage() {
         </button>
       </div>
 
+      {error && (
+        <div style={{ ...card(), marginBottom:12, background:'rgba(239,68,68,0.08)', border:`1px solid rgba(239,68,68,0.25)`, color:C.red, fontSize:13, fontWeight:600 }}>
+          {error}
+        </div>
+      )}
+
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
         {[
-          { label:'إجمالي الأفرع',   value:String(BRANCHES.length), icon:'🌍', color:C.blue   },
-          { label:'الأفرع النشطة',   value:String(activeCount),     icon:'✅', color:C.green  },
-          { label:'إجمالي الطلاب',   value:totalStudents.toLocaleString(), icon:'🎓', color:C.purple },
-          { label:'إجمالي المعلمين', value:totalTeachers.toLocaleString(), icon:'👨‍🏫', color:C.teal  },
+          { label:'إجمالي الأفرع',   value:String(realBranches.length), icon:'🌍', color:C.blue   },
+          { label:'الأفرع النشطة',   value:String(activeCount),         icon:'✅', color:C.green  },
+          { label:'إجمالي الطلاب',   value:fmt(totalStudents),          icon:'🎓', color:C.purple },
+          { label:'إجمالي المعلمين', value:fmt(totalTeachers),          icon:'👨‍🏫', color:C.teal  },
         ].map((s,i)=>(
           <div key={i} style={card({ padding:'14px', display:'flex', alignItems:'center', gap:12 })}>
             <div style={{ width:42, height:42, borderRadius:13, background:`${s.color}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>{s.icon}</div>
             <div>
-              <p style={{ color:C.text, fontWeight:900, fontSize:20 }}>{s.value}</p>
+              <p style={{ color:C.text, fontWeight:900, fontSize:20 }}>{loading ? '—' : s.value}</p>
               <p style={{ color:C.sub, fontSize:11 }}>{s.label}</p>
             </div>
           </div>
@@ -84,52 +230,53 @@ export default function SASchoolsPage() {
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:700 }}>
           <thead>
             <tr style={{ background:'rgba(0,0,0,0.03)' }}>
-              {['#','الفرع / الدولة','العملة','الدورات','الطلاب','المعلمون','مدير الفرع','الأداء','الحالة','إجراءات'].map((h,i)=>(
+              {['#','الفرع / الدولة','الدورات','الطلاب','المعلمون','مدير الفرع','الحالة','إجراءات'].map((h,i)=>(
                 <th key={i} style={{ padding:'12px 14px', textAlign:'right', color:C.sub, fontSize:11, fontWeight:700, borderBottom:`1px solid ${C.border}`, whiteSpace:'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((b,i)=>(
-              <tr key={b.id} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?'transparent':'rgba(0,0,0,0.015)' }}>
-                <td style={{ padding:'12px 14px', color:C.dim, fontSize:12 }}>{b.id}</td>
-                <td style={{ padding:'12px 14px' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ width:38, height:38, borderRadius:10, background:`${C.gold}18`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>{b.flag}</div>
-                    <div>
-                      <p style={{ color:C.text, fontWeight:700, fontSize:13 }}>فرع {b.country}</p>
-                      <p style={{ color:C.sub, fontSize:11 }}>{b.country}</p>
+            {filtered.map((b,i)=>{
+              const status = b.is_active ? 'نشط' : 'معلق';
+              return (
+                <tr key={b.id} style={{ borderBottom:`1px solid ${C.border}`, background:i%2===0?'transparent':'rgba(0,0,0,0.015)' }}>
+                  <td style={{ padding:'12px 14px', color:C.dim, fontSize:12 }}>{b.id}</td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{ width:38, height:38, borderRadius:10, background:`${C.gold}18`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>{countryFlag(b.country)}</div>
+                      <div>
+                        <p style={{ color:C.text, fontWeight:700, fontSize:13 }}>فرع {b.country}</p>
+                        <p style={{ color:C.sub, fontSize:11 }}>{b.country}</p>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td style={{ padding:'12px 14px', color:C.sub, fontSize:12 }}>{b.currency}</td>
-                <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{b.courses}</td>
-                <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{b.students.toLocaleString()}</td>
-                <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{b.teachers}</td>
-                <td style={{ padding:'12px 14px', color:C.sub, fontSize:12 }}>{b.admin}</td>
-                <td style={{ padding:'12px 14px' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <div style={{ flex:1, height:5, borderRadius:3, background:'rgba(0,0,0,0.08)', minWidth:60 }}>
-                      <div style={{ width:`${b.perf}%`, height:'100%', borderRadius:3, background:b.perf>95?C.green:b.perf>90?C.gold:C.orange }}/>
+                  </td>
+                  <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{b.courses}</td>
+                  <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{fmt(b.students)}</td>
+                  <td style={{ padding:'12px 14px', color:C.text, fontWeight:700, fontSize:13 }}>{b.teachers}</td>
+                  <td style={{ padding:'12px 14px', color:C.sub, fontSize:12 }}>{b.admin_name || '—'}</td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <span style={{ padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:b.is_active?'rgba(22,163,74,0.12)':'rgba(217,119,6,0.12)', color:b.is_active?C.green:C.orange }}>{status}</span>
+                  </td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button onClick={()=>openEdit(b)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✏️</button>
+                      <button onClick={()=>toggleBranch(b)} title={b.is_active?'تعليق':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🔒</button>
+                      <button onClick={()=>deleteBranch(b)} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
                     </div>
-                    <span style={{ color:C.text, fontSize:11, fontWeight:700, flexShrink:0 }}>{b.perf}%</span>
-                  </div>
-                </td>
-                <td style={{ padding:'12px 14px' }}>
-                  <span style={{ padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:b.status==='نشط'?'rgba(22,163,74,0.12)':'rgba(217,119,6,0.12)', color:b.status==='نشط'?C.green:C.orange }}>{b.status}</span>
-                </td>
-                <td style={{ padding:'12px 14px' }}>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={()=>openEdit(b)} title="تعديل" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✏️</button>
-                    <button onClick={()=>alert(`تم ${b.status==='نشط'?'تعليق':'تفعيل'} فرع ${b.country}`)} title={b.status==='نشط'?'تعليق':'تفعيل'} style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🔒</button>
-                    <button onClick={()=>{ if(confirm(`هل تريد حذف فرع ${b.country}؟`)) alert('تم الحذف — سيُطبّق عند ربط API الفعلي'); }} title="حذف" style={{ width:30, height:30, borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>🗑️</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-        {filtered.length===0&&<div style={{ textAlign:'center', padding:'32px', color:C.sub, fontSize:13 }}>لا توجد نتائج مطابقة</div>}
+        {!loading && filtered.length===0 && (
+          <div style={{ textAlign:'center', padding:'32px', color:C.sub, fontSize:13 }}>
+            {realBranches.length === 0 ? 'لا توجد أفرع' : 'لا توجد نتائج مطابقة'}
+          </div>
+        )}
+        {loading && (
+          <div style={{ textAlign:'center', padding:'32px', color:C.sub, fontSize:13 }}>جارٍ التحميل...</div>
+        )}
       </div>
 
       {/* Modal */}
@@ -143,25 +290,50 @@ export default function SASchoolsPage() {
             <p style={{ color:C.sub, fontSize:12, marginBottom:18, background:C.bg, borderRadius:10, padding:'10px 14px' }}>
               ⚠️ كل فرع يمثّل دولة واحدة فقط — لا يمكن إنشاء أكثر من فرع لنفس الدولة.
             </p>
+
+            <div style={{ marginBottom:14 }}>
+              <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>الدولة</label>
+              {editTarget ? (
+                <input value={editTarget.country} disabled
+                  style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box' }}/>
+              ) : (
+                <select value={form.country_id} onChange={e=>setForm(f=>({...f, country_id:e.target.value}))}
+                  style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', cursor:'pointer' }}>
+                  <option value="">اختر الدولة</option>
+                  {unbranchedCountries.map(c => (
+                    <option key={c.country_id} value={c.country_id}>{c.country}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             {[
-              { l:'الدولة',         p:'اختر الدولة التي يمثّلها الفرع',  v: editTarget?.country ?? '' },
-              { l:'اسم مدير الفرع', p:'الاسم الكامل لمدير هذا الفرع',   v: editTarget?.admin ?? ''   },
-              { l:'البريد الإلكتروني', p:'بريد مدير الفرع',             v: '' },
-              { l:'رقم الهاتف',     p:'رقم التواصل',                      v: '' },
-            ].map((f,i)=>(
-              <div key={i} style={{ marginBottom:14 }}>
+              { l:'اسم مدير الفرع', key:'admin_name' as const, p:'الاسم الكامل لمدير هذا الفرع' },
+              { l:'البريد الإلكتروني', key:'admin_email' as const, p:'بريد مدير الفرع' },
+              { l:'رقم الهاتف', key:'admin_phone' as const, p:'رقم التواصل' },
+            ].map((f)=>(
+              <div key={f.key} style={{ marginBottom:14 }}>
                 <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>{f.l}</label>
-                <input defaultValue={f.v} placeholder={f.p}
+                <input value={form[f.key]} onChange={e=>setForm(prev=>({...prev, [f.key]:e.target.value}))} placeholder={f.p}
                   style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box' }}/>
               </div>
             ))}
+
             <div style={{ marginBottom:14 }}>
               <label style={{ color:C.sub, fontSize:12, fontWeight:600, display:'block', marginBottom:5 }}>ملاحظات</label>
-              <textarea rows={3} placeholder="أي ملاحظات إضافية عن هذا الفرع..." style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', resize:'none', fontFamily:"'Cairo',sans-serif" }}/>
+              <textarea rows={3} value={form.notes} onChange={e=>setForm(prev=>({...prev, notes:e.target.value}))} placeholder="أي ملاحظات إضافية عن هذا الفرع..." style={{ width:'100%', padding:'9px 14px', borderRadius:11, border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:13, outline:'none', boxSizing:'border-box', resize:'none', fontFamily:"'Cairo',sans-serif" }}/>
             </div>
+
+            {editTarget && (
+              <label style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14, color:C.text, fontSize:13, cursor:'pointer' }}>
+                <input type="checkbox" checked={form.is_active} onChange={e=>setForm(prev=>({...prev, is_active:e.target.checked}))} style={{ width:16, height:16, accentColor:C.gold }}/>
+                الفرع نشط
+              </label>
+            )}
+
             <div style={{ display:'flex', gap:10, marginTop:20 }}>
-              <button onClick={()=>{ alert(editTarget?'تم حفظ التعديلات — سيُطبّق عند ربط API الفعلي':'تمت إضافة الفرع — سيُطبّق عند ربط API الفعلي'); setShowModal(false); }} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer' }}>
-                {editTarget ? 'حفظ التعديلات' : 'إضافة الفرع'}
+              <button disabled={saving} onClick={handleSubmit} style={{ flex:1, padding:'11px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:13, border:'none', cursor:'pointer', opacity:saving?0.7:1 }}>
+                {saving ? 'جارٍ الحفظ...' : (editTarget ? 'حفظ التعديلات' : 'إضافة الفرع')}
               </button>
               <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'11px', borderRadius:12, background:C.bg, color:C.sub, fontWeight:600, fontSize:13, border:`1px solid ${C.border}`, cursor:'pointer' }}>إلغاء</button>
             </div>

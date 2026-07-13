@@ -17,25 +17,6 @@ const C = {
 };
 const font = { fontFamily: "'Cairo', sans-serif" };
 
-// ── Static mock data (fallback when API returns empty) ──────────────────────
-const MOCK_LEAGUES: League[] = [
-  { id:1, name:'دوري الرياضيات المتقدم', type:'group', status:'active',  i_joined:true,  participants_count:248, max_participants:500, starts_at:'2026-06-01', ends_at:'2026-06-30' },
-  { id:2, name:'تحدي اللغة الإنجليزية', type:'1v1',   status:'active',  i_joined:false, participants_count:86,  max_participants:100, starts_at:'2026-06-15', ends_at:'2026-06-25' },
-  { id:3, name:'بطولة العلوم الفصلية',   type:'group', status:'pending', i_joined:false, participants_count:12,  max_participants:200, starts_at:'2026-07-01', ends_at:'2026-07-31' },
-  { id:4, name:'دوري الياقوت الكبير',    type:'group', status:'ended',   i_joined:true,  participants_count:500, max_participants:500, starts_at:'2026-05-01', ends_at:'2026-05-31' },
-];
-
-const MOCK_LEADERBOARD = [
-  { rank:1, name:'أحمد سالم',     score:5820, is_me:false, student_id:1 },
-  { rank:2, name:'سارة محمد',     score:5210, is_me:false, student_id:2 },
-  { rank:3, name:'محمد خالد',     score:4980, is_me:false, student_id:3 },
-  { rank:4, name:'نورة العتيبي',  score:4760, is_me:false, student_id:4 },
-  { rank:5, name:'أنت',           score:4450, is_me:true,  student_id:5 },
-  { rank:6, name:'عمر الشمري',    score:4200, is_me:false, student_id:6 },
-  { rank:7, name:'ريم الزهراني',  score:3980, is_me:false, student_id:7 },
-  { rank:8, name:'فهد الغامدي',   score:3720, is_me:false, student_id:8 },
-];
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const medal: Record<number,string> = { 1:'🥇', 2:'🥈', 3:'🥉' };
 const medalColor: Record<number,string> = { 1:'#F0D060', 2:'#B0BEC5', 3:'#CD7F32' };
@@ -64,7 +45,7 @@ export default function StudentLeaguePage() {
     return () => { dispatch(clearActiveLeague()); };
   }, [dispatch]);
 
-  const displayLeagues = leagues.length > 0 ? leagues : MOCK_LEAGUES;
+  const displayLeagues = leagues;
 
   const handleJoin = async (leagueId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,9 +57,10 @@ export default function StudentLeaguePage() {
 
   const handleOpen = (leagueId: number) => dispatch(fetchLeagueDetail(leagueId));
 
-  const myEntry  = MOCK_LEADERBOARD.find(e => e.is_me);
-  const top3     = MOCK_LEADERBOARD.slice(0,3);
-  const rest     = MOCK_LEADERBOARD.slice(3);
+  const board = activeLeague?.leaderboard ?? [];
+  const myEntry  = board.find(e => e.is_me);
+  const top3     = board.slice(0,3);
+  const rest     = board.slice(3);
   const cardS    = { background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}` } as React.CSSProperties;
 
   return (
@@ -109,9 +91,9 @@ export default function StudentLeaguePage() {
             {/* Quick Stats */}
             <div style={{ display:'flex', gap:12, marginTop:18, flexWrap:'wrap' }}>
               {[
-                { icon:'👥', val:'248', label:'مشارك' },
+                { icon:'👥', val:String(displayLeagues.reduce((s,l)=>s+(l.participants_count||0),0) || '—'), label:'مشارك' },
                 { icon:'🎯', val:String(displayLeagues.filter(l=>l.status==='active').length), label:'دوري نشط' },
-                { icon:'⭐', val:`#${myEntry?.rank ?? 5}`, label:'مركزك' },
+                { icon:'⭐', val: myEntry ? `#${myEntry.rank}` : '—', label:'مركزك' },
               ].map((s,i)=>(
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px', borderRadius:12, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)' }}>
                   <span style={{ fontSize:18 }}>{s.icon}</span>
@@ -162,6 +144,13 @@ export default function StudentLeaguePage() {
               {loading && (
                 <div style={{ textAlign:'center', padding:40 }}>
                   <div style={{ width:36, height:36, borderRadius:'50%', border:`3px solid ${C.goldBg}`, borderTopColor:C.gold, animation:'spin 0.8s linear infinite', margin:'0 auto' }}/>
+                </div>
+              )}
+
+              {!loading && displayLeagues.length === 0 && (
+                <div style={{ textAlign:'center', padding:40 }}>
+                  <div style={{ fontSize:40, marginBottom:10 }}>🏆</div>
+                  <p style={{ color:C.sub, fontSize:14 }}>لا توجد دوريات متاحة حالياً</p>
                 </div>
               )}
 
@@ -237,7 +226,13 @@ export default function StudentLeaguePage() {
           {tab==='board' && (
             <>
               <h2 style={{ color:C.text, fontWeight:900, fontSize:16, marginBottom:14 }}>ترتيب المتنافسين</h2>
-
+              {board.length === 0 ? (
+                <div style={{ textAlign:'center', padding:40, ...cardS }}>
+                  <div style={{ fontSize:40, marginBottom:10 }}>🏅</div>
+                  <p style={{ color:C.sub, fontSize:14 }}>افتح دورياً لعرض الترتيب، أو لا يوجد مشاركون بعد</p>
+                </div>
+              ) : (
+              <>
               {/* Podium Top 3 */}
               <div style={{ ...cardS, marginBottom:14, padding:'20px', background:'linear-gradient(160deg,#0D1535,#1B2038)' }}>
                 <p style={{ color:'rgba(255,255,255,0.5)', fontSize:12, textAlign:'center', marginBottom:16 }}>المراكز الثلاثة الأولى</p>
@@ -245,22 +240,22 @@ export default function StudentLeaguePage() {
                   {/* 2nd */}
                   <div style={{ textAlign:'center', flex:1 }}>
                     <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(176,190,197,0.15)', border:`2px solid ${medalColor[2]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, margin:'0 auto 6px' }}>👤</div>
-                    <p style={{ color:'#B0BEC5', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[1]?.name}</p>
-                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[1]?.score?.toLocaleString()} نقطة</p>
+                    <p style={{ color:'#B0BEC5', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[1]?.name ?? '—'}</p>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[1]?.score?.toLocaleString() ?? '—'} نقطة</p>
                     <div style={{ height:40, background:'rgba(176,190,197,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>🥈</div>
                   </div>
                   {/* 1st */}
                   <div style={{ textAlign:'center', flex:1, marginBottom:12 }}>
                     <div style={{ width:62, height:62, borderRadius:'50%', background:'rgba(240,208,96,0.15)', border:`2px solid ${medalColor[1]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 6px', boxShadow:'0 0 20px rgba(240,208,96,0.3)' }}>👤</div>
-                    <p style={{ color:'#F0D060', fontWeight:900, fontSize:13, marginBottom:2, lineHeight:1.3 }}>{top3[0]?.name}</p>
-                    <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>{top3[0]?.score?.toLocaleString()} نقطة</p>
+                    <p style={{ color:'#F0D060', fontWeight:900, fontSize:13, marginBottom:2, lineHeight:1.3 }}>{top3[0]?.name ?? '—'}</p>
+                    <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>{top3[0]?.score?.toLocaleString() ?? '—'} نقطة</p>
                     <div style={{ height:56, background:'rgba(240,208,96,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>🥇</div>
                   </div>
                   {/* 3rd */}
                   <div style={{ textAlign:'center', flex:1 }}>
                     <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(205,127,50,0.15)', border:`2px solid ${medalColor[3]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, margin:'0 auto 6px' }}>👤</div>
-                    <p style={{ color:'#CD7F32', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[2]?.name}</p>
-                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[2]?.score?.toLocaleString()} نقطة</p>
+                    <p style={{ color:'#CD7F32', fontWeight:800, fontSize:11, marginBottom:2, lineHeight:1.3 }}>{top3[2]?.name ?? '—'}</p>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{top3[2]?.score?.toLocaleString() ?? '—'} نقطة</p>
                     <div style={{ height:28, background:'rgba(205,127,50,0.1)', borderRadius:'8px 8px 0 0', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🥉</div>
                   </div>
                 </div>
@@ -270,7 +265,7 @@ export default function StudentLeaguePage() {
               <div style={cardS}>
                 <p style={{ color:C.sub, fontSize:12, fontWeight:600, marginBottom:12 }}>الترتيب الكامل</p>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {rest.map(entry => (
+                  {(rest.length > 0 ? rest : board).map(entry => (
                     <div key={entry.student_id} style={{
                       display:'flex', alignItems:'center', gap:12, padding:'10px 14px', borderRadius:14,
                       background: entry.is_me ? C.goldBg : '#F9FAFB',
@@ -291,6 +286,8 @@ export default function StudentLeaguePage() {
                   ))}
                 </div>
               </div>
+              </>
+              )}
             </>
           )}
 
