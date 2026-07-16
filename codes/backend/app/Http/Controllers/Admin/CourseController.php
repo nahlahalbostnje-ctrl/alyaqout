@@ -7,11 +7,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Exam;
+use App\Models\Homework;
+use App\Models\LiveClass;
 use App\Models\Subject;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Services\StudentEntitlementService;
 use App\Services\TeacherSubjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
@@ -53,6 +59,208 @@ class CourseController extends Controller
         }
 
         return response()->json(['success' => true, 'data' => $query->get()]);
+    }
+
+    /** GET /admin/courses/{course}/dossier — ملف الدورة الكامل */
+    public function dossier(Course $course, StudentEntitlementService $entitlement): JsonResponse
+    {
+        $this->authorizeCourse($course);
+
+        $course->load([
+            'subject:id,name,type',
+            'grade:id,name',
+            'category:id,name,grade_id',
+            'category.grade:id,name',
+            'teacher:id,name,phone',
+            'units' => fn ($q) => $q->orderBy('sort_order')->withCount('lessons'),
+        ]);
+
+        $units = $course->units->map(fn ($u) => [
+            'id'            => $u->id,
+            'title'         => $u->title,
+            'lessons_count' => (int) $u->lessons_count,
+            'sort_order'    => $u->sort_order,
+        ])->values();
+
+        $lessonsCount = (int) DB::table('lessons')
+            ->whereIn('unit_id', $course->units->pluck('id'))
+            ->count();
+
+        $videosCount = (int) DB::table('videos')
+            ->whereIn('lesson_id', function ($q) use ($course) {
+                $q->select('lessons.id')
+                    ->from('lessons')
+                    ->join('units', 'units.id', '=', 'lessons.unit_id')
+                    ->where('units.course_id', $course->id);
+            })
+            ->count();
+
+        $homeworks = Homework::where('course_id', $course->id)
+            ->with('teacher:id,name')
+            ->orderByDesc('created_at')
+            ->get(['id', 'title', 'status', 'due_date', 'teacher_id', 'archived_at', 'created_at'])
+            ->map(fn (Homework $h) => [
+                'id'          => $h->id,
+                'title'       => $h->title,
+                'status'      => $h->status,
+                'due_date'    => $h->due_date?->toDateString(),
+                'archived'    => $h->archived_at !== null,
+                'teacher'     => $h->teacher?->name,
+                'created_at'  => $h->created_at?->toDateString(),
+            ])->values();
+
+        $exams = Exam::where('course_id', $course->id)
+            ->with('teacher:id,name')
+            ->withCount('questions')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Exam $e) => [
+                'id'               => $e->id,
+                'title'            => $e->title,
+                'status'           => $e->status,
+                'duration'         => $e->duration,
+                'starts_at'        => $e->starts_at?->toIso8601String(),
+                'archived'         => $e->archived_at !== null,
+                'questions_count'  => (int) $e->questions_count,
+                'teacher'          => $e->teacher?->name,
+                'created_at'       => $e->created_at?->toDateString(),
+            ])->values();
+
+        $liveClasses = LiveClass::where('course_id', $course->id)
+            ->whereNull('archived_at')
+            ->with('teacher:id,name')
+            ->orderByDesc('scheduled_at')
+            ->limit(50)
+            ->get(['id', 'title', 'scheduled_at', 'duration_minutes', 'status', 'approval_status', 'session_type', 'teacher_id'])
+            ->map(fn (LiveClass $lc) => [
+                'id'               => $lc->id,
+                'title'            => $lc->title,
+                'scheduled_at'     => $lc->scheduled_at?->toIso8601String(),
+                'duration_minutes' => $lc->duration_minutes,
+                'status'           => $lc->status,
+                'approval_status'  => $lc->approval_status,
+                'session_type'     => $lc->session_type,
+                'teacher'          => $lc->teacher?->name,
+            ])->values();
+
+        $students = $this->studentsForCourse($course, $entitlement);
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'course' => [
+                    'id'              => $course->id,
+                    'title'           => $course->title,
+                    'description'     => $course->description,
+                    'price'           => $course->price,
+                    'is_free'         => $course->is_free,
+                    'is_active'       => $course->is_active,
+                    'approval_status' => $course->approval_status,
+                    'subject'         => $course->subject,
+                    'grade'           => $course->grade,
+                    'category'        => $course->category,
+                    'teacher'         => $course->teacher,
+                ],
+                'content' => [
+                    'units_count'   => $units->count(),
+                    'lessons_count' => $lessonsCount,
+                    'videos_count'  => $videosCount,
+                    'units'         => $units,
+                ],
+                'homeworks'    => $homeworks,
+                'exams'        => $exams,
+                'live_classes' => $liveClasses,
+                'students'     => $students,
+                'counts'       => [
+                    'students'     => count($students),
+                    'homeworks'    => $homeworks->count(),
+                    'exams'        => $exams->count(),
+                    'live_classes' => $liveClasses->count(),
+                    'units'        => $units->count(),
+                ],
+            ],
+        ]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function studentsForCourse(Course $course, StudentEntitlementService $entitlement): array
+    {
+        $countryId = $this->countryId();
+        $courseId  = (int) $course->id;
+
+        $packageIds = DB::table('package_course')
+            ->where('course_id', $courseId)
+            ->pluck('package_id');
+
+        if ($course->subject_id) {
+            $packageIds = $packageIds->merge(
+                DB::table('package_subject')
+                    ->where('subject_id', $course->subject_id)
+                    ->pluck('package_id')
+            );
+        }
+
+        $packageIds = $packageIds->unique()->values();
+
+        $candidateIds = collect();
+
+        if ($packageIds->isNotEmpty()) {
+            $candidateIds = Subscription::where('country_id', $countryId)
+                ->where('status', 'active')
+                ->whereDate('ends_at', '>=', now()->toDateString())
+                ->whereIn('package_id', $packageIds)
+                ->pluck('student_id');
+        }
+
+        if ($course->is_free) {
+            $gradeId = $course->grade_id ? (int) $course->grade_id : null;
+            $freeQuery = User::where('country_id', $countryId)
+                ->where('role', 'student')
+                ->where('is_active', true);
+            if ($gradeId) {
+                $freeQuery->where(function ($q) use ($gradeId) {
+                    $q->where('grade_id', $gradeId)->orWhereNull('grade_id');
+                });
+            }
+            $candidateIds = $candidateIds->merge($freeQuery->limit(300)->pluck('id'));
+        }
+
+        $candidateIds = $candidateIds->unique()->values();
+        if ($candidateIds->isEmpty()) {
+            return [];
+        }
+
+        $users = User::whereIn('id', $candidateIds)
+            ->where('role', 'student')
+            ->with('grade:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'grade_id', 'is_active']);
+
+        $rows = [];
+        foreach ($users as $user) {
+            if (! $entitlement->canAccessCourse($user, $course)) {
+                continue;
+            }
+            $activeSub = Subscription::where('student_id', $user->id)
+                ->where('status', 'active')
+                ->whereDate('ends_at', '>=', now()->toDateString())
+                ->with('package:id,name')
+                ->latest()
+                ->first();
+
+            $rows[] = [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'phone'      => $user->phone,
+                'grade'      => $user->grade?->name,
+                'is_active'  => $user->is_active,
+                'access_via' => $course->is_free && ! $activeSub ? 'free' : 'subscription',
+                'package'    => $activeSub?->package?->name,
+                'ends_at'    => $activeSub?->ends_at?->format('Y-m-d'),
+            ];
+        }
+
+        return $rows;
     }
 
     public function store(Request $request, TeacherSubjectService $teacherSubjects): JsonResponse

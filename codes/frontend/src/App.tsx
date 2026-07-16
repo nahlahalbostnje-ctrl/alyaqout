@@ -14,6 +14,7 @@ import LiveClassesPage            from './pages/LiveClassesPage';
 import SubscriptionsPage          from './pages/SubscriptionsPage';
 import AdminNotificationsPage     from './pages/AdminNotificationsPage';
 import CourseContentPage          from './pages/CourseContentPage';
+import AdminCourseDossierPage     from './pages/AdminCourseDossierPage';
 import StudentDashboardPage       from './pages/StudentDashboardPage';
 import StudentCoursesPage         from './pages/StudentCoursesPage';
 import StudentLiveClassesPage     from './pages/StudentLiveClassesPage';
@@ -214,6 +215,9 @@ export default function App() {
         } />
         <Route path="/admin/courses" element={
           <PrivateRoute roles={['admin']}><CoursesPage /></PrivateRoute>
+        } />
+        <Route path="/admin/courses/:courseId" element={
+          <PrivateRoute roles={['admin']}><AdminCourseDossierPage /></PrivateRoute>
         } />
         <Route path="/admin/courses/:courseId/content" element={
           <PrivateRoute roles={['admin']}><CourseContentPage /></PrivateRoute>

@@ -320,7 +320,9 @@ export default function CoursesPage() {
                   <tr key={course.id}>
                     <td style={{ ...TD, color: DK.sub, fontWeight: 700 }}>{idx + 1}</td>
                     <td style={TD}>
-                      <div style={{ fontWeight: 700 }}>{course.title}</div>
+                      <Link to={`/admin/courses/${course.id}`} style={{ fontWeight: 700, color: DK.text, textDecoration: 'none' }}>
+                        {course.title}
+                      </Link>
                       {course.description && <div style={{ fontSize: 11, color: DK.sub }}>{course.description}</div>}
                     </td>
                     <td style={TD}>
@@ -367,6 +369,10 @@ export default function CoursesPage() {
                     </td>
                     <td style={TD}>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <Link to={`/admin/courses/${course.id}`} style={{
+                          padding: '5px 12px', borderRadius: 8, background: DK.goldGrad,
+                          color: '#1B2038', fontSize: 12, fontWeight: 800, textDecoration: 'none',
+                        }}>ملف الدورة</Link>
                         <button onClick={() => openEdit(course)} style={{
                           padding: '5px 12px', borderRadius: 8, border: '1px solid #EDE3CE',
                           background: '#fff', color: DK.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer',

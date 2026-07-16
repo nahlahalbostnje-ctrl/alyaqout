@@ -256,6 +256,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::delete('packages/{package}',       [AdminPackageController::class, 'destroy']);
 
     Route::get('courses',                   [AdminCourseController::class, 'index']);
+    Route::get('courses/{course}/dossier',  [AdminCourseController::class, 'dossier']);
     Route::post('courses',                  [AdminCourseController::class, 'store']);
     Route::put('courses/{course}',          [AdminCourseController::class, 'update']);
     Route::patch('courses/{course}/toggle', [AdminCourseController::class, 'toggle']);
