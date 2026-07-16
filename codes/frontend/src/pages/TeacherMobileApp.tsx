@@ -66,10 +66,11 @@ function Badge({ n, color = T.red }: { n: number; color?: string }) {
 }
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = false, open = true, onClose }: {
+function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout, isMobile = false, open = true, onClose }: {
   active: Screen;
   onNav: (s: Screen) => void;
   teacher: { id: number; name: string } | null;
+  subjectsLabel: string;
   pendingTotal: number;
   onLogout: () => void;
   isMobile?: boolean;
@@ -98,16 +99,10 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = fa
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: '0 4px 14px rgba(201,149,42,0.4)' }}>👨‍🏫</div>
           <div>
             <p style={{ color: T.sText, fontWeight: 800, fontSize: 13.5 }}>أ. {teacher?.name ?? '...'}</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              <span style={{ color: T.goldL, fontSize: 11, fontWeight: 600 }}>English</span>
-              <span style={{ background: T.goldGrad, color: T.sidebar, fontSize: 9, fontWeight: 800, padding: '1px 7px', borderRadius: 20 }}>رتبة المعلم ★</span>
-            </div>
+            <p style={{ color: T.goldL, fontSize: 11, fontWeight: 600, marginTop: 4, lineHeight: 1.4 }}>
+              {subjectsLabel}
+            </p>
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12, padding: '7px 12px', background: 'rgba(201,149,42,0.15)', borderRadius: 10, border: `1px solid rgba(201,149,42,0.3)` }}>
-          <span style={{ fontSize: 14 }}>💰</span>
-          <span style={{ color: T.goldL, fontWeight: 900, fontSize: 16 }}>8,420</span>
-          <span style={{ color: T.sSub, fontSize: 10, marginRight: 'auto' }}>نقطة</span>
         </div>
       </div>
 
@@ -743,7 +738,10 @@ function StudentsScreen() {
 export default function TeacherMobileApp() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { teacher, upcoming, stats, liveNow, recentSubmissions } = useAppSelector(s => s.teacher);
+  const { teacher, subjects, upcoming, stats, liveNow, recentSubmissions } = useAppSelector(s => s.teacher);
+  const subjectsLabel = subjects.length
+    ? subjects.map(s => s.name).filter(Boolean).join(' · ')
+    : 'بدون تخصص';
   const { exams, homeworks } = useAppSelector(s => s.teacherExams);
   const [screen, setScreen] = useState<Screen>('home');
 
@@ -780,7 +778,7 @@ export default function TeacherMobileApp() {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', background: T.bg, fontFamily: "'Cairo',sans-serif", direction: 'rtl' }}>
       {/* Sidebar (right in RTL) — static on desktop, slide-in drawer on mobile */}
-      <Sidebar active={screen} onNav={setScreen} teacher={teacher} pendingTotal={pendingTotal} onLogout={handleLogout}
+      <Sidebar active={screen} onNav={setScreen} teacher={teacher} subjectsLabel={subjectsLabel} pendingTotal={pendingTotal} onLogout={handleLogout}
         isMobile={isMobile} open={isMobile ? navOpen : true} onClose={() => setNavOpen(false)}/>
 
       {/* Main content */}

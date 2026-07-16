@@ -12,6 +12,7 @@ use App\Models\ExamSubmission;
 use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\LiveClass;
+use App\Models\TeacherSubject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,9 +37,26 @@ class HomeController extends Controller
 
         $courses = Course::where('teacher_id', $teacherId)
             ->where('is_active', true)
-            ->with(['category:id,name,grade_id', 'category.grade:id,name'])
+            ->with([
+                'subject:id,name,type',
+                'grade:id,name',
+                'category:id,name,grade_id',
+                'category.grade:id,name',
+            ])
             ->orderBy('sort_order')
-            ->get(['id', 'category_id', 'title', 'price', 'is_free', 'thumbnail', 'is_active']);
+            ->get(['id', 'category_id', 'subject_id', 'grade_id', 'title', 'price', 'is_free', 'thumbnail', 'is_active']);
+
+        $subjects = TeacherSubject::where('teacher_id', $teacherId)
+            ->with(['subject:id,name,type', 'grades:id,name'])
+            ->get()
+            ->map(fn (TeacherSubject $ts) => [
+                'id'         => $ts->id,
+                'subject_id' => $ts->subject_id,
+                'name'       => $ts->subject?->name,
+                'type'       => $ts->subject?->type,
+                'grades'     => $ts->grades->map(fn ($g) => ['id' => $g->id, 'name' => $g->name])->values(),
+            ])
+            ->values();
 
         $upcoming = LiveClass::where('teacher_id', $teacherId)
             ->whereIn('status', ['scheduled', 'live'])
@@ -93,6 +111,7 @@ class HomeController extends Controller
             'success' => true,
             'data'    => [
                 'teacher'  => ['id' => $teacher->id, 'name' => $teacher->name],
+                'subjects' => $subjects,
                 'courses'  => $courses,
                 'upcoming' => $upcoming,
                 'stats'    => [
@@ -113,11 +132,34 @@ class HomeController extends Controller
     public function courses(): JsonResponse
     {
         $courses = Course::where('teacher_id', $this->teacherId())
-            ->with(['category:id,name,grade_id', 'category.grade:id,name'])
+            ->with([
+                'subject:id,name,type',
+                'grade:id,name',
+                'category:id,name,grade_id',
+                'category.grade:id,name',
+            ])
             ->orderBy('sort_order')
             ->get();
 
         return response()->json(['success' => true, 'data' => $courses]);
+    }
+
+    public function mySubjects(): JsonResponse
+    {
+        $rows = TeacherSubject::where('teacher_id', $this->teacherId())
+            ->with(['subject:id,name,type,is_active', 'grades:id,name'])
+            ->get()
+            ->map(fn (TeacherSubject $ts) => [
+                'id'         => $ts->id,
+                'subject_id' => $ts->subject_id,
+                'name'       => $ts->subject?->name,
+                'type'       => $ts->subject?->type,
+                'is_active'  => (bool) $ts->subject?->is_active,
+                'grades'     => $ts->grades->map(fn ($g) => ['id' => $g->id, 'name' => $g->name])->values(),
+            ])
+            ->values();
+
+        return response()->json(['success' => true, 'data' => $rows]);
     }
 
     public function liveClasses(): JsonResponse

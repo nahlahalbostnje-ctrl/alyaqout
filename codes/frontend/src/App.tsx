@@ -6,7 +6,7 @@ import LoginPage                  from './pages/LoginPage';
 import DashboardPage              from './pages/DashboardPage';
 import AdminDashboardPage         from './pages/AdminDashboardPage';
 import GradesPage                 from './pages/GradesPage';
-import CategoriesPage             from './pages/CategoriesPage';
+import SubjectsPage               from './pages/SubjectsPage';
 import CoursesPage                from './pages/CoursesPage';
 import UsersPage                  from './pages/UsersPage';
 import PackagesPage               from './pages/PackagesPage';
@@ -205,7 +205,10 @@ export default function App() {
           <PrivateRoute roles={['admin']}><GradesPage /></PrivateRoute>
         } />
         <Route path="/admin/categories" element={
-          <PrivateRoute roles={['admin']}><CategoriesPage /></PrivateRoute>
+          <PrivateRoute roles={['admin']}><SubjectsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/subjects" element={
+          <PrivateRoute roles={['admin']}><SubjectsPage /></PrivateRoute>
         } />
         <Route path="/admin/courses" element={
           <PrivateRoute roles={['admin']}><CoursesPage /></PrivateRoute>

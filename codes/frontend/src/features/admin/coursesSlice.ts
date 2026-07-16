@@ -3,7 +3,9 @@ import api from '../../services/axios';
 
 export interface Course {
   id: number;
-  category_id: number;
+  category_id: number | null;
+  subject_id: number | null;
+  grade_id: number | null;
   teacher_id: number | null;
   title: string;
   description: string | null;
@@ -12,12 +14,16 @@ export interface Course {
   is_free: boolean;
   is_active: boolean;
   sort_order: number;
+  subject?: { id: number; name: string; type: string };
+  grade?: { id: number; name: string };
   category?: { id: number; name: string; grade_id: number; grade?: { id: number; name: string } };
   teacher?: { id: number; name: string } | null;
 }
 
 export interface CoursePayload {
-  category_id: number;
+  subject_id: number;
+  grade_id?: number | null;
+  teacher_id?: number | null;
   title: string;
   description?: string;
   price?: number;
@@ -35,9 +41,9 @@ const initialState: CoursesState = { list: [], loading: false, error: null };
 
 export const fetchCourses = createAsyncThunk(
   'courses/fetchAll',
-  async (categoryId: number | null, { rejectWithValue }) => {
+  async (subjectId: number | null, { rejectWithValue }) => {
     try {
-      const params = categoryId ? { category_id: categoryId } : {};
+      const params = subjectId ? { subject_id: subjectId } : {};
       const { data } = await api.get('/admin/courses', { params });
       return data.data as Course[];
     } catch (err: any) {
@@ -53,7 +59,7 @@ export const addCourse = createAsyncThunk(
       const { data } = await api.post('/admin/courses', payload);
       return data.data as Course;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || 'فشل إضافة الدورة');
+      return rejectWithValue(err.response?.data?.message || err.response?.data?.errors?.teacher_id?.[0] || 'فشل إضافة الدورة');
     }
   }
 );
@@ -61,7 +67,7 @@ export const addCourse = createAsyncThunk(
 /** Metadata update only — does not send teacher_id (assignTeacher uses the same PUT route). */
 export const updateCourse = createAsyncThunk(
   'courses/update',
-  async (payload: { id: number } & Omit<CoursePayload, 'category_id'>, { rejectWithValue }) => {
+  async (payload: { id: number } & Partial<Omit<CoursePayload, 'subject_id'>> & { subject_id?: number }, { rejectWithValue }) => {
     try {
       const { id, ...body } = payload;
       const { data } = await api.put(`/admin/courses/${id}`, body);
@@ -93,7 +99,10 @@ export const assignTeacher = createAsyncThunk(
       });
       return data.data as Course;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || 'فشل تعيين المعلم');
+      const msg = err.response?.data?.message
+        || err.response?.data?.errors?.teacher_id?.[0]
+        || 'فشل تعيين المعلم';
+      return rejectWithValue(msg);
     }
   }
 );

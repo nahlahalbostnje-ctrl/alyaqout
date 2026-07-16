@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Course extends Model
 {
     protected $fillable = [
-        'country_id', 'category_id', 'teacher_id',
+        'country_id', 'category_id', 'subject_id', 'grade_id', 'teacher_id',
         'title', 'description', 'thumbnail',
         'price', 'is_free', 'is_active', 'sort_order',
     ];
@@ -25,6 +25,8 @@ class Course extends Model
 
     public function country(): BelongsTo  { return $this->belongsTo(Country::class); }
     public function category(): BelongsTo { return $this->belongsTo(Category::class); }
+    public function subject(): BelongsTo  { return $this->belongsTo(Subject::class); }
+    public function grade(): BelongsTo    { return $this->belongsTo(Grade::class); }
     public function teacher(): BelongsTo  { return $this->belongsTo(User::class, 'teacher_id'); }
     public function units(): HasMany      { return $this->hasMany(Unit::class)->orderBy('sort_order'); }
 }

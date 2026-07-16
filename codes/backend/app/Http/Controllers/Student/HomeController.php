@@ -28,11 +28,16 @@ class HomeController extends Controller
         $studentId = (int) $student->id;
         $countryId = $this->countryId();
 
-        $courses = Course::where('country_id', $countryId)
-            ->where('is_active', true)
-            ->with(['category:id,name,grade_id', 'category.grade:id,name', 'teacher:id,name'])
+        $courses = $this->visibleCoursesQuery($student)
+            ->with([
+                'subject:id,name,type',
+                'grade:id,name',
+                'category:id,name,grade_id',
+                'category.grade:id,name',
+                'teacher:id,name',
+            ])
             ->orderBy('sort_order')
-            ->get(['id', 'category_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail']);
+            ->get(['id', 'category_id', 'subject_id', 'grade_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail']);
 
         $upcoming = LiveClass::where('country_id', $countryId)
             ->whereIn('status', ['scheduled', 'live'])
@@ -124,13 +129,58 @@ class HomeController extends Controller
 
     public function courses(): JsonResponse
     {
-        $courses = Course::where('country_id', $this->countryId())
-            ->where('is_active', true)
-            ->with(['category:id,name,grade_id', 'category.grade:id,name', 'teacher:id,name'])
+        $student = auth()->user();
+
+        $courses = $this->visibleCoursesQuery($student)
+            ->with([
+                'subject:id,name,type',
+                'grade:id,name',
+                'category:id,name,grade_id',
+                'category.grade:id,name',
+                'teacher:id,name',
+            ])
             ->orderBy('sort_order')
             ->get();
 
         return response()->json(['success' => true, 'data' => $courses]);
+    }
+
+    /**
+     * Curriculum: student's grade only.
+     * Extracurricular: country-wide; grade null (all) or matching student grade.
+     */
+    private function visibleCoursesQuery($student)
+    {
+        $countryId = (int) $student->country_id;
+        $gradeId   = $student->grade_id ? (int) $student->grade_id : null;
+
+        return Course::where('country_id', $countryId)
+            ->where('is_active', true)
+            ->where(function ($q) use ($gradeId) {
+                $q->where(function ($extra) use ($gradeId) {
+                    $extra->whereHas('subject', fn ($s) => $s->where('type', 'extracurricular')->where('is_active', true))
+                        ->where(function ($g) use ($gradeId) {
+                            $g->whereNull('grade_id');
+                            if ($gradeId) {
+                                $g->orWhere('grade_id', $gradeId);
+                            }
+                        });
+                });
+
+                if ($gradeId) {
+                    $q->orWhere(function ($curr) use ($gradeId) {
+                        $curr->where('grade_id', $gradeId)
+                            ->where(function ($inner) {
+                                $inner->whereHas('subject', fn ($s) => $s->where('type', 'curriculum')->where('is_active', true))
+                                    ->orWhereNull('subject_id');
+                            });
+                    })->orWhere(function ($legacy) use ($gradeId) {
+                        $legacy->whereNull('subject_id')
+                            ->whereNull('grade_id')
+                            ->whereHas('category', fn ($c) => $c->where('grade_id', $gradeId));
+                    });
+                }
+            });
     }
 
     public function liveClasses(): JsonResponse

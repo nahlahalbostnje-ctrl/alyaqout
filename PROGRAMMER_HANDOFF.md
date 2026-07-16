@@ -1,9 +1,8 @@
 # تسليم المبرمج — منصة الياقوت (alyaqout)
 
-> تاريخ: **2026-07-13**  
+> تاريخ: **2026-07-16**  
 > الفرع: `master`  
 > المستودع: https://github.com/nahlahalbostnje-ctrl/alyaqout  
-> آخر commit عند التسليم: `8068137`  
 > الإنتاج: https://alyaqoutgroup.net  
 
 ---
@@ -176,6 +175,38 @@ echo \"fixed=\$fixed\".PHP_EOL;
 
 ---
 
+## 4ب) هيكلة المواد والتخصصات (2026-07-16)
+
+بعد `php artisan migrate --force` تُنشأ الجداول ويُرحَّل محتوى `categories` تلقائياً.
+
+| كيان | جدول | معنى |
+|------|------|------|
+| مادة | `subjects` | منهجية `curriculum` أو غير منهجية `extracurricular` |
+| صفوف المادة | `subject_grade` | مادة واحدة لعدة صفوف |
+| إسناد معلم | `teacher_subjects` + `teacher_subject_grades` | معلم ↔ مادة ↔ صفوف |
+| دورة | `courses.subject_id` + `grade_id` | عرض تشغيلي؛ المعلم يُتحقق من الإسناد |
+
+**API أدمن الدولة**
+
+- `GET/POST/PUT/PATCH/DELETE /api/admin/subjects`
+- `PUT /api/admin/subjects/{id}/grades`
+- `GET/PUT /api/admin/teachers/{id}/subjects`
+- `POST/PUT /api/admin/courses` يقبل `subject_id` + `grade_id` + `teacher_id` (مع تحقق الإسناد)
+
+**معلم / طالب**
+
+- `GET /api/teacher/me/subjects` و`subjects` داخل `/teacher/dashboard`
+- واجهة المعلم: أسماء المواد الحقيقية (أو «بدون تخصص») — بدون `English` / نقاط وهمية
+- كورسات الطالب تُفلتر: منهجي لصفه + غير منهجي (بلا صف أو نفس الصف)
+
+**واجهة**
+
+- `/admin/subjects` (و`/admin/categories` يعيد التوجيه لنفس الصفحة)
+- الدورات والمستخدمون (تعديل معلم → إسناد مواد/صفوف)
+- `categories` تبقى طبقة توافق مؤقتة؛ الكتابة الجديدة على `subjects`
+
+---
+
 ## 5) ما يزال يحتاج أن يصبح ديناميكياً (Backlog للمبرمج)
 
 راجع أيضاً `PROJECT_LOG.md` و stubs في الواجهة. أولويات مقترحة:
@@ -221,6 +252,8 @@ Document Root:   .../codes/backend/public/  (+ symlink /home/baitpait/alyaqoutgr
 - [ ] تشغيل أمر تطبيع أرقام `05…` → `00970…`
 - [ ] تجربة دخول معلم: إيميل + باسورد، و OTP بـ `123456` إن كان وضع QA
 - [ ] تجربة `/dashboard/faqs` وإظهار سؤال في الصفحة الرئيسية
+- [ ] تجربة `/admin/subjects` + إسناد معلم + دورة بمادة/صف
+- [ ] التأكد أن سايدبار المعلم يعرض مواد حقيقية بعد الإسناد
 - [ ] عدم commit لـ `.env` أو مفاتيح API
 - [ ] `npm run build` قبل كل push
 

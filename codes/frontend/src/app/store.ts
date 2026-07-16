@@ -4,6 +4,7 @@ import countriesReducer     from '../features/countries/countriesSlice';
 import adminReducer         from '../features/admin/adminSlice';
 import gradesReducer        from '../features/admin/gradesSlice';
 import categoriesReducer    from '../features/admin/categoriesSlice';
+import subjectsReducer      from '../features/admin/subjectsSlice';
 import coursesReducer       from '../features/admin/coursesSlice';
 import adminUsersReducer    from '../features/admin/usersSlice';
 import packagesReducer      from '../features/admin/packagesSlice';
@@ -31,6 +32,7 @@ export const store = configureStore({
     admin:          adminReducer,
     grades:         gradesReducer,
     categories:     categoriesReducer,
+    subjects:       subjectsReducer,
     courses:        coursesReducer,
     adminUsers:     adminUsersReducer,
     packages:       packagesReducer,

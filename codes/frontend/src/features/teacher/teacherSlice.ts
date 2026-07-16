@@ -1,7 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/axios';
 
-interface CourseCategory { id: number; name: string; grade: { id: number; name: string } }
+interface CourseCategory { id: number; name: string; grade?: { id: number; name: string } }
+
+export interface TeacherSubjectSummary {
+  id: number;
+  subject_id: number;
+  name: string | null;
+  type: string | null;
+  grades: { id: number; name: string }[];
+}
 
 export interface TeacherCourse {
   id: number;
@@ -11,7 +19,9 @@ export interface TeacherCourse {
   price: string;
   is_free: boolean;
   is_active: boolean;
-  category: CourseCategory;
+  category?: CourseCategory;
+  subject?: { id: number; name: string; type: string };
+  grade?: { id: number; name: string };
 }
 
 export interface TeacherLiveClass {
@@ -47,6 +57,7 @@ interface TeacherInfo { id: number; name: string }
 
 interface TeacherState {
   teacher: TeacherInfo | null;
+  subjects: TeacherSubjectSummary[];
   courses: TeacherCourse[];
   liveClasses: TeacherLiveClass[];
   upcoming: TeacherLiveClass[];
@@ -59,6 +70,7 @@ interface TeacherState {
 
 const initialState: TeacherState = {
   teacher: null,
+  subjects: [],
   courses: [],
   liveClasses: [],
   upcoming: [],
@@ -131,6 +143,7 @@ const teacherSlice = createSlice({
       .addCase(fetchTeacherDashboard.fulfilled, (s, a) => {
         s.loading           = false;
         s.teacher           = a.payload.teacher;
+        s.subjects          = a.payload.subjects ?? [];
         s.courses           = a.payload.courses;
         s.upcoming          = a.payload.upcoming;
         s.stats             = a.payload.stats ?? null;

@@ -4,7 +4,7 @@ import AppLayout, { Icons } from './AppLayout';
 const navItems = [
   { to: '/admin/dashboard',     label: 'الرئيسية',          icon: Icons.home,          end: true },
   { to: '/admin/grades',        label: 'الصفوف الدراسية',   icon: Icons.graduationCap  },
-  { to: '/admin/categories',    label: 'المواد الدراسية',    icon: Icons.grid           },
+  { to: '/admin/subjects',      label: 'المواد',             icon: Icons.grid           },
   { to: '/admin/courses',       label: 'الدورات',            icon: Icons.play           },
   { to: '/admin/users',         label: 'المستخدمون',         icon: Icons.users          },
   { to: '/admin/packages',      label: 'الباقات',            icon: Icons.package        },

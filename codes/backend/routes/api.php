@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
+use App\Http\Controllers\Admin\TeacherSubjectController as AdminTeacherSubjectController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\LiveClassController as AdminLiveClassController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
@@ -197,6 +199,16 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::put('categories/{category}',           [AdminCategoryController::class, 'update']);
     Route::patch('categories/{category}/toggle',  [AdminCategoryController::class, 'toggle']);
     Route::delete('categories/{category}',        [AdminCategoryController::class, 'destroy']);
+
+    Route::get('subjects',                        [AdminSubjectController::class, 'index']);
+    Route::post('subjects',                       [AdminSubjectController::class, 'store']);
+    Route::put('subjects/{subject}',              [AdminSubjectController::class, 'update']);
+    Route::put('subjects/{subject}/grades',       [AdminSubjectController::class, 'syncGrades']);
+    Route::patch('subjects/{subject}/toggle',     [AdminSubjectController::class, 'toggle']);
+    Route::delete('subjects/{subject}',           [AdminSubjectController::class, 'destroy']);
+
+    Route::get('teachers/{teacher}/subjects',     [AdminTeacherSubjectController::class, 'show']);
+    Route::put('teachers/{teacher}/subjects',     [AdminTeacherSubjectController::class, 'sync']);
 
     Route::get('users',                      [AdminUserController::class, 'index']);
     Route::post('users',                     [AdminUserController::class, 'store']);
@@ -402,6 +414,7 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
 */
 Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function () {
     Route::get('dashboard',                          [TeacherHomeController::class, 'dashboard']);
+    Route::get('me/subjects',                        [TeacherHomeController::class, 'mySubjects']);
     Route::get('courses',                            [TeacherHomeController::class, 'courses']);
     Route::get('live-classes',                       [TeacherHomeController::class, 'liveClasses']);
     Route::patch('live-classes/{liveClass}/status',  [TeacherHomeController::class, 'updateStatus']);

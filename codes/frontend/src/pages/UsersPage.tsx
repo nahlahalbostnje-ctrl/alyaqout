@@ -35,10 +35,10 @@ const TD: React.CSSProperties = {
   padding:'12px 16px', borderBottom:'1px solid #F3EDE0', fontSize:13, color:'#1B2038',
 };
 
-function Modal({ title, onClose, children }: { title:string; onClose:()=>void; children:ReactNode }) {
+function Modal({ title, onClose, children, width = 480 }: { title:string; onClose:()=>void; children:ReactNode; width?: number }) {
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
-      <div style={{background:'#fff',borderRadius:20,padding:28,width:480,maxWidth:'95vw'}} onClick={e=>e.stopPropagation()}>
+      <div style={{background:'#fff',borderRadius:20,padding:28,width,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
           <h2 style={{color:'#1B2038',fontWeight:900,fontSize:17,margin:0}}>{title}</h2>
           <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:'1px solid #EDE3CE',background:'transparent',cursor:'pointer',fontSize:16,color:'#6B7280'}}>✕</button>
@@ -130,11 +130,32 @@ export default function UsersPage() {
   const [editForm, setEditForm]       = useState({ name:'', phone:'', email:'', password:'', address:'', city_id:'' });
   const [editBusy, setEditBusy]       = useState(false);
   const [editError, setEditError]     = useState('');
+  type AssignRow = { subject_id: number; grade_ids: number[] };
+  type SubjectOpt = { id: number; name: string; type: string; grades?: { id: number; name: string }[] };
+  const [allSubjects, setAllSubjects] = useState<SubjectOpt[]>([]);
+  const [assignRows, setAssignRows]   = useState<AssignRow[]>([]);
 
-  const openEdit = (u: UserItem) => {
+  const openEdit = async (u: UserItem) => {
     setEditUser(u);
     setEditForm({ name: u.name, phone: u.phone ?? '', email: u.email ?? '', password: '', address:'', city_id:'' });
     setEditError('');
+    setAssignRows([]);
+    if (u.role === 'teacher') {
+      try {
+        const [subsRes, assignRes] = await Promise.all([
+          api.get('/admin/subjects'),
+          api.get(`/admin/teachers/${u.id}/subjects`),
+        ]);
+        setAllSubjects(subsRes.data.data ?? []);
+        setAssignRows((assignRes.data.data ?? []).map((r: { subject_id: number; grade_ids: number[] }) => ({
+          subject_id: r.subject_id,
+          grade_ids: r.grade_ids ?? [],
+        })));
+      } catch {
+        setAllSubjects([]);
+        setAssignRows([]);
+      }
+    }
   };
 
   const handleEditSave = async () => {
@@ -157,11 +178,18 @@ export default function UsersPage() {
         if (editForm.password.trim()) payload.password = editForm.password.trim();
       }
       await api.put(`/admin/users/${editUser.id}`, payload);
+      if (editUser.role === 'teacher') {
+        await api.put(`/admin/teachers/${editUser.id}/subjects`, { subjects: assignRows });
+      }
       setEditUser(null);
       dispatch(fetchUsers(null));
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } } };
-      setEditError(err.response?.data?.message ?? 'تعذّر حفظ التعديلات.');
+      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+      setEditError(
+        err.response?.data?.message
+        ?? err.response?.data?.errors?.subjects?.[0]
+        ?? 'تعذّر حفظ التعديلات.'
+      );
     } finally {
       setEditBusy(false);
     }
@@ -649,7 +677,7 @@ export default function UsersPage() {
 
       {/* Edit Modal */}
       {editUser && (
-        <Modal title={`تعديل: ${editUser.name}`} onClose={() => setEditUser(null)}>
+        <Modal title={`تعديل: ${editUser.name}`} onClose={() => setEditUser(null)} width={editUser.role === 'teacher' ? 560 : 480}>
           <div style={{ marginBottom:14 }}>
             <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>الاسم</label>
             <input value={editForm.name} onChange={e=>setEditForm(f=>({...f, name:e.target.value}))} style={inp()} />
@@ -671,10 +699,75 @@ export default function UsersPage() {
             </>
           )}
           {editUser.role === 'teacher' && (
-            <div style={{ marginBottom:14 }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان</label>
-              <input value={editForm.address} onChange={e=>setEditForm(f=>({...f, address:e.target.value}))} style={inp()} />
-            </div>
+            <>
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>العنوان</label>
+                <input value={editForm.address} onChange={e=>setEditForm(f=>({...f, address:e.target.value}))} style={inp()} />
+              </div>
+              <div style={{ marginBottom:14, padding:14, borderRadius:12, border:'1px solid #EDE3CE', background:'#F8F5EE' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <label style={{ fontSize:12, fontWeight:800, color: DK.gold }}>إسناد المواد والصفوف</label>
+                  <button type="button" onClick={() => {
+                    const unused = allSubjects.find(s => !assignRows.some(r => r.subject_id === s.id));
+                    if (!unused) return;
+                    setAssignRows(rows => [...rows, { subject_id: unused.id, grade_ids: (unused.grades ?? []).map(g => g.id) }]);
+                  }} style={{ ...btn('outline'), padding:'5px 10px', fontSize:11 }}>+ مادة</button>
+                </div>
+                {assignRows.length === 0 && (
+                  <p style={{ fontSize:12, color: DK.sub, margin:0 }}>لا يوجد تخصص مسند — سيظهر «بدون تخصص» عند المعلم.</p>
+                )}
+                {assignRows.map((row, idx) => {
+                  const sub = allSubjects.find(s => s.id === row.subject_id);
+                  const grades = sub?.grades ?? [];
+                  return (
+                    <div key={`${row.subject_id}-${idx}`} style={{ marginBottom:12, padding:12, borderRadius:10, background:'#fff', border:'1px solid #EDE3CE' }}>
+                      <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                        <select
+                          value={row.subject_id}
+                          onChange={e => {
+                            const sid = Number(e.target.value);
+                            const s = allSubjects.find(x => x.id === sid);
+                            setAssignRows(rows => rows.map((r, i) => i === idx ? {
+                              subject_id: sid,
+                              grade_ids: (s?.grades ?? []).map(g => g.id),
+                            } : r));
+                          }}
+                          style={{ ...inp(), flex:1, cursor:'pointer' }}
+                        >
+                          {allSubjects.map(s => (
+                            <option key={s.id} value={s.id}>{s.name} ({s.type === 'curriculum' ? 'منهجي' : 'غير منهجي'})</option>
+                          ))}
+                        </select>
+                        <button type="button" onClick={() => setAssignRows(rows => rows.filter((_, i) => i !== idx))}
+                          style={{ ...btn('outline'), color: DK.red, padding:'8px 12px' }}>حذف</button>
+                      </div>
+                      {grades.length > 0 ? (
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                          {grades.map(g => {
+                            const on = row.grade_ids.includes(g.id);
+                            return (
+                              <button key={g.id} type="button" onClick={() => setAssignRows(rows => rows.map((r, i) => {
+                                if (i !== idx) return r;
+                                const ids = on ? r.grade_ids.filter(id => id !== g.id) : [...r.grade_ids, g.id];
+                                return { ...r, grade_ids: ids };
+                              }))} style={{
+                                padding:'4px 10px', borderRadius:16, fontSize:11, fontWeight:700, cursor:'pointer',
+                                background: on ? DK.gold : '#fff', color: on ? '#fff' : DK.sub,
+                                border: on ? 'none' : '1px solid #EDE3CE', fontFamily:"'Cairo',sans-serif",
+                              }}>{g.name}</button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize:11, color: DK.sub, margin:0 }}>
+                          {sub?.type === 'extracurricular' ? 'غير منهجي بلا تقييد صف' : 'لا صفوف مرتبطة بالمادة'}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
           {editUser.role === 'student' && (
             <div style={{ marginBottom:14 }}>
