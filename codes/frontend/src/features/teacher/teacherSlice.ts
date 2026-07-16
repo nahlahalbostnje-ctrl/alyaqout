@@ -31,9 +31,18 @@ export interface TeacherLiveClass {
   scheduled_at: string;
   duration_minutes: number;
   status: 'scheduled' | 'live' | 'ended';
+  approval_status?: 'pending' | 'approved' | 'rejected';
   meeting_link: string | null;
   agora_channel: string | null;
   course: { id: number; title: string };
+}
+
+export interface CreateLiveClassPayload {
+  course_id: number;
+  title: string;
+  description?: string;
+  scheduled_at: string;
+  duration_minutes: number;
 }
 
 export interface TeacherStats {
@@ -133,6 +142,19 @@ export const updateTeacherClassStatus = createAsyncThunk(
   }
 );
 
+export const createTeacherLiveClass = createAsyncThunk(
+  'teacher/createLiveClass',
+  async (payload: CreateLiveClassPayload, { rejectWithValue }) => {
+    try {
+      const r = await api.post('/teacher/live-classes', payload);
+      return r.data.data as TeacherLiveClass;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
 const teacherSlice = createSlice({
   name: 'teacher',
   initialState,
@@ -168,6 +190,10 @@ const teacherSlice = createSlice({
         if (idx !== -1) s.liveClasses[idx] = a.payload;
         const upIdx = s.upcoming.findIndex((c) => c.id === a.payload.id);
         if (upIdx !== -1) s.upcoming[upIdx] = a.payload;
+      })
+
+      .addCase(createTeacherLiveClass.fulfilled, (s, a) => {
+        s.liveClasses = [a.payload, ...s.liveClasses];
       });
   },
 });

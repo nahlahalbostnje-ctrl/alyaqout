@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchGrades } from '../features/admin/gradesSlice';
 import {
@@ -134,7 +135,11 @@ export default function SubjectsPage() {
     e.preventDefault();
     if (!form.name.trim()) { setAddError('اسم المادة مطلوب'); return; }
     if (form.type === 'curriculum' && form.grade_ids.length === 0) {
-      setAddError('اختر صفاً واحداً على الأقل للمواد المنهجية');
+      setAddError(
+        grades.length === 0
+          ? 'لا توجد صفوف دراسية في دولتك. أضف صفوفاً من «الصفوف الدراسية» أولاً.'
+          : 'اختر صفاً واحداً على الأقل للمواد المنهجية'
+      );
       return;
     }
     setAddLoading(true);
@@ -300,18 +305,32 @@ export default function SubjectsPage() {
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>
                 الصفوف {form.type === 'extracurricular' ? '(اختياري — فارغ = كل الصفوف)' : '(مطلوب)'}
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {grades.map((g) => {
-                  const on = form.grade_ids.includes(g.id);
-                  return (
-                    <button key={g.id} type="button" onClick={() => toggleGrade(g.id)} style={{
-                      padding: '7px 12px', borderRadius: 20, cursor: 'pointer', fontWeight: 700, fontSize: 12,
-                      background: on ? DK.goldGrad : '#fff', color: on ? '#fff' : DK.sub,
-                      border: on ? 'none' : '1px solid #EDE3CE', fontFamily: "'Cairo',sans-serif",
-                    }}>{g.name}</button>
-                  );
-                })}
-              </div>
+              {grades.length === 0 ? (
+                <div style={{
+                  padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.25)',
+                  background: 'rgba(239,68,68,0.06)', fontSize: 13, color: DK.text, lineHeight: 1.6,
+                }}>
+                  لا توجد صفوف دراسية مسجّلة لدولتك — لذلك لا يظهر اختيار الصفوف هنا.
+                  <div style={{ marginTop: 8 }}>
+                    <Link to="/admin/grades" style={{ color: DK.gold, fontWeight: 800, textDecoration: 'underline' }}>
+                      اذهب إلى الصفوف الدراسية وأضف صفوفاً أولاً
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {grades.map((g) => {
+                    const on = form.grade_ids.includes(g.id);
+                    return (
+                      <button key={g.id} type="button" onClick={() => toggleGrade(g.id)} style={{
+                        padding: '7px 12px', borderRadius: 20, cursor: 'pointer', fontWeight: 700, fontSize: 12,
+                        background: on ? DK.goldGrad : '#fff', color: on ? '#fff' : DK.sub,
+                        border: on ? 'none' : '1px solid #EDE3CE', fontFamily: "'Cairo',sans-serif",
+                      }}>{g.name}</button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>الترتيب</label>

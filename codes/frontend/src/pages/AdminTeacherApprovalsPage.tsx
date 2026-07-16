@@ -32,11 +32,28 @@ interface PendingHomework {
   teacher: { id: number; name: string };
 }
 
-type Tab = 'exams' | 'homeworks';
+interface PendingLiveClass {
+  id: number;
+  title: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  created_at: string;
+  course: { id: number; title: string };
+  teacher: { id: number; name: string };
+}
+
+type Tab = 'exams' | 'homeworks' | 'live_classes';
 
 function formatDate(iso: string | null) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatDateTime(iso: string | null) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('ar-EG', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
 }
 
 function TeacherAvatar({ name }: { name: string }) {
@@ -55,6 +72,7 @@ export default function AdminTeacherApprovalsPage() {
   const [tab, setTab] = useState<Tab>('exams');
   const [exams, setExams] = useState<PendingExam[]>([]);
   const [homeworks, setHomeworks] = useState<PendingHomework[]>([]);
+  const [liveClasses, setLiveClasses] = useState<PendingLiveClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
 
@@ -68,9 +86,14 @@ export default function AdminTeacherApprovalsPage() {
     setHomeworks(data.homeworks);
   };
 
+  const loadLiveClasses = async () => {
+    const { data } = await api.get('/admin/approvals/live-classes');
+    setLiveClasses(data.live_classes);
+  };
+
   const load = async () => {
     setLoading(true);
-    try { await Promise.all([loadExams(), loadHomeworks()]); }
+    try { await Promise.all([loadExams(), loadHomeworks(), loadLiveClasses()]); }
     finally { setLoading(false); }
   };
 
@@ -92,9 +115,18 @@ export default function AdminTeacherApprovalsPage() {
     } finally { setBusyId(null); }
   };
 
+  const handleLiveClassDecision = async (cls: PendingLiveClass, status: 'approved' | 'rejected') => {
+    setBusyId(cls.id);
+    try {
+      await api.patch(`/admin/approvals/live-classes/${cls.id}`, { status });
+      setLiveClasses((prev) => prev.filter((c) => c.id !== cls.id));
+    } finally { setBusyId(null); }
+  };
+
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'exams', label: 'الاختبارات', count: exams.length },
     { key: 'homeworks', label: 'الواجبات', count: homeworks.length },
+    { key: 'live_classes', label: 'حصص مباشرة', count: liveClasses.length },
   ];
 
   return (
@@ -279,6 +311,70 @@ export default function AdminTeacherApprovalsPage() {
                         fontFamily: "'Cairo',sans-serif", opacity: busyId === hw.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}>
                       {busyId === hw.id ? '...' : '✕ رفض'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Live Classes Tab */}
+        {!loading && tab === 'live_classes' && (
+          liveClasses.length === 0 ? (
+            <div style={card({ padding: '48px 0', textAlign: 'center' })}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>📹</div>
+              <p style={{ fontWeight: 700, fontSize: 15, color: DK.text, margin: '0 0 6px' }}>لا توجد حصص بانتظار الاعتماد</p>
+              <p style={{ color: DK.sub, fontSize: 13 }}>جميع الحصص المباشرة تمت معالجتها</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+              {liveClasses.map((cls) => (
+                <div key={cls.id} style={card({ padding: 18, display: 'flex', flexDirection: 'column', gap: 0 })}>
+                  <div style={{ marginBottom: 10 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                      background: 'rgba(16,185,129,0.1)', color: DK.green,
+                    }}>
+                      {cls.course?.title ?? '—'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: DK.text, margin: '0 0 6px', lineHeight: 1.4 }}>
+                    {cls.title}
+                  </p>
+                  <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 4px' }}>
+                    🕐 {formatDateTime(cls.scheduled_at)}
+                  </p>
+                  <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 12px' }}>
+                    ⏱ {cls.duration_minutes} دقيقة
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <TeacherAvatar name={cls.teacher?.name ?? '?'} />
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: DK.text, margin: 0 }}>{cls.teacher?.name ?? '—'}</p>
+                      <p style={{ fontSize: 11, color: DK.dim, margin: 0 }}>{formatDate(cls.created_at)}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                    <button
+                      onClick={() => handleLiveClassDecision(cls, 'approved')}
+                      disabled={busyId === cls.id}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: 'rgba(16,185,129,0.1)', color: DK.green, fontSize: 13, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif", opacity: busyId === cls.id ? 0.5 : 1, transition: 'all 0.15s',
+                      }}>
+                      {busyId === cls.id ? '...' : '✓ قبول'}
+                    </button>
+                    <button
+                      onClick={() => handleLiveClassDecision(cls, 'rejected')}
+                      disabled={busyId === cls.id}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: 'rgba(239,68,68,0.08)', color: DK.red, fontSize: 13, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif", opacity: busyId === cls.id ? 0.5 : 1, transition: 'all 0.15s',
+                      }}>
+                      {busyId === cls.id ? '...' : '✕ رفض'}
                     </button>
                   </div>
                 </div>

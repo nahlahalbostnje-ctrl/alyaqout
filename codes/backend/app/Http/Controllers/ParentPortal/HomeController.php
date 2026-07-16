@@ -37,6 +37,7 @@ class HomeController extends Controller
         $childId = (int) $child->getAttribute('id');
 
         $upcoming = LiveClass::whereIn('status', ['scheduled', 'live'])
+            ->where('approval_status', 'approved')
             ->where('country_id', $countryId)
             ->where(function ($q) use ($childId) {
                 $q->where('session_type', 'group')->orWhere('student_id', $childId);
@@ -90,6 +91,7 @@ class HomeController extends Controller
             $childId = (int) $child->getAttribute('id');
 
             $liveClasses = LiveClass::whereIn('status', ['scheduled', 'live'])
+                ->where('approval_status', 'approved')
                 ->where('country_id', $countryId)
                 ->where(function ($q) use ($childId) {
                     $q->where('session_type', 'group')->orWhere('student_id', $childId);
@@ -120,6 +122,7 @@ class HomeController extends Controller
         $studentId = (int) $student->getAttribute('id');
 
         $classes = LiveClass::whereIn('status', ['scheduled', 'live'])
+            ->where('approval_status', 'approved')
             ->where('country_id', $countryId)
             ->where(function ($q) use ($studentId) {
                 $q->where('session_type', 'group')->orWhere('student_id', $studentId);

@@ -7,7 +7,7 @@ import { getApiError } from '../utils/apiError';
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
 type ContentStatus = 'pending'|'approved'|'rejected';
-type ContentKind = 'exam'|'homework';
+type ContentKind = 'exam'|'homework'|'live_class';
 
 interface ContentItem {
   id: number;
@@ -19,20 +19,25 @@ interface ContentItem {
   status: ContentStatus;
   created_at: string | null;
   due_date?: string | null;
+  scheduled_at?: string | null;
 }
 
 interface Meta {
   pending_exams: number;
   pending_homeworks: number;
+  pending_live_classes: number;
   approved_exams: number;
   approved_homeworks: number;
+  approved_live_classes: number;
   rejected_exams: number;
   rejected_homeworks: number;
+  rejected_live_classes: number;
 }
 
 const KIND_INFO = {
-  exam:     { icon:'📝', label:'اختبار', color:C.purple },
-  homework: { icon:'📚', label:'واجب',  color:C.orange },
+  exam:       { icon:'📝', label:'اختبار', color:C.purple },
+  homework:   { icon:'📚', label:'واجب',  color:C.orange },
+  live_class: { icon:'📹', label:'حصة مباشرة', color:C.teal },
 };
 
 function fmtDate(iso: string | null | undefined): string {
@@ -49,9 +54,9 @@ export default function SAContentApprovalsPage() {
   const [activeTab, setActiveTab] = useState<'all'|ContentStatus>('pending');
   const [items, setItems] = useState<ContentItem[]>([]);
   const [meta, setMeta] = useState<Meta>({
-    pending_exams: 0, pending_homeworks: 0,
-    approved_exams: 0, approved_homeworks: 0,
-    rejected_exams: 0, rejected_homeworks: 0,
+    pending_exams: 0, pending_homeworks: 0, pending_live_classes: 0,
+    approved_exams: 0, approved_homeworks: 0, approved_live_classes: 0,
+    rejected_exams: 0, rejected_homeworks: 0, rejected_live_classes: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +81,9 @@ export default function SAContentApprovalsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const pendingTotal = meta.pending_exams + meta.pending_homeworks;
-  const approvedTotal = meta.approved_exams + meta.approved_homeworks;
-  const rejectedTotal = meta.rejected_exams + meta.rejected_homeworks;
+  const pendingTotal = meta.pending_exams + meta.pending_homeworks + meta.pending_live_classes;
+  const approvedTotal = meta.approved_exams + meta.approved_homeworks + meta.approved_live_classes;
+  const rejectedTotal = meta.rejected_exams + meta.rejected_homeworks + meta.rejected_live_classes;
 
   const decide = async (item: ContentItem, status: 'approved'|'rejected') => {
     const key = `${item.kind}-${item.id}`;
@@ -86,7 +91,9 @@ export default function SAContentApprovalsPage() {
     try {
       const path = item.kind === 'exam'
         ? `/super-admin/approvals/exams/${item.id}`
-        : `/super-admin/approvals/homeworks/${item.id}`;
+        : item.kind === 'homework'
+          ? `/super-admin/approvals/homeworks/${item.id}`
+          : `/super-admin/approvals/live-classes/${item.id}`;
       await api.patch(path, { status });
       setRejectModal(null);
       await load();
@@ -109,7 +116,7 @@ export default function SAContentApprovalsPage() {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
         <div>
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>المحتوى والاعتمادات</h1>
-          <p style={{color:C.sub,fontSize:12,marginTop:2}}>اعتماد الامتحانات والواجبات عبر كل الدول</p>
+          <p style={{color:C.sub,fontSize:12,marginTop:2}}>اعتماد الامتحانات والواجبات والحصص المباشرة عبر كل الدول</p>
         </div>
         {pendingTotal > 0 && (
           <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:12,background:'rgba(217,119,6,0.1)',border:'1px solid rgba(217,119,6,0.25)'}}>
@@ -130,6 +137,7 @@ export default function SAContentApprovalsPage() {
           {label:'بانتظار الاعتماد',value:pendingTotal,icon:'⏳',color:C.orange},
           {label:'امتحانات معلّقة',value:meta.pending_exams,icon:'📝',color:C.purple},
           {label:'واجبات معلّقة',value:meta.pending_homeworks,icon:'📚',color:C.teal},
+          {label:'حصص معلّقة',value:meta.pending_live_classes,icon:'📹',color:C.blue},
           {label:'معتمد',value:approvedTotal,icon:'✅',color:C.green},
           {label:'مرفوض',value:rejectedTotal,icon:'❌',color:C.red},
         ].map((s,i)=>(

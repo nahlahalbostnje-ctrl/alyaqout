@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { fetchTeacherLiveClasses, updateTeacherClassStatus } from '../features/teacher/teacherSlice';
+import {
+  createTeacherLiveClass,
+  fetchTeacherCourses,
+  fetchTeacherLiveClasses,
+  updateTeacherClassStatus,
+} from '../features/teacher/teacherSlice';
 import TeacherLayout from '../components/TeacherLayout';
 import type { TeacherLiveClass } from '../features/teacher/teacherSlice';
 
@@ -33,11 +38,11 @@ interface NewClassForm {
   description: string;
   scheduled_at: string;
   duration_minutes: number;
-  course_title: string;
+  course_id: string;
 }
 
 const EMPTY_FORM: NewClassForm = {
-  title: '', description: '', scheduled_at: '', duration_minutes: 60, course_title: '',
+  title: '', description: '', scheduled_at: '', duration_minutes: 60, course_id: '',
 };
 
 function statusBadge(status: TeacherLiveClass['status']) {
@@ -56,6 +61,30 @@ function statusBadge(status: TeacherLiveClass['status']) {
     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
       style={{ background: '#F3F4F6', color: TH.textDim, border: '1px solid #E5E7EB' }}>منتهية</span>
   );
+}
+
+function approvalBadge(approval?: TeacherLiveClass['approval_status']) {
+  if (approval === 'pending') {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+        style={{ background: 'rgba(245,158,11,0.12)', color: '#D97706', border: '1px solid rgba(245,158,11,0.25)' }}>
+        بانتظار الموافقة
+      </span>
+    );
+  }
+  if (approval === 'rejected') {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+        style={{ background: TH.redBg, color: TH.red, border: `1px solid ${TH.redBorder}` }}>
+        مرفوضة
+      </span>
+    );
+  }
+  return null;
+}
+
+function isApproved(cls: TeacherLiveClass) {
+  return (cls.approval_status ?? 'approved') === 'approved';
 }
 
 // ─── Interactive Whiteboard ────────────────────────────────────────────────────
@@ -199,55 +228,60 @@ function InteractiveWhiteboard({ onClose }: { onClose: () => void }) {
 export default function TeacherLiveClassesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { liveClasses, loading, error } = useAppSelector((s) => s.teacher);
+  const { liveClasses, courses, loading, error } = useAppSelector((s) => s.teacher);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewClassForm>(EMPTY_FORM);
-  const [localClasses, setLocalClasses] = useState<TeacherLiveClass[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showWhiteboard, setShowWhiteboard] = useState(false);
 
-  useEffect(() => { dispatch(fetchTeacherLiveClasses()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchTeacherLiveClasses());
+    dispatch(fetchTeacherCourses());
+  }, [dispatch]);
 
-  const allClasses = [...liveClasses, ...localClasses];
-  const active = allClasses.filter((c) => c.status !== 'ended');
-  const ended  = allClasses.filter((c) => c.status === 'ended');
+  const active = liveClasses.filter((c) => c.status !== 'ended');
+  const ended  = liveClasses.filter((c) => c.status === 'ended');
 
   const handleStart = async (cls: TeacherLiveClass) => {
-    if (!cls.agora_channel) return;
-    await dispatch(updateTeacherClassStatus(cls.id)).unwrap();
-    navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
+    if (!cls.agora_channel || !isApproved(cls)) return;
+    try {
+      await dispatch(updateTeacherClassStatus(cls.id)).unwrap();
+      navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
+    } catch (e: unknown) {
+      setFormError(typeof e === 'string' ? e : 'تعذّر بدء الحصة');
+      setTimeout(() => setFormError(''), 4000);
+    }
   };
 
   const handleJoin = (cls: TeacherLiveClass) => {
-    if (!cls.agora_channel) return;
+    if (!cls.agora_channel || !isApproved(cls)) return;
     navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
   };
 
   const handleCreateClass = async () => {
-    if (!form.title.trim() || !form.scheduled_at || !form.course_title.trim()) return;
+    if (!form.title.trim() || !form.scheduled_at || !form.course_id) return;
     setSubmitting(true);
-    await new Promise(r => setTimeout(r, 800));
-
-    const newCls: TeacherLiveClass = {
-      id: Date.now(),
-      title: form.title,
-      description: form.description,
-      scheduled_at: form.scheduled_at,
-      duration_minutes: form.duration_minutes,
-      status: 'scheduled',
-      agora_channel: null,
-      meeting_link: null,
-      course: { id: 0, title: form.course_title },
-    };
-
-    setLocalClasses(p => [newCls, ...p]);
-    setSubmitting(false);
-    setShowModal(false);
-    setForm(EMPTY_FORM);
-    setSuccessMsg('✅ تم جدولة الحصة بنجاح! سيتم إشعار الطلاب.');
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setFormError('');
+    try {
+      await dispatch(createTeacherLiveClass({
+        course_id: Number(form.course_id),
+        title: form.title.trim(),
+        description: form.description.trim() || undefined,
+        scheduled_at: form.scheduled_at,
+        duration_minutes: form.duration_minutes,
+      })).unwrap();
+      setShowModal(false);
+      setForm(EMPTY_FORM);
+      setSuccessMsg('تم إرسال الحصة بانتظار موافقة الإدارة.');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (e: unknown) {
+      setFormError(typeof e === 'string' ? e : 'تعذّر إنشاء الحصة');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -288,7 +322,7 @@ export default function TeacherLiveClassesPage() {
           </div>
         </div>
 
-        {/* Success */}
+        {/* Success / error banners */}
         {successMsg && (
           <div style={{
             background: TH.greenBg, border: `1px solid ${TH.greenBorder}`,
@@ -296,6 +330,15 @@ export default function TeacherLiveClassesPage() {
             fontWeight: 600, fontSize: 13,
           }}>
             {successMsg}
+          </div>
+        )}
+        {formError && !showModal && (
+          <div style={{
+            background: TH.redBg, border: `1px solid ${TH.redBorder}`,
+            color: TH.red, padding: '12px 16px', borderRadius: 12, marginBottom: 16,
+            fontWeight: 600, fontSize: 13,
+          }}>
+            {formError}
           </div>
         )}
 
@@ -311,7 +354,7 @@ export default function TeacherLiveClassesPage() {
           </p>
         )}
 
-        {!loading && allClasses.length === 0 && (
+        {!loading && liveClasses.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 0', color: TH.textDim }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📹</div>
             <p style={{ fontWeight: 700, marginBottom: 6 }}>لا توجد حصص بعد</p>
@@ -327,22 +370,23 @@ export default function TeacherLiveClassesPage() {
                 <div key={cls.id} className="p-4 rounded-xl" style={TH.card}>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {statusBadge(cls.status)}
+                        {approvalBadge(cls.approval_status)}
                         <p className="font-semibold" style={{ color: TH.text }}>{cls.title}</p>
                       </div>
                       {cls.description && (
                         <p className="text-xs mb-2" style={{ color: TH.textSub }}>{cls.description}</p>
                       )}
                       <div className="flex flex-wrap gap-3 text-xs" style={{ color: TH.textSub }}>
-                        <span>📚 {cls.course.title}</span>
+                        <span>📚 {cls.course?.title ?? '—'}</span>
                         <span>🕐 {new Date(cls.scheduled_at).toLocaleString('ar-EG')}</span>
                         <span>⏱ {cls.duration_minutes} دقيقة</span>
                       </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2 mr-4">
-                      {cls.status === 'scheduled' && cls.agora_channel && (
+                      {cls.status === 'scheduled' && isApproved(cls) && cls.agora_channel && (
                         <button onClick={() => handleStart(cls)}
                           className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition"
                           style={{ background: TH.greenBg, color: TH.green, border: `1px solid ${TH.greenBorder}` }}>
@@ -352,12 +396,17 @@ export default function TeacherLiveClassesPage() {
                           بدء الحصة
                         </button>
                       )}
-                      {cls.status === 'scheduled' && !cls.agora_channel && (
-                        <span style={{ fontSize: 11, color: TH.textDim, background: '#F3F4F6', padding: '4px 10px', borderRadius: 8 }}>
-                          ⏳ بانتظار الرابط
+                      {cls.status === 'scheduled' && cls.approval_status === 'pending' && (
+                        <span style={{ fontSize: 11, color: '#D97706', background: 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 8, fontWeight: 600 }}>
+                          بانتظار موافقة الإدارة
                         </span>
                       )}
-                      {cls.status === 'live' && cls.agora_channel && (
+                      {cls.status === 'scheduled' && cls.approval_status === 'rejected' && (
+                        <span style={{ fontSize: 11, color: TH.red, background: TH.redBg, padding: '4px 10px', borderRadius: 8, fontWeight: 600 }}>
+                          مرفوضة من الإدارة
+                        </span>
+                      )}
+                      {cls.status === 'live' && isApproved(cls) && cls.agora_channel && (
                         <button onClick={() => handleJoin(cls)}
                           className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition"
                           style={{ background: TH.goldGrad, color: '#fff' }}>
@@ -367,7 +416,7 @@ export default function TeacherLiveClassesPage() {
                           الدخول للحصة
                         </button>
                       )}
-                      {cls.status === 'live' && (
+                      {cls.status === 'live' && isApproved(cls) && (
                         <button onClick={() => dispatch(updateTeacherClassStatus(cls.id))}
                           className="text-xs transition"
                           style={{ color: TH.red }}>
@@ -388,12 +437,13 @@ export default function TeacherLiveClassesPage() {
             <div className="space-y-2">
               {ended.map((cls) => (
                 <div key={cls.id} className="p-4 rounded-xl" style={TH.cardEnded}>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {statusBadge(cls.status)}
+                    {approvalBadge(cls.approval_status)}
                     <p className="font-medium" style={{ color: TH.textSub }}>{cls.title}</p>
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs" style={{ color: TH.textDim }}>
-                    <span>📚 {cls.course.title}</span>
+                    <span>📚 {cls.course?.title ?? '—'}</span>
                     <span>🕐 {new Date(cls.scheduled_at).toLocaleString('ar-EG')}</span>
                     <span>⏱ {cls.duration_minutes} دقيقة</span>
                   </div>
@@ -410,7 +460,7 @@ export default function TeacherLiveClassesPage() {
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
           zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
           backdropFilter: 'blur(4px)',
-        }} onClick={() => setShowModal(false)}>
+        }} onClick={() => { setShowModal(false); setFormError(''); }}>
           <div style={{
             background: '#fff', borderRadius: 20, padding: '28px 28px 24px',
             width: '100%', maxWidth: 460,
@@ -421,36 +471,77 @@ export default function TeacherLiveClassesPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <h3 style={{ color: TH.navy, fontWeight: 800, fontSize: 18 }}>إضافة حصة مباشرة</h3>
-                <p style={{ color: TH.textSub, fontSize: 12, marginTop: 2 }}>سيتم إشعار الطلاب تلقائياً بعد الجدولة</p>
+                <p style={{ color: TH.textSub, fontSize: 12, marginTop: 2 }}>تُرسل للإدارة للموافقة قبل ظهورها للطلاب</p>
               </div>
-              <button onClick={() => setShowModal(false)}
+              <button onClick={() => { setShowModal(false); setFormError(''); }}
                 style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: TH.textSub }}>
                 ✕
               </button>
             </div>
 
+            {formError && (
+              <div style={{
+                background: TH.redBg, border: `1px solid ${TH.redBorder}`,
+                color: TH.red, padding: '10px 12px', borderRadius: 10, marginBottom: 14,
+                fontWeight: 600, fontSize: 12,
+              }}>
+                {formError}
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {([
-                { label: 'عنوان الحصة *', key: 'title', placeholder: 'مثال: شرح الفصل الثالث — التوابع الرياضية', type: 'text' },
-                { label: 'المادة / الدورة *', key: 'course_title', placeholder: 'مثال: الرياضيات — الصف الثاني الثانوي', type: 'text' },
-                { label: 'تاريخ ووقت الحصة *', key: 'scheduled_at', placeholder: '', type: 'datetime-local' },
-              ] as { label: string; key: keyof NewClassForm; placeholder: string; type: string }[]).map(f => (
-                <div key={f.key}>
-                  <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    value={form[f.key] as string}
-                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                    placeholder={f.placeholder}
-                    style={{
-                      width: '100%', padding: '10px 14px', borderRadius: 12,
-                      border: '1px solid #E2E8F0', fontSize: 13,
-                      fontFamily: "'Cairo',sans-serif", background: '#F8FAFC',
-                      outline: 'none', color: TH.text,
-                    }}
-                  />
-                </div>
-              ))}
+              <div>
+                <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>عنوان الحصة *</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                  placeholder="مثال: شرح الفصل الثالث — التوابع الرياضية"
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                    border: '1px solid #E2E8F0', fontSize: 13,
+                    fontFamily: "'Cairo',sans-serif", background: '#F8FAFC',
+                    outline: 'none', color: TH.text,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>الدورة *</label>
+                <select
+                  value={form.course_id}
+                  onChange={e => setForm(p => ({ ...p, course_id: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                    border: '1px solid #E2E8F0', fontSize: 13,
+                    fontFamily: "'Cairo',sans-serif", background: '#F8FAFC',
+                    outline: 'none', color: TH.text,
+                  }}
+                >
+                  <option value="">اختر الدورة</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+                {courses.length === 0 && (
+                  <p style={{ fontSize: 11, color: TH.textDim, marginTop: 6 }}>لا توجد دورات مسندة لك حالياً</p>
+                )}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>تاريخ ووقت الحصة *</label>
+                <input
+                  type="datetime-local"
+                  value={form.scheduled_at}
+                  onChange={e => setForm(p => ({ ...p, scheduled_at: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                    border: '1px solid #E2E8F0', fontSize: 13,
+                    fontFamily: "'Cairo',sans-serif", background: '#F8FAFC',
+                    outline: 'none', color: TH.text,
+                  }}
+                />
+              </div>
 
               <div>
                 <label style={{ display: 'block', color: TH.text, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
@@ -490,17 +581,17 @@ export default function TeacherLiveClassesPage() {
 
               <button
                 onClick={handleCreateClass}
-                disabled={submitting || !form.title.trim() || !form.scheduled_at || !form.course_title.trim()}
+                disabled={submitting || !form.title.trim() || !form.scheduled_at || !form.course_id}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 14,
                   background: TH.goldGrad, color: '#fff',
                   fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer',
-                  opacity: submitting || !form.title.trim() || !form.scheduled_at || !form.course_title.trim() ? 0.6 : 1,
+                  opacity: submitting || !form.title.trim() || !form.scheduled_at || !form.course_id ? 0.6 : 1,
                   fontFamily: "'Cairo',sans-serif",
                   boxShadow: '0 4px 14px rgba(201,149,42,0.4)',
                   transition: 'opacity 0.2s',
                 }}>
-                {submitting ? '⏳ جاري الجدولة...' : '📅 جدولة الحصة'}
+                {submitting ? 'جاري الإرسال...' : 'إرسال للموافقة'}
               </button>
             </div>
           </div>

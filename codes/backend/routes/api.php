@@ -20,6 +20,7 @@ use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Teacher\HomeController as TeacherHomeController;
+use App\Http\Controllers\Teacher\LiveClassController as TeacherLiveClassController;
 use App\Http\Controllers\Teacher\ExamController as TeacherExamController;
 use App\Http\Controllers\Teacher\HomeworkController as TeacherHomeworkController;
 use App\Http\Controllers\ParentPortal\HomeController as ParentHomeController;
@@ -147,6 +148,7 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
     Route::get('approvals',                              [SuperAdminContentApprovalController::class, 'index']);
     Route::patch('approvals/exams/{exam}',                [SuperAdminContentApprovalController::class, 'decideExam']);
     Route::patch('approvals/homeworks/{homework}',        [SuperAdminContentApprovalController::class, 'decideHomework']);
+    Route::patch('approvals/live-classes/{liveClass}',    [SuperAdminContentApprovalController::class, 'decideLiveClass']);
 
     // Security center
     Route::get('security/login-attempts',   [SecurityController::class, 'loginAttempts']);
@@ -316,6 +318,8 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::patch('approvals/exams/{exam}',                                  [AdminTeacherApprovalController::class, 'approveExam']);
     Route::get('approvals/homeworks',                                       [AdminTeacherApprovalController::class, 'pendingHomeworks']);
     Route::patch('approvals/homeworks/{homework}',                          [AdminTeacherApprovalController::class, 'approveHomework']);
+    Route::get('approvals/live-classes',                                    [AdminTeacherApprovalController::class, 'pendingLiveClasses']);
+    Route::patch('approvals/live-classes/{liveClass}',                      [AdminTeacherApprovalController::class, 'approveLiveClass']);
 
     // Supervisor Assignment
     Route::get('supervisors',                                               [AdminSupervisorAssignmentController::class, 'supervisors']);
@@ -417,6 +421,7 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::get('me/subjects',                        [TeacherHomeController::class, 'mySubjects']);
     Route::get('courses',                            [TeacherHomeController::class, 'courses']);
     Route::get('live-classes',                       [TeacherHomeController::class, 'liveClasses']);
+    Route::post('live-classes',                      [TeacherLiveClassController::class, 'store']);
     Route::patch('live-classes/{liveClass}/status',  [TeacherHomeController::class, 'updateStatus']);
 
     // Exams

@@ -40,6 +40,7 @@ class HomeController extends Controller
             ->get(['id', 'category_id', 'subject_id', 'grade_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail']);
 
         $upcoming = LiveClass::where('country_id', $countryId)
+            ->where('approval_status', 'approved')
             ->whereIn('status', ['scheduled', 'live'])
             ->where(function ($q) use ($studentId) {
                 $q->where('session_type', 'group')->orWhere('student_id', $studentId);
@@ -188,6 +189,7 @@ class HomeController extends Controller
         $studentId = (int) auth()->user()->id;
 
         $classes = LiveClass::where('country_id', $this->countryId())
+            ->where('approval_status', 'approved')
             ->whereIn('status', ['scheduled', 'live'])
             ->where(function ($q) use ($studentId) {
                 $q->where('session_type', 'group')->orWhere('student_id', $studentId);

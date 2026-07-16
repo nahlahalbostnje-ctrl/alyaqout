@@ -178,10 +178,17 @@ class HomeController extends Controller
             return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
         }
 
+        if (! $liveClass->isApproved()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن بدء الحصة قبل موافقة الإدارة.',
+            ], 422);
+        }
+
         $transitions = ['scheduled' => 'live', 'live' => 'ended'];
         $next = $transitions[$liveClass->status] ?? null;
 
-        if (!$next) {
+        if (! $next) {
             return response()->json(['success' => false, 'message' => 'لا يمكن تغيير حالة هذه الحصة.'], 422);
         }
 

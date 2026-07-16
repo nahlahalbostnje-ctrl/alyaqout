@@ -94,6 +94,7 @@ class LiveClassController extends Controller
             'scheduled_at'     => $request->scheduled_at,
             'duration_minutes' => $request->duration_minutes ?? 60,
             'status'           => 'scheduled',
+            'approval_status'  => 'approved',
             'meeting_link'     => $request->meeting_link,
             'agora_channel'    => 'ch' . bin2hex(random_bytes(8)),
         ]);
