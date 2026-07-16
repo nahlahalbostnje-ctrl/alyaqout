@@ -5,7 +5,6 @@ import { fetchTeacherDashboard, updateTeacherClassStatus } from '../features/tea
 import { fetchTeacherExams, fetchTeacherHomework } from '../features/teacher/examSlice';
 import { logout } from '../features/auth/authSlice';
 import api from '../services/axios';
-import { toast } from '../components/Toast';
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────
 const T = {
@@ -37,17 +36,24 @@ const T = {
 
 type Screen = 'home'|'schedule'|'homework'|'exams'|'reports'|'ai'|'messages'|'live'|'students';
 
-const NAV_ITEMS: { icon:string; label:string; screen:Screen }[] = [
+const NAV_ITEMS: { icon:string; label:string; screen:Screen; route?: string }[] = [
   { icon:'🏠', label:'الرئيسية',         screen:'home'     },
-  { icon:'📅', label:'جدول الحصص',       screen:'schedule' },
-  { icon:'📚', label:'الواجبات',          screen:'homework' },
-  { icon:'📝', label:'الامتحانات',        screen:'exams'    },
+  { icon:'📅', label:'جدول الحصص',       screen:'schedule', route: '/teacher/live-classes' },
+  { icon:'📚', label:'الواجبات',          screen:'homework', route: '/teacher/homework' },
+  { icon:'📝', label:'الامتحانات',        screen:'exams',    route: '/teacher/exams' },
   { icon:'📊', label:'التقارير',          screen:'reports'  },
   { icon:'✉️', label:'الرسائل',           screen:'messages' },
   { icon:'🤖', label:'المساعد الذكي',     screen:'ai'       },
   { icon:'👥', label:'إدارة الطلاب',     screen:'students' },
   { icon:'📹', label:'غرفة البث',         screen:'live'     },
 ];
+
+/** شاشات الإدارة الكاملة (إضافة / تعديل / أرشفة) */
+const MANAGE_ROUTES: Partial<Record<Screen, string>> = {
+  homework: '/teacher/homework',
+  exams:    '/teacher/exams',
+  schedule: '/teacher/live-classes',
+};
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 const card = (extra?: Record<string, unknown>) => ({
@@ -338,12 +344,19 @@ function ScheduleScreen({ upcoming, onStart }: {
 
 // HOMEWORK ────────────────────────────────────────────────────────────────────
 function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; due_date:string; course:{title:string}|null; status:string; submissions_count:number }[] }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<'pending'|'done'>('pending');
   const filtered = homeworks.filter(h => tab === 'pending' ? (h.status === 'pending' || h.status === 'approved') : (h.status === 'expired' || h.status === 'completed'));
 
   return (
     <div>
-      <SectionTitle title="الواجبات" sub="إدارة واجبات طلابك"/>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+        <SectionTitle title="الواجبات" sub="للإضافة والتعديل والأرشفة افتح صفحة الإدارة الكاملة"/>
+        <button onClick={() => navigate('/teacher/homework')}
+          style={{ padding: '10px 18px', borderRadius: 12, background: T.goldGrad, border: 'none', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: "'Cairo',sans-serif" }}>
+          + إضافة / إدارة الواجبات
+        </button>
+      </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {([['pending','جديدة / نشطة'],['done','منتهية']] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} style={{ padding: '10px 28px', borderRadius: 12, background: tab === k ? T.goldGrad : T.card, border: `1px solid ${tab === k ? T.gold : T.border}`, color: tab === k ? '#071220' : T.sub, fontWeight: 700, fontSize: 13.5, cursor: 'pointer' }}>{l}</button>
@@ -353,7 +366,11 @@ function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; d
       {filtered.length === 0 ? (
         <div style={{ ...card({ textAlign: 'center', padding: '60px' }) }}>
           <div style={{ fontSize: 52, marginBottom: 14 }}>📚</div>
-          <p style={{ color: T.sub, fontSize: 14 }}>لا توجد واجبات {tab === 'pending' ? 'نشطة' : 'منتهية'}</p>
+          <p style={{ color: T.sub, fontSize: 14, marginBottom: 16 }}>لا توجد واجبات {tab === 'pending' ? 'نشطة' : 'منتهية'}</p>
+          <button onClick={() => navigate('/teacher/homework')}
+            style={{ padding: '12px 22px', borderRadius: 12, background: T.goldGrad, border: 'none', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+            إضافة واجب جديد
+          </button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))', gap: 14 }}>
@@ -369,7 +386,7 @@ function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; d
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ color: T.sub, fontSize: 12 }}>التسليمات: <strong style={{ color: T.text }}>{hw.submissions_count}</strong></span>
-                <button onClick={()=>toast.info(`${hw.title}\nالمادة: ${hw.course?.title ?? '—'}\nآخر موعد: ${new Date(hw.due_date).toLocaleDateString('ar-EG')}\nالتسليمات: ${hw.submissions_count}`)} style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>عرض التفاصيل</button>
+                <button onClick={() => navigate('/teacher/homework')} style={{ padding: '9px 20px', borderRadius: 10, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>إدارة</button>
               </div>
             </div>
           ))}
@@ -381,12 +398,19 @@ function HomeworkScreen({ homeworks }: { homeworks: { id:number; title:string; d
 
 // EXAMS ───────────────────────────────────────────────────────────────────────
 function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:string; duration?:number; course:{title:string}|null; status:string; submissions_count:number; questions_count:number }[] }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<'upcoming'|'done'>('upcoming');
   const filtered = exams.filter(e => tab === 'upcoming' ? (e.status === 'approved' || e.status === 'pending') : (e.status === 'completed' || e.status === 'rejected'));
 
   return (
     <div>
-      <SectionTitle title="الامتحانات" sub="إنشاء وإدارة امتحانات طلابك"/>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+        <SectionTitle title="الامتحانات" sub="للإضافة والتعديل والأرشفة افتح صفحة الإدارة الكاملة"/>
+        <button onClick={() => navigate('/teacher/exams')}
+          style={{ padding: '10px 18px', borderRadius: 12, background: T.goldGrad, border: 'none', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: "'Cairo',sans-serif" }}>
+          + إضافة / إدارة الامتحانات
+        </button>
+      </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {([['upcoming','القادمة'],['done','المنتهية']] as const).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} style={{ padding: '10px 28px', borderRadius: 12, background: tab === k ? T.goldGrad : T.card, border: `1px solid ${tab === k ? T.gold : T.border}`, color: tab === k ? '#071220' : T.sub, fontWeight: 700, fontSize: 13.5, cursor: 'pointer' }}>{l}</button>
@@ -396,7 +420,11 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
       {filtered.length === 0 ? (
         <div style={{ ...card({ textAlign: 'center', padding: '60px' }) }}>
           <div style={{ fontSize: 52, marginBottom: 14 }}>📝</div>
-          <p style={{ color: T.sub, fontSize: 14 }}>لا توجد امتحانات {tab === 'upcoming' ? 'قادمة' : 'منتهية'}</p>
+          <p style={{ color: T.sub, fontSize: 14, marginBottom: 16 }}>لا توجد امتحانات {tab === 'upcoming' ? 'قادمة' : 'منتهية'}</p>
+          <button onClick={() => navigate('/teacher/exams')}
+            style={{ padding: '12px 22px', borderRadius: 12, background: T.goldGrad, border: 'none', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+            إنشاء امتحان جديد
+          </button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))', gap: 14 }}>
@@ -420,7 +448,7 @@ function ExamsScreen({ exams }: { exams: { id:number; title:string; starts_at?:s
                   <p style={{ color: T.text, fontWeight: 700, fontSize: 18 }}>{exam.submissions_count}</p>
                 </div>
               </div>
-              <button disabled title="غير متاح بعد" style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'not-allowed', opacity: 0.55 }}>إدارة الامتحان</button>
+              <button onClick={() => navigate('/teacher/exams')} style={{ width: '100%', padding: '11px', borderRadius: 11, background: T.goldGrad, border: 'none', color: T.sidebar, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>إدارة الامتحان</button>
             </div>
           ))}
         </div>
@@ -764,6 +792,15 @@ export default function TeacherMobileApp() {
 
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
 
+  const handleNav = (s: Screen) => {
+    const route = MANAGE_ROUTES[s];
+    if (route) {
+      navigate(route);
+      return;
+    }
+    setScreen(s);
+  };
+
   const handleStart = async (classId: number) => {
     const cls = upcoming.find(u => u.id === classId);
     if (!cls) return;
@@ -778,7 +815,7 @@ export default function TeacherMobileApp() {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', background: T.bg, fontFamily: "'Cairo',sans-serif", direction: 'rtl' }}>
       {/* Sidebar (right in RTL) — static on desktop, slide-in drawer on mobile */}
-      <Sidebar active={screen} onNav={setScreen} teacher={teacher} subjectsLabel={subjectsLabel} pendingTotal={pendingTotal} onLogout={handleLogout}
+      <Sidebar active={screen} onNav={handleNav} teacher={teacher} subjectsLabel={subjectsLabel} pendingTotal={pendingTotal} onLogout={handleLogout}
         isMobile={isMobile} open={isMobile ? navOpen : true} onClose={() => setNavOpen(false)}/>
 
       {/* Main content */}
