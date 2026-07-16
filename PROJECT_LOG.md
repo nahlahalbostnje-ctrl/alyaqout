@@ -1559,4 +1559,12 @@
 
 ---
 
+### [2026-07-16] — إصلاح تمرير القائمة الجانبية على الشاشات الصغيرة
+
+- **المشكلة:** قائمة المعلم لا تتمرر (نقص `minHeight:0` + إخفاء شريط التمرير)
+- **الإصلاح:** توحيد كل الـ Layouts — `minHeight:0`، `100dvh`، شريط تمرير خفيف، رأس/خروج ثابتان
+- **الملفات:** `TeacherMobileApp`, `TeacherLayout`, `StudentLayout`, `ParentLayout`, `SupervisorLayout`, `SuperAdminShell`, `AppLayout`
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

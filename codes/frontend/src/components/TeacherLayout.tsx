@@ -53,9 +53,10 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside className="w-60 flex-shrink-0 flex flex-col h-screen"
+      <aside className="w-60 flex-shrink-0 flex flex-col"
         style={{
           background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)',
+          height: '100dvh', maxHeight: '100vh', overflow: 'hidden',
           position: isMobile ? 'fixed' : 'sticky', top: 0, right: 0,
           zIndex: isMobile ? 50 : 'auto' as never,
           transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
@@ -63,7 +64,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         }}>
 
         {/* Logo */}
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="px-5 py-5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-3">
             <BrandLogo size={44} className="flex-shrink-0 rounded-xl" />
             <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>بوابة المعلم</p>
@@ -71,7 +72,12 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none', flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{
+          flex: 1, overflowY: 'auto', minHeight: 0,
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+        }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"

@@ -79,15 +79,15 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
       <aside style={{
         width: 248, flexShrink: 0, background: SB,
         position: isMobile ? 'fixed' : 'sticky',
-        top: 0, right: 0, height: '100vh',
+        top: 0, right: 0, height: '100dvh', maxHeight: '100vh',
         zIndex: isMobile ? 50 : undefined,
-        display: 'flex', flexDirection: 'column', overflowY: 'auto', scrollbarWidth: 'none',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
         borderLeft: '1px solid rgba(255,255,255,0.06)',
         transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
         transition: 'transform 0.25s ease',
       }}>
         {/* Brand */}
-        <div style={{ padding: '20px 14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ padding: '20px 14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
             <p style={{ color: GOLD_L, fontSize: 10.5, fontWeight: 600 }}>بوابة ولي الأمر</p>
@@ -95,7 +95,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', minHeight: 0 }}>
+        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', minHeight: 0, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.25) transparent' }}>
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} style={{ textDecoration: 'none' }}>
               {({ isActive }) => (

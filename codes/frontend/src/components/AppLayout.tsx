@@ -92,13 +92,13 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           background: SB,
           display: 'flex',
           flexDirection: 'column',
-          height: '100vh',
+          height: '100dvh',
+          maxHeight: '100vh',
+          overflow: 'hidden',
           position: isMobile ? 'fixed' : 'sticky',
           top: 0,
           right: 0,
           zIndex: isMobile ? 50 : 'auto',
-          overflowY: 'auto',
-          scrollbarWidth: 'none',
           borderLeft: '1px solid rgba(255,255,255,0.06)',
           transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
           transition: 'transform 0.25s ease',
@@ -109,6 +109,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           style={{
             padding: '20px 16px 18px',
             borderBottom: '1px solid rgba(255,255,255,0.07)',
+            flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -129,6 +130,9 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
             gap: 2,
             overflowY: 'auto',
             minHeight: 0,
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.25) transparent',
           }}
         >
           {navItems.map((item) => (

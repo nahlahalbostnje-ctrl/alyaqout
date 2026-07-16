@@ -82,13 +82,18 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = fa
         <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199 }} />
       )}
       <div style={isMobile ? {
-        width: 240, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh',
+        width: 240, background: T.sidebar, display: 'flex', flexDirection: 'column',
+        height: '100dvh', maxHeight: '100vh', overflow: 'hidden',
         position: 'fixed', top: 0, right: 0, zIndex: 200,
         transform: open ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.25s ease', boxShadow: open ? '-8px 0 24px rgba(0,0,0,0.3)' : 'none',
-      } : { width: 240, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, flexShrink: 0 }}>
+      } : {
+        width: 240, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`,
+        display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100vh',
+        overflow: 'hidden', position: 'sticky', top: 0, flexShrink: 0,
+      }}>
       {/* Logo */}
-      <div style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.sBorder}` }}>
+      <div style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.sBorder}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: '0 4px 14px rgba(201,149,42,0.4)' }}>👨‍🏫</div>
           <div>
@@ -106,8 +111,13 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = fa
         </div>
       </div>
 
-      {/* Nav items */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 10px', scrollbarWidth: 'none' }}>
+      {/* Nav items — minHeight:0 required so flex child can scroll on short screens */}
+      <nav style={{
+        flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '12px 10px',
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+      }}>
         {NAV_ITEMS.map(item => {
           const isActive = active === item.screen;
           const badge = item.screen === 'homework' || item.screen === 'exams' ? pendingTotal : 0;
@@ -123,7 +133,7 @@ function Sidebar({ active, onNav, teacher, pendingTotal, onLogout, isMobile = fa
       </nav>
 
       {/* Logout */}
-      <div style={{ padding: '14px 10px', borderTop: `1px solid ${T.sBorder}` }}>
+      <div style={{ padding: '14px 10px', borderTop: `1px solid ${T.sBorder}`, flexShrink: 0 }}>
         <button onClick={onLogout} style={{ width: '100%', padding: '10px 14px', borderRadius: 12, background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.28)', color: '#FF8080', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>🚪</span> تسجيل الخروج
         </button>

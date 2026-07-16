@@ -100,13 +100,13 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
       )}
 
       {/* ══ SIDEBAR ══ */}
-      <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100vh', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, display:'flex', flexDirection:'column', overflowY:'auto', scrollbarWidth:'none', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
-        <div style={{ padding:'18px 12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', textAlign:'center' }}>
+      <aside style={{ width:SW, flexShrink:0, background:C.navy, height:'100dvh', maxHeight:'100vh', overflow:'hidden', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, display:'flex', flexDirection:'column', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
+        <div style={{ padding:'18px 12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', textAlign:'center', flexShrink:0 }}>
           <BrandLogo size={52} style={{ margin:'0 auto 10px', borderRadius:12 }} />
           <p style={{ color:'#fff', fontWeight:900, fontSize:14, lineHeight:1.3 }}>مركز القيادة</p>
           <p style={{ color:'rgba(255,255,255,0.45)', fontSize:10, marginTop:3 }}>الإدارة العليا للمنصة</p>
         </div>
-        <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:4, overflowY:'auto', minHeight:0 }}>
+        <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:4, overflowY:'auto', minHeight:0, WebkitOverflowScrolling:'touch', scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.25) transparent' }}>
           {NAV.map((item, i) => (
             <NavLink key={i} to={item.to} end={item.end} style={{ textDecoration:'none' }}>
               {({ isActive }) => (

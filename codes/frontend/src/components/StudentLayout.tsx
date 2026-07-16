@@ -100,10 +100,10 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside style={{ width:220, flexShrink:0, display:'flex', flexDirection:'column', height:'100vh', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, background:C.sidebar, borderLeft:'1px solid rgba(255,255,255,0.06)', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
+      <aside style={{ width:220, flexShrink:0, display:'flex', flexDirection:'column', height:'100dvh', maxHeight:'100vh', overflow:'hidden', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, background:C.sidebar, borderLeft:'1px solid rgba(255,255,255,0.06)', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
 
         {/* Logo */}
-        <div style={{ padding:'18px 16px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ padding:'18px 16px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <BrandLogo size={38} style={{ flexShrink:0, borderRadius:10, boxShadow:'0 4px 12px rgba(197,147,65,0.35)' }} />
             <div>
@@ -114,7 +114,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 8px', overflowY:'auto', scrollbarWidth:'none', minHeight:0 }}>
+        <nav style={{ flex:1, padding:'10px 8px', overflowY:'auto', minHeight:0, WebkitOverflowScrolling:'touch', scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.25) transparent' }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} style={{ textDecoration:'none' }}>
               {({ isActive }) => (

@@ -53,17 +53,17 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
 
       {/* Sidebar */}
       <aside style={{
-        width:240, flexShrink:0, display:'flex', flexDirection:'column', height:'100vh',
+        width:240, flexShrink:0, display:'flex', flexDirection:'column',
+        height:'100dvh', maxHeight:'100vh', overflow:'hidden',
         position: isMobile ? 'fixed' : 'sticky', top:0, right:0,
         zIndex: isMobile ? 50 : undefined,
         background:'#0D1E3A', borderLeft:'1px solid rgba(255,255,255,0.07)',
-        overflowY:'auto', scrollbarWidth:'none',
         transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
         transition: 'transform 0.25s ease',
       }}>
 
         {/* Logo */}
-        <div style={{ padding:'18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ padding:'18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <BrandLogo size={44} style={{ flexShrink:0, borderRadius:10 }} />
             <p style={{ color:'#C59341', fontSize:11, fontWeight:600 }}>بوابة المشرف</p>
@@ -71,7 +71,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         </div>
 
         {/* Nav */}
-        <nav style={{ flex:1, padding:'10px 10px', overflowY:'auto', scrollbarWidth:'none', display:'flex', flexDirection:'column', gap:2, minHeight:0 }}>
+        <nav style={{ flex:1, padding:'10px 10px', overflowY:'auto', display:'flex', flexDirection:'column', gap:2, minHeight:0, WebkitOverflowScrolling:'touch', scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.25) transparent' }}>
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to}
               style={({ isActive }) => ({
