@@ -51,6 +51,7 @@ use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotControll
 use App\Http\Controllers\ParentPortal\BillingController as ParentBillingController;
 use App\Http\Controllers\Admin\InstallmentController as AdminInstallmentController;
 use App\Http\Controllers\ParentPortal\MessageController as ParentMessageController;
+use App\Http\Controllers\ParentPortal\PackageController as ParentPackageController;
 use App\Http\Controllers\Teacher\MessageController as TeacherMessageController;
 use App\Http\Controllers\SuperAdmin\MessageController as SuperAdminMessageController;
 use App\Http\Controllers\SuperAdmin\NotificationController as SuperAdminNotificationController;
@@ -263,6 +264,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::get('subscriptions',                              [AdminSubscriptionController::class, 'index']);
     Route::post('subscriptions',                             [AdminSubscriptionController::class, 'store']);
     Route::patch('subscriptions/{subscription}/cancel',      [AdminSubscriptionController::class, 'cancel']);
+    Route::patch('subscriptions/{subscription}/activate',    [AdminSubscriptionController::class, 'activate']);
     Route::get('users/{student}/subscriptions',              [AdminSubscriptionController::class, 'studentSubscriptions']);
 
     // Installments (تقسيط الدفعات)
@@ -492,6 +494,9 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
 
     // Billing / installments (parent)
     Route::get('billing/installments',               [ParentBillingController::class, 'installments']);
+    Route::get('packages',                           [ParentPackageController::class, 'index']);
+    Route::get('subscriptions',                      [ParentPackageController::class, 'subscriptions']);
+    Route::post('subscriptions/request',             [ParentPackageController::class, 'requestSubscription']);
 
     // Messages (parent ↔ teacher)
     Route::get('children/{student}/teachers',        [ParentMessageController::class, 'teachersForChild']);

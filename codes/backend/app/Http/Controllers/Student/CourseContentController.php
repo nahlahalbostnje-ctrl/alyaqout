@@ -9,17 +9,23 @@ use App\Models\Course;
 use App\Models\Video;
 use App\Models\VideoProgress;
 use App\Services\GamificationService;
+use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CourseContentController extends Controller
 {
-    public function __construct(private readonly GamificationService $gamification) {}
+    public function __construct(
+        private readonly GamificationService $gamification,
+        private readonly StudentEntitlementService $entitlement,
+    ) {}
+
     public function courseUnits(Course $course): JsonResponse
     {
         abort_if((int) $course->country_id !== (int) Auth::user()->country_id, 403);
-        abort_if(!$course->is_active, 403);
+        abort_if(! $course->is_active, 403);
+        abort_unless($this->entitlement->canAccessCourse(Auth::user(), $course), 403, 'غير مشترك في هذه الدورة.');
 
         $studentId = (int) Auth::id();
 
@@ -78,8 +84,22 @@ class CourseContentController extends Controller
         ]);
     }
 
+    private function assertVideoAccess(Video $video): void
+    {
+        $course = $video->lesson?->unit?->course
+            ?? Course::query()
+                ->whereHas('units.lessons.videos', fn ($q) => $q->where('videos.id', $video->id))
+                ->first();
+
+        abort_unless($course, 404);
+        abort_unless($this->entitlement->canAccessCourse(Auth::user(), $course), 403, 'غير مشترك في هذه الدورة.');
+    }
+
     public function watchVideo(Video $video): JsonResponse
     {
+        $video->loadMissing('lesson.unit.course');
+        $this->assertVideoAccess($video);
+
         $studentId = (int) Auth::id();
 
         $progress = VideoProgress::firstOrNew([
@@ -100,6 +120,9 @@ class CourseContentController extends Controller
 
     public function markComplete(Request $request, Video $video): JsonResponse
     {
+        $video->loadMissing('lesson.unit.course');
+        $this->assertVideoAccess($video);
+
         $studentId = (int) Auth::id();
 
         $data = $request->validate([
@@ -120,7 +143,7 @@ class CourseContentController extends Controller
             ]
         );
 
-        if (!$alreadyCompleted) {
+        if (! $alreadyCompleted) {
             $this->gamification->award($studentId, 'complete_video', $video->title);
         }
 

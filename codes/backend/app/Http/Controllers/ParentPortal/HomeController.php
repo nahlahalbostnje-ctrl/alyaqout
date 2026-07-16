@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\ParentPortal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
 use App\Models\LiveClass;
 use App\Models\User;
+use App\Services\StudentEntitlementService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
 {
+    public function __construct(private readonly StudentEntitlementService $entitlement) {}
+
     private function parentId(): int
     {
         return (int) auth()->id();
@@ -83,20 +85,25 @@ class HomeController extends Controller
         $data = $children->map(function (User $child) {
             $countryId = (int) $child->getAttribute('country_id');
 
-            $courses = Course::where('is_active', true)
-                ->where('country_id', $countryId)
-                ->with(['category:id,name,grade_id', 'category.grade:id,name'])
+            $courses = $this->entitlement->entitledCoursesQuery($child)
+                ->with(['category:id,name,grade_id', 'category.grade:id,name', 'subject:id,name'])
                 ->orderBy('sort_order')
-                ->get(['id', 'category_id', 'title', 'price', 'is_free', 'thumbnail', 'is_active', 'country_id']);
+                ->get(['id', 'category_id', 'subject_id', 'title', 'price', 'is_free', 'thumbnail', 'is_active', 'country_id']);
 
             $childId = (int) $child->getAttribute('id');
+            $courseIds = $courses->pluck('id')->all();
 
             $liveClasses = LiveClass::whereIn('status', ['scheduled', 'live'])
                 ->where('approval_status', 'approved')
                 ->whereNull('archived_at')
                 ->where('country_id', $countryId)
-                ->where(function ($q) use ($childId) {
-                    $q->where('session_type', 'group')->orWhere('student_id', $childId);
+                ->where(function ($q) use ($childId, $courseIds) {
+                    $q->where('student_id', $childId);
+                    if ($courseIds !== []) {
+                        $q->orWhere(function ($g) use ($courseIds) {
+                            $g->where('session_type', 'group')->whereIn('course_id', $courseIds);
+                        });
+                    }
                 })
                 ->with(['course:id,title'])
                 ->orderBy('scheduled_at')

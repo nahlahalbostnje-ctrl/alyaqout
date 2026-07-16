@@ -9,6 +9,7 @@ use App\Models\Exam;
 use App\Models\ExamSubmission;
 use App\Services\GamificationService;
 use App\Services\NotificationService;
+use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,16 +19,17 @@ class ExamController extends Controller
     public function __construct(
         private readonly NotificationService $notif,
         private readonly GamificationService $gamification,
+        private readonly StudentEntitlementService $entitlement,
     ) {}
 
     public function index(): JsonResponse
     {
         $student   = Auth::user();
-        $countryId = (int) $student->country_id;
+        $courseIds = $this->entitlement->courseIdsFor($student);
 
         $exams = Exam::where('status', 'approved')
             ->whereNull('archived_at')
-            ->whereHas('course', fn ($q) => $q->where('country_id', $countryId)->where('is_active', true))
+            ->whereIn('course_id', $courseIds ?: [0])
             ->with('course:id,title')
             ->withCount('questions')
             ->get();
@@ -46,6 +48,7 @@ class ExamController extends Controller
     public function show(Exam $exam): JsonResponse
     {
         abort_if($exam->status !== 'approved', 403);
+        abort_unless($this->entitlement->canAccessCourse(Auth::user(), (int) $exam->course_id), 403, 'غير مشترك في دورة هذا الامتحان.');
 
         $exam->load('questions');
 
@@ -70,9 +73,11 @@ class ExamController extends Controller
 
     public function submit(Request $request, Exam $exam): JsonResponse
     {
-        $studentId = (int) Auth::id();
+        $student = Auth::user();
+        $studentId = (int) $student->id;
 
         abort_if($exam->status !== 'approved', 403);
+        abort_unless($this->entitlement->canAccessCourse($student, (int) $exam->course_id), 403, 'غير مشترك في دورة هذا الامتحان.');
         abort_if(
             ExamSubmission::where('exam_id', $exam->id)->where('student_id', $studentId)->exists(),
             422,

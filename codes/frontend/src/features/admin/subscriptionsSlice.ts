@@ -91,6 +91,19 @@ export const cancelSubscription = createAsyncThunk(
   }
 );
 
+export const activateSubscription = createAsyncThunk(
+  'subscriptions/activate',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const r = await api.patch(`/admin/subscriptions/${id}/activate`);
+      return r.data.data as Subscription;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
 const subscriptionsSlice = createSlice({
   name: 'subscriptions',
   initialState,
@@ -114,9 +127,22 @@ const subscriptionsSlice = createSlice({
       .addCase(cancelSubscription.fulfilled, (s, a) => {
         const idx = s.items.findIndex((i) => i.id === a.payload.id);
         if (idx !== -1) {
+          const wasActive = s.items[idx].status === 'active';
+          const wasPending = s.items[idx].status === 'pending';
           s.items[idx] = a.payload;
-          s.stats.active    = Math.max(0, s.stats.active - 1);
+          if (wasActive) s.stats.active = Math.max(0, s.stats.active - 1);
+          if (wasPending) s.stats.pending = Math.max(0, s.stats.pending - 1);
           s.stats.cancelled = s.stats.cancelled + 1;
+        }
+      })
+
+      .addCase(activateSubscription.fulfilled, (s, a) => {
+        const idx = s.items.findIndex((i) => i.id === a.payload.id);
+        if (idx !== -1) {
+          const wasPending = s.items[idx].status === 'pending';
+          s.items[idx] = a.payload;
+          if (wasPending) s.stats.pending = Math.max(0, s.stats.pending - 1);
+          s.stats.active += 1;
         }
       });
   },

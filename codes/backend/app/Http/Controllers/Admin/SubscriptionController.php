@@ -143,6 +143,40 @@ class SubscriptionController extends Controller
         ]);
     }
 
+    /** PATCH /admin/subscriptions/{subscription}/activate — تفعيل طلب معلّق (مثلاً من ولي الأمر) */
+    public function activate(Subscription $subscription): JsonResponse
+    {
+        if ((int) $subscription->country_id !== $this->countryId()) {
+            abort(403, 'غير مصرح.');
+        }
+
+        if ($subscription->status === 'active' && $subscription->ends_at->gte(now()->startOfDay())) {
+            return response()->json(['success' => false, 'message' => 'الاشتراك مفعّل مسبقاً.'], 422);
+        }
+
+        $package = Package::where('id', $subscription->package_id)
+            ->where('country_id', $this->countryId())
+            ->firstOrFail();
+
+        $startsAt = Carbon::today();
+        $subscription->update([
+            'status'         => 'active',
+            'payment_status' => $subscription->payment_status === 'refunded' ? 'paid' : ($subscription->payment_status ?: 'paid'),
+            'amount_paid'    => $subscription->amount_paid > 0 ? $subscription->amount_paid : $package->price,
+            'starts_at'      => $startsAt,
+            'ends_at'        => $startsAt->copy()->addDays((int) $package->duration_days),
+            'notes'          => trim(($subscription->notes ? $subscription->notes.' | ' : '').'فعّله الأدمن '.now()->toDateTimeString()),
+        ]);
+
+        $subscription->load(['student:id,name,phone', 'package:id,name,duration_days']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تفعيل الاشتراك — يفتح محتوى الباقة للطالب فوراً.',
+            'data'    => $this->format($subscription),
+        ]);
+    }
+
     public function studentSubscriptions(User $student): JsonResponse
     {
         if ((int) $student->country_id !== $this->countryId() || $student->role !== 'student') {

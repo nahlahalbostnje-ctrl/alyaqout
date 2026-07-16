@@ -56,6 +56,7 @@ import ParentCommunicationPage    from './pages/ParentCommunicationPage';
 import ParentNotificationsPage    from './pages/ParentNotificationsPage';
 import ParentCounselingPage       from './pages/ParentCounselingPage';
 import ParentBillingPage          from './pages/ParentBillingPage';
+import ParentPackagesPage         from './pages/ParentPackagesPage';
 import ParentLeaguePage           from './pages/ParentLeaguePage';
 import ParentAcademyPage          from './pages/ParentAcademyPage';
 import ParentAchievementsPage     from './pages/ParentAchievementsPage';
@@ -411,6 +412,9 @@ export default function App() {
         } />
         <Route path="/parent/billing" element={
           <PrivateRoute roles={['parent']}><ParentBillingPage /></PrivateRoute>
+        } />
+        <Route path="/parent/packages" element={
+          <PrivateRoute roles={['parent']}><ParentPackagesPage /></PrivateRoute>
         } />
         <Route path="/parent/league" element={
           <PrivateRoute roles={['parent']}><ParentLeaguePage /></PrivateRoute>

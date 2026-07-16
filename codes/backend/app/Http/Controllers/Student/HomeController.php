@@ -6,17 +6,19 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
-use App\Models\Course;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\LiveClass;
 use App\Models\Subscription;
 use App\Services\GamificationService;
+use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
 {
+    public function __construct(private readonly StudentEntitlementService $entitlement) {}
+
     private function countryId(): int
     {
         return (int) auth()->user()->country_id;
@@ -26,9 +28,9 @@ class HomeController extends Controller
     {
         $student   = auth()->user();
         $studentId = (int) $student->id;
-        $countryId = $this->countryId();
+        $courseIds = $this->entitlement->courseIdsFor($student);
 
-        $courses = $this->visibleCoursesQuery($student)
+        $courses = $this->entitlement->entitledCoursesQuery($student)
             ->with([
                 'subject:id,name,type',
                 'grade:id,name',
@@ -39,47 +41,45 @@ class HomeController extends Controller
             ->orderBy('sort_order')
             ->get(['id', 'category_id', 'subject_id', 'grade_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail']);
 
-        $upcoming = LiveClass::where('country_id', $countryId)
+        $upcoming = LiveClass::where('country_id', $this->countryId())
             ->where('approval_status', 'approved')
             ->whereNull('archived_at')
             ->whereIn('status', ['scheduled', 'live'])
-            ->where(function ($q) use ($studentId) {
-                $q->where('session_type', 'group')->orWhere('student_id', $studentId);
+            ->where(function ($q) use ($studentId, $courseIds) {
+                $q->where('student_id', $studentId);
+                if ($courseIds !== []) {
+                    $q->orWhere(function ($g) use ($courseIds) {
+                        $g->where('session_type', 'group')->whereIn('course_id', $courseIds);
+                    });
+                }
             })
             ->with(['course:id,title', 'teacher:id,name'])
             ->orderBy('scheduled_at')
             ->limit(5)
             ->get();
 
-        $activeSubscription = Subscription::where('student_id', $studentId)
-            ->where('status', 'active')
-            ->where('ends_at', '>=', now())
-            ->with(['package:id,name,duration_days,price'])
-            ->latest()
-            ->first();
+        $activeSubscription = $this->entitlement->activeSubscriptions($student)->first();
 
-        // Extra stats for dashboard
         $totalPoints = (new GamificationService())->totalPoints($studentId);
 
-        $pendingHomework = Homework::whereHas('course', fn ($q) => $q->where('country_id', $countryId))
-            ->where('status', 'approved')
+        $pendingHomework = Homework::where('status', 'approved')
             ->whereNull('archived_at')
             ->where('due_date', '>=', now())
+            ->whereIn('course_id', $courseIds ?: [0])
             ->whereNotIn('id', HomeworkSubmission::where('student_id', $studentId)->pluck('homework_id'))
             ->count();
 
-        $upcomingExams = Exam::whereHas('course', fn ($q) => $q->where('country_id', $countryId))
-            ->where('status', 'approved')
+        $upcomingExams = Exam::where('status', 'approved')
             ->whereNull('archived_at')
             ->where('starts_at', '>=', now())
+            ->whereIn('course_id', $courseIds ?: [0])
             ->count();
 
         $attendanceCount = AttendanceRecord::where('student_id', $studentId)->count();
 
-        // Level calculation: every 500 pts = 1 level
-        $level       = (int) floor($totalPoints / 500) + 1;
-        $xpInLevel   = $totalPoints % 500;
-        $xpForNext   = 500;
+        $level     = (int) floor($totalPoints / 500) + 1;
+        $xpInLevel = $totalPoints % 500;
+        $xpForNext = 500;
 
         return response()->json([
             'success' => true,
@@ -96,14 +96,14 @@ class HomeController extends Controller
                     'status'         => $activeSubscription->status,
                 ] : null,
                 'stats' => [
-                    'total_points'    => $totalPoints,
-                    'level'           => $level,
-                    'xp_in_level'     => $xpInLevel,
-                    'xp_for_next'     => $xpForNext,
-                    'pending_homework'=> $pendingHomework,
-                    'upcoming_exams'  => $upcomingExams,
-                    'attendance_count'=> $attendanceCount,
-                    'total_courses'   => $courses->count(),
+                    'total_points'     => $totalPoints,
+                    'level'            => $level,
+                    'xp_in_level'      => $xpInLevel,
+                    'xp_for_next'      => $xpForNext,
+                    'pending_homework' => $pendingHomework,
+                    'upcoming_exams'   => $upcomingExams,
+                    'attendance_count' => $attendanceCount,
+                    'total_courses'    => $courses->count(),
                 ],
             ],
         ]);
@@ -135,7 +135,7 @@ class HomeController extends Controller
     {
         $student = auth()->user();
 
-        $courses = $this->visibleCoursesQuery($student)
+        $courses = $this->entitlement->entitledCoursesQuery($student)
             ->with([
                 'subject:id,name,type',
                 'grade:id,name',
@@ -149,55 +149,23 @@ class HomeController extends Controller
         return response()->json(['success' => true, 'data' => $courses]);
     }
 
-    /**
-     * Curriculum: student's grade only.
-     * Extracurricular: country-wide; grade null (all) or matching student grade.
-     */
-    private function visibleCoursesQuery($student)
-    {
-        $countryId = (int) $student->country_id;
-        $gradeId   = $student->grade_id ? (int) $student->grade_id : null;
-
-        return Course::where('country_id', $countryId)
-            ->where('is_active', true)
-            ->where('approval_status', 'approved')
-            ->where(function ($q) use ($gradeId) {
-                $q->where(function ($extra) use ($gradeId) {
-                    $extra->whereHas('subject', fn ($s) => $s->where('type', 'extracurricular')->where('is_active', true))
-                        ->where(function ($g) use ($gradeId) {
-                            $g->whereNull('grade_id');
-                            if ($gradeId) {
-                                $g->orWhere('grade_id', $gradeId);
-                            }
-                        });
-                });
-
-                if ($gradeId) {
-                    $q->orWhere(function ($curr) use ($gradeId) {
-                        $curr->where('grade_id', $gradeId)
-                            ->where(function ($inner) {
-                                $inner->whereHas('subject', fn ($s) => $s->where('type', 'curriculum')->where('is_active', true))
-                                    ->orWhereNull('subject_id');
-                            });
-                    })->orWhere(function ($legacy) use ($gradeId) {
-                        $legacy->whereNull('subject_id')
-                            ->whereNull('grade_id')
-                            ->whereHas('category', fn ($c) => $c->where('grade_id', $gradeId));
-                    });
-                }
-            });
-    }
-
     public function liveClasses(): JsonResponse
     {
-        $studentId = (int) auth()->user()->id;
+        $student   = auth()->user();
+        $studentId = (int) $student->id;
+        $courseIds = $this->entitlement->courseIdsFor($student);
 
         $classes = LiveClass::where('country_id', $this->countryId())
             ->where('approval_status', 'approved')
             ->whereNull('archived_at')
             ->whereIn('status', ['scheduled', 'live'])
-            ->where(function ($q) use ($studentId) {
-                $q->where('session_type', 'group')->orWhere('student_id', $studentId);
+            ->where(function ($q) use ($studentId, $courseIds) {
+                $q->where('student_id', $studentId);
+                if ($courseIds !== []) {
+                    $q->orWhere(function ($g) use ($courseIds) {
+                        $g->where('session_type', 'group')->whereIn('course_id', $courseIds);
+                    });
+                }
             })
             ->with(['course:id,title', 'teacher:id,name'])
             ->orderBy('scheduled_at')

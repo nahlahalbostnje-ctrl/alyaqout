@@ -8,21 +8,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Services\GamificationService;
+use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class HomeworkController extends Controller
 {
-    public function __construct(private readonly GamificationService $gamification) {}
+    public function __construct(
+        private readonly GamificationService $gamification,
+        private readonly StudentEntitlementService $entitlement,
+    ) {}
+
     public function index(): JsonResponse
     {
         $student   = Auth::user();
-        $countryId = (int) $student->country_id;
+        $courseIds = $this->entitlement->courseIdsFor($student);
 
         $homeworks = Homework::where('status', 'approved')
             ->whereNull('archived_at')
-            ->whereHas('course', fn ($q) => $q->where('country_id', $countryId)->where('is_active', true))
+            ->whereIn('course_id', $courseIds ?: [0])
             ->with('course:id,title')
             ->orderBy('due_date')
             ->get();
@@ -51,9 +56,11 @@ class HomeworkController extends Controller
 
     public function submit(Request $request, Homework $homework): JsonResponse
     {
-        $studentId = (int) Auth::id();
+        $student = Auth::user();
+        $studentId = (int) $student->id;
 
         abort_if($homework->status !== 'approved', 403);
+        abort_unless($this->entitlement->canAccessCourse($student, (int) $homework->course_id), 403, 'غير مشترك في دورة هذا الواجب.');
         abort_if(
             HomeworkSubmission::where('homework_id', $homework->id)->where('student_id', $studentId)->exists(),
             422,

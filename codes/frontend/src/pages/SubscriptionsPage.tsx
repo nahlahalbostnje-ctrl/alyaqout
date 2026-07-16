@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
-  fetchSubscriptions, addSubscription, cancelSubscription,
+  fetchSubscriptions, addSubscription, cancelSubscription, activateSubscription,
 } from '../features/admin/subscriptionsSlice';
 import { fetchUsers }    from '../features/admin/usersSlice';
 import { fetchPackages } from '../features/admin/packagesSlice';
@@ -319,6 +319,12 @@ export default function SubscriptionsPage() {
                           <StatusBadge label={STATUS_LABEL[sub.status] ?? sub.status} color={ss.color} bg={ss.bg} />
                         </td>
                         <td style={TD}>
+                          {sub.status === 'pending' && (
+                            <button onClick={() => void dispatch(activateSubscription(sub.id))}
+                              style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'rgba(16,185,129,0.12)', color: DK.green, fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
+                              تفعيل
+                            </button>
+                          )}
                           {sub.status === 'active' && (
                             <div style={{ display:'flex', gap:6 }}>
                               <button onClick={() => openInstallmentModal(sub)}

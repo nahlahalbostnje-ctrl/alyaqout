@@ -9,7 +9,21 @@ export interface Package {
   duration_days: number;
   is_active: boolean;
   sort_order: number;
+  subject_ids?: number[];
+  course_ids?: number[];
+  subjects?: { id: number; name: string; type?: string }[];
+  courses?: { id: number; title: string }[];
 }
+
+export type PackagePayload = {
+  name: string;
+  description?: string;
+  price: number;
+  duration_days: number;
+  sort_order?: number;
+  subject_ids?: number[];
+  course_ids?: number[];
+};
 
 interface PackagesState {
   list: Package[];
@@ -33,7 +47,7 @@ export const fetchPackages = createAsyncThunk(
 
 export const addPackage = createAsyncThunk(
   'packages/add',
-  async (payload: { name: string; description?: string; price: number; duration_days: number; sort_order?: number }, { rejectWithValue }) => {
+  async (payload: PackagePayload, { rejectWithValue }) => {
     try {
       const { data } = await api.post('/admin/packages', payload);
       return data.data as Package;
@@ -46,7 +60,7 @@ export const addPackage = createAsyncThunk(
 export const updatePackage = createAsyncThunk(
   'packages/update',
   async (
-    payload: { id: number; name: string; description?: string; price: number; duration_days: number; sort_order?: number },
+    payload: PackagePayload & { id: number },
     { rejectWithValue }
   ) => {
     try {
