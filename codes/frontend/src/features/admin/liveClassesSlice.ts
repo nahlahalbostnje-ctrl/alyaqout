@@ -16,6 +16,8 @@ export interface LiveClass {
   scheduled_at: string;
   duration_minutes: number;
   status: ClassStatus;
+  approval_status?: string;
+  archived_at?: string | null;
   agora_channel: string | null;
   course?: { id: number; title: string };
   teacher?: { id: number; name: string };
@@ -108,6 +110,18 @@ export const deleteLiveClass = createAsyncThunk(
   }
 );
 
+export const archiveLiveClass = createAsyncThunk(
+  'liveClasses/archive',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await api.patch(`/admin/live-classes/${id}/archive`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'فشل الأرشفة');
+    }
+  }
+);
+
 const liveClassesSlice = createSlice({
   name: 'liveClasses',
   initialState,
@@ -127,6 +141,9 @@ const liveClassesSlice = createSlice({
         if (i !== -1) s.list[i] = a.payload;
       })
       .addCase(deleteLiveClass.fulfilled,   (s, a) => {
+        s.list = s.list.filter((c) => c.id !== a.payload);
+      })
+      .addCase(archiveLiveClass.fulfilled,  (s, a) => {
         s.list = s.list.filter((c) => c.id !== a.payload);
       });
   },

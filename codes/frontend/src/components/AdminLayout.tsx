@@ -16,6 +16,7 @@ const navItems = [
   { to: '/admin/cms',           label: 'إدارة المحتوى',      icon: Icons.fileText       },
   { to: '/admin/supervisors',   label: 'المشرفون',            icon: Icons.users          },
   { to: '/admin/approvals',     label: 'موافقات المعلمين',   icon: Icons.clipboard      },
+  { to: '/admin/teacher-content', label: 'محتوى المعلمين',   icon: Icons.fileText       },
   { to: '/admin/cities',        label: 'المدن',               icon: Icons.home           },
   { to: '/admin/audit-log',    label: 'سجل العمليات',        icon: Icons.clipboard      },
   { to: '/admin/notifications', label: 'الإشعارات',          icon: Icons.bell           },

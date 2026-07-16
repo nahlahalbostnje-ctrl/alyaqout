@@ -12,13 +12,19 @@ class Exam extends Model
 {
     protected $fillable = [
         'course_id', 'teacher_id', 'title', 'description',
-        'status', 'duration', 'starts_at',
+        'status', 'duration', 'starts_at', 'archived_at',
     ];
 
     protected $casts = [
-        'duration'   => 'integer',
-        'starts_at'  => 'datetime',
+        'duration'     => 'integer',
+        'starts_at'   => 'datetime',
+        'archived_at' => 'datetime',
     ];
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
 
     public function course(): BelongsTo      { return $this->belongsTo(Course::class); }
     public function teacher(): BelongsTo     { return $this->belongsTo(User::class, 'teacher_id'); }

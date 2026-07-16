@@ -17,6 +17,7 @@ export interface TeacherExam {
   status: 'pending' | 'approved' | 'rejected';
   duration?: number;
   starts_at?: string;
+  archived_at?: string | null;
   course: { id: number; title: string } | null;
   questions_count: number;
   submissions_count: number;
@@ -38,6 +39,7 @@ export interface Homework {
   description?: string;
   status: 'pending' | 'approved' | 'rejected';
   due_date: string;
+  archived_at?: string | null;
   course: { id: number; title: string } | null;
   submissions_count: number;
   created_at: string;
@@ -61,6 +63,7 @@ interface TeacherExamState {
   hwSubmissions: Record<number, HomeworkSubmissionRecord[]>;
   loading: boolean;
   saving: boolean;
+  error: string | null;
 }
 
 const initialState: TeacherExamState = {
@@ -70,27 +73,60 @@ const initialState: TeacherExamState = {
   hwSubmissions: {},
   loading: false,
   saving: false,
+  error: null,
 };
 
+function apiErr(e: unknown, fallback: string): string {
+  const err = e as { response?: { data?: { message?: string } } };
+  return err.response?.data?.message ?? fallback;
+}
+
 export const fetchTeacherExams = createAsyncThunk(
-  'teacherExams/fetch', async () => {
-    const res = await api.get('/teacher/exams');
-    return res.data.data as TeacherExam[];
+  'teacherExams/fetch',
+  async (scope: 'active' | 'archived' | undefined, { rejectWithValue }) => {
+    try {
+      const res = await api.get('/teacher/exams', { params: { scope: scope ?? 'active' } });
+      return res.data.data as TeacherExam[];
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر جلب الامتحانات'));
+    }
   }
 );
 
 export const createExam = createAsyncThunk(
   'teacherExams/create',
-  async (payload: { course_id: number; title: string; description?: string; duration?: number; questions: ExamQuestion[] }) => {
-    const res = await api.post('/teacher/exams', payload);
-    return res.data.data as TeacherExam;
+  async (payload: { course_id: number; title: string; description?: string; duration?: number; questions: ExamQuestion[] }, { rejectWithValue }) => {
+    try {
+      const res = await api.post('/teacher/exams', payload);
+      return res.data.data as TeacherExam;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر إنشاء الامتحان'));
+    }
   }
 );
 
-export const deleteExam = createAsyncThunk(
-  'teacherExams/delete', async (id: number) => {
-    await api.delete(`/teacher/exams/${id}`);
-    return id;
+export const updateExam = createAsyncThunk(
+  'teacherExams/update',
+  async (payload: { id: number; course_id?: number; title?: string; description?: string; duration?: number }, { rejectWithValue }) => {
+    try {
+      const { id, ...body } = payload;
+      const res = await api.put(`/teacher/exams/${id}`, body);
+      return res.data.data as TeacherExam;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر تعديل الامتحان'));
+    }
+  }
+);
+
+export const archiveExam = createAsyncThunk(
+  'teacherExams/archive',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const res = await api.patch(`/teacher/exams/${id}/archive`);
+      return res.data.data as TeacherExam;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر أرشفة الامتحان'));
+    }
   }
 );
 
@@ -110,24 +146,51 @@ export const gradeExamSubmission = createAsyncThunk(
 );
 
 export const fetchTeacherHomework = createAsyncThunk(
-  'teacherExams/hwFetch', async () => {
-    const res = await api.get('/teacher/homework');
-    return res.data.data as Homework[];
+  'teacherExams/hwFetch',
+  async (scope: 'active' | 'archived' | undefined, { rejectWithValue }) => {
+    try {
+      const res = await api.get('/teacher/homework', { params: { scope: scope ?? 'active' } });
+      return res.data.data as Homework[];
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر جلب الواجبات'));
+    }
   }
 );
 
 export const createHomework = createAsyncThunk(
   'teacherExams/hwCreate',
-  async (payload: { course_id: number; title: string; description?: string; due_date: string }) => {
-    const res = await api.post('/teacher/homework', payload);
-    return res.data.data as Homework;
+  async (payload: { course_id: number; title: string; description?: string; due_date: string }, { rejectWithValue }) => {
+    try {
+      const res = await api.post('/teacher/homework', payload);
+      return res.data.data as Homework;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر إنشاء الواجب'));
+    }
   }
 );
 
-export const deleteHomework = createAsyncThunk(
-  'teacherExams/hwDelete', async (id: number) => {
-    await api.delete(`/teacher/homework/${id}`);
-    return id;
+export const updateHomework = createAsyncThunk(
+  'teacherExams/hwUpdate',
+  async (payload: { id: number; course_id?: number; title?: string; description?: string; due_date?: string }, { rejectWithValue }) => {
+    try {
+      const { id, ...body } = payload;
+      const res = await api.put(`/teacher/homework/${id}`, body);
+      return res.data.data as Homework;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر تعديل الواجب'));
+    }
+  }
+);
+
+export const archiveHomework = createAsyncThunk(
+  'teacherExams/hwArchive',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const res = await api.patch(`/teacher/homework/${id}/archive`);
+      return res.data.data as Homework;
+    } catch (e) {
+      return rejectWithValue(apiErr(e, 'تعذّر أرشفة الواجب'));
+    }
   }
 );
 
@@ -151,18 +214,30 @@ export const gradeHomeworkSubmission = createAsyncThunk(
 const teacherExamSlice = createSlice({
   name: 'teacherExams',
   initialState,
-  reducers: {},
+  reducers: {
+    clearTeacherExamError(s) { s.error = null; },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTeacherExams.pending, (s) => { s.loading = true; })
+      .addCase(fetchTeacherExams.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(fetchTeacherExams.fulfilled, (s, a) => { s.loading = false; s.exams = a.payload; })
-      .addCase(fetchTeacherExams.rejected, (s) => { s.loading = false; })
+      .addCase(fetchTeacherExams.rejected, (s, a) => { s.loading = false; s.error = a.payload as string; })
 
-      .addCase(createExam.pending, (s) => { s.saving = true; })
+      .addCase(createExam.pending, (s) => { s.saving = true; s.error = null; })
       .addCase(createExam.fulfilled, (s, a) => { s.saving = false; s.exams.unshift(a.payload); })
-      .addCase(createExam.rejected, (s) => { s.saving = false; })
+      .addCase(createExam.rejected, (s, a) => { s.saving = false; s.error = a.payload as string; })
 
-      .addCase(deleteExam.fulfilled, (s, a) => { s.exams = s.exams.filter((e) => e.id !== a.payload); })
+      .addCase(updateExam.pending, (s) => { s.saving = true; s.error = null; })
+      .addCase(updateExam.fulfilled, (s, a) => {
+        s.saving = false;
+        const i = s.exams.findIndex((e) => e.id === a.payload.id);
+        if (i !== -1) s.exams[i] = a.payload;
+      })
+      .addCase(updateExam.rejected, (s, a) => { s.saving = false; s.error = a.payload as string; })
+
+      .addCase(archiveExam.fulfilled, (s, a) => {
+        s.exams = s.exams.filter((e) => e.id !== a.payload.id);
+      })
 
       .addCase(fetchExamSubmissions.fulfilled, (s, a) => {
         s.submissions[a.payload.examId] = a.payload.data;
@@ -174,15 +249,25 @@ const teacherExamSlice = createSlice({
         if (sub) sub.score = a.payload.score;
       })
 
-      .addCase(fetchTeacherHomework.pending, (s) => { s.loading = true; })
+      .addCase(fetchTeacherHomework.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(fetchTeacherHomework.fulfilled, (s, a) => { s.loading = false; s.homeworks = a.payload; })
-      .addCase(fetchTeacherHomework.rejected, (s) => { s.loading = false; })
+      .addCase(fetchTeacherHomework.rejected, (s, a) => { s.loading = false; s.error = a.payload as string; })
 
-      .addCase(createHomework.pending, (s) => { s.saving = true; })
+      .addCase(createHomework.pending, (s) => { s.saving = true; s.error = null; })
       .addCase(createHomework.fulfilled, (s, a) => { s.saving = false; s.homeworks.unshift(a.payload); })
-      .addCase(createHomework.rejected, (s) => { s.saving = false; })
+      .addCase(createHomework.rejected, (s, a) => { s.saving = false; s.error = a.payload as string; })
 
-      .addCase(deleteHomework.fulfilled, (s, a) => { s.homeworks = s.homeworks.filter((h) => h.id !== a.payload); })
+      .addCase(updateHomework.pending, (s) => { s.saving = true; s.error = null; })
+      .addCase(updateHomework.fulfilled, (s, a) => {
+        s.saving = false;
+        const i = s.homeworks.findIndex((h) => h.id === a.payload.id);
+        if (i !== -1) s.homeworks[i] = a.payload;
+      })
+      .addCase(updateHomework.rejected, (s, a) => { s.saving = false; s.error = a.payload as string; })
+
+      .addCase(archiveHomework.fulfilled, (s, a) => {
+        s.homeworks = s.homeworks.filter((h) => h.id !== a.payload.id);
+      })
 
       .addCase(fetchHomeworkSubmissions.fulfilled, (s, a) => {
         s.hwSubmissions[a.payload.hwId] = a.payload.data;
@@ -196,4 +281,5 @@ const teacherExamSlice = createSlice({
   },
 });
 
+export const { clearTeacherExamError } = teacherExamSlice.actions;
 export default teacherExamSlice.reducer;

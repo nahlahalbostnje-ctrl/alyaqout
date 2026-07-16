@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
+  archiveTeacherLiveClass,
   createTeacherLiveClass,
   fetchTeacherCourses,
   fetchTeacherLiveClasses,
   updateTeacherClassStatus,
+  updateTeacherLiveClass,
 } from '../features/teacher/teacherSlice';
 import TeacherLayout from '../components/TeacherLayout';
 import type { TeacherLiveClass } from '../features/teacher/teacherSlice';
@@ -230,7 +232,9 @@ export default function TeacherLiveClassesPage() {
   const navigate = useNavigate();
   const { liveClasses, courses, loading, error } = useAppSelector((s) => s.teacher);
 
+  const [scope, setScope] = useState<'active' | 'archived'>('active');
   const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<TeacherLiveClass | null>(null);
   const [form, setForm] = useState<NewClassForm>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -238,9 +242,12 @@ export default function TeacherLiveClassesPage() {
   const [showWhiteboard, setShowWhiteboard] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchTeacherLiveClasses());
     dispatch(fetchTeacherCourses());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchTeacherLiveClasses(scope));
+  }, [dispatch, scope]);
 
   const active = liveClasses.filter((c) => c.status !== 'ended');
   const ended  = liveClasses.filter((c) => c.status === 'ended');
@@ -261,24 +268,69 @@ export default function TeacherLiveClassesPage() {
     navigate(`/live/${cls.agora_channel}?classId=${cls.id}`);
   };
 
-  const handleCreateClass = async () => {
-    if (!form.title.trim() || !form.scheduled_at || !form.course_id) return;
+  const openCreate = () => {
+    setEditing(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setShowModal(true);
+  };
+
+  const openEdit = (cls: TeacherLiveClass) => {
+    if (cls.status === 'live') return;
+    setEditing(cls);
+    setForm({
+      title: cls.title,
+      description: cls.description ?? '',
+      scheduled_at: cls.scheduled_at ? cls.scheduled_at.slice(0, 16) : '',
+      duration_minutes: cls.duration_minutes,
+      course_id: String(cls.course?.id ?? ''),
+    });
+    setFormError('');
+    setShowModal(true);
+  };
+
+  const handleArchive = async (cls: TeacherLiveClass) => {
+    if (!confirm(`أرشفة الحصة «${cls.title}»؟ سيختفي عن الطلاب.`)) return;
+    try {
+      await dispatch(archiveTeacherLiveClass(cls.id)).unwrap();
+      setSuccessMsg('تم أرشفة الحصة');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (e: unknown) {
+      setFormError(typeof e === 'string' ? e : 'تعذّر الأرشفة');
+    }
+  };
+
+  const handleSaveClass = async () => {
+    if (!form.title.trim() || !form.scheduled_at) return;
+    if (!editing && !form.course_id) return;
     setSubmitting(true);
     setFormError('');
     try {
-      await dispatch(createTeacherLiveClass({
-        course_id: Number(form.course_id),
-        title: form.title.trim(),
-        description: form.description.trim() || undefined,
-        scheduled_at: form.scheduled_at,
-        duration_minutes: form.duration_minutes,
-      })).unwrap();
+      if (editing) {
+        await dispatch(updateTeacherLiveClass({
+          id: editing.id,
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
+          scheduled_at: form.scheduled_at,
+          duration_minutes: form.duration_minutes,
+        })).unwrap();
+        setSuccessMsg('تم تعديل الحصة');
+      } else {
+        await dispatch(createTeacherLiveClass({
+          course_id: Number(form.course_id),
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
+          scheduled_at: form.scheduled_at,
+          duration_minutes: form.duration_minutes,
+        })).unwrap();
+        setSuccessMsg('تم إرسال الحصة بانتظار موافقة الإدارة.');
+      }
       setShowModal(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('تم إرسال الحصة بانتظار موافقة الإدارة.');
+      setEditing(null);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: unknown) {
-      setFormError(typeof e === 'string' ? e : 'تعذّر إنشاء الحصة');
+      setFormError(typeof e === 'string' ? e : 'تعذّر الحفظ');
     } finally {
       setSubmitting(false);
     }
@@ -297,15 +349,16 @@ export default function TeacherLiveClassesPage() {
               <div className="w-1 h-5 rounded-full" style={{ background: TH.goldGrad }} />
               <h2 className="text-xl font-bold" style={{ color: TH.text }}>حصصي المباشرة</h2>
             </div>
-            <p className="text-xs mr-4" style={{ color: TH.textSub }}>إدارة حصصك المجدولة والجارية</p>
+            <p className="text-xs mr-4" style={{ color: TH.textSub }}>إضافة وتعديل وأرشفة — الحذف من صلاحية الإدارة فقط</p>
           </div>
           <div style={{ display:'flex', gap:10, alignItems:'center' }}>
             <button onClick={() => setShowWhiteboard(true)}
               style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 16px', borderRadius:12, background:'rgba(13,30,58,0.08)', color:'#0D1E3A', fontWeight:700, fontSize:13, border:'1px solid rgba(13,30,58,0.15)', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
               🖊️ السبورة التفاعلية
             </button>
+            {scope === 'active' && (
             <button
-              onClick={() => setShowModal(true)}
+              onClick={openCreate}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 18px', borderRadius: 12,
@@ -319,7 +372,26 @@ export default function TeacherLiveClassesPage() {
               </svg>
               إضافة حصة جديدة
             </button>
+            )}
           </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {([
+            { key: 'active' as const, label: 'النشطة' },
+            { key: 'archived' as const, label: 'المؤرشفة' },
+          ]).map((t) => (
+            <button key={t.key} onClick={() => setScope(t.key)}
+              style={{
+                padding: '8px 18px', borderRadius: 40, cursor: 'pointer',
+                fontFamily: "'Cairo',sans-serif", fontSize: 13, fontWeight: 700,
+                background: scope === t.key ? TH.goldGrad : '#FFFFFF',
+                color: scope === t.key ? '#fff' : TH.textSub,
+                border: scope === t.key ? 'none' : '1px solid #EDE3CE',
+              }}>
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Success / error banners */}
@@ -386,42 +458,50 @@ export default function TeacherLiveClassesPage() {
                     </div>
 
                     <div className="flex flex-col items-end gap-2 mr-4">
-                      {cls.status === 'scheduled' && isApproved(cls) && cls.agora_channel && (
+                      {scope === 'active' && cls.status === 'scheduled' && isApproved(cls) && cls.agora_channel && (
                         <button onClick={() => handleStart(cls)}
                           className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition"
                           style={{ background: TH.greenBg, color: TH.green, border: `1px solid ${TH.greenBorder}` }}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                          </svg>
                           بدء الحصة
                         </button>
                       )}
-                      {cls.status === 'scheduled' && cls.approval_status === 'pending' && (
+                      {scope === 'active' && cls.status === 'scheduled' && cls.approval_status === 'pending' && (
                         <span style={{ fontSize: 11, color: '#D97706', background: 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 8, fontWeight: 600 }}>
                           بانتظار موافقة الإدارة
                         </span>
                       )}
-                      {cls.status === 'scheduled' && cls.approval_status === 'rejected' && (
+                      {scope === 'active' && cls.status === 'scheduled' && cls.approval_status === 'rejected' && (
                         <span style={{ fontSize: 11, color: TH.red, background: TH.redBg, padding: '4px 10px', borderRadius: 8, fontWeight: 600 }}>
                           مرفوضة من الإدارة
                         </span>
                       )}
-                      {cls.status === 'live' && isApproved(cls) && cls.agora_channel && (
+                      {scope === 'active' && cls.status === 'live' && isApproved(cls) && cls.agora_channel && (
                         <button onClick={() => handleJoin(cls)}
                           className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition"
                           style={{ background: TH.goldGrad, color: '#fff' }}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
-                          </svg>
                           الدخول للحصة
                         </button>
                       )}
-                      {cls.status === 'live' && isApproved(cls) && (
+                      {scope === 'active' && cls.status === 'live' && isApproved(cls) && (
                         <button onClick={() => dispatch(updateTeacherClassStatus(cls.id))}
                           className="text-xs transition"
                           style={{ color: TH.red }}>
                           إنهاء الحصة
                         </button>
+                      )}
+                      {scope === 'active' && cls.status !== 'live' && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => openEdit(cls)}
+                            className="text-xs px-3 py-1.5 rounded-lg"
+                            style={{ background: '#F8FAFC', color: TH.text, border: '1px solid #EDE3CE' }}>
+                            تعديل
+                          </button>
+                          <button onClick={() => handleArchive(cls)}
+                            className="text-xs px-3 py-1.5 rounded-lg"
+                            style={{ background: 'rgba(245,158,11,0.1)', color: '#D97706', border: '1px solid rgba(245,158,11,0.25)' }}>
+                            أرشفة
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -437,15 +517,26 @@ export default function TeacherLiveClassesPage() {
             <div className="space-y-2">
               {ended.map((cls) => (
                 <div key={cls.id} className="p-4 rounded-xl" style={TH.cardEnded}>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    {statusBadge(cls.status)}
-                    {approvalBadge(cls.approval_status)}
-                    <p className="font-medium" style={{ color: TH.textSub }}>{cls.title}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-xs" style={{ color: TH.textDim }}>
-                    <span>📚 {cls.course?.title ?? '—'}</span>
-                    <span>🕐 {new Date(cls.scheduled_at).toLocaleString('ar-EG')}</span>
-                    <span>⏱ {cls.duration_minutes} دقيقة</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {statusBadge(cls.status)}
+                        {approvalBadge(cls.approval_status)}
+                        <p className="font-medium" style={{ color: TH.textSub }}>{cls.title}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-xs" style={{ color: TH.textDim }}>
+                        <span>📚 {cls.course?.title ?? '—'}</span>
+                        <span>🕐 {new Date(cls.scheduled_at).toLocaleString('ar-EG')}</span>
+                        <span>⏱ {cls.duration_minutes} دقيقة</span>
+                      </div>
+                    </div>
+                    {scope === 'active' && (
+                      <button onClick={() => handleArchive(cls)}
+                        className="text-xs px-3 py-1.5 rounded-lg"
+                        style={{ background: 'rgba(245,158,11,0.1)', color: '#D97706', border: '1px solid rgba(245,158,11,0.25)' }}>
+                        أرشفة
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -470,8 +561,10 @@ export default function TeacherLiveClassesPage() {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <h3 style={{ color: TH.navy, fontWeight: 800, fontSize: 18 }}>إضافة حصة مباشرة</h3>
-                <p style={{ color: TH.textSub, fontSize: 12, marginTop: 2 }}>تُرسل للإدارة للموافقة قبل ظهورها للطلاب</p>
+                <h3 style={{ color: TH.navy, fontWeight: 800, fontSize: 18 }}>{editing ? 'تعديل الحصة' : 'إضافة حصة مباشرة'}</h3>
+                <p style={{ color: TH.textSub, fontSize: 12, marginTop: 2 }}>
+                  {editing ? 'تعديل حصة معتمدة يعيدها لانتظار الموافقة' : 'تُرسل للإدارة للموافقة قبل ظهورها للطلاب'}
+                </p>
               </div>
               <button onClick={() => { setShowModal(false); setFormError(''); }}
                 style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: TH.textSub }}>
@@ -511,6 +604,7 @@ export default function TeacherLiveClassesPage() {
                 <select
                   value={form.course_id}
                   onChange={e => setForm(p => ({ ...p, course_id: e.target.value }))}
+                  disabled={!!editing}
                   style={{
                     width: '100%', padding: '10px 14px', borderRadius: 12,
                     border: '1px solid #E2E8F0', fontSize: 13,
@@ -580,18 +674,18 @@ export default function TeacherLiveClassesPage() {
               </div>
 
               <button
-                onClick={handleCreateClass}
-                disabled={submitting || !form.title.trim() || !form.scheduled_at || !form.course_id}
+                onClick={handleSaveClass}
+                disabled={submitting || !form.title.trim() || !form.scheduled_at || (!editing && !form.course_id)}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 14,
                   background: TH.goldGrad, color: '#fff',
                   fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer',
-                  opacity: submitting || !form.title.trim() || !form.scheduled_at || !form.course_id ? 0.6 : 1,
+                  opacity: submitting || !form.title.trim() || !form.scheduled_at || (!editing && !form.course_id) ? 0.6 : 1,
                   fontFamily: "'Cairo',sans-serif",
                   boxShadow: '0 4px 14px rgba(201,149,42,0.4)',
                   transition: 'opacity 0.2s',
                 }}>
-                {submitting ? 'جاري الإرسال...' : 'إرسال للموافقة'}
+                {submitting ? 'جاري الحفظ...' : editing ? 'حفظ التعديل' : 'إرسال للموافقة'}
               </button>
             </div>
           </div>

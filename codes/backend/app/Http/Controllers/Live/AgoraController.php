@@ -37,6 +37,10 @@ class AgoraController extends Controller
             return response()->json(['message' => 'هذه الحصة لم تُعتمد بعد من الإدارة.'], 422);
         }
 
+        if ($liveClass->isArchived()) {
+            return response()->json(['message' => 'هذه الحصة مؤرشفة.'], 422);
+        }
+
         $isTeacher = $user->role === 'teacher' && (int) $liveClass->teacher_id === $uid;
         $role      = $isTeacher ? AgoraService::ROLE_PUBLISHER : AgoraService::ROLE_SUBSCRIBER;
 
@@ -64,6 +68,10 @@ class AgoraController extends Controller
 
         if (! $liveClass->isApproved()) {
             return response()->json(['message' => 'لا يمكن بدء الحصة قبل موافقة الإدارة.'], 422);
+        }
+
+        if ($liveClass->isArchived()) {
+            return response()->json(['message' => 'هذه الحصة مؤرشفة.'], 422);
         }
 
         if ($liveClass->status === 'ended') {

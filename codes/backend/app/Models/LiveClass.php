@@ -13,17 +13,23 @@ class LiveClass extends Model
         'country_id', 'course_id', 'teacher_id',
         'session_type', 'student_id',
         'title', 'description', 'scheduled_at',
-        'duration_minutes', 'status', 'approval_status', 'meeting_link', 'agora_channel',
+        'duration_minutes', 'status', 'approval_status', 'archived_at', 'meeting_link', 'agora_channel',
     ];
 
     protected $casts = [
         'scheduled_at'     => 'datetime',
         'duration_minutes' => 'integer',
+        'archived_at'      => 'datetime',
     ];
 
     public function isApproved(): bool
     {
         return $this->approval_status === 'approved';
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
     }
 
     public function country(): BelongsTo { return $this->belongsTo(Country::class); }

@@ -21,6 +21,7 @@ class HomeworkController extends Controller
         $countryId = (int) $student->country_id;
 
         $homeworks = Homework::where('status', 'approved')
+            ->whereNull('archived_at')
             ->whereHas('course', fn ($q) => $q->where('country_id', $countryId)->where('is_active', true))
             ->with('course:id,title')
             ->orderBy('due_date')

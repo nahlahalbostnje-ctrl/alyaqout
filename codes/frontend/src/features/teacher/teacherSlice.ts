@@ -32,6 +32,7 @@ export interface TeacherLiveClass {
   duration_minutes: number;
   status: 'scheduled' | 'live' | 'ended';
   approval_status?: 'pending' | 'approved' | 'rejected';
+  archived_at?: string | null;
   meeting_link: string | null;
   agora_channel: string | null;
   course: { id: number; title: string };
@@ -43,6 +44,14 @@ export interface CreateLiveClassPayload {
   description?: string;
   scheduled_at: string;
   duration_minutes: number;
+}
+
+export interface UpdateLiveClassPayload {
+  id: number;
+  title?: string;
+  description?: string;
+  scheduled_at?: string;
+  duration_minutes?: number;
 }
 
 export interface TeacherStats {
@@ -118,9 +127,9 @@ export const fetchTeacherCourses = createAsyncThunk(
 
 export const fetchTeacherLiveClasses = createAsyncThunk(
   'teacher/fetchLiveClasses',
-  async (_, { rejectWithValue }) => {
+  async (scope: 'active' | 'archived' | undefined, { rejectWithValue }) => {
     try {
-      const r = await api.get('/teacher/live-classes');
+      const r = await api.get('/teacher/live-classes', { params: { scope: scope ?? 'active' } });
       return r.data.data as TeacherLiveClass[];
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } };
@@ -147,6 +156,33 @@ export const createTeacherLiveClass = createAsyncThunk(
   async (payload: CreateLiveClassPayload, { rejectWithValue }) => {
     try {
       const r = await api.post('/teacher/live-classes', payload);
+      return r.data.data as TeacherLiveClass;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+export const updateTeacherLiveClass = createAsyncThunk(
+  'teacher/updateLiveClass',
+  async (payload: UpdateLiveClassPayload, { rejectWithValue }) => {
+    try {
+      const { id, ...body } = payload;
+      const r = await api.put(`/teacher/live-classes/${id}`, body);
+      return r.data.data as TeacherLiveClass;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
+export const archiveTeacherLiveClass = createAsyncThunk(
+  'teacher/archiveLiveClass',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const r = await api.patch(`/teacher/live-classes/${id}/archive`);
       return r.data.data as TeacherLiveClass;
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } };
@@ -194,6 +230,15 @@ const teacherSlice = createSlice({
 
       .addCase(createTeacherLiveClass.fulfilled, (s, a) => {
         s.liveClasses = [a.payload, ...s.liveClasses];
+      })
+
+      .addCase(updateTeacherLiveClass.fulfilled, (s, a) => {
+        const idx = s.liveClasses.findIndex((c) => c.id === a.payload.id);
+        if (idx !== -1) s.liveClasses[idx] = a.payload;
+      })
+
+      .addCase(archiveTeacherLiveClass.fulfilled, (s, a) => {
+        s.liveClasses = s.liveClasses.filter((c) => c.id !== a.payload.id);
       });
   },
 });

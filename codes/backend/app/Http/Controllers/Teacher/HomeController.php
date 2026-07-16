@@ -162,14 +162,21 @@ class HomeController extends Controller
         return response()->json(['success' => true, 'data' => $rows]);
     }
 
-    public function liveClasses(): JsonResponse
+    public function liveClasses(Request $request): JsonResponse
     {
-        $classes = LiveClass::where('teacher_id', $this->teacherId())
-            ->with(['course:id,title'])
-            ->orderBy('scheduled_at', 'desc')
-            ->get();
+        $scope = $request->input('scope', 'active');
 
-        return response()->json(['success' => true, 'data' => $classes]);
+        $query = LiveClass::where('teacher_id', $this->teacherId())
+            ->with(['course:id,title'])
+            ->orderBy('scheduled_at', 'desc');
+
+        if ($scope === 'archived') {
+            $query->whereNotNull('archived_at');
+        } elseif ($scope !== 'all') {
+            $query->whereNull('archived_at');
+        }
+
+        return response()->json(['success' => true, 'data' => $query->get()]);
     }
 
     public function updateStatus(Request $request, LiveClass $liveClass): JsonResponse
@@ -182,6 +189,13 @@ class HomeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن بدء الحصة قبل موافقة الإدارة.',
+            ], 422);
+        }
+
+        if ($liveClass->isArchived()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الحصة مؤرشفة.',
             ], 422);
         }
 

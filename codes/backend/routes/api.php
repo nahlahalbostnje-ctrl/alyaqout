@@ -65,6 +65,7 @@ use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\CMSController as AdminCMSController;
 use App\Http\Controllers\Admin\SupervisorAssignmentController as AdminSupervisorAssignmentController;
 use App\Http\Controllers\Admin\TeacherApprovalController as AdminTeacherApprovalController;
+use App\Http\Controllers\Admin\TeacherContentController as AdminTeacherContentController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Api\CityController;
@@ -224,7 +225,15 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('live-classes',                        [AdminLiveClassController::class, 'store']);
     Route::put('live-classes/{liveClass}',             [AdminLiveClassController::class, 'update']);
     Route::patch('live-classes/{liveClass}/status',    [AdminLiveClassController::class, 'updateStatus']);
+    Route::patch('live-classes/{liveClass}/archive',   [AdminLiveClassController::class, 'archive']);
     Route::delete('live-classes/{liveClass}',          [AdminLiveClassController::class, 'destroy']);
+
+    Route::get('teacher-content/homeworks',                              [AdminTeacherContentController::class, 'homeworks']);
+    Route::patch('teacher-content/homeworks/{homework}/archive',        [AdminTeacherContentController::class, 'archiveHomework']);
+    Route::delete('teacher-content/homeworks/{homework}',               [AdminTeacherContentController::class, 'destroyHomework']);
+    Route::get('teacher-content/exams',                                  [AdminTeacherContentController::class, 'exams']);
+    Route::patch('teacher-content/exams/{exam}/archive',                 [AdminTeacherContentController::class, 'archiveExam']);
+    Route::delete('teacher-content/exams/{exam}',                        [AdminTeacherContentController::class, 'destroyExam']);
 
     // Settings
     Route::get('settings',                             [AdminSettingsController::class, 'show']);
@@ -422,20 +431,24 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::get('courses',                            [TeacherHomeController::class, 'courses']);
     Route::get('live-classes',                       [TeacherHomeController::class, 'liveClasses']);
     Route::post('live-classes',                      [TeacherLiveClassController::class, 'store']);
+    Route::put('live-classes/{liveClass}',           [TeacherLiveClassController::class, 'update']);
+    Route::patch('live-classes/{liveClass}/archive', [TeacherLiveClassController::class, 'archive']);
     Route::patch('live-classes/{liveClass}/status',  [TeacherHomeController::class, 'updateStatus']);
 
     // Exams
     Route::get('exams',                                       [TeacherExamController::class, 'index']);
     Route::post('exams',                                      [TeacherExamController::class, 'store']);
+    Route::put('exams/{exam}',                                [TeacherExamController::class, 'update']);
+    Route::patch('exams/{exam}/archive',                      [TeacherExamController::class, 'archive']);
     Route::get('exams/{exam}',                                [TeacherExamController::class, 'show']);
-    Route::delete('exams/{exam}',                             [TeacherExamController::class, 'destroy']);
     Route::get('exams/{exam}/submissions',                    [TeacherExamController::class, 'submissions']);
     Route::patch('exams/{exam}/submissions/{submission}/grade', [TeacherExamController::class, 'grade']);
 
     // Homework
     Route::get('homework',                                    [TeacherHomeworkController::class, 'index']);
     Route::post('homework',                                   [TeacherHomeworkController::class, 'store']);
-    Route::delete('homework/{homework}',                      [TeacherHomeworkController::class, 'destroy']);
+    Route::put('homework/{homework}',                         [TeacherHomeworkController::class, 'update']);
+    Route::patch('homework/{homework}/archive',               [TeacherHomeworkController::class, 'archive']);
     Route::get('homework/{homework}/submissions',             [TeacherHomeworkController::class, 'submissions']);
     Route::patch('homework/{homework}/submissions/{submission}/grade', [TeacherHomeworkController::class, 'grade']);
 

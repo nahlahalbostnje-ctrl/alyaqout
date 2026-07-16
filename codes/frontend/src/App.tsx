@@ -40,6 +40,7 @@ import AdminLeadsPage             from './pages/AdminLeadsPage';
 import AdminCMSPage               from './pages/AdminCMSPage';
 import AdminSupervisorAssignmentPage from './pages/AdminSupervisorAssignmentPage';
 import AdminTeacherApprovalsPage    from './pages/AdminTeacherApprovalsPage';
+import AdminTeacherContentPage      from './pages/AdminTeacherContentPage';
 import LiveRoomPage               from './pages/LiveRoomPage';
 import TeacherMobileApp           from './pages/TeacherMobileApp';
 import TeacherCoursesPage         from './pages/TeacherCoursesPage';
@@ -251,6 +252,9 @@ export default function App() {
         } />
         <Route path="/admin/approvals" element={
           <PrivateRoute roles={['admin']}><AdminTeacherApprovalsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/teacher-content" element={
+          <PrivateRoute roles={['admin']}><AdminTeacherContentPage /></PrivateRoute>
         } />
         <Route path="/admin/settings" element={
           <PrivateRoute roles={['admin']}><AdminSettingsPage /></PrivateRoute>

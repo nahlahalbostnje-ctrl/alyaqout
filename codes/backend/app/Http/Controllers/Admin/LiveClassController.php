@@ -36,6 +36,13 @@ class LiveClassController extends Controller
             ])
             ->orderBy('scheduled_at', 'desc');
 
+        $scope = $request->input('scope', 'active');
+        if ($scope === 'archived') {
+            $query->whereNotNull('archived_at');
+        } elseif ($scope !== 'all') {
+            $query->whereNull('archived_at');
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -143,5 +150,16 @@ class LiveClassController extends Controller
         $this->authorize($liveClass);
         $liveClass->delete();
         return response()->json(['success' => true, 'message' => 'تم حذف الحصة.']);
+    }
+
+    public function archive(LiveClass $liveClass): JsonResponse
+    {
+        $this->authorize($liveClass);
+        abort_if($liveClass->isArchived(), 422, 'الحصة مؤرشفة مسبقاً.');
+        abort_if($liveClass->status === 'live', 422, 'أنهِ الحصة أولاً قبل الأرشفة.');
+
+        $liveClass->update(['archived_at' => now()]);
+
+        return response()->json(['success' => true, 'message' => 'تم أرشفة الحصة.', 'data' => $liveClass->fresh()]);
     }
 }

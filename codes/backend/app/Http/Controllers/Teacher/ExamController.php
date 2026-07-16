@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Exam;
 use App\Models\ExamSubmission;
 use App\Services\NotificationService;
@@ -16,16 +17,23 @@ class ExamController extends Controller
 {
     public function __construct(private readonly NotificationService $notif) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $teacherId = (int) Auth::id();
+        $scope = $request->input('scope', 'active');
 
-        $exams = Exam::where('teacher_id', $teacherId)
+        $query = Exam::where('teacher_id', $teacherId)
             ->with('course:id,title')
             ->withCount('questions')
-            ->withCount('submissions')
-            ->latest()
-            ->get();
+            ->withCount('submissions');
+
+        if ($scope === 'archived') {
+            $query->whereNotNull('archived_at');
+        } elseif ($scope !== 'all') {
+            $query->whereNull('archived_at');
+        }
+
+        $exams = $query->latest()->get();
 
         return response()->json([
             'data' => $exams->map(fn ($e) => $this->format($e)),
@@ -43,12 +51,14 @@ class ExamController extends Controller
             'duration'    => 'nullable|integer|min:1',
             'starts_at'   => 'nullable|date',
             'questions'   => 'required|array|min:1',
-            'questions.*.question'   => 'required|string',
-            'questions.*.type'       => 'required|in:mcq,true_false,short',
-            'questions.*.options'    => 'nullable|array',
-            'questions.*.answer'     => 'nullable|string',
-            'questions.*.points'     => 'nullable|integer|min:1',
+            'questions.*.question' => 'required|string',
+            'questions.*.type'     => 'required|in:mcq,true_false,short',
+            'questions.*.options'  => 'nullable|array',
+            'questions.*.answer'   => 'nullable|string',
+            'questions.*.points'   => 'nullable|integer|min:1',
         ]);
+
+        $this->assertOwnCourse((int) $data['course_id'], $teacherId);
 
         $exam = Exam::create([
             'course_id'   => $data['course_id'],
@@ -71,7 +81,55 @@ class ExamController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'تم إنشاء الامتحان — بانتظار الموافقة', 'data' => $this->format($exam->load('course:id,title'))], 201);
+        return response()->json([
+            'message' => 'تم إنشاء الامتحان — بانتظار الموافقة',
+            'data'    => $this->format($exam->load('course:id,title')->loadCount(['questions', 'submissions'])),
+        ], 201);
+    }
+
+    public function update(Request $request, Exam $exam): JsonResponse
+    {
+        $this->authorizeExam($exam);
+        abort_if($exam->isArchived(), 422, 'لا يمكن تعديل امتحان مؤرشف.');
+
+        $data = $request->validate([
+            'course_id'   => 'sometimes|integer|exists:courses,id',
+            'title'       => 'sometimes|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'duration'    => 'nullable|integer|min:1',
+            'starts_at'   => 'nullable|date',
+        ]);
+
+        if (isset($data['course_id'])) {
+            $this->assertOwnCourse((int) $data['course_id'], (int) Auth::id());
+        }
+
+        $payload = collect($data)->only(['course_id', 'title', 'description', 'duration', 'starts_at'])->all();
+        if ($exam->status === 'approved') {
+            $payload['status'] = 'pending';
+        }
+
+        $exam->update($payload);
+
+        return response()->json([
+            'message' => $exam->fresh()->status === 'pending'
+                ? 'تم التعديل — بانتظار إعادة الموافقة'
+                : 'تم التعديل',
+            'data' => $this->format($exam->fresh()->load('course:id,title')->loadCount(['questions', 'submissions'])),
+        ]);
+    }
+
+    public function archive(Exam $exam): JsonResponse
+    {
+        $this->authorizeExam($exam);
+        abort_if($exam->isArchived(), 422, 'الامتحان مؤرشف مسبقاً.');
+
+        $exam->update(['archived_at' => now()]);
+
+        return response()->json([
+            'message' => 'تم أرشفة الامتحان',
+            'data'    => $this->format($exam->fresh()->load('course:id,title')->loadCount(['questions', 'submissions'])),
+        ]);
     }
 
     public function show(Exam $exam): JsonResponse
@@ -122,11 +180,10 @@ class ExamController extends Controller
         return response()->json(['message' => 'تم تصحيح الامتحان']);
     }
 
-    public function destroy(Exam $exam): JsonResponse
+    private function assertOwnCourse(int $courseId, int $teacherId): void
     {
-        $this->authorizeExam($exam);
-        $exam->delete();
-        return response()->json(['message' => 'تم الحذف']);
+        $course = Course::findOrFail($courseId);
+        abort_if((int) $course->teacher_id !== $teacherId, 403, 'هذه الدورة غير مسندة لك.');
     }
 
     private function authorizeExam(Exam $exam): void
@@ -137,16 +194,17 @@ class ExamController extends Controller
     private function format(Exam $e): array
     {
         return [
-            'id'               => $e->id,
-            'title'            => $e->title,
-            'description'      => $e->description,
-            'status'           => $e->status,
-            'duration'         => $e->duration,
-            'starts_at'        => $e->starts_at?->toISOString(),
-            'course'           => $e->course ? ['id' => $e->course->id, 'title' => $e->course->title] : null,
-            'questions_count'  => $e->questions_count ?? 0,
-            'submissions_count'=> $e->submissions_count ?? 0,
-            'created_at'       => $e->created_at?->toISOString(),
+            'id'                => $e->id,
+            'title'             => $e->title,
+            'description'       => $e->description,
+            'status'            => $e->status,
+            'duration'          => $e->duration,
+            'starts_at'         => $e->starts_at?->toISOString(),
+            'archived_at'       => $e->archived_at?->toISOString(),
+            'course'            => $e->course ? ['id' => $e->course->id, 'title' => $e->course->title] : null,
+            'questions_count'   => $e->questions_count ?? 0,
+            'submissions_count' => $e->submissions_count ?? 0,
+            'created_at'        => $e->created_at?->toISOString(),
         ];
     }
 }

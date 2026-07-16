@@ -9,6 +9,7 @@ import {
   updateLiveClass,
   updateClassStatus,
   deleteLiveClass,
+  archiveLiveClass,
   type ClassStatus,
   type LiveClassPayload,
   type LiveClass,
@@ -412,16 +413,29 @@ export default function LiveClassesPage() {
                             </button>
                           )}
                           {(cls.status === 'scheduled' || cls.status === 'ended') && (
-                            <button onClick={() => askDelete(cls.id, cls.title)} disabled={deleting === cls.id}
-                              style={{
-                                padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE',
-                                background:'#fff', color: DK.sub,
-                                fontWeight:700, fontSize:12, cursor:'pointer',
-                                fontFamily:"'Cairo',sans-serif",
-                                opacity: deleting === cls.id ? 0.5 : 1,
-                              }}>
-                              {deleting === cls.id ? '...' : '🗑️'}
-                            </button>
+                            <>
+                              <button onClick={() => {
+                                if (confirm(`أرشفة «${cls.title}»؟`)) void dispatch(archiveLiveClass(cls.id));
+                              }}
+                                style={{
+                                  padding:'5px 12px', borderRadius:8, border:'1px solid rgba(245,158,11,0.3)',
+                                  background:'rgba(245,158,11,0.1)', color: DK.orange,
+                                  fontWeight:700, fontSize:12, cursor:'pointer',
+                                  fontFamily:"'Cairo',sans-serif",
+                                }}>
+                                أرشفة
+                              </button>
+                              <button onClick={() => askDelete(cls.id, cls.title)} disabled={deleting === cls.id}
+                                style={{
+                                  padding:'5px 12px', borderRadius:8, border:'1px solid #EDE3CE',
+                                  background:'#fff', color: DK.sub,
+                                  fontWeight:700, fontSize:12, cursor:'pointer',
+                                  fontFamily:"'Cairo',sans-serif",
+                                  opacity: deleting === cls.id ? 0.5 : 1,
+                                }}>
+                                {deleting === cls.id ? '...' : 'حذف'}
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

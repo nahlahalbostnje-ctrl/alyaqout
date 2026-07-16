@@ -26,6 +26,7 @@ class ExamController extends Controller
         $countryId = (int) $student->country_id;
 
         $exams = Exam::where('status', 'approved')
+            ->whereNull('archived_at')
             ->whereHas('course', fn ($q) => $q->where('country_id', $countryId)->where('is_active', true))
             ->with('course:id,title')
             ->withCount('questions')

@@ -22,6 +22,11 @@ class LiveClassController extends Controller
         return (int) auth()->user()->country_id;
     }
 
+    private function authorizeOwn(LiveClass $liveClass): void
+    {
+        abort_if((int) $liveClass->teacher_id !== $this->teacherId(), 403, 'غير مصرح.');
+    }
+
     /** POST /teacher/live-classes — طلب جدولة حصة (بانتظار موافقة الإدارة) */
     public function store(Request $request): JsonResponse
     {
@@ -78,5 +83,51 @@ class LiveClassController extends Controller
             'message' => 'تم إرسال الحصة بانتظار موافقة الإدارة.',
             'data'    => $liveClass,
         ], 201);
+    }
+
+    /** PUT /teacher/live-classes/{liveClass} */
+    public function update(Request $request, LiveClass $liveClass): JsonResponse
+    {
+        $this->authorizeOwn($liveClass);
+        abort_if($liveClass->isArchived(), 422, 'لا يمكن تعديل حصة مؤرشفة.');
+        abort_if($liveClass->status === 'live', 422, 'لا يمكن تعديل حصة جارية.');
+
+        $data = $request->validate([
+            'title'            => 'sometimes|string|max:200',
+            'description'      => 'nullable|string',
+            'scheduled_at'     => 'sometimes|date|after:now',
+            'duration_minutes' => 'sometimes|integer|min:15|max:480',
+        ]);
+
+        $payload = collect($data)->only(['title', 'description', 'scheduled_at', 'duration_minutes'])->all();
+        if ($liveClass->approval_status === 'approved') {
+            $payload['approval_status'] = 'pending';
+        }
+
+        $liveClass->update($payload);
+
+        return response()->json([
+            'success' => true,
+            'message' => $liveClass->fresh()->approval_status === 'pending'
+                ? 'تم التعديل — بانتظار إعادة الموافقة'
+                : 'تم التعديل',
+            'data'    => $liveClass->fresh(['course:id,title']),
+        ]);
+    }
+
+    /** PATCH /teacher/live-classes/{liveClass}/archive */
+    public function archive(LiveClass $liveClass): JsonResponse
+    {
+        $this->authorizeOwn($liveClass);
+        abort_if($liveClass->isArchived(), 422, 'الحصة مؤرشفة مسبقاً.');
+        abort_if($liveClass->status === 'live', 422, 'أنهِ الحصة أولاً قبل الأرشفة.');
+
+        $liveClass->update(['archived_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم أرشفة الحصة',
+            'data'    => $liveClass->fresh(['course:id,title']),
+        ]);
     }
 }

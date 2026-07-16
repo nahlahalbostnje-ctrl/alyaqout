@@ -13,10 +13,18 @@ class Homework extends Model
     protected $table = 'homeworks';
 
     protected $fillable = [
-        'course_id', 'teacher_id', 'title', 'description', 'status', 'due_date',
+        'course_id', 'teacher_id', 'title', 'description', 'status', 'due_date', 'archived_at',
     ];
 
-    protected $casts = ['due_date' => 'date'];
+    protected $casts = [
+        'due_date'    => 'date',
+        'archived_at' => 'datetime',
+    ];
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
 
     public function course(): BelongsTo     { return $this->belongsTo(Course::class); }
     public function teacher(): BelongsTo    { return $this->belongsTo(User::class, 'teacher_id'); }

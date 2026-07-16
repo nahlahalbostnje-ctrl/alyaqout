@@ -756,8 +756,8 @@ export default function TeacherMobileApp() {
 
   useEffect(() => {
     dispatch(fetchTeacherDashboard());
-    dispatch(fetchTeacherExams());
-    dispatch(fetchTeacherHomework());
+    dispatch(fetchTeacherExams('active'));
+    dispatch(fetchTeacherHomework('active'));
   }, [dispatch]);
 
   const pendingTotal = (stats?.pending_homework_subs ?? 0) + (stats?.pending_exam_subs ?? 0);
