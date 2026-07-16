@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
+use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -103,6 +104,45 @@ class TeacherApprovalController extends Controller
             'message' => $request->status === 'approved'
                 ? 'تم قبول الحصة ونشرها للطلاب'
                 : 'تم رفض الحصة',
+        ]);
+    }
+
+    public function pendingCourses(): JsonResponse
+    {
+        $countryId = Auth::user()->country_id;
+
+        $courses = Course::where('country_id', $countryId)
+            ->where('approval_status', 'pending')
+            ->with([
+                'subject:id,name',
+                'grade:id,name',
+                'teacher:id,name',
+            ])
+            ->orderByDesc('created_at')
+            ->get([
+                'id', 'title', 'description', 'price', 'is_free',
+                'subject_id', 'grade_id', 'teacher_id', 'created_at',
+            ]);
+
+        return response()->json(['courses' => $courses]);
+    }
+
+    public function approveCourse(Request $request, Course $course): JsonResponse
+    {
+        abort_if((int) $course->country_id !== (int) Auth::user()->country_id, 403);
+
+        $request->validate(['status' => 'required|in:approved,rejected']);
+
+        $approved = $request->status === 'approved';
+        $course->update([
+            'approval_status' => $request->status,
+            'is_active'       => $approved,
+        ]);
+
+        return response()->json([
+            'message' => $approved
+                ? 'تم قبول الدورة ونشرها'
+                : 'تم رفض الدورة',
         ]);
     }
 

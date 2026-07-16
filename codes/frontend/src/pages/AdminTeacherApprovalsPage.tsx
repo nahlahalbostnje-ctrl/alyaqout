@@ -42,7 +42,19 @@ interface PendingLiveClass {
   teacher: { id: number; name: string };
 }
 
-type Tab = 'exams' | 'homeworks' | 'live_classes';
+interface PendingCourse {
+  id: number;
+  title: string;
+  description?: string | null;
+  price?: string | number;
+  is_free?: boolean;
+  created_at: string;
+  subject?: { id: number; name: string } | null;
+  grade?: { id: number; name: string } | null;
+  teacher?: { id: number; name: string } | null;
+}
+
+type Tab = 'exams' | 'homeworks' | 'live_classes' | 'courses';
 
 function formatDate(iso: string | null) {
   if (!iso) return '—';
@@ -73,6 +85,7 @@ export default function AdminTeacherApprovalsPage() {
   const [exams, setExams] = useState<PendingExam[]>([]);
   const [homeworks, setHomeworks] = useState<PendingHomework[]>([]);
   const [liveClasses, setLiveClasses] = useState<PendingLiveClass[]>([]);
+  const [courses, setCourses] = useState<PendingCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
 
@@ -91,9 +104,14 @@ export default function AdminTeacherApprovalsPage() {
     setLiveClasses(data.live_classes);
   };
 
+  const loadCourses = async () => {
+    const { data } = await api.get('/admin/approvals/courses');
+    setCourses(data.courses);
+  };
+
   const load = async () => {
     setLoading(true);
-    try { await Promise.all([loadExams(), loadHomeworks(), loadLiveClasses()]); }
+    try { await Promise.all([loadExams(), loadHomeworks(), loadLiveClasses(), loadCourses()]); }
     finally { setLoading(false); }
   };
 
@@ -123,7 +141,16 @@ export default function AdminTeacherApprovalsPage() {
     } finally { setBusyId(null); }
   };
 
+  const handleCourseDecision = async (course: PendingCourse, status: 'approved' | 'rejected') => {
+    setBusyId(course.id);
+    try {
+      await api.patch(`/admin/approvals/courses/${course.id}`, { status });
+      setCourses((prev) => prev.filter((c) => c.id !== course.id));
+    } finally { setBusyId(null); }
+  };
+
   const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: 'courses', label: 'الدورات', count: courses.length },
     { key: 'exams', label: 'الاختبارات', count: exams.length },
     { key: 'homeworks', label: 'الواجبات', count: homeworks.length },
     { key: 'live_classes', label: 'حصص مباشرة', count: liveClasses.length },
@@ -375,6 +402,83 @@ export default function AdminTeacherApprovalsPage() {
                         fontFamily: "'Cairo',sans-serif", opacity: busyId === cls.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}>
                       {busyId === cls.id ? '...' : '✕ رفض'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Courses Tab */}
+        {!loading && tab === 'courses' && (
+          courses.length === 0 ? (
+            <div style={card({ padding: '48px 0', textAlign: 'center' })}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>📚</div>
+              <p style={{ fontWeight: 700, fontSize: 15, color: DK.text, margin: '0 0 6px' }}>لا توجد دورات بانتظار الاعتماد</p>
+              <p style={{ color: DK.sub, fontSize: 13 }}>جميع طلبات الدورات تمت معالجتها</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+              {courses.map((course) => (
+                <div key={course.id} style={card({ padding: 18, display: 'flex', flexDirection: 'column', gap: 0 })}>
+                  <div style={{ marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                      background: 'rgba(59,130,246,0.1)', color: DK.blue,
+                    }}>
+                      {course.subject?.name ?? '—'}
+                    </span>
+                    {course.grade?.name && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                        background: 'rgba(139,92,246,0.1)', color: DK.purple,
+                      }}>
+                        {course.grade.name}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: DK.text, margin: '0 0 6px', lineHeight: 1.4 }}>
+                    {course.title}
+                  </p>
+                  {course.description && (
+                    <p style={{
+                      fontSize: 12, color: DK.sub, margin: '0 0 8px', lineHeight: 1.5,
+                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    }}>
+                      {course.description}
+                    </p>
+                  )}
+                  <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 12px' }}>
+                    {course.is_free ? 'مجانية' : `${Number(course.price || 0)} د.ك`}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <TeacherAvatar name={course.teacher?.name ?? '?'} />
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: DK.text, margin: 0 }}>{course.teacher?.name ?? '—'}</p>
+                      <p style={{ fontSize: 11, color: DK.dim, margin: 0 }}>{formatDate(course.created_at)}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                    <button
+                      onClick={() => handleCourseDecision(course, 'approved')}
+                      disabled={busyId === course.id}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: 'rgba(16,185,129,0.1)', color: DK.green, fontSize: 13, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif", opacity: busyId === course.id ? 0.5 : 1, transition: 'all 0.15s',
+                      }}>
+                      {busyId === course.id ? '...' : '✓ قبول'}
+                    </button>
+                    <button
+                      onClick={() => handleCourseDecision(course, 'rejected')}
+                      disabled={busyId === course.id}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: 'rgba(239,68,68,0.08)', color: DK.red, fontSize: 13, fontWeight: 700,
+                        fontFamily: "'Cairo',sans-serif", opacity: busyId === course.id ? 0.5 : 1, transition: 'all 0.15s',
+                      }}>
+                      {busyId === course.id ? '...' : '✕ رفض'}
                     </button>
                   </div>
                 </div>

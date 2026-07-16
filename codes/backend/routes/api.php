@@ -21,6 +21,7 @@ use App\Http\Controllers\Student\GamificationController as StudentGamificationCo
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Teacher\HomeController as TeacherHomeController;
 use App\Http\Controllers\Teacher\LiveClassController as TeacherLiveClassController;
+use App\Http\Controllers\Teacher\CourseController as TeacherCourseController;
 use App\Http\Controllers\Teacher\ExamController as TeacherExamController;
 use App\Http\Controllers\Teacher\HomeworkController as TeacherHomeworkController;
 use App\Http\Controllers\ParentPortal\HomeController as ParentHomeController;
@@ -329,6 +330,8 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::patch('approvals/homeworks/{homework}',                          [AdminTeacherApprovalController::class, 'approveHomework']);
     Route::get('approvals/live-classes',                                    [AdminTeacherApprovalController::class, 'pendingLiveClasses']);
     Route::patch('approvals/live-classes/{liveClass}',                      [AdminTeacherApprovalController::class, 'approveLiveClass']);
+    Route::get('approvals/courses',                                         [AdminTeacherApprovalController::class, 'pendingCourses']);
+    Route::patch('approvals/courses/{course}',                              [AdminTeacherApprovalController::class, 'approveCourse']);
 
     // Supervisor Assignment
     Route::get('supervisors',                                               [AdminSupervisorAssignmentController::class, 'supervisors']);
@@ -429,6 +432,7 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::get('dashboard',                          [TeacherHomeController::class, 'dashboard']);
     Route::get('me/subjects',                        [TeacherHomeController::class, 'mySubjects']);
     Route::get('courses',                            [TeacherHomeController::class, 'courses']);
+    Route::post('courses',                           [TeacherCourseController::class, 'store']);
     Route::get('live-classes',                       [TeacherHomeController::class, 'liveClasses']);
     Route::post('live-classes',                      [TeacherLiveClassController::class, 'store']);
     Route::put('live-classes/{liveClass}',           [TeacherLiveClassController::class, 'update']);

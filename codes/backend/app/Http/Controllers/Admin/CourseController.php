@@ -100,17 +100,18 @@ class CourseController extends Controller
         $categoryId = $this->legacyCategoryId($subject, $gradeId, $countryId);
 
         $course = Course::create([
-            'country_id'  => $countryId,
-            'subject_id'  => $subject->id,
-            'grade_id'    => $gradeId,
-            'category_id' => $categoryId,
-            'teacher_id'  => $teacherId,
-            'title'       => $request->title,
-            'description' => $request->description,
-            'price'       => $request->boolean('is_free') ? 0 : ($request->price ?? 0),
-            'is_free'     => $request->boolean('is_free'),
-            'is_active'   => true,
-            'sort_order'  => $request->sort_order ?? 0,
+            'country_id'       => $countryId,
+            'subject_id'       => $subject->id,
+            'grade_id'         => $gradeId,
+            'category_id'      => $categoryId,
+            'teacher_id'       => $teacherId,
+            'title'            => $request->title,
+            'description'      => $request->description,
+            'price'            => $request->boolean('is_free') ? 0 : ($request->price ?? 0),
+            'is_free'          => $request->boolean('is_free'),
+            'is_active'        => true,
+            'approval_status'  => 'approved',
+            'sort_order'       => $request->sort_order ?? 0,
         ]);
 
         $course->load([

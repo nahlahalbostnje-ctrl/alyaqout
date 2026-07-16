@@ -13,7 +13,7 @@ class Course extends Model
     protected $fillable = [
         'country_id', 'category_id', 'subject_id', 'grade_id', 'teacher_id',
         'title', 'description', 'thumbnail',
-        'price', 'is_free', 'is_active', 'sort_order',
+        'price', 'is_free', 'is_active', 'approval_status', 'sort_order',
     ];
 
     protected $casts = [
@@ -22,6 +22,11 @@ class Course extends Model
         'is_active'  => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    public function isApproved(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
 
     public function country(): BelongsTo  { return $this->belongsTo(Country::class); }
     public function category(): BelongsTo { return $this->belongsTo(Category::class); }

@@ -160,6 +160,7 @@ class HomeController extends Controller
 
         return Course::where('country_id', $countryId)
             ->where('is_active', true)
+            ->where('approval_status', 'approved')
             ->where(function ($q) use ($gradeId) {
                 $q->where(function ($extra) use ($gradeId) {
                     $extra->whereHas('subject', fn ($s) => $s->where('type', 'extracurricular')->where('is_active', true))

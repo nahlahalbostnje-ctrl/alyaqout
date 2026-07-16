@@ -19,6 +19,7 @@ export interface TeacherCourse {
   price: string;
   is_free: boolean;
   is_active: boolean;
+  approval_status?: 'pending' | 'approved' | 'rejected';
   category?: CourseCategory;
   subject?: { id: number; name: string; type: string };
   grade?: { id: number; name: string };
@@ -125,6 +126,26 @@ export const fetchTeacherCourses = createAsyncThunk(
   }
 );
 
+export const createTeacherCourse = createAsyncThunk(
+  'teacher/createCourse',
+  async (payload: {
+    subject_id: number;
+    grade_id?: number | null;
+    title: string;
+    description?: string;
+    price?: number;
+    is_free?: boolean;
+  }, { rejectWithValue }) => {
+    try {
+      const r = await api.post('/teacher/courses', payload);
+      return r.data.data as TeacherCourse;
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message ?? 'حدث خطأ');
+    }
+  }
+);
+
 export const fetchTeacherLiveClasses = createAsyncThunk(
   'teacher/fetchLiveClasses',
   async (scope: 'active' | 'archived' | undefined, { rejectWithValue }) => {
@@ -216,6 +237,10 @@ const teacherSlice = createSlice({
       .addCase(fetchTeacherCourses.pending,   (s) => { s.loading = true; s.error = null; })
       .addCase(fetchTeacherCourses.fulfilled, (s, a) => { s.loading = false; s.courses = a.payload; })
       .addCase(fetchTeacherCourses.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
+
+      .addCase(createTeacherCourse.fulfilled, (s, a) => {
+        s.courses = [a.payload, ...s.courses];
+      })
 
       .addCase(fetchTeacherLiveClasses.pending,   (s) => { s.loading = true; s.error = null; })
       .addCase(fetchTeacherLiveClasses.fulfilled, (s, a) => { s.loading = false; s.liveClasses = a.payload; })
