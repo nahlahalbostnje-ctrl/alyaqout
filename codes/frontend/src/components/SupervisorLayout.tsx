@@ -53,7 +53,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
 
       {/* Sidebar */}
       <aside style={{
-        width:240, flexShrink:0, display:'flex', flexDirection:'column',
+        width:280, flexShrink:0, display:'flex', flexDirection:'column',
         height:'100dvh', maxHeight:'100vh', overflow:'hidden',
         position: isMobile ? 'fixed' : 'sticky', top:0, right:0,
         zIndex: isMobile ? 50 : undefined,
@@ -66,7 +66,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         <div style={{ padding:'18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <BrandLogo size={44} style={{ flexShrink:0, borderRadius:10 }} />
-            <p style={{ color:'#C59341', fontSize:11, fontWeight:600 }}>بوابة المشرف</p>
+            <p style={{ color:'#C59341', fontSize:13, fontWeight:700 }}>بوابة المشرف</p>
           </div>
         </div>
 
@@ -75,16 +75,16 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to}
               style={({ isActive }) => ({
-                display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:12,
-                fontSize:12.5, fontWeight:600, textDecoration:'none', transition:'all 0.18s',
+                display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12,
+                fontSize:15, fontWeight: isActive ? 800 : 700, textDecoration:'none', transition:'all 0.18s',
                 ...(isActive
                   ? { background:'#C59341', color:'#fff', boxShadow:'0 4px 12px rgba(197,147,65,0.35)' }
-                  : { color:'rgba(255,255,255,0.5)', background:'transparent' }),
+                  : { color:'rgba(255,255,255,0.88)', background:'transparent' }),
               })}
-              onMouseEnter={(e) => { const el = e.currentTarget; if (!el.style.background.includes('#C59341')) { el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.85)'; } }}
-              onMouseLeave={(e) => { const el = e.currentTarget; if (!el.style.background.includes('#C59341')) { el.style.background='transparent'; el.style.color='rgba(255,255,255,0.5)'; } }}
+              onMouseEnter={(e) => { const el = e.currentTarget; if (!el.style.background.includes('#C59341')) { el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.95)'; } }}
+              onMouseLeave={(e) => { const el = e.currentTarget; if (!el.style.background.includes('#C59341')) { el.style.background='transparent'; el.style.color='rgba(255,255,255,0.88)'; } }}
             >
-              <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink:0 }}>
+              <svg width={18} height={18} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink:0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.d} />
               </svg>
               <span>{item.label}</span>

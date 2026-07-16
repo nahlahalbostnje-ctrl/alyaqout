@@ -53,8 +53,9 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside className="w-60 flex-shrink-0 flex flex-col"
+      <aside className="flex-shrink-0 flex flex-col"
         style={{
+          width: 280,
           background: '#1B2038', borderLeft: '1px solid rgba(255,255,255,0.07)',
           height: '100dvh', maxHeight: '100vh', overflow: 'hidden',
           position: isMobile ? 'fixed' : 'sticky', top: 0, right: 0,
@@ -67,7 +68,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         <div className="px-5 py-5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-3">
             <BrandLogo size={44} className="flex-shrink-0 rounded-xl" />
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#DDAD50' }}>بوابة المعلم</p>
+            <p style={{ color: '#DDAD50', fontSize: 13, fontWeight: 700 }}>بوابة المعلم</p>
           </div>
         </div>
 
@@ -80,12 +81,16 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-              style={({ isActive }) => isActive
-                ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff', boxShadow: '0 4px 14px rgba(201,149,42,0.3)' }
-                : { color: 'rgba(255,255,255,0.5)' }
-              }>
-              <svg className="w-[17px] h-[17px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+              className="flex items-center gap-3 px-3 rounded-xl transition-all duration-200"
+              style={({ isActive }) => ({
+                padding: '11px 12px',
+                fontSize: 15,
+                fontWeight: isActive ? 800 : 700,
+                ...(isActive
+                  ? { background: 'linear-gradient(135deg, #C9952A, #DDAD50)', color: '#fff', boxShadow: '0 4px 14px rgba(201,149,42,0.3)' }
+                  : { color: 'rgba(255,255,255,0.88)' }),
+              })}>
+              <svg className="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.d} />
               </svg>
               <span>{item.label}</span>

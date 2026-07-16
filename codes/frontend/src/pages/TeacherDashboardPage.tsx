@@ -14,7 +14,7 @@ const C = {
   text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
   shadow:'0 2px 14px rgba(0,0,0,0.06)', green:'#16A34A', orange:'#D97706', red:'#EF4444', blue:'#2563EB',
 };
-const SW = 232;  // sidebar width
+const SW = 280;  // sidebar width
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
@@ -134,10 +134,10 @@ export default function TeacherDashboardPage() {
         <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2 }}>
           {NAV.map((item, i) => {
             const inner = (active=false) => (
-              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:11, fontSize:12.5, fontWeight:active?700:500, background:active?C.goldGrad:'transparent', color:active?'#fff':'rgba(255,255,255,0.55)', cursor:'pointer', position:'relative' }}>
-                <span style={{ fontSize:14, lineHeight:1, flexShrink:0 }}>{item.icon}</span>
+              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 12px', borderRadius:11, fontSize:15, fontWeight:active?800:700, background:active?C.goldGrad:'transparent', color:active?'#fff':'rgba(255,255,255,0.88)', cursor:'pointer', position:'relative' }}>
+                <span style={{ fontSize:16, lineHeight:1, flexShrink:0 }}>{item.icon}</span>
                 <span style={{ flex:1 }}>{item.label}</span>
-                {(item.badge === -1 ? pendingTotal : item.badge) > 0 && <span style={{ background:C.red, color:'#fff', borderRadius:20, fontSize:9.5, fontWeight:700, padding:'1px 6px', minWidth:18, textAlign:'center' }}>{item.badge === -1 ? pendingTotal : item.badge}</span>}
+                {(item.badge === -1 ? pendingTotal : item.badge) > 0 && <span style={{ background:C.red, color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px', minWidth:18, textAlign:'center' }}>{item.badge === -1 ? pendingTotal : item.badge}</span>}
               </div>
             );
             if (item.to) return (

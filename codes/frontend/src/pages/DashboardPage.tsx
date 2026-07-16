@@ -16,7 +16,7 @@ const C = {
   shadow:'0 2px 14px rgba(0,0,0,0.06)', green:'#16A34A', orange:'#D97706',
   red:'#EF4444', blue:'#2563EB', purple:'#7C3AED', teal:'#0E7490',
 };
-const SW = 248;
+const SW = 280;
 
 // ─── Sidebar nav ──────────────────────────────────────────────────────────────
 const NAV = [
@@ -262,8 +262,8 @@ export default function DashboardPage() {
         <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:4, overflowY:'auto', minHeight:0 }}>
           {NAV.map((item,i)=>{
             const inner=(active=false)=>(
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:14, fontWeight:active?800:600, lineHeight:1.35, background:active?C.goldGrad:'transparent', color:active?'#1B2038':'rgba(255,255,255,0.82)', cursor:'pointer' }}>
-                <span style={{ fontSize:17, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:15, fontWeight:active?800:700, lineHeight:1.35, background:active?C.goldGrad:'transparent', color:active?'#1B2038':'rgba(255,255,255,0.88)', cursor:'pointer' }}>
+                <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
                 <span style={{ flex:1 }}>{item.label}</span>
               </div>
             );

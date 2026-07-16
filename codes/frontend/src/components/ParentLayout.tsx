@@ -77,7 +77,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
 
       {/* ─── Sidebar ─── */}
       <aside style={{
-        width: 248, flexShrink: 0, background: SB,
+        width: 280, flexShrink: 0, background: SB,
         position: isMobile ? 'fixed' : 'sticky',
         top: 0, right: 0, height: '100dvh', maxHeight: '100vh',
         zIndex: isMobile ? 50 : undefined,
@@ -90,7 +90,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         <div style={{ padding: '20px 14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
-            <p style={{ color: GOLD_L, fontSize: 10.5, fontWeight: 600 }}>بوابة ولي الأمر</p>
+            <p style={{ color: GOLD_L, fontSize: 13, fontWeight: 700 }}>بوابة ولي الأمر</p>
           </div>
         </div>
 
@@ -101,15 +101,15 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
               {({ isActive }) => (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 9,
-                  padding: '9px 11px', borderRadius: 11,
-                  fontSize: 12.5, fontWeight: isActive ? 700 : 500,
+                  padding: '11px 12px', borderRadius: 11,
+                  fontSize: 15, fontWeight: isActive ? 800 : 700,
                   background: isActive ? GOLD : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
                   boxShadow: isActive ? `0 4px 12px rgba(197,147,65,0.35)` : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
-                  <span style={{ width: 17, height: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}>
-                    <Icon d={item.d} size={16} />
+                  <span style={{ width: 18, height: 18, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? '#fff' : 'rgba(255,255,255,0.75)' }}>
+                    <Icon d={item.d} size={17} />
                   </span>
                   <span>{item.label}</span>
                 </div>

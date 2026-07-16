@@ -100,7 +100,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside style={{ width:220, flexShrink:0, display:'flex', flexDirection:'column', height:'100dvh', maxHeight:'100vh', overflow:'hidden', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, background:C.sidebar, borderLeft:'1px solid rgba(255,255,255,0.06)', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
+      <aside style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', height:'100dvh', maxHeight:'100vh', overflow:'hidden', position: isMobile ? 'fixed' : 'sticky', top:0, right:0, zIndex: isMobile ? 50 : undefined, background:C.sidebar, borderLeft:'1px solid rgba(255,255,255,0.06)', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none', transition:'transform 0.25s ease' }}>
 
         {/* Logo */}
         <div style={{ padding:'18px 16px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
@@ -119,14 +119,14 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
             <NavLink key={item.to} to={item.to} style={{ textDecoration:'none' }}>
               {({ isActive }) => (
                 <div style={{
-                  display:'flex', alignItems:'center', gap:9, padding:'8px 10px', borderRadius:10, marginBottom:2,
-                  fontSize:12, fontWeight: isActive ? 700 : 500,
+                  display:'flex', alignItems:'center', gap:9, padding:'11px 12px', borderRadius:10, marginBottom:2,
+                  fontSize:15, fontWeight: isActive ? 800 : 700,
                   background: isActive ? C.active : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
                   boxShadow: isActive ? '0 4px 12px rgba(197,147,65,0.35)' : 'none',
                   transition:'all 0.15s',
                 }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink:0 }}>
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} style={{ flexShrink:0 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                   </svg>
                   <span>{item.label}</span>

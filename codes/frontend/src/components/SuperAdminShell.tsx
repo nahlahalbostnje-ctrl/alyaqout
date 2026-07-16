@@ -14,7 +14,7 @@ export const C = {
   red:'#EF4444', blue:'#2563EB', purple:'#7C3AED', teal:'#0E7490',
 };
 
-export const SW = 248;
+export const SW = 280;
 
 const NAV = [
   { label:'الرئيسية',               to:'/dashboard',                   icon:'🏠', end:true },
@@ -110,8 +110,8 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
           {NAV.map((item, i) => (
             <NavLink key={i} to={item.to} end={item.end} style={{ textDecoration:'none' }}>
               {({ isActive }) => (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:14, fontWeight:isActive?800:600, lineHeight:1.35, background:isActive?C.goldGrad:'transparent', color:isActive?'#1B2038':'rgba(255,255,255,0.82)', cursor:'pointer', transition:'all 0.15s' }}>
-                  <span style={{ fontSize:17, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:15, fontWeight:isActive?800:700, lineHeight:1.35, background:isActive?C.goldGrad:'transparent', color:isActive?'#1B2038':'rgba(255,255,255,0.88)', cursor:'pointer', transition:'all 0.15s' }}>
+                  <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
                   <span style={{ flex:1 }}>{item.label}</span>
                 </div>
               )}

@@ -87,7 +87,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
       {/* ══ SIDEBAR ══ */}
       <aside
         style={{
-          width: 240,
+          width: 280,
           flexShrink: 0,
           background: SB,
           display: 'flex',
@@ -115,7 +115,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
             <div>
-              <p style={{ color: GOLD_L, fontSize: 11, fontWeight: 600 }}>{roleLabel}</p>
+              <p style={{ color: GOLD_L, fontSize: 13, fontWeight: 700 }}>{roleLabel}</p>
             </div>
           </div>
         </div>
@@ -148,12 +148,12 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
-                    padding: '9px 12px',
+                    padding: '11px 12px',
                     borderRadius: 12,
-                    fontSize: 13,
-                    fontWeight: isActive ? 700 : 500,
+                    fontSize: 15,
+                    fontWeight: isActive ? 800 : 700,
                     background: isActive ? GOLD : 'transparent',
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                     boxShadow: isActive ? `0 4px 12px rgba(197,147,65,0.35)` : 'none',
@@ -161,10 +161,10 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                 >
                   <span
                     style={{
-                      width: 18,
-                      height: 18,
+                      width: 20,
+                      height: 20,
                       flexShrink: 0,
-                      color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -172,7 +172,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                   >
                     {item.icon}
                   </span>
-                  <span style={{ flex: 1, fontSize: 12.5 }}>{item.label}</span>
+                  <span style={{ flex: 1, fontSize: 15, fontWeight: isActive ? 800 : 700, lineHeight: 1.35 }}>{item.label}</span>
                 </div>
               )}
             </NavLink>

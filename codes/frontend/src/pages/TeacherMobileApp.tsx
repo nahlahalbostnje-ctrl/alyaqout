@@ -83,13 +83,13 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
         <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199 }} />
       )}
       <div style={isMobile ? {
-        width: 240, background: T.sidebar, display: 'flex', flexDirection: 'column',
+        width: 280, background: T.sidebar, display: 'flex', flexDirection: 'column',
         height: '100dvh', maxHeight: '100vh', overflow: 'hidden',
         position: 'fixed', top: 0, right: 0, zIndex: 200,
         transform: open ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.25s ease', boxShadow: open ? '-8px 0 24px rgba(0,0,0,0.3)' : 'none',
       } : {
-        width: 240, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`,
+        width: 280, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`,
         display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100vh',
         overflow: 'hidden', position: 'sticky', top: 0, flexShrink: 0,
       }}>
@@ -120,7 +120,7 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
             <button key={item.screen} onClick={() => { onNav(item.screen); if (isMobile) onClose?.(); }}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, marginBottom: 3, background: isActive ? T.goldGrad : 'transparent', border: `1px solid ${isActive ? T.gold : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
-              <span style={{ color: isActive ? T.sidebar : T.sSub, fontWeight: isActive ? 800 : 500, fontSize: 13, flex: 1 }}>{item.label}</span>
+              <span style={{ color: isActive ? T.sidebar : 'rgba(255,255,255,0.88)', fontWeight: isActive ? 800 : 700, fontSize: 15, flex: 1 }}>{item.label}</span>
               {!isActive && badge > 0 && <Badge n={badge}/>}
             </button>
           );
