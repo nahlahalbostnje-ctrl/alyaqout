@@ -90,6 +90,7 @@ export default function AdminTeacherApprovalsPage() {
   const [courses, setCourses] = useState<PendingCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [countryError, setCountryError] = useState<string | null>(null);
 
   const loadExams = async () => {
     const { data } = await api.get('/admin/approvals/exams');
@@ -107,8 +108,17 @@ export default function AdminTeacherApprovalsPage() {
   };
 
   const loadCourses = async () => {
-    const { data } = await api.get('/admin/approvals/courses');
-    setCourses(data.courses);
+    try {
+      const { data } = await api.get('/admin/approvals/courses');
+      setCourses(data.courses);
+      setCountryError(null);
+    } catch (e: unknown) {
+      const err = e as { response?: { status?: number; data?: { message?: string } } };
+      if (err.response?.status === 422) {
+        setCountryError(err.response.data?.message ?? 'حساب الأدمن غير مرتبط بدولة.');
+      }
+      setCourses([]);
+    }
   };
 
   const load = async () => {
@@ -170,6 +180,12 @@ export default function AdminTeacherApprovalsPage() {
           </div>
           <p style={{ color: DK.sub, fontSize: 13, marginRight: 14 }}>مراجعة وقبول أو رفض محتوى المعلمين قبل نشره للطلاب</p>
         </div>
+
+        {countryError && (
+          <div style={card({ marginBottom: 16, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' })}>
+            <p style={{ color: DK.red, fontWeight: 700, fontSize: 13, margin: 0 }}>{countryError}</p>
+          </div>
+        )}
 
         {/* Pill Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>

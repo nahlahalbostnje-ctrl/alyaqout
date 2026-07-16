@@ -30,6 +30,13 @@ class CourseController extends Controller
         $teacherId = $this->teacherId();
         $countryId = $this->countryId();
 
+        if ($countryId <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حساب المعلم غير مرتبط بدولة. تواصل مع الإدارة.',
+            ], 422);
+        }
+
         $data = $request->validate([
             'subject_id'  => 'required|integer|exists:subjects,id',
             'grade_id'    => 'nullable|integer|exists:grades,id',

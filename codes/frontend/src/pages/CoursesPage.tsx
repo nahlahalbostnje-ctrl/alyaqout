@@ -346,11 +346,23 @@ export default function CoursesPage() {
                       )}
                     </td>
                     <td style={TD}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <ToggleSwitch on={course.is_active} onClick={() => handleToggle(course.id)} disabled={toggling === course.id} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: course.is_active ? DK.green : DK.red }}>
-                          {course.is_active ? 'نشط' : 'معطّل'}
-                        </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {course.approval_status === 'pending' && (
+                          <span style={{ padding: '2px 10px', borderRadius: 20, background: 'rgba(217,119,6,0.12)', color: '#D97706', fontSize: 11, fontWeight: 700, width: 'fit-content' }}>
+                            بانتظار الموافقة
+                          </span>
+                        )}
+                        {course.approval_status === 'rejected' && (
+                          <span style={{ padding: '2px 10px', borderRadius: 20, background: 'rgba(239,68,68,0.1)', color: '#EF4444', fontSize: 11, fontWeight: 700, width: 'fit-content' }}>
+                            مرفوضة
+                          </span>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <ToggleSwitch on={course.is_active} onClick={() => handleToggle(course.id)} disabled={toggling === course.id} />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: course.is_active ? DK.green : DK.red }}>
+                            {course.is_active ? 'نشط' : 'معطّل'}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td style={TD}>

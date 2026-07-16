@@ -110,6 +110,12 @@ class TeacherApprovalController extends Controller
     public function pendingCourses(): JsonResponse
     {
         $countryId = Auth::user()->country_id;
+        if (! $countryId) {
+            return response()->json([
+                'courses' => [],
+                'message' => 'حساب الأدمن غير مرتبط بدولة. اربط الدولة من لوحة السوبر أدمن أولاً.',
+            ], 422);
+        }
 
         $courses = Course::where('country_id', $countryId)
             ->where('approval_status', 'pending')

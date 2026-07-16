@@ -7,7 +7,7 @@ import { getApiError } from '../utils/apiError';
 const card = (e={}) => ({ background:C.card, borderRadius:18, padding:'16px', boxShadow:C.shadow, border:`1px solid ${C.border}`, ...e } as React.CSSProperties);
 
 type ContentStatus = 'pending'|'approved'|'rejected';
-type ContentKind = 'exam'|'homework'|'live_class';
+type ContentKind = 'exam'|'homework'|'live_class'|'course';
 
 interface ContentItem {
   id: number;
@@ -26,18 +26,22 @@ interface Meta {
   pending_exams: number;
   pending_homeworks: number;
   pending_live_classes: number;
+  pending_courses: number;
   approved_exams: number;
   approved_homeworks: number;
   approved_live_classes: number;
+  approved_courses: number;
   rejected_exams: number;
   rejected_homeworks: number;
   rejected_live_classes: number;
+  rejected_courses: number;
 }
 
 const KIND_INFO = {
   exam:       { icon:'📝', label:'اختبار', color:C.purple },
   homework:   { icon:'📚', label:'واجب',  color:C.orange },
   live_class: { icon:'📹', label:'حصة مباشرة', color:C.teal },
+  course:     { icon:'📖', label:'دورة', color:C.gold },
 };
 
 function fmtDate(iso: string | null | undefined): string {
@@ -54,9 +58,9 @@ export default function SAContentApprovalsPage() {
   const [activeTab, setActiveTab] = useState<'all'|ContentStatus>('pending');
   const [items, setItems] = useState<ContentItem[]>([]);
   const [meta, setMeta] = useState<Meta>({
-    pending_exams: 0, pending_homeworks: 0, pending_live_classes: 0,
-    approved_exams: 0, approved_homeworks: 0, approved_live_classes: 0,
-    rejected_exams: 0, rejected_homeworks: 0, rejected_live_classes: 0,
+    pending_exams: 0, pending_homeworks: 0, pending_live_classes: 0, pending_courses: 0,
+    approved_exams: 0, approved_homeworks: 0, approved_live_classes: 0, approved_courses: 0,
+    rejected_exams: 0, rejected_homeworks: 0, rejected_live_classes: 0, rejected_courses: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +74,12 @@ export default function SAContentApprovalsPage() {
       const status = activeTab === 'all' ? 'all' : activeTab;
       const { data } = await api.get('/super-admin/approvals', { params: { status } });
       setItems(data.data ?? []);
-      if (data.meta) setMeta(data.meta);
+      if (data.meta) setMeta({
+        pending_exams: 0, pending_homeworks: 0, pending_live_classes: 0, pending_courses: 0,
+        approved_exams: 0, approved_homeworks: 0, approved_live_classes: 0, approved_courses: 0,
+        rejected_exams: 0, rejected_homeworks: 0, rejected_live_classes: 0, rejected_courses: 0,
+        ...data.meta,
+      });
     } catch {
       setError('فشل جلب قائمة الاعتمادات');
       setItems([]);
@@ -81,9 +90,9 @@ export default function SAContentApprovalsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const pendingTotal = meta.pending_exams + meta.pending_homeworks + meta.pending_live_classes;
-  const approvedTotal = meta.approved_exams + meta.approved_homeworks + meta.approved_live_classes;
-  const rejectedTotal = meta.rejected_exams + meta.rejected_homeworks + meta.rejected_live_classes;
+  const pendingTotal = meta.pending_exams + meta.pending_homeworks + meta.pending_live_classes + meta.pending_courses;
+  const approvedTotal = meta.approved_exams + meta.approved_homeworks + meta.approved_live_classes + meta.approved_courses;
+  const rejectedTotal = meta.rejected_exams + meta.rejected_homeworks + meta.rejected_live_classes + meta.rejected_courses;
 
   const decide = async (item: ContentItem, status: 'approved'|'rejected') => {
     const key = `${item.kind}-${item.id}`;
@@ -93,7 +102,9 @@ export default function SAContentApprovalsPage() {
         ? `/super-admin/approvals/exams/${item.id}`
         : item.kind === 'homework'
           ? `/super-admin/approvals/homeworks/${item.id}`
-          : `/super-admin/approvals/live-classes/${item.id}`;
+          : item.kind === 'live_class'
+            ? `/super-admin/approvals/live-classes/${item.id}`
+            : `/super-admin/approvals/courses/${item.id}`;
       await api.patch(path, { status });
       setRejectModal(null);
       await load();
@@ -116,7 +127,7 @@ export default function SAContentApprovalsPage() {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
         <div>
           <h1 style={{color:C.text,fontWeight:900,fontSize:20}}>المحتوى والاعتمادات</h1>
-          <p style={{color:C.sub,fontSize:12,marginTop:2}}>اعتماد الامتحانات والواجبات والحصص المباشرة عبر كل الدول</p>
+          <p style={{color:C.sub,fontSize:12,marginTop:2}}>اعتماد الدورات والامتحانات والواجبات والحصص عبر كل الدول</p>
         </div>
         {pendingTotal > 0 && (
           <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:12,background:'rgba(217,119,6,0.1)',border:'1px solid rgba(217,119,6,0.25)'}}>
@@ -135,6 +146,7 @@ export default function SAContentApprovalsPage() {
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:10,marginBottom:14}}>
         {[
           {label:'بانتظار الاعتماد',value:pendingTotal,icon:'⏳',color:C.orange},
+          {label:'دورات معلّقة',value:meta.pending_courses,icon:'📖',color:C.gold},
           {label:'امتحانات معلّقة',value:meta.pending_exams,icon:'📝',color:C.purple},
           {label:'واجبات معلّقة',value:meta.pending_homeworks,icon:'📚',color:C.teal},
           {label:'حصص معلّقة',value:meta.pending_live_classes,icon:'📹',color:C.blue},
@@ -163,7 +175,7 @@ export default function SAContentApprovalsPage() {
         <table style={{width:'100%',borderCollapse:'collapse',minWidth:620}}>
           <thead>
             <tr style={{background:'rgba(0,0,0,0.03)'}}>
-              {['النوع','العنوان','الدورة','الدولة','المعلم','التاريخ','الحالة','إجراءات'].map((h,i)=>(
+              {['النوع','العنوان','المادة/الدورة','الدولة','المعلم','التاريخ','الحالة','إجراءات'].map((h,i)=>(
                 <th key={i} style={{padding:'12px 14px',textAlign:'right',color:C.sub,fontSize:11,fontWeight:700,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
               ))}
             </tr>

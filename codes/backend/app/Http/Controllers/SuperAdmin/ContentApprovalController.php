@@ -6,6 +6,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminActionLog;
+use App\Models\Course;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
@@ -20,7 +21,7 @@ class ContentApprovalController extends Controller
     {
         $request->validate([
             'status'     => 'nullable|in:pending,approved,rejected,all',
-            'type'       => 'nullable|in:exam,homework,live_class,all',
+            'type'       => 'nullable|in:exam,homework,live_class,course,all',
             'country_id' => 'nullable|exists:countries,id',
         ]);
 
@@ -29,6 +30,27 @@ class ContentApprovalController extends Controller
         $countryId = $request->filled('country_id') ? (int) $request->country_id : null;
 
         $items = collect();
+
+        if ($type === 'all' || $type === 'course') {
+            $courseQuery = Course::query()
+                ->with([
+                    'country:id,name',
+                    'teacher:id,name',
+                    'subject:id,name',
+                ])
+                ->orderByDesc('created_at');
+
+            if ($status !== 'all') {
+                $courseQuery->where('approval_status', $status);
+            }
+            if ($countryId) {
+                $courseQuery->where('country_id', $countryId);
+            }
+
+            foreach ($courseQuery->get() as $course) {
+                $items->push($this->formatCourse($course));
+            }
+        }
 
         if ($type === 'all' || $type === 'exam') {
             $examQuery = Exam::query()
@@ -102,13 +124,45 @@ class ContentApprovalController extends Controller
                 'pending_exams'         => Exam::where('status', 'pending')->count(),
                 'pending_homeworks'     => Homework::where('status', 'pending')->count(),
                 'pending_live_classes'  => LiveClass::where('approval_status', 'pending')->count(),
+                'pending_courses'       => Course::where('approval_status', 'pending')->count(),
                 'approved_exams'        => Exam::where('status', 'approved')->count(),
                 'approved_homeworks'    => Homework::where('status', 'approved')->count(),
                 'approved_live_classes' => LiveClass::where('approval_status', 'approved')->count(),
+                'approved_courses'      => Course::where('approval_status', 'approved')->count(),
                 'rejected_exams'        => Exam::where('status', 'rejected')->count(),
                 'rejected_homeworks'    => Homework::where('status', 'rejected')->count(),
                 'rejected_live_classes' => LiveClass::where('approval_status', 'rejected')->count(),
+                'rejected_courses'      => Course::where('approval_status', 'rejected')->count(),
             ],
+        ]);
+    }
+
+    /** PATCH /super-admin/approvals/courses/{course} */
+    public function decideCourse(Request $request, Course $course): JsonResponse
+    {
+        $request->validate(['status' => 'required|in:approved,rejected']);
+
+        $approved = $request->status === 'approved';
+
+        ActivityLogger::withoutLogging(function () use ($request, $course, $approved): void {
+            $course->update([
+                'approval_status' => $request->status,
+                'is_active'       => $approved,
+            ]);
+        });
+        $course->load(['country:id,name', 'teacher:id,name', 'subject:id,name']);
+
+        AdminActionLog::record(
+            $approved ? 'approve_course' : 'reject_course',
+            'Course',
+            $course->id,
+            $course->title
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $approved ? 'تم اعتماد الدورة.' : 'تم رفض الدورة.',
+            'data'    => $this->formatCourse($course),
         ]);
     }
 
@@ -182,6 +236,21 @@ class ContentApprovalController extends Controller
             'message' => $request->status === 'approved' ? 'تم اعتماد الحصة.' : 'تم رفض الحصة.',
             'data'    => $this->formatLiveClass($liveClass),
         ]);
+    }
+
+    private function formatCourse(Course $course): array
+    {
+        return [
+            'id'           => $course->id,
+            'kind'         => 'course',
+            'title'        => $course->title,
+            'course'       => $course->subject?->name,
+            'country'      => $course->country?->name,
+            'country_id'   => $course->country_id,
+            'teacher'      => $course->teacher?->name,
+            'status'       => $course->approval_status,
+            'created_at'   => $course->created_at?->toIso8601String(),
+        ];
     }
 
     private function formatExam(Exam $exam): array

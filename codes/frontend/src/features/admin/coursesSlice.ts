@@ -13,6 +13,7 @@ export interface Course {
   price: string;
   is_free: boolean;
   is_active: boolean;
+  approval_status?: 'pending' | 'approved' | 'rejected';
   sort_order: number;
   subject?: { id: number; name: string; type: string };
   grade?: { id: number; name: string };

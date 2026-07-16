@@ -148,6 +148,7 @@ Route::middleware(['auth:api', 'super_admin'])->prefix('super-admin')->group(fun
 
     // Content approvals (exams + homeworks) — cross-country
     Route::get('approvals',                              [SuperAdminContentApprovalController::class, 'index']);
+    Route::patch('approvals/courses/{course}',            [SuperAdminContentApprovalController::class, 'decideCourse']);
     Route::patch('approvals/exams/{exam}',                [SuperAdminContentApprovalController::class, 'decideExam']);
     Route::patch('approvals/homeworks/{homework}',        [SuperAdminContentApprovalController::class, 'decideHomework']);
     Route::patch('approvals/live-classes/{liveClass}',    [SuperAdminContentApprovalController::class, 'decideLiveClass']);
