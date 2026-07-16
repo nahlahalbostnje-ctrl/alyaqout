@@ -6,6 +6,7 @@ import {
   fetchTeacherDashboard,
 } from '../features/teacher/teacherSlice';
 import TeacherLayout from '../components/TeacherLayout';
+import { useCurrency } from '../hooks/useCurrency';
 
 const C = {
   bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
@@ -36,6 +37,7 @@ const EMPTY = { title: '', description: '', subject_id: '', grade_id: '', price:
 
 export default function TeacherCoursesPage() {
   const dispatch = useAppDispatch();
+  const { formatMoney, withLabel } = useCurrency();
   const { courses, subjects, loading, error } = useAppSelector((s) => s.teacher);
 
   const [showCreate, setShowCreate] = useState(false);
@@ -141,7 +143,7 @@ export default function TeacherCoursesPage() {
                     )}
                   </div>
                   <p style={{ fontWeight: 800, fontSize: 14, color: course.is_free ? C.green : C.gold, margin: 0 }}>
-                    {course.is_free ? 'مجاني' : `${course.price}`}
+                    {course.is_free ? 'مجاني' : formatMoney(course.price)}
                   </p>
                 </div>
               );
@@ -213,7 +215,7 @@ export default function TeacherCoursesPage() {
                     </label>
                     {!form.is_free && (
                       <input type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        placeholder="السعر" style={fieldStyle} />
+                        placeholder={withLabel('السعر')} style={fieldStyle} />
                     )}
                   </div>
                   <div style={{ background: C.amberBg, border: '1px solid rgba(217,119,6,0.2)', borderRadius: 12, padding: '10px 14px', fontSize: 12, color: C.amber, marginBottom: 18 }}>

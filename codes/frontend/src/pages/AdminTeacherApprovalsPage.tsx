@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
+import { useCurrency } from '../hooks/useCurrency';
 
 const DK = {
   gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -81,6 +82,7 @@ function TeacherAvatar({ name }: { name: string }) {
 }
 
 export default function AdminTeacherApprovalsPage() {
+  const { formatMoney } = useCurrency();
   const [tab, setTab] = useState<Tab>('exams');
   const [exams, setExams] = useState<PendingExam[]>([]);
   const [homeworks, setHomeworks] = useState<PendingHomework[]>([]);
@@ -450,7 +452,7 @@ export default function AdminTeacherApprovalsPage() {
                     </p>
                   )}
                   <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 12px' }}>
-                    {course.is_free ? 'مجانية' : `${Number(course.price || 0)} د.ك`}
+                    {course.is_free ? 'مجانية' : formatMoney(course.price || 0)}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                     <TeacherAvatar name={course.teacher?.name ?? '?'} />

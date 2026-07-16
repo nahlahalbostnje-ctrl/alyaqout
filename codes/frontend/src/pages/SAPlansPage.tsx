@@ -74,7 +74,8 @@ export default function SAPlansPage() {
                     ? Number(plan.price).toLocaleString()
                     : Math.floor(Number(plan.price)*12*0.8).toLocaleString()}
                 </span>
-                <span style={{color:C.sub,fontSize:12}}> ر.س / {billingCycle==='monthly'?'شهر':'سنة'}</span>
+                <span style={{color:C.sub,fontSize:12}}> / {billingCycle==='monthly'?'شهر':'سنة'}</span>
+                <p style={{color:C.dim,fontSize:11,marginTop:6}}>العملة حسب الدولة في لوحة التحكم</p>
               </div>
               {plan.description && (
                 <p style={{color:C.sub,fontSize:12,textAlign:'center',marginBottom:14,lineHeight:1.5}}>{plan.description}</p>

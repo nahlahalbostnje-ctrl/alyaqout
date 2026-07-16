@@ -10,6 +10,7 @@ import {
 } from '../features/admin/packagesSlice';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useCurrency } from '../hooks/useCurrency';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -60,6 +61,7 @@ const emptyForm = { name: '', description: '', price: 0, duration_days: 30, sort
 
 export default function PackagesPage() {
   const dispatch = useAppDispatch();
+  const { currency, withLabel } = useCurrency();
   const { list: packages, loading } = useAppSelector((s) => s.packages);
 
   const [showModal, setShowModal]   = useState(false);
@@ -188,7 +190,7 @@ export default function PackagesPage() {
                       <span style={{ fontSize:32, fontWeight:900, color:'#fff', lineHeight:1 }} dir="ltr">
                         {Number(pkg.price).toFixed(2)}
                       </span>
-                      <span style={{ fontSize:13, color:'rgba(255,255,255,0.85)', marginRight:4, fontWeight:600 }}>ر.س/شهر</span>
+                      <span style={{ fontSize:13, color:'rgba(255,255,255,0.85)', marginRight:4, fontWeight:600 }}>{currency ? `${currency}/شهر` : '/شهر'}</span>
                     </div>
                   </div>
 
@@ -265,7 +267,7 @@ export default function PackagesPage() {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14 }}>
               <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>السعر (ر.س)</label>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>{withLabel('السعر')}</label>
                 <input type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})}
                   min={0} step={0.01} required dir="ltr"
                   style={inp(focused==='price')}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentCourses } from '../features/student/studentSlice';
 import StudentLayout from '../components/StudentLayout';
+import { useCurrency } from '../hooks/useCurrency';
 
 const C = {
   bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
@@ -23,6 +24,7 @@ const SUBJECT_EMOJI: Record<string, string> = {
 export default function StudentCoursesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { formatMoney } = useCurrency();
   const { courses, loading } = useAppSelector(s => s.student);
   const [cat, setCat] = useState<Cat>('الكل');
   const [search, setSearch] = useState('');
@@ -142,7 +144,7 @@ export default function StudentCoursesPage() {
                       <span style={{ padding:'2px 8px', borderRadius:8, fontSize:10.5, fontWeight:700,
                         background: course.is_free ? 'rgba(16,185,129,0.1)' : 'rgba(37,99,235,0.08)',
                         color:      course.is_free ? '#10B981'              : '#2563EB' }}>
-                        {course.is_free ? 'مجاني' : `${course.price} ر.س`}
+                        {course.is_free ? 'مجاني' : formatMoney(course.price)}
                       </span>
                     </div>
                   </div>

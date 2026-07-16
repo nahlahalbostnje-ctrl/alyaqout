@@ -144,7 +144,7 @@ export default function SAAnalyticsPage() {
       up: revChange >= 0,
       icon: '💰',
       color: C.gold,
-      currency: 'ريال',
+      currency: undefined,
     },
   ];
 

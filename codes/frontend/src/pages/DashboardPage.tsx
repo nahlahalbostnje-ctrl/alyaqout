@@ -187,7 +187,7 @@ export default function DashboardPage() {
       { label:'إجمالي المعلمين',         value: fmt(s?.total_teachers),      sub: 'معلمون مسجّلون', icon:'👨‍🏫', color:C.teal },
       { label:'إجمالي الدورات',          value: fmt(s?.total_courses),       sub: 'دورات معتمدة', icon:'✅', color:C.green },
       { label:'الاشتراكات',              value: fmt(s?.total_subscriptions), sub: 'اشتراكات نشطة', icon:'⭐', color:C.orange },
-      { label:'الإيرادات هذا الشهر',     value: fmt(s?.revenue_this_month),  sub: `${revChange >= 0 ? '+' : ''}${revChange}% عن الشهر الماضي`, icon:'💰', color:C.green, currency:'ريال سعودي' as string | undefined },
+      { label:'الإيرادات هذا الشهر',     value: fmt(s?.revenue_this_month),  sub: `${revChange >= 0 ? '+' : ''}${revChange}% عن الشهر الماضي`, icon:'💰', color:C.green, currency: undefined as string | undefined },
     ];
   }, [stats, loading]);
 
@@ -538,7 +538,7 @@ export default function DashboardPage() {
                   <>
                     <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
                       <span style={{ color:C.text, fontWeight:900, fontSize:22, lineHeight:1 }}>{fmt(stats?.revenue_this_month)}</span>
-                      <span style={{ color:C.sub, fontSize:11 }}>ريال سعودي</span>
+                      <span style={{ color:C.sub, fontSize:11 }}>حسب عملة كل دولة</span>
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:10 }}>
                       <span style={{ color:(stats?.revenue_change_pct ?? 0) >= 0 ? C.green : C.red, fontSize:11, fontWeight:700 }}>

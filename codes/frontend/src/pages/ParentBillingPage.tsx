@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
 import api from '../services/axios';
+import { useCurrency } from '../hooks/useCurrency';
 
 interface Installment {
   id: number;
@@ -75,6 +76,7 @@ function DeviceRequestModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function ParentBillingPage() {
+  const { currency, formatMoney } = useCurrency();
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
@@ -117,7 +119,7 @@ export default function ParentBillingPage() {
             ) : (
               <>
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
-                  {([['monthly','شهري','99 ريال / شهر',''], ['quarterly','ربع سنوي','270 ريال / 3 أشهر','وفّر 27 ريال'], ['annual','سنوي','960 ريال / سنة','🎁 وفّر 228 ريال']] as const).map(([v,l,p,save]) => (
+                  {([['monthly','شهري',`99 ${currency || ''} / شهر`.trim(),''], ['quarterly','ربع سنوي',`270 ${currency || ''} / 3 أشهر`.trim(),`وفّر 27 ${currency || ''}`.trim()], ['annual','سنوي',`960 ${currency || ''} / سنة`.trim(),`🎁 وفّر 228 ${currency || ''}`.trim()]] as const).map(([v,l,p,save]) => (
                     <button key={v} onClick={() => setRenewPlan(v)}
                       style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${renewPlan===v?C.gold:'#EDE3CE'}`, background: renewPlan===v?C.goldBg:'#F8FAFC', cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                       <div>
@@ -179,7 +181,7 @@ export default function ParentBillingPage() {
               <div>
                 <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>إجمالي المدفوع</p>
                 <p style={{ color: C.green, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalPaid.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>ريال سعودي</p>
+                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
               </div>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="20" height="20" fill="none" stroke={C.green} viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -198,7 +200,7 @@ export default function ParentBillingPage() {
               <div>
                 <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>المستحقات</p>
                 <p style={{ color: C.amber, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalPending.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>ريال سعودي</p>
+                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
               </div>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: C.amberBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="20" height="20" fill="none" stroke={C.amber} viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -217,7 +219,7 @@ export default function ParentBillingPage() {
               <div>
                 <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>متأخرات</p>
                 <p style={{ color: C.red, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalOverdue.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>ريال سعودي</p>
+                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
               </div>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: C.redBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="20" height="20" fill="none" stroke={C.red} viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -247,7 +249,7 @@ export default function ParentBillingPage() {
               <div>
                 <p style={{ color: '#fff', fontWeight: 800, fontSize: 15, margin: 0 }}>لديك مستحقات معلقة</p>
                 <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: '2px 0 0' }}>
-                  إجمالي المبلغ المطلوب: {(totalPending + totalOverdue).toLocaleString('ar-SA')} ريال
+                  إجمالي المبلغ المطلوب: {formatMoney(totalPending + totalOverdue)}
                 </p>
               </div>
             </div>
@@ -277,7 +279,7 @@ export default function ParentBillingPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                      {['القسط #', 'الابن', 'الباقة', 'المبلغ (ريال)', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
+                      {['القسط #', 'الابن', 'الباقة', currency ? `المبلغ (${currency})` : 'المبلغ', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
                         <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
@@ -325,7 +327,7 @@ export default function ParentBillingPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {['#', 'القسط', 'الطفل', 'الباقة', 'المبلغ (ريال)', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
+                  {['#', 'القسط', 'الطفل', 'الباقة', currency ? `المبلغ (${currency})` : 'المبلغ', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
                     <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>

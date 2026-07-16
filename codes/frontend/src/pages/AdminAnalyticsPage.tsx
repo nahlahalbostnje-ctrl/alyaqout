@@ -3,6 +3,7 @@ import AdminLayout from '../components/AdminLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAdminStats } from '../features/admin/adminSlice';
 import { fetchUsers } from '../features/admin/usersSlice';
+import { useCurrency } from '../hooks/useCurrency';
 
 const C = {
   gold:'#C59341', goldL:'#D4A65A', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -97,6 +98,7 @@ function AIEvaluation({ teacher }: { teacher: TeacherRow }) {
 
 export default function AdminAnalyticsPage() {
   const dispatch = useAppDispatch();
+  const { withLabel } = useCurrency();
   const { dashboard, loading } = useAppSelector(s => s.admin);
   const { list: users } = useAppSelector(s => s.adminUsers);
   useEffect(() => { dispatch(fetchAdminStats()); dispatch(fetchUsers('teacher')); }, [dispatch]);
@@ -157,7 +159,7 @@ export default function AdminAnalyticsPage() {
             {/* Revenue Chart */}
             <div style={card({ marginBottom:20 })}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
-                <p style={{ color: C.text, fontWeight:800, fontSize:15 }}>الإيرادات الشهرية (ر.س)</p>
+                <p style={{ color: C.text, fontWeight:800, fontSize:15 }}>{withLabel('الإيرادات الشهرية')}</p>
                 <span style={{ fontSize:11, color: C.gold, fontWeight:700 }}>يناير — يونيو 2026</span>
               </div>
               {MONTHLY_DATA.length === 0 ? (

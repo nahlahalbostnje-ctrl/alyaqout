@@ -16,6 +16,7 @@ import {
 import api from '../services/axios';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useCurrency } from '../hooks/useCurrency';
 
 const DK = {
   gold: '#C59341', goldL: '#D4A65A',
@@ -86,6 +87,7 @@ type EligibleTeacher = { id: number; name: string };
 
 export default function CoursesPage() {
   const dispatch = useAppDispatch();
+  const { formatMoney, withLabel } = useCurrency();
   const { list: subjects } = useAppSelector((s) => s.subjects);
   const { list: courses, loading } = useAppSelector((s) => s.courses);
   const { list: allUsers } = useAppSelector((s) => s.adminUsers);
@@ -340,7 +342,7 @@ export default function CoursesPage() {
                       {course.is_free ? (
                         <span style={{ padding: '2px 10px', borderRadius: 20, background: 'rgba(16,185,129,0.10)', color: '#10B981', fontSize: 12, fontWeight: 700 }}>مجاني</span>
                       ) : (
-                        <span dir="ltr" style={{ fontWeight: 700 }}>{Number(course.price).toFixed(2)}</span>
+                        <span dir="ltr" style={{ fontWeight: 700 }}>{formatMoney(course.price)}</span>
                       )}
                     </td>
                     <td style={TD}>
@@ -430,7 +432,7 @@ export default function CoursesPage() {
             </label>
             {!form.is_free && (
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>السعر</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DK.gold, marginBottom: 6 }}>{withLabel('السعر')}</label>
                 <input type="number" min={0} step={0.01} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} dir="ltr" style={inp()} />
               </div>
             )}

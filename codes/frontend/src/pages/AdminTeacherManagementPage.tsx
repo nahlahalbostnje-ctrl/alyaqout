@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, toggleUser } from '../features/admin/usersSlice';
+import { useCurrency } from '../hooks/useCurrency';
 
 const C = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -46,6 +47,7 @@ const STATUS_LABEL: Record<Teacher['status'], { label: string; color: string; bg
 
 export default function AdminTeacherManagementPage() {
   const navigate = useNavigate();
+  const { formatMoney } = useCurrency();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -292,7 +294,7 @@ export default function AdminTeacherManagementPage() {
                   <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                     <div style={{ background:C.goldBg, border:`1px solid ${C.goldBdr}`, borderRadius:12, padding:'12px 14px', marginBottom:4 }}>
                       <p style={{ color:C.sub, fontSize:11, marginBottom:4 }}>الراتب الأساسي الحالي</p>
-                      <p style={{ color:C.gold, fontWeight:900, fontSize:20 }}>{selected.salary.toLocaleString()} ريال</p>
+                      <p style={{ color:C.gold, fontWeight:900, fontSize:20 }}>{formatMoney(selected.salary)}</p>
                     </div>
                     <div>
                       <label style={{ color:C.text, fontWeight:700, fontSize:13, display:'block', marginBottom:6 }}>تعديل الراتب الأساسي</label>
@@ -305,7 +307,7 @@ export default function AdminTeacherManagementPage() {
                     <div style={{ background:'#F8FAFC', borderRadius:12, padding:'12px 14px', border:`1px solid ${C.border}` }}>
                       <div style={{ display:'flex', justifyContent:'space-between' }}>
                         <span style={{ color:C.sub, fontSize:13 }}>الإجمالي المتوقع</span>
-                        <span style={{ color:C.green, fontWeight:800, fontSize:15 }}>{(editSalary+editIncentives).toLocaleString()} ريال</span>
+                        <span style={{ color:C.green, fontWeight:800, fontSize:15 }}>{formatMoney(editSalary+editIncentives)}</span>
                       </div>
                     </div>
                   </div>

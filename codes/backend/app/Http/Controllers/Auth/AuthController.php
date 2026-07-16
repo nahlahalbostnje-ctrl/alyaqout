@@ -328,6 +328,10 @@ class AuthController extends Controller
 
     private function userPayload(User $user): array
     {
+        $country = $user->relationLoaded('country')
+            ? $user->country
+            : $user->country()->first();
+
         return [
             'id'         => $user->id,
             'name'       => $user->name,
@@ -335,7 +339,12 @@ class AuthController extends Controller
             'email'      => $user->email,
             'role'       => $user->role,
             'country_id' => $user->country_id,
-            'country'    => $user->relationLoaded('country') ? $user->country : $user->country()->first(),
+            'country'    => $country ? [
+                'id'       => $country->id,
+                'name'     => $country->name,
+                'code'     => $country->code,
+                'currency' => $country->currency,
+            ] : null,
             'is_active'  => $user->is_active,
         ];
     }

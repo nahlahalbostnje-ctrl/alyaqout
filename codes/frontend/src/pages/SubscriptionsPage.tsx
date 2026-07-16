@@ -9,6 +9,7 @@ import AdminLayout from '../components/AdminLayout';
 import type { Subscription } from '../features/admin/subscriptionsSlice';
 import api from '../services/axios';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useCurrency } from '../hooks/useCurrency';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -96,6 +97,7 @@ function DaysBar({ days, total }: { days: number; total: number }) {
 
 export default function SubscriptionsPage() {
   const dispatch = useAppDispatch();
+  const { formatMoney } = useCurrency();
   const { items, stats, loading, error } = useAppSelector((s) => s.subscriptions);
   const students = useAppSelector((s) => s.adminUsers.list.filter((u) => u.role === 'student'));
   const packages = useAppSelector((s) => s.packages.list.filter((p) => p.is_active));
@@ -438,7 +440,7 @@ export default function SubscriptionsPage() {
           ) : (
             <div dir="rtl">
               <p style={{ color: DK.sub, fontSize:13, marginBottom:16 }}>
-                سيتم تقسيم مبلغ الاشتراك ({installmentSub.amount_paid} ريال) بالتساوي على عدد الأقساط المحدد، بدءاً من التاريخ المختار وبفاصل شهر بين كل قسط والآخر.
+                سيتم تقسيم مبلغ الاشتراك ({formatMoney(installmentSub.amount_paid)}) بالتساوي على عدد الأقساط المحدد، بدءاً من التاريخ المختار وبفاصل شهر بين كل قسط والآخر.
               </p>
               <div style={{ marginBottom:14 }}>
                 <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>عدد الأقساط</label>

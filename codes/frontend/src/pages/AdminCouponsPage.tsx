@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { useCurrency } from '../hooks/useCurrency';
 
 const DK = {
   gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
@@ -81,6 +82,7 @@ function generateCode() {
 }
 
 export default function AdminCouponsPage() {
+  const { currency, formatMoney } = useCurrency();
   const [coupons, setCoupons]   = useState<Coupon[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -257,7 +259,7 @@ export default function AdminCouponsPage() {
               {/* Discount Value */}
               <div>
                 <label style={{ color:DK.sub, fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>
-                  قيمة الخصم {form.discount_type === 'percentage' ? '(%)' : '(ر.س)'}
+                  قيمة الخصم {form.discount_type === 'percentage' ? '(%)' : (currency ? `(${currency})` : '')}
                 </label>
                 <input
                   required type="number" min="0.01" step="0.01"
@@ -397,7 +399,7 @@ export default function AdminCouponsPage() {
                         </span>
                       </td>
                       <td style={{ ...TD, fontWeight:700 }}>
-                        {coupon.discount_type==='percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} ر.س`}
+                        {coupon.discount_type==='percentage' ? `${coupon.discount_value}%` : formatMoney(coupon.discount_value)}
                       </td>
                       <td style={TD}>
                         <div>
