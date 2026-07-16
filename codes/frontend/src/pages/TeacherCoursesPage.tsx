@@ -29,6 +29,21 @@ interface NewCourseForm {
 
 const EMPTY_FORM: NewCourseForm = { title:'', description:'', price:'', is_free:false, grade:'', category:'' };
 
+const fieldStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  borderRadius: 12,
+  border: `1.5px solid ${C.border}`,
+  fontSize: 13,
+  fontFamily: "'Cairo',sans-serif",
+  outline: 'none',
+  boxSizing: 'border-box',
+  background: '#FFFFFF',
+  color: C.text,
+  WebkitTextFillColor: C.text,
+  caretColor: C.text,
+};
+
 const GRADES    = ['الصف الثالث','الصف الرابع','الصف الخامس','الصف السادس','الصف السابع','الصف الثامن','الصف التاسع','الصف العاشر'];
 const CATS      = ['الرياضيات','العلوم','اللغة العربية','اللغة الإنجليزية','التربية الإسلامية','الفيزياء','الكيمياء','الأحياء'];
 const CAT_EMOJI: Record<string,string> = {
@@ -215,7 +230,7 @@ export default function TeacherCoursesPage() {
                     <label style={{ display:'block', fontSize:12, fontWeight:700, color: C.sub, marginBottom:6 }}>عنوان الدورة *</label>
                     <input value={form.title} onChange={e=>setForm({...form,title:e.target.value})}
                       placeholder="مثال: الرياضيات — الوحدة 4" required
-                      style={{ width:'100%', padding:'10px 14px', borderRadius:12, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box' }} />
+                      style={fieldStyle} />
                   </div>
 
                   {/* Description */}
@@ -223,7 +238,7 @@ export default function TeacherCoursesPage() {
                     <label style={{ display:'block', fontSize:12, fontWeight:700, color: C.sub, marginBottom:6 }}>الوصف</label>
                     <textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}
                       placeholder="وصف مختصر للدورة..." rows={3}
-                      style={{ width:'100%', padding:'10px 14px', borderRadius:12, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', boxSizing:'border-box', resize:'none' }} />
+                      style={{ ...fieldStyle, resize: 'none' }} />
                   </div>
 
                   {/* Grade + Category */}
@@ -231,7 +246,7 @@ export default function TeacherCoursesPage() {
                     <div>
                       <label style={{ display:'block', fontSize:12, fontWeight:700, color: C.sub, marginBottom:6 }}>الصف الدراسي</label>
                       <select value={form.grade} onChange={e=>setForm({...form,grade:e.target.value})}
-                        style={{ width:'100%', padding:'10px 14px', borderRadius:12, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', background:'#fff' }}>
+                        style={fieldStyle}>
                         <option value="">— اختر —</option>
                         {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                       </select>
@@ -239,7 +254,7 @@ export default function TeacherCoursesPage() {
                     <div>
                       <label style={{ display:'block', fontSize:12, fontWeight:700, color: C.sub, marginBottom:6 }}>المادة</label>
                       <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}
-                        style={{ width:'100%', padding:'10px 14px', borderRadius:12, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none', background:'#fff' }}>
+                        style={fieldStyle}>
                         <option value="">— اختر —</option>
                         {CATS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -257,7 +272,7 @@ export default function TeacherCoursesPage() {
                       {!form.is_free && (
                         <input type="number" value={form.price} onChange={e=>setForm({...form,price:e.target.value})}
                           placeholder="السعر بالريال" min={0}
-                          style={{ flex:1, padding:'10px 14px', borderRadius:12, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'Cairo',sans-serif", outline:'none' }} />
+                          style={{ ...fieldStyle, flex: 1 }} />
                       )}
                     </div>
                   </div>
