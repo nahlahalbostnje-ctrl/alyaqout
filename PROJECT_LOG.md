@@ -1584,4 +1584,12 @@
 
 ---
 
+### [2026-07-19] — نظام التحديات (فردي + عائلي)
+
+- **ما تم:** جداول `challenges` + `challenge_progress_logs`؛ طالب ينشئ فردي/عائلي؛ ولي أمر يوافق/ينشئ/يسجّل تقدماً؛ إكمال يمنح 20 نقطة
+- **صفحات:** `/student/challenges`، `/parent/challenges`
+- **Deploy:** `php artisan migrate --force` ثم build
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

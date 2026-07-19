@@ -46,6 +46,7 @@ use App\Http\Controllers\ParentPortal\PersonalItemController as ParentPersonalIt
 use App\Http\Controllers\Supervisor\PersonalItemController as SupervisorPersonalItemController;
 use App\Http\Controllers\Live\AgoraController;
 use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
+use App\Http\Controllers\Student\ChallengeController as StudentChallengeController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
 use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotController;
@@ -53,6 +54,7 @@ use App\Http\Controllers\ParentPortal\BillingController as ParentBillingControll
 use App\Http\Controllers\Admin\InstallmentController as AdminInstallmentController;
 use App\Http\Controllers\ParentPortal\MessageController as ParentMessageController;
 use App\Http\Controllers\ParentPortal\PackageController as ParentPackageController;
+use App\Http\Controllers\ParentPortal\ChallengeController as ParentChallengeController;
 use App\Http\Controllers\Teacher\MessageController as TeacherMessageController;
 use App\Http\Controllers\SuperAdmin\MessageController as SuperAdminMessageController;
 use App\Http\Controllers\SuperAdmin\NotificationController as SuperAdminNotificationController;
@@ -422,6 +424,12 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::post('leagues/{league}/join',            [StudentLeagueController::class, 'join']);
     Route::get('leagues/{league}',                  [StudentLeagueController::class, 'show']);
 
+    // Challenges
+    Route::get('challenges',                        [StudentChallengeController::class, 'index']);
+    Route::post('challenges',                       [StudentChallengeController::class, 'store']);
+    Route::post('challenges/{challenge}/progress',  [StudentChallengeController::class, 'addProgress']);
+    Route::post('challenges/{challenge}/cancel',    [StudentChallengeController::class, 'cancel']);
+
     // Emergency
     Route::post('emergency',                        [StudentEmergencyController::class, 'request']);
     Route::get('emergency',                         [StudentEmergencyController::class, 'myRequests']);
@@ -502,6 +510,14 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::get('packages',                           [ParentPackageController::class, 'index']);
     Route::get('subscriptions',                      [ParentPackageController::class, 'subscriptions']);
     Route::post('subscriptions/request',             [ParentPackageController::class, 'requestSubscription']);
+
+    // Challenges (family)
+    Route::get('challenges',                         [ParentChallengeController::class, 'index']);
+    Route::post('challenges',                        [ParentChallengeController::class, 'store']);
+    Route::post('challenges/{challenge}/accept',     [ParentChallengeController::class, 'accept']);
+    Route::post('challenges/{challenge}/reject',     [ParentChallengeController::class, 'reject']);
+    Route::post('challenges/{challenge}/progress',   [ParentChallengeController::class, 'addProgress']);
+    Route::post('challenges/{challenge}/cancel',     [ParentChallengeController::class, 'cancel']);
 
     // Messages (parent ↔ teacher)
     Route::get('children/{student}/teachers',        [ParentMessageController::class, 'teachersForChild']);

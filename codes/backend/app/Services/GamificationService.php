@@ -13,6 +13,7 @@ class GamificationService
         'submit_homework' => 5,
         'submit_exam'     => 15,
         'complete_video'  => 3,
+        'complete_challenge' => 20,
     ];
 
     public function award(int $studentId, string $action, string $description = ''): GamificationPoint
