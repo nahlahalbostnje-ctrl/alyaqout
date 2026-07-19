@@ -65,7 +65,6 @@ export default function ParentAcademicProgressPage() {
   }, [selectedChild]);
 
   const exams = report?.exams.recent ?? [];
-  const avg = report?.exams.average ?? 0;
   const max = exams.length ? Math.max(...exams.map(e => e.pct)) : 0;
   const min = exams.length ? Math.min(...exams.map(e => e.pct)) : 0;
 
