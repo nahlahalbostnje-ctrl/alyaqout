@@ -1,7 +1,8 @@
 # دليل النشر والتشغيل — منصة الياقوت
 
-> آخر تحديث: **2026-07-06**  
-> الحالة: **منشور ويعمل** على `https://alyaqoutgroup.net`
+> آخر تحديث: **2026-07-19**  
+> الحالة: **منشور ويعمل** على `https://alyaqoutgroup.net`  
+> فهرس التوثيق: [`docs/README.md`](docs/README.md)
 
 ---
 
@@ -240,6 +241,7 @@ sudo -u baitpait php artisan migrate --force
 sudo -u baitpait php artisan optimize:clear
 
 # Frontend
+# إن كنت أصلاً داخل codes/frontend فلا تُعد cd codes/frontend (سيفشل المسار)
 cd ../frontend
 sudo -u baitpait npm install    # npm ci قد يفشل — npm install بديل مقبول
 sudo -u baitpait npm run build
@@ -247,6 +249,24 @@ sudo -u baitpait cp -r dist/. ../backend/public/
 ```
 
 > **تحذير:** لا تستخدم `rsync --delete dist/ public/` — يحذف `index.php` و `.htaccess` و `storage` من Laravel ويكسر `/api` و `/login`.
+
+### صور الصفحة الرئيسية (`landing/`)
+
+المصدر: `codes/frontend/public/landing/` — التفاصيل في [`docs/LANDING_PAGE.md`](docs/LANDING_PAGE.md).
+
+بعد وضع الصور أعد `npm run build` و `cp -r dist/. ../backend/public/` أو انسخ المجلد إلى:
+
+```
+codes/backend/public/landing/
+```
+
+### دليل الاستخدام (رابط داخلي خاص)
+
+```
+https://alyaqoutgroup.net/internal/docs/yg-3bb4b9c226a4.html
+```
+
+الملفات: `codes/backend/public/internal/docs/` — يُحدَّث عبر `git pull` دون حاجة لـ build.
 
 **بعد النشر** تأكد أن `public/` يحتوي:
 - `index.php` + `.htaccess` (Laravel)
