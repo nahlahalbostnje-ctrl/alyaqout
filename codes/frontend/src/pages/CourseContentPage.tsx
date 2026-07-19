@@ -77,7 +77,9 @@ export default function CourseContentPage() {
 
   const [videoModal, setVideoModal]   = useState<number | null>(null);
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
-  const [videoForm, setVideoForm]     = useState({ title: '', video_url: '', type: 'video' as ContentType, duration: '' });
+  const [videoForm, setVideoForm]     = useState({
+    title: '', video_url: '', type: 'video' as ContentType, duration: '', is_review: false,
+  });
   const [pendingDelete, setPendingDelete] = useState<
     | { kind: 'unit'; id: number; label: string; courseId: number }
     | { kind: 'lesson'; id: number; label: string; unitId: number }
@@ -162,13 +164,14 @@ export default function CourseContentPage() {
       video_url: videoForm.video_url.trim(),
       type: videoForm.type,
       duration: videoForm.duration ? parseInt(videoForm.duration) * 60 : 0,
+      is_review: videoForm.is_review,
     };
     if (editingVideoId !== null) {
       await dispatch(updateVideo({ lessonId: videoModal, videoId: editingVideoId, ...payload }));
     } else {
       await dispatch(addVideo({ lessonId: videoModal, ...payload }));
     }
-    setVideoForm({ title: '', video_url: '', type: 'video', duration: '' });
+    setVideoForm({ title: '', video_url: '', type: 'video', duration: '', is_review: false });
     setEditingVideoId(null);
     setVideoModal(null);
   }
@@ -303,7 +306,7 @@ export default function CourseContentPage() {
                             </div>
                             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                               <button
-                                onClick={() => { setVideoModal(lesson.id); setEditingVideoId(null); setVideoForm({ title: '', video_url: '', type: 'video', duration: '' }); if (!openLessons.has(lesson.id)) toggleLesson(lesson.id); }}
+                                onClick={() => { setVideoModal(lesson.id); setEditingVideoId(null); setVideoForm({ title: '', video_url: '', type: 'video', duration: '', is_review: false }); if (!openLessons.has(lesson.id)) toggleLesson(lesson.id); }}
                                 className="text-xs font-bold px-2.5 py-1 rounded-lg transition hover:opacity-80"
                                 style={{ background: 'rgba(59,130,246,0.08)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.15)' }}
                               >
@@ -343,6 +346,12 @@ export default function CourseContentPage() {
                                     <div className="flex items-center gap-2.5">
                                       <TypeIcon type={v.type} />
                                       <span className="text-sm" style={{ color: '#1B2038' }}>{v.title}</span>
+                                      {v.is_review && (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                          style={{ background: 'rgba(139,92,246,0.1)', color: '#7C3AED' }}>
+                                          مراجعة
+                                        </span>
+                                      )}
                                       {v.duration > 0 && (
                                         <span className="text-xs dir-ltr" style={{ color: DK.dimTxt }}>{fmtDuration(v.duration)}</span>
                                       )}
@@ -357,6 +366,7 @@ export default function CourseContentPage() {
                                             video_url: v.video_url,
                                             type: v.type,
                                             duration: v.duration ? String(Math.round(v.duration / 60)) : '',
+                                            is_review: !!v.is_review,
                                           });
                                         }}
                                         className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold"
@@ -555,6 +565,19 @@ export default function CourseContentPage() {
                   onBlur={(e) => (e.target.style.borderColor = '#EDE3CE')}
                 />
               )}
+              <label className="flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer"
+                style={{ background: videoForm.is_review ? 'rgba(124,58,237,0.08)' : '#F9FAFB', border: '1px solid #EDE3CE' }}>
+                <input
+                  type="checkbox"
+                  checked={videoForm.is_review}
+                  onChange={(e) => setVideoForm({ ...videoForm, is_review: e.target.checked })}
+                  style={{ width: 16, height: 16, accentColor: '#7C3AED' }}
+                />
+                <div>
+                  <p className="text-sm font-bold m-0" style={{ color: '#1B2038' }}>فيديو مراجعة</p>
+                  <p className="text-xs m-0 mt-0.5" style={{ color: DK.dimTxt }}>يظهر للطالب في قسم «فيديوهات المراجعة»</p>
+                </div>
+              </label>
               <div className="flex gap-3">
                 <button
                   type="submit"

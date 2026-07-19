@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Video extends Model
 {
-    protected $fillable = ['lesson_id', 'title', 'video_url', 'duration', 'type', 'sort_order'];
+    protected $fillable = ['lesson_id', 'title', 'video_url', 'duration', 'type', 'is_review', 'sort_order'];
 
     protected $casts = [
         'duration'   => 'integer',
         'sort_order' => 'integer',
+        'is_review'  => 'boolean',
     ];
 
     public function lesson(): BelongsTo     { return $this->belongsTo(Lesson::class); }

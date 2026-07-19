@@ -8,6 +8,7 @@ export interface VideoItem {
   video_url: string;
   duration: number;
   type: 'video' | 'pdf' | 'attachment';
+  is_review: boolean;
   sort_order: number;
 }
 
@@ -121,7 +122,14 @@ export const fetchVideos = createAsyncThunk(
 
 export const addVideo = createAsyncThunk(
   'courseContent/addVideo',
-  async (payload: { lessonId: number; title: string; video_url: string; type: string; duration: number }) => {
+  async (payload: {
+    lessonId: number;
+    title: string;
+    video_url: string;
+    type: string;
+    duration: number;
+    is_review: boolean;
+  }) => {
     const res = await api.post(`/admin/lessons/${payload.lessonId}/videos`, payload);
     return { lessonId: payload.lessonId, video: res.data.data as VideoItem };
   }
@@ -136,6 +144,7 @@ export const updateVideo = createAsyncThunk(
     video_url: string;
     type: string;
     duration: number;
+    is_review: boolean;
   }) => {
     const { lessonId, videoId, ...body } = payload;
     const res = await api.put(`/admin/lessons/${lessonId}/videos/${videoId}`, body);

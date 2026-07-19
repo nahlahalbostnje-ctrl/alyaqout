@@ -1576,4 +1576,12 @@
 
 ---
 
+### [2026-07-19] — فيديوهات المراجعة (is_review)
+
+- **ما تم:** حقل `is_review` على `videos`؛ أدمن البلد يعلّم الفيديو من محتوى الكورس + صفحة `/admin/review-videos`؛ الطالب يرى القائمة في `/student/review-videos` مع مشاهدة محمية خفيفة
+- **API:** `GET /student/review-videos`، `GET /admin/review-videos`، `PATCH /admin/videos/{id}/review`
+- **Deploy:** `php artisan migrate --force` ثم build للفرونت
+
+---
+
 *نهاية السجل — يُحدَّث بعد كل جلسة عمل*

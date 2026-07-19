@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\HomeController as StudentHomeController;
 use App\Http\Controllers\Student\CourseContentController as StudentCourseContentController;
+use App\Http\Controllers\Student\ReviewVideoController as StudentReviewVideoController;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
@@ -291,6 +292,8 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('lessons/{lesson}/videos',            [AdminVideoController::class, 'store']);
     Route::put('lessons/{lesson}/videos/{video}',     [AdminVideoController::class, 'update']);
     Route::delete('lessons/{lesson}/videos/{video}',  [AdminVideoController::class, 'destroy']);
+    Route::get('review-videos',                       [AdminVideoController::class, 'reviewIndex']);
+    Route::patch('videos/{video}/review',             [AdminVideoController::class, 'setReviewFlag']);
 
     // Coupons
     Route::get('coupons',                            [AdminCouponController::class, 'index']);
@@ -396,6 +399,7 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::get('courses/{course}/content',          [StudentCourseContentController::class, 'courseUnits']);
     Route::get('videos/{video}/watch',              [StudentCourseContentController::class, 'watchVideo']);
     Route::post('videos/{video}/complete',          [StudentCourseContentController::class, 'markComplete']);
+    Route::get('review-videos',                     [StudentReviewVideoController::class, 'index']);
 
     // Exams
     Route::get('exams',                             [StudentExamController::class, 'index']);

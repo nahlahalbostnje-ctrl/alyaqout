@@ -21,6 +21,7 @@ const navItems = [
   { to: '/admin/audit-log',    label: 'سجل العمليات',        icon: Icons.clipboard      },
   { to: '/admin/notifications', label: 'الإشعارات',          icon: Icons.bell           },
   { to: '/admin/leagues',       label: 'دوري ياقوت',          icon: Icons.trophy         },
+  { to: '/admin/review-videos', label: 'فيديوهات المراجعة',   icon: Icons.video          },
   { to: '/admin/my-items',           label: 'مهامي ومذكراتي',     icon: Icons.clipboard  },
   { to: '/admin/approval-requests', label: 'مركز الموافقات',    icon: Icons.clipboard  },
   { to: '/admin/teacher-management', label: 'إدارة المعلمين',      icon: Icons.users      },

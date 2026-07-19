@@ -45,6 +45,7 @@ class CourseContentController extends Controller
                     'title'     => $v->title,
                     'duration'  => $v->duration,
                     'type'      => $v->type,
+                    'is_review' => (bool) $v->is_review,
                     'completed' => isset($completedVideoIds[$v->id]),
                 ]);
 

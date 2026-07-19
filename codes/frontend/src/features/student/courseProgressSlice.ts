@@ -6,6 +6,7 @@ export interface ProgressVideo {
   title: string;
   duration: number;
   type: string;
+  is_review?: boolean;
   completed: boolean;
 }
 
