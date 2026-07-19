@@ -10,20 +10,30 @@ use App\Models\League;
 use App\Models\LeagueParticipant;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LeagueController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'type' => 'nullable|in:1v1,group',
+        ]);
+
         $countryId = (int) Auth::user()->country_id;
         $myId      = (int) Auth::id();
 
-        $leagues = League::where('country_id', $countryId)
+        $query = League::where('country_id', $countryId)
             ->where('status', '!=', 'ended')
             ->withCount('participants')
-            ->orderByDesc('created_at')
-            ->get()
+            ->orderByDesc('created_at');
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $leagues = $query->get()
             ->map(fn (League $l) => [
                 'id'                 => $l->id,
                 'name'               => $l->name,

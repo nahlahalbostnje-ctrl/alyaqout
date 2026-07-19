@@ -42,9 +42,11 @@ const initialState: LeagueState = {
 
 export const fetchLeagues = createAsyncThunk(
   'league/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (type: '1v1' | 'group' | undefined = undefined, { rejectWithValue }) => {
     try {
-      const { data } = await api.get('/student/leagues');
+      const { data } = await api.get('/student/leagues', {
+        params: type ? { type } : undefined,
+      });
       return data.leagues as League[];
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
