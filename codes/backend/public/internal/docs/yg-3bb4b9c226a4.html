@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>دليل استخدام منصة الياقوت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0D1E3A;
+      --navy2: #1B2038;
+      --gold: #C59341;
+      --gold-l: #D4A65A;
+      --bg: #F7F3EA;
+      --card: #FFFFFF;
+      --border: #E8DFCE;
+      --text: #1B2038;
+      --sub: #5B6472;
+      --dim: #8B93A1;
+      --green: #0F9F6E;
+      --amber: #D97706;
+      --red: #DC2626;
+      --blue: #2563EB;
+      --shadow: 0 8px 28px rgba(13, 30, 58, 0.08);
+      --radius: 16px;
+      --sidebar-w: 280px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Cairo", sans-serif;
+      background: linear-gradient(180deg, #F2EBE0 0%, var(--bg) 40%, #F8F5EF 100%);
+      color: var(--text);
+      line-height: 1.75;
+    }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout { display: flex; min-height: 100vh; }
+    aside {
+      width: var(--sidebar-w);
+      position: sticky; top: 0; height: 100vh;
+      overflow-y: auto;
+      background: var(--navy);
+      color: #fff;
+      padding: 22px 16px 40px;
+      flex-shrink: 0;
+      box-shadow: 8px 0 32px rgba(0,0,0,.12);
+    }
+    aside .brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px 18px;
+      border-bottom: 1px solid rgba(197,147,65,.25);
+      margin-bottom: 16px;
+    }
+    aside .brand-mark {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-l));
+      display: grid; place-items: center;
+      font-weight: 900; color: var(--navy); font-size: 18px;
+    }
+    aside .brand h1 { margin: 0; font-size: 15px; font-weight: 800; }
+    aside .brand p { margin: 2px 0 0; font-size: 11px; color: rgba(255,255,255,.55); }
+    aside nav a {
+      display: block;
+      color: rgba(255,255,255,.78);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      text-decoration: none;
+    }
+    aside nav a:hover, aside nav a.active {
+      background: rgba(197,147,65,.18);
+      color: #fff;
+      text-decoration: none;
+    }
+    aside nav .group {
+      margin: 14px 8px 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gold-l);
+      letter-spacing: .04em;
+    }
+
+    main { flex: 1; min-width: 0; padding: 28px 28px 80px; }
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #16325a 55%, #0a1628 100%);
+      color: #fff;
+      border-radius: 24px;
+      padding: 36px 32px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute; inset: auto -40px -60px auto;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(197,147,65,.35), transparent 70%);
+    }
+    .hero .eyebrow {
+      display: inline-block;
+      padding: 5px 14px; border-radius: 999px;
+      background: rgba(197,147,65,.15);
+      border: 1px solid rgba(197,147,65,.35);
+      color: var(--gold-l);
+      font-size: 12px; font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .hero h2 { margin: 0 0 10px; font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 900; position: relative; z-index: 1; }
+    .hero p { margin: 0; color: rgba(255,255,255,.72); max-width: 720px; position: relative; z-index: 1; font-size: 14.5px; }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 18px; position: relative; z-index: 1;
+    }
+    .chip {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 6px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+    }
+
+    section.block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    section.block > h2 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--navy);
+      display: flex; align-items: center; gap: 10px;
+    }
+    section.block > h2 .num {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-l));
+      color: var(--navy); display: grid; place-items: center;
+      font-size: 14px; font-weight: 900;
+    }
+    section.block > .lead {
+      margin: 0 0 18px; color: var(--sub); font-size: 14px;
+    }
+    h3 {
+      margin: 22px 0 10px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--navy2);
+      padding-right: 10px;
+      border-right: 3px solid var(--gold);
+    }
+    h4 { margin: 14px 0 6px; font-size: .95rem; font-weight: 800; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .card {
+      background: #FCFBF8;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+    }
+    .card .title {
+      font-weight: 800; font-size: 14px; margin: 0 0 6px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card .title .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--gold); flex-shrink: 0;
+    }
+    .card p { margin: 0; font-size: 12.5px; color: var(--sub); }
+    .card .steps {
+      margin: 8px 0 0; padding: 0 18px 0 0;
+      font-size: 12.5px; color: var(--text);
+    }
+    .card .steps li { margin-bottom: 3px; }
+    .note {
+      margin-top: 8px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(217,119,6,.08);
+      color: #92400E;
+      border: 1px solid rgba(217,119,6,.2);
+    }
+    .ok {
+      background: rgba(15,159,110,.08);
+      color: #065F46;
+      border-color: rgba(15,159,110,.2);
+    }
+    .warn {
+      background: rgba(220,38,38,.06);
+      color: #991B1B;
+      border-color: rgba(220,38,38,.18);
+    }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; margin: 10px 0 6px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: right;
+      vertical-align: top;
+    }
+    th { background: #F8F1E4; font-weight: 800; color: var(--navy); }
+    td path, code, .path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11.5px;
+      background: #F3F0EA;
+      padding: 1px 6px;
+      border-radius: 6px;
+      direction: ltr;
+      display: inline-block;
+    }
+
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 12px 0;
+    }
+    .flow span {
+      background: var(--navy); color: #fff;
+      padding: 8px 14px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 700;
+    }
+    .flow i {
+      color: var(--gold); font-style: normal; font-weight: 900;
+    }
+
+    .roles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px; margin-top: 14px;
+    }
+    .role {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(197,147,65,.25);
+      border-radius: 14px; padding: 12px;
+      text-align: center;
+    }
+    .role strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .role small { color: rgba(255,255,255,.55); font-size: 11px; }
+
+    footer.doc {
+      margin-top: 28px;
+      padding: 18px;
+      text-align: center;
+      color: var(--dim);
+      font-size: 12px;
+    }
+
+    .toc-mobile { display: none; }
+
+    @media (max-width: 920px) {
+      aside { display: none; }
+      .toc-mobile {
+        display: block;
+        background: var(--navy); color: #fff;
+        padding: 14px 16px; margin: -28px -28px 22px;
+      }
+      .toc-mobile details summary {
+        font-weight: 800; cursor: pointer;
+      }
+      .toc-mobile a {
+        display: block; color: rgba(255,255,255,.8);
+        padding: 6px 0; font-size: 13px;
+      }
+      main { padding: 20px 16px 60px; }
+    }
+
+    @media print {
+      aside, .toc-mobile { display: none !important; }
+      main { padding: 0; }
+      section.block { break-inside: avoid; box-shadow: none; }
+      .hero { box-shadow: none; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">ي</div>
+        <div>
+          <h1>دليل الياقوت</h1>
+          <p>آلية استخدام المنصة</p>
+        </div>
+      </div>
+      <nav>
+        <div class="group">البداية</div>
+        <a href="#intro">مقدمة ونظرة عامة</a>
+        <a href="#public">الزائر والصفحة العامة</a>
+        <a href="#login">تسجيل الدخول</a>
+        <div class="group">حسب الدور</div>
+        <a href="#student">بوابة الطالب</a>
+        <a href="#parent">بوابة ولي الأمر</a>
+        <a href="#teacher">بوابة المعلم</a>
+        <a href="#supervisor">بوابة المشرف</a>
+        <a href="#admin">لوحة أدمن الدولة</a>
+        <a href="#super">لوحة السوبر أدمن</a>
+        <div class="group">مراجع</div>
+        <a href="#shared">ميزات مشتركة</a>
+        <a href="#matrix">خريطة الصلاحيات</a>
+        <a href="#pending">ما هو قيد التطوير</a>
+        <a href="#tips">نصائح سريعة</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="toc-mobile">
+        <details>
+          <summary>فهرس الدليل</summary>
+          <a href="#intro">مقدمة</a>
+          <a href="#public">الزائر</a>
+          <a href="#login">تسجيل الدخول</a>
+          <a href="#student">الطالب</a>
+          <a href="#parent">ولي الأمر</a>
+          <a href="#teacher">المعلم</a>
+          <a href="#supervisor">المشرف</a>
+          <a href="#admin">أدمن الدولة</a>
+          <a href="#super">السوبر أدمن</a>
+          <a href="#shared">مشترك</a>
+          <a href="#pending">قيد التطوير</a>
+        </details>
+      </div>
+
+      <header class="hero" id="top">
+        <span class="eyebrow">منصة الياقوت لخدمات التعليم · دليل المستخدم</span>
+        <h2>شرح كامل لآلية استخدام المنصة</h2>
+        <p>
+          هذا الملف مرجع توثيقي يشرح كل دور وصلاحية وميزة ظاهرة في المنصة:
+          كيف تدخل، ماذا ترى في القائمة الجانبية، وما الخطوات العملية لكل عنصر —
+          مع توضيح ما هو مكتمل وما هو غير متاح بعد.
+        </p>
+        <div class="meta">
+          <span class="chip">الموقع: alyaqoutgroup.net</span>
+          <span class="chip">6 أدوار مستخدم</span>
+          <span class="chip">تحديث: يوليو 2026</span>
+          <span class="chip">لغة الدليل: العربية</span>
+        </div>
+        <div class="roles">
+          <div class="role"><strong>طالب</strong><small>تعلّم ونقاط</small></div>
+          <div class="role"><strong>ولي أمر</strong><small>متابعة الأبناء</small></div>
+          <div class="role"><strong>معلم</strong><small>محتوى وحصص</small></div>
+          <div class="role"><strong>مشرف</strong><small>متابعة تربوية</small></div>
+          <div class="role"><strong>أدمن دولة</strong><small>تشغيل الفرع</small></div>
+          <div class="role"><strong>سوبر أدمن</strong><small>إدارة المنصة</small></div>
+        </div>
+      </header>
+
+      <!-- INTRO -->
+      <section class="block" id="intro">
+        <h2><span class="num">1</span> مقدمة ونظرة عامة</h2>
+        <p class="lead">
+          منصة الياقوت منظومة تعليم إلكتروني عربية تدعم الفصول المباشرة، المحتوى الدراسي،
+          التقييم، التلعيب، متابعة أولياء الأمور، والإرشاد — ضمن صلاحيات منفصلة لكل دور.
+        </p>
+
+        <h3>كيف تتدفق المنصة؟</h3>
+        <div class="flow">
+          <span>زائر / حجز</span><i>←</i>
+          <span>إنشاء حساب (إدارة)</span><i>←</i>
+          <span>تسجيل الدخول</span><i>←</i>
+          <span>بوابة حسب الدور</span><i>←</i>
+          <span>التعلّم والمتابعة</span>
+        </div>
+
+        <h3>مفاهيم أساسية</h3>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> الدولة / الفرع</p>
+            <p>كل دولة لها أدمن يشغّل الصفوف والمواد والمستخدمين والباقات ضمن نطاقه.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الدورة والمحتوى</p>
+            <p>المعلم يبني محتوى الدورة؛ الأدمن يعتمد عند الحاجة؛ الطالب يدرس ويختبر.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الاشتراك والباقة</p>
+            <p>ولي الأمر أو الإدارة يربطان الطالب بباقة تمنحه حق الوصول للدورات والخدمات.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> التلعيب</p>
+            <p>نقاط، دوري، تحديات، وإنجازات لتحفيز الطالب ومتابعة الأسرة.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PUBLIC -->
+      <section class="block" id="public">
+        <h2><span class="num">2</span> الزائر والصفحة العامة</h2>
+        <p class="lead">ما يراه أي زائر قبل تسجيل الدخول على الصفحة الرئيسية للمنصة.</p>
+
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> اختيار الدولة</p>
+            <p>من أعلى الصفحة اختر الدولة (مثل فلسطين / لبنان) لعرض المحتوى المرتبط بها عند توفره.</p>
+            <ul class="steps">
+              <li>افتح الموقع.</li>
+              <li>من القائمة العلوية اختر الدولة.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> استكشاف المنصة</p>
+            <p>أقسام: المميزات، كيف نعمل؟، الأسئلة الشائعة، ودعوة للتسجيل.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> احجز مكانك الآن</p>
+            <p>يفتح نموذجاً لإرسال بيانات طالب محتمل (Lead) ليتواصل فريق المبيعات/التسجيل.</p>
+            <ul class="steps">
+              <li>اضغط «احجز مكانك الآن» أو زر الحجز في الهيرو.</li>
+              <li>عبّئ الاسم، الهاتف، الدولة، والمادة إن طُلبت.</li>
+              <li>أرسل وانتظر تواصل الفريق.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> اطلب حصة مجانية</p>
+            <p>نفس فكرة النموذج مع مصدر طلب «حصة مجانية» لتمييز نوع الاهتمام.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الأسئلة الشائعة</p>
+            <p>أسئلة عامة تُدار من السوبر أدمن (أسئلة المنصة). إن لم تظهر أسئلة فالقائمة فارغة في قاعدة البيانات.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> تسجيل الدخول</p>
+            <p>الزر الذهبي ينقلك إلى صفحة الدخول <span class="path">/login</span> — وليس نموذج الحجز.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <section class="block" id="login">
+        <h2><span class="num">3</span> تسجيل الدخول والتوجيه</h2>
+        <p class="lead">صفحة واحدة لكل الأدوار. بعد النجاح تُوجَّه تلقائياً حسب صلاحيتك.</p>
+
+        <h3>طريقتا الدخول</h3>
+        <table>
+          <thead><tr><th>الطريقة</th><th>الخطوات</th><th>لمن؟</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>إيميل وكلمة سر</td>
+              <td>أدخل البريد ثم كلمة المرور ← تسجيل الدخول</td>
+              <td>جميع الأدوار الذين لديهم بريد</td>
+            </tr>
+            <tr>
+              <td>جوال وواتساب</td>
+              <td>أدخل الرقم ← إرسال رمز OTP ← أدخل الرمز المكوّن من 6 أرقام</td>
+              <td>غالباً طلاب وأولياء مربوطون برقم جوال</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>أين تذهب بعد الدخول؟</h3>
+        <table>
+          <thead><tr><th>الدور</th><th>الوجهة</th></tr></thead>
+          <tbody>
+            <tr><td>طالب</td><td><span class="path">/student/dashboard</span></td></tr>
+            <tr><td>ولي أمر</td><td><span class="path">/parent/dashboard</span></td></tr>
+            <tr><td>معلم</td><td><span class="path">/teacher/dashboard</span></td></tr>
+            <tr><td>مشرف</td><td><span class="path">/supervisor/students</span></td></tr>
+            <tr><td>أدمن دولة</td><td><span class="path">/admin/dashboard</span></td></tr>
+            <tr><td>سوبر أدمن</td><td><span class="path">/dashboard</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note ok">نصيحة: إن ظهرت صفحة فارغة أو خطأ صلاحية، تأكد أن حسابك مفعّل وأن الدور صحيح لدى الإدارة.</div>
+      </section>
+
+      <!-- STUDENT -->
+      <section class="block" id="student">
+        <h2><span class="num">4</span> بوابة الطالب</h2>
+        <p class="lead">القائمة الجانبية اليمنى تعرض كل خدمات التعلّم والتحفيز والدعم. استخدم الشريط كما هو مرتّب أدناه.</p>
+
+        <h3>الأكاديمي اليومي</h3>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> الرئيسية</p>
+            <p>ملخص اليوم: تقدم، تنبيهات اشتراك، وروابط سريعة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الدورات</p>
+            <p>قائمة الدورات المسجّل فيها. ادخل الدورة لعرض الدروس والمحتوى.</p>
+            <ul class="steps">
+              <li>افتح «الدورات».</li>
+              <li>اختر دورة ← تصفّح الوحدات/الفيديوهات.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الحصص المباشرة</p>
+            <p>جدول الحصص القادمة. عند بدء الحصة ادخل غرفة البث.</p>
+            <ul class="steps">
+              <li>انتظر وقت الحصة المعتمدة.</li>
+              <li>اضغط دخول الغرفة المباشرة.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> امتحاناتي</p>
+            <p>عرض الامتحانات المتاحة وأداؤها ضمن المهلة المحددة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> واجباتي</p>
+            <p>تسليم الواجبات ومتابعة التصحيح والملاحظات.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مستوى التطور</p>
+            <p>تقرير تقدّمك الأكاديمي (درجات، نشاط، مؤشرات).</p>
+          </div>
+        </div>
+
+        <h3>التحفيز والتنافس</h3>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> نقاطي وإنجازاتي</p>
+            <p>رصيد النقاط والشارات المكتسبة من النشاط الدراسي.</p>
+            <div class="note">بعض أزرار الاستبدال/المكافآت قد تظهر «غير متاح بعد».</div>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> دوري الياقوت</p>
+            <p>لوحة صدارة الدوري الرسمي الذي تديره الإدارة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> نظام التحديات</p>
+            <p>أنشئ تحدياً فردياً أو تابع تقدّمك (قراءة، واجب، دراسة…).</p>
+            <ul class="steps">
+              <li>أضف تحدياً بعنوان وهدف.</li>
+              <li>سجّل التقدم حتى الإكمال.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> دوري الزملاء</p>
+            <p>منافسات 1 ضد 1 ضمن الدوريات من نوع الزملاء التي يعدّها الأدمن.</p>
+          </div>
+        </div>
+
+        <h3>الدعم والدراسة الذكية</h3>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> معلمي الذكي</p>
+            <p>محادثة مساعدة دراسية بالذكاء الاصطناعي (تلميحات لا إجابات جاهزة قدر الإمكان).</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مكتبة الياقوت</p>
+            <p>موارد حسب الدولة/الصف يرفعها الأدمن.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> حاضنة المواهب</p>
+            <p>عند أول دخول قد يُطلب استبيان موهبة؛ ثم يمكنك متابعة/تحديث ملفك ليراجعه الأدمن.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> صديق الدراسة</p>
+            <p>مؤقت بومودورو (نحو 25 دقيقة) + ملاحظات الجلسة + وضع ذكي للاستراحة.</p>
+            <ul class="steps">
+              <li>ابدأ الجلسة.</li>
+              <li>اكتب ملاحظاتك.</li>
+              <li>احفظ الجلسة عند الانتهاء.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مرشد الياقوت</p>
+            <p>اطلب جلسة إرشاد طلابي؛ يصلك رد أولي ويمكن للأدمن الرد لاحقاً.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الكبسولة الزمنية</p>
+            <p>اكتب رسالة شهرية لنفسك؛ تُفتح بعد انتهاء الشهر.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> فيديوهات المراجعة</p>
+            <p>مقاطع مراجعة يعدّها الأدمن ويُميّزها كفيديوهات مراجعة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> غرفة الطوارئ</p>
+            <p>طلب مساعدة عاجلة يصل للمعلمين. يتوفر أيضاً زر طوارئ عائم في الواجهة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> غرفة الدراسة 24/7</p>
+            <p>مركز روابط سريع للدعم: المساعد الذكي، الطوارئ، المرشد، صديق الدراسة…</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> تواصل مع المعلم</p>
+            <p>قائمة معلمي دوراتك المخوّلة وطرق التواصل المتاحة عبر المنصة.</p>
+            <div class="note ok">مسار «الرسائل» القديم يحوّل تلقائياً إلى هذه الصفحة.</div>
+          </div>
+        </div>
+
+        <h3>عناصر مساعدة في الواجهة</h3>
+        <ul>
+          <li><strong>جرس الإشعارات:</strong> تنبيهات النظام.</li>
+          <li><strong>Widget الشات بوت:</strong> استفسارات عامة أثناء التصفح.</li>
+          <li><strong>زر الطوارئ العائم:</strong> اختصار لغرفة الطوارئ.</li>
+        </ul>
+      </section>
+
+      <!-- PARENT -->
+      <section class="block" id="parent">
+        <h2><span class="num">5</span> بوابة ولي الأمر</h2>
+        <p class="lead">هدفها متابعة الأبناء أكاديمياً ومالياً، والتواصل مع المعلمين، والمشاركة في مجتمع الآباء.</p>
+
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> الرئيسية</p>
+            <p>لوحة ملخص سريعة لحالة الأبناء المرتبطين بحسابك.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> أبنائي</p>
+            <p>قائمة الأبناء؛ يمكن فتح تقرير تفصيلي لكل ابن.</p>
+            <ul class="steps">
+              <li>اختر الابن.</li>
+              <li>اعرض التقرير أو اطلب PDF/واتساب إن توفّر.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مؤشر التطور الأكاديمي</p>
+            <p>متوسط الامتحانات والواجبات والحضور وآخر النتائج من سجلات المنصة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الحضور والغياب</p>
+            <p>ملخص سجلات الحضور (حاضر/غائب/متأخر ونسبة الحضور).</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> التواصل مع المعلمين</p>
+            <p>محادثات مع معلمي الأبناء — ابدأ محادثة أو تابع الرسائل.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> طلب جلسة إرشاد</p>
+            <p>أرسل موضوع الجلسة وتفاصيلها؛ الأدمن يرد عبر نظام الإرشاد.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> المدفوعات والفواتير</p>
+            <p>عرض الفواتير وحالة الدفع.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الباقات والاشتراك</p>
+            <p>استعراض الباقات المتاحة والاشتراك الحالي للأبناء.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> دوري الياقوت للآباء</p>
+            <p>ترتيب عائلي ومقارنة مع أفضل العائلات في الدولة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> التحديات العائلية</p>
+            <p>تحديات مشتركة بين ولي الأمر والابن لتحفيز الالتزام.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> أكاديمية ولي الأمر</p>
+            <p>محتوى توعوي/تربوي تنشره إدارة الدولة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الإنجازات والشارات</p>
+            <p>نقاط الأبناء وأحدث إنجازاتهم التلعيبية.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> التقارير</p>
+            <p>تقارير دورية مجمّعة لمتابعة الأداء.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مساعد الياقوت الذكي</p>
+            <p>مساعد محادثة موجّه لأسئلة ولي الأمر التربوية/الإدارية ضمن المنصة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> ملاحظاتي</p>
+            <p>ملاحظات شخصية خاصة بك داخل البوابة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الإعدادات</p>
+            <p>عرض الملف وتحديث بيانات الدخول المتاحة.</p>
+            <div class="note">تغيير الصورة وحذف الحساب وبعض خيارات الحفظ قد تكون «غير متاح بعد».</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEACHER -->
+      <section class="block" id="teacher">
+        <h2><span class="num">6</span> بوابة المعلم</h2>
+        <p class="lead">مساحة المعلم لإدارة الدورات والحصص والامتحانات والواجبات واستقبال الطوارئ.</p>
+
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> الرئيسية</p>
+            <p>نظرة على نشاطك اليومي والاختصارات الأساسية.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> دوراتي</p>
+            <p>إنشاء/إدارة الدورات والمحتوى المرتبط بالمواد والصلاحيات الممنوحة لك.</p>
+            <ul class="steps">
+              <li>أضف دورة أو افتح دورة قائمة.</li>
+              <li>ارفع المحتوى والدروس.</li>
+              <li>انتظر اعتماد الإدارة إن كان مطلوباً في دولتكم.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> حصصي المباشرة</p>
+            <p>جدولة الحصص، بدء البث، وإنهاء الحصة. الجدول يُبنى منها أيضاً.</p>
+            <ul class="steps">
+              <li>أنشئ حصة بموعد ودورة.</li>
+              <li>بعد الموافقة (إن لزم) ابدأ البث في الوقت المحدد.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> امتحاناتي</p>
+            <p>إنشاء امتحان بأسئلة، نشره، ثم تصحيح التسليمات.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> واجباتي</p>
+            <p>إنشاء واجب، استلام التسليمات، وضع الدرجة والملاحظة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> طلبات الطوارئ</p>
+            <p>استقبال طلبات مساعدة عاجلة من الطلاب وقبولها/إنهاؤها.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الحضور والسلوك</p>
+            <p>صفحة إرشادية حالياً: الحضور التفصيلي يُدار عبر الحصص/المشرف؛ تعرض دوراتك مع رابط للحصص.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> جدولي</p>
+            <p>عرض أسبوعي/قائمة مبني تلقائياً من حصصك المباشرة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مذكراتي</p>
+            <p>مهام وملاحظات شخصية للمعلم.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUPERVISOR -->
+      <section class="block" id="supervisor">
+        <h2><span class="num">7</span> بوابة المشرف</h2>
+        <p class="lead">المشرف يتابع مجموعة طلاب يعيّنهم أدمن الدولة، ويدعم المتابعة التربوية والتواصل.</p>
+
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> طلابي</p>
+            <p>قائمة الطلاب المعيّنين لك ونقطة الانطلاق للمتابعة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> غرف الواجبات</p>
+            <p>مساحة مراجعة واجبات الطلاب المشرف عليهم.</p>
+            <div class="note">تظهر فارغة حتى يُربط مسار مراجعة المشرف بتسليمات الواجبات فعلياً.</div>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> غرف الاختبارات والتقييم</p>
+            <p>متابعة نتائج الاختبارات للطلاب تحت إشرافك.</p>
+            <div class="note">نفس ملاحظة الربط: الواجهة جاهزة وستمتلئ عند اكتمال التكامل.</div>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> تقارير الأداء والمتابعة</p>
+            <p>مؤشرات أداء الطلاب المعيّنين (من بيانات الأداء المتاحة في النظام).</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> جلسات الإرشاد والتوجيه</p>
+            <p>إدارة/متابعة جلسات إرشادية.</p>
+            <div class="note">قد تظهر رسالة بأن التفعيل الكامل يرتبط بخدمة البث لاحقاً.</div>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> مركز الرسائل والتواصل</p>
+            <p>تواصل مع الطلاب أو الأطراف ذات الصلة ضمن صلاحيتك.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> المساعد الذكي</p>
+            <p>مساعد محادثة لإرشاد المشرف في المتابعة التربوية.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> خططي الخاصة</p>
+            <p>مخططات ومهام شخصية للمشرف.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الإعدادات</p>
+            <p>إعدادات حساب المشرف.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="block" id="admin">
+        <h2><span class="num">8</span> لوحة أدمن الدولة</h2>
+        <p class="lead">تشغيل المنصة داخل دولة/فرع: الهيكل الأكاديمي، المستخدمون، المالية المحلية، المحتوى العام، والموافقات.</p>
+
+        <h3>الهيكل الأكاديمي والمستخدمون</h3>
+        <div class="grid">
+          <div class="card"><p class="title"><span class="dot"></span> الرئيسية</p><p>مؤشرات تشغيل الدولة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الصفوف الدراسية</p><p>تعريف الصفوف (أول، سادس…).</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المواد</p><p>تعريف المواد وربطها بالصفوف.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الدورات</p><p>إدارة الدورات ومحتواها واعتمادها ضمن النطاق.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المستخدمون</p><p>إنشاء طلاب/معلمين/أولياء وربط العلاقات.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المشرفون</p><p>تعيين مشرفين وربطهم بالطلاب.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> إدارة المعلمين</p><p>إدارة تشغيلية إضافية للمعلمين.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المدن</p><p>مدن الدولة للاستخدام في النماذج والتقارير.</p></div>
+        </div>
+
+        <h3>الاشتراكات والتسويق</h3>
+        <div class="grid">
+          <div class="card"><p class="title"><span class="dot"></span> الباقات</p><p>تعريف باقات الأسعار والمزايا.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الاشتراكات</p><p>ربط المستخدمين بالباقات ومتابعة الحالة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الكوبونات</p><p>أكواد خصم للعروض.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> العملاء المحتملون</p><p>طلبات الحجز/الحصة المجانية الواردة من الموقع.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> البانرات</p><p>صور/روابط تظهر في الصفحة العامة حسب الدولة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> إدارة المحتوى (CMS)</p><p>روابط اجتماعية ومحتوى عام للدولة.</p></div>
+        </div>
+
+        <h3>التشغيل التعليمي</h3>
+        <div class="grid">
+          <div class="card"><p class="title"><span class="dot"></span> الحصص المباشرة</p><p>الإشراف على الحصص واعتمادها عند الحاجة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> موافقات المعلمين</p><p>اعتماد طلبات/محتوى المعلمين.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> محتوى المعلمين</p><p>مراجعة مواد رفعها المعلمون.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مركز الموافقات</p><p>تجميع طلبات الموافقة العامة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> دوري ياقوت</p><p>إنشاء دوريات (بما فيها 1v1 للزملاء) وإدارتها.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> فيديوهات المراجعة</p><p>رفع/وسم فيديوهات مراجعة للطلاب.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مكتبة الياقوت</p><p>موارد المكتبة حسب الصف/الدولة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> حاضنة المواهب</p><p>مراجعة استبيانات وملفات مواهب الطلاب.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> طلبات الإرشاد</p><p>الرد على طلبات إرشاد الطلاب وأولياء الأمور.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> أكاديمية الآباء</p><p>نشر محتوى أكاديمية ولي الأمر.</p></div>
+        </div>
+
+        <h3>الحوكمة والتحليل</h3>
+        <div class="grid">
+          <div class="card"><p class="title"><span class="dot"></span> الإشعارات</p><p>إرسال إشعارات لمستخدمي الدولة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> سجل العمليات</p><p>تتبع إجراءات الأدمن.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> التحليلات وتقييم AI</p><p>لوحات تحليل؛ بعض أزرار التصدير قد تكون غير مفعّلة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مهامي ومذكراتي</p><p>مهام شخصية للأدمن.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الإعدادات</p><p>إعدادات لوحة أدمن الدولة.</p></div>
+        </div>
+      </section>
+
+      <!-- SUPER ADMIN -->
+      <section class="block" id="super">
+        <h2><span class="num">9</span> لوحة السوبر أدمن</h2>
+        <p class="lead">أعلى مستوى إداري للمنصة متعددة الدول: البنية، المالية الكلية، السياسات، والأمان.</p>
+
+        <div class="grid">
+          <div class="card"><p class="title"><span class="dot"></span> الرئيسية</p><p>مؤشرات المنصة العامة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مؤشرات المنصة</p><p>تحليلات أوسع على مستوى النظام.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الأفرع</p><p>إدارة الأفرع/المدارس المرتبطة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الدول</p><p>تفعيل الدول وتعيين أدمن الدولة لكل دولة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المعلمون والموظفون</p><p>إدارة عبر الدول.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الطلاب وأولياء الأمور</p><p>عرض/إدارة على نطاق المنصة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المحتوى والاعتمادات</p><p>اعتماد مركزي للمحتوى الحساس.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> المالية والفواتير</p><p>إيرادات وفواتير على مستوى المنصة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الخطط والاشتراكات</p><p>خطط النظام العليا.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> التقارير والتحليلات</p><p>تقارير إدارية؛ التصدير قد يكون معطّلاً جزئياً.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> نظام التنبيهات</p><p>إشعارات عامة عابرة للدول.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الأسئلة الشائعة</p><p>إدارة FAQ الصفحة العامة (أسئلة المنصة).</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الإعدادات العامة</p><p>بعض التبويبات للعرض فقط حالياً.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الصلاحيات والأدوار</p><p>عرض الأدوار والصلاحيات الافتراضية.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> سجل العمليات</p><p>Audit log على مستوى المنصة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مركز الأمان</p><p>أمان الحساب/الجلسة.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الرسائل</p><p>مركز رسائل السوبر أدمن.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> الدعم الفني</p><p>واجهة تذاكر؛ فتح تذكرة جديدة قد يكون غير متاح بعد.</p></div>
+          <div class="card"><p class="title"><span class="dot"></span> مركز التطوير</p><p>أدوات تقنية (مثل Webhooks) — الإضافة قد تكون معطّلة.</p></div>
+        </div>
+      </section>
+
+      <!-- SHARED -->
+      <section class="block" id="shared">
+        <h2><span class="num">10</span> ميزات مشتركة بين الأدوار</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> غرفة البث المباشر</p>
+            <p>مسار مشترك <span class="path">/live/:channel</span>. يدخلها المعلم والطالب (وأحياناً الأدمن كمراقب) عند بدء الحصة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الإشعارات</p>
+            <p>جرس في أغلب البوابات؛ صفحات إشعارات إضافية لبعض الأدوار خارج القائمة الرئيسية.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> المساعد الذكي / الشات بوت</p>
+            <p>متوفر للطالب (ودجت + غرف)، ولولي الأمر والمشرف، وتحليلات للأدمن.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> الطوارئ</p>
+            <p>الطالب يطلب ← المعلم يستقبل ← يُغلق الطلب بعد المعالجة.</p>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> المذكرات الشخصية</p>
+            <p>«مهامي / ملاحظاتي / مذكراتي / خططي» موجودة في عدة بوابات كمفكرة داخلية.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MATRIX -->
+      <section class="block" id="matrix">
+        <h2><span class="num">11</span> خريطة سريعة: من يفعل ماذا؟</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>المجال</th>
+              <th>من يُنشئ/يدير؟</th>
+              <th>من يستخدم؟</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>صفوف ومواد ودورات</td><td>أدمن (+ معلم للمحتوى)</td><td>طالب</td></tr>
+            <tr><td>حصص مباشرة</td><td>معلم / أدمن</td><td>طالب</td></tr>
+            <tr><td>امتحانات وواجبات</td><td>معلم</td><td>طالب · متابعة مشرف/ولي</td></tr>
+            <tr><td>اشتراكات وباقات</td><td>أدمن / سوبر</td><td>ولي أمر</td></tr>
+            <tr><td>دوري وتحديات</td><td>أدمن (دوري) · طالب/ولي (تحديات)</td><td>طالب · ولي أمر</td></tr>
+            <tr><td>مكتبة / مراجعة / مواهب</td><td>أدمن</td><td>طالب</td></tr>
+            <tr><td>إرشاد</td><td>أدمن للرد</td><td>طالب · ولي أمر</td></tr>
+            <tr><td>أكاديمية آباء</td><td>أدمن</td><td>ولي أمر</td></tr>
+            <tr><td>Leads وبانرات وFAQ</td><td>أدمن / سوبر</td><td>الزائر</td></tr>
+            <tr><td>تعيين مشرفين</td><td>أدمن</td><td>مشرف ← طلاب</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- PENDING -->
+      <section class="block" id="pending">
+        <h2><span class="num">12</span> ما هو قيد التطوير أو محدود حالياً؟</h2>
+        <p class="lead">حتى لا يُتوقَّع سلوك مكتمل من أزرار تظهر في الواجهة لكنها معطّلة أو غير مربوطة ببيانات.</p>
+        <ul>
+          <li>فتح تذاكر الدعم الفني وإضافة Webhooks من السوبر أدمن.</li>
+          <li>بعض تبويبات الإعدادات العامة وحفظها لدى السوبر أدمن.</li>
+          <li>تصدير بعض التقارير/التحليلات.</li>
+          <li>غرف واجبات واختبارات المشرف بانتظار ربط بيانات كامل.</li>
+          <li>تسجيل حضور المعلم التفصيلي كموديول منفصل (الصفحة توضيحية).</li>
+          <li>تغيير صورة ولي الأمر وحذف الحساب في الإعدادات.</li>
+          <li>بعض أزرار مكافآت النقاط أو الميكروفون في غرف الدراسة.</li>
+        </ul>
+        <div class="note warn">إذا ظهر زر بلون باهت وعنوان «غير متاح بعد» فهو مقصود — الميزة ليست جاهزة للإنتاج بعد.</div>
+      </section>
+
+      <!-- TIPS -->
+      <section class="block" id="tips">
+        <h2><span class="num">13</span> نصائح تشغيل سريعة</h2>
+        <div class="grid">
+          <div class="card">
+            <p class="title"><span class="dot"></span> لتفعيل دولة جديدة</p>
+            <ul class="steps">
+              <li>سوبر أدمن ← الدول ← تفعيل.</li>
+              <li>عيّن أدمن الدولة.</li>
+              <li>الأدمن يبني الصفوف والمواد والباقات.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> لربط طالب بمنصة كاملة</p>
+            <ul class="steps">
+              <li>أنشئ حساب طالب وولي أمر واربطهما.</li>
+              <li>فعّل اشتراكاً/باقة.</li>
+              <li>سجّل الطالب في الدورات.</li>
+              <li>(اختياري) عيّن مشرفاً.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> لحصة مباشرة ناجحة</p>
+            <ul class="steps">
+              <li>المعلم ينشئ الحصة على دورة معتمدة.</li>
+              <li>الأدمن يوافق إن لزم.</li>
+              <li>في الموعد: المعلم يبدأ ← الطالب يدخل من «الحصص المباشرة».</li>
+            </ul>
+          </div>
+          <div class="card">
+            <p class="title"><span class="dot"></span> لإثراء الصفحة العامة</p>
+            <ul class="steps">
+              <li>سوبر أدمن: أضف أسئلة FAQ المنصة.</li>
+              <li>أدمن الدولة: بانرات + روابط اجتماعية + متابعة الـ Leads.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <footer class="doc">
+        دليل استخدام منصة الياقوت · للاستخدام الداخلي والتدريب · يمكن طباعة الصفحة أو حفظها PDF من المتصفح<br />
+        <a href="#top">العودة للأعلى</a>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
