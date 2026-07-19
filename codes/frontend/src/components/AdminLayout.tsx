@@ -24,6 +24,8 @@ const navItems = [
   { to: '/admin/review-videos', label: 'فيديوهات المراجعة',   icon: Icons.video          },
   { to: '/admin/library',       label: 'مكتبة الياقوت',       icon: Icons.fileText       },
   { to: '/admin/talents',       label: 'حاضنة المواهب',       icon: Icons.graduationCap  },
+  { to: '/admin/counseling',    label: 'طلبات الإرشاد',       icon: Icons.clipboard      },
+  { to: '/admin/parent-academy', label: 'أكاديمية الآباء',    icon: Icons.fileText       },
   { to: '/admin/my-items',           label: 'مهامي ومذكراتي',     icon: Icons.clipboard  },
   { to: '/admin/approval-requests', label: 'مركز الموافقات',    icon: Icons.clipboard  },
   { to: '/admin/teacher-management', label: 'إدارة المعلمين',      icon: Icons.users      },

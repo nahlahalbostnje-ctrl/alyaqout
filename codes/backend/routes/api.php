@@ -15,12 +15,18 @@ use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Admin\LibraryController as AdminLibraryController;
 use App\Http\Controllers\Admin\TalentController as AdminTalentController;
+use App\Http\Controllers\Admin\CounselingController as AdminCounselingController;
+use App\Http\Controllers\Admin\ParentAcademyController as AdminParentAcademyController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\HomeController as StudentHomeController;
 use App\Http\Controllers\Student\CourseContentController as StudentCourseContentController;
 use App\Http\Controllers\Student\ReviewVideoController as StudentReviewVideoController;
 use App\Http\Controllers\Student\LibraryController as StudentLibraryController;
 use App\Http\Controllers\Student\TalentController as StudentTalentController;
+use App\Http\Controllers\Student\StudyBuddyController as StudentStudyBuddyController;
+use App\Http\Controllers\Student\TimeCapsuleController as StudentTimeCapsuleController;
+use App\Http\Controllers\Student\CounselorController as StudentCounselorController;
+use App\Http\Controllers\Student\TeacherContactController as StudentTeacherContactController;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
@@ -59,6 +65,8 @@ use App\Http\Controllers\Admin\InstallmentController as AdminInstallmentControll
 use App\Http\Controllers\ParentPortal\MessageController as ParentMessageController;
 use App\Http\Controllers\ParentPortal\PackageController as ParentPackageController;
 use App\Http\Controllers\ParentPortal\ChallengeController as ParentChallengeController;
+use App\Http\Controllers\ParentPortal\CounselingController as ParentCounselingController;
+use App\Http\Controllers\ParentPortal\InsightsController as ParentInsightsController;
 use App\Http\Controllers\Teacher\MessageController as TeacherMessageController;
 use App\Http\Controllers\SuperAdmin\MessageController as SuperAdminMessageController;
 use App\Http\Controllers\SuperAdmin\NotificationController as SuperAdminNotificationController;
@@ -308,6 +316,12 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::delete('library/{libraryItem}',            [AdminLibraryController::class, 'destroy']);
 
     Route::get('talents',                             [AdminTalentController::class, 'index']);
+    Route::get('counseling',                          [AdminCounselingController::class, 'index']);
+    Route::post('counseling/{counselingRequest}/respond', [AdminCounselingController::class, 'respond']);
+    Route::get('parent-academy',                      [AdminParentAcademyController::class, 'index']);
+    Route::post('parent-academy',                     [AdminParentAcademyController::class, 'store']);
+    Route::put('parent-academy/{parentAcademyItem}',  [AdminParentAcademyController::class, 'update']);
+    Route::delete('parent-academy/{parentAcademyItem}', [AdminParentAcademyController::class, 'destroy']);
 
     // Coupons
     Route::get('coupons',                            [AdminCouponController::class, 'index']);
@@ -418,6 +432,15 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::get('talent',                            [StudentTalentController::class, 'show']);
     Route::post('talent',                           [StudentTalentController::class, 'store']);
     Route::put('talent',                            [StudentTalentController::class, 'update']);
+
+    Route::get('study-buddy',                       [StudentStudyBuddyController::class, 'index']);
+    Route::post('study-buddy',                      [StudentStudyBuddyController::class, 'store']);
+    Route::get('time-capsules',                     [StudentTimeCapsuleController::class, 'index']);
+    Route::post('time-capsules',                    [StudentTimeCapsuleController::class, 'store']);
+    Route::post('time-capsules/{timeCapsule}/open', [StudentTimeCapsuleController::class, 'open']);
+    Route::get('counselor',                         [StudentCounselorController::class, 'index']);
+    Route::post('counselor',                        [StudentCounselorController::class, 'store']);
+    Route::get('teachers',                          [StudentTeacherContactController::class, 'teachers']);
 
     // Exams
     Route::get('exams',                             [StudentExamController::class, 'index']);
@@ -534,6 +557,12 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::post('challenges/{challenge}/reject',     [ParentChallengeController::class, 'reject']);
     Route::post('challenges/{challenge}/progress',   [ParentChallengeController::class, 'addProgress']);
     Route::post('challenges/{challenge}/cancel',     [ParentChallengeController::class, 'cancel']);
+
+    Route::get('counseling',                         [ParentCounselingController::class, 'index']);
+    Route::post('counseling',                        [ParentCounselingController::class, 'store']);
+    Route::get('academy',                            [ParentInsightsController::class, 'academy']);
+    Route::get('achievements',                       [ParentInsightsController::class, 'achievements']);
+    Route::get('league-board',                       [ParentInsightsController::class, 'league']);
 
     // Messages (parent ↔ teacher)
     Route::get('children/{student}/teachers',        [ParentMessageController::class, 'teachersForChild']);

@@ -38,6 +38,8 @@ import AdminLeaguePage            from './pages/AdminLeaguePage';
 import AdminReviewVideosPage      from './pages/AdminReviewVideosPage';
 import AdminLibraryPage           from './pages/AdminLibraryPage';
 import AdminTalentsPage           from './pages/AdminTalentsPage';
+import AdminCounselingPage        from './pages/AdminCounselingPage';
+import AdminParentAcademyPage     from './pages/AdminParentAcademyPage';
 import AdminCouponsPage           from './pages/AdminCouponsPage';
 import AdminBannersPage           from './pages/AdminBannersPage';
 import AdminLeadsPage             from './pages/AdminLeadsPage';
@@ -252,6 +254,12 @@ export default function App() {
         } />
         <Route path="/admin/talents" element={
           <PrivateRoute roles={['admin']}><AdminTalentsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/counseling" element={
+          <PrivateRoute roles={['admin']}><AdminCounselingPage /></PrivateRoute>
+        } />
+        <Route path="/admin/parent-academy" element={
+          <PrivateRoute roles={['admin']}><AdminParentAcademyPage /></PrivateRoute>
         } />
         <Route path="/admin/coupons" element={
           <PrivateRoute roles={['admin']}><AdminCouponsPage /></PrivateRoute>
