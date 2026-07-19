@@ -333,12 +333,12 @@ export default function LandingPage() {
 
           {/* Left actions */}
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <button onClick={()=>openModal('book_now')}
-              style={{ background:C.goldGrad, border:'none', borderRadius:12, color:'#fff', fontWeight:800, fontSize:13.5, fontFamily:FONT, padding:'10px 22px', cursor:'pointer', boxShadow:`0 4px 18px rgba(197,147,65,0.4)`, transition:'transform 0.2s,box-shadow 0.2s' }}
+            <Link to="/login"
+              style={{ background:C.goldGrad, border:'none', borderRadius:12, color:'#fff', fontWeight:800, fontSize:13.5, fontFamily:FONT, padding:'10px 22px', cursor:'pointer', boxShadow:`0 4px 18px rgba(197,147,65,0.4)`, transition:'transform 0.2s,box-shadow 0.2s', textDecoration:'none', display:'inline-block' }}
               onMouseEnter={e=>{ const el=e.currentTarget; el.style.transform='translateY(-2px)'; el.style.boxShadow='0 8px 26px rgba(197,147,65,0.55)'; }}
               onMouseLeave={e=>{ const el=e.currentTarget; el.style.transform='translateY(0)'; el.style.boxShadow='0 4px 18px rgba(197,147,65,0.4)'; }}>
               تسجيل الدخول
-            </button>
+            </Link>
             {/* Hamburger */}
             <button className="md:hidden" onClick={()=>setMenuOpen(m=>!m)}
               style={{ background:'none', border:'none', cursor:'pointer', padding:6, display:'flex', flexDirection:'column', gap:5 }}>

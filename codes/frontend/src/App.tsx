@@ -98,7 +98,6 @@ import SupervisorPersonalItemsPage from './pages/SupervisorPersonalItemsPage';
 import StudentEmergencyPage       from './pages/StudentEmergencyPage';
 import StudentPeerLeaguePage      from './pages/StudentPeerLeaguePage';
 import StudentStudy24Page         from './pages/StudentStudy24Page';
-import StudentMessagesPage        from './pages/StudentMessagesPage';
 import StudentTeacherContactPage  from './pages/StudentTeacherContactPage';
 import TeacherAttendancePage      from './pages/TeacherAttendancePage';
 import AdminApprovalsPage         from './pages/AdminApprovalsPage';
@@ -350,7 +349,7 @@ export default function App() {
           <PrivateRoute roles={['student']}><StudentStudy24Page /></PrivateRoute>
         } />
         <Route path="/student/messages" element={
-          <PrivateRoute roles={['student']}><StudentMessagesPage /></PrivateRoute>
+          <PrivateRoute roles={['student']}><Navigate to="/student/teacher-contact" replace /></PrivateRoute>
         } />
         <Route path="/student/teacher-contact" element={
           <PrivateRoute roles={['student']}><StudentTeacherContactPage /></PrivateRoute>

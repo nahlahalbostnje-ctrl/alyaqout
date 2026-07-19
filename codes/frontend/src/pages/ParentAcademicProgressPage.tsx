@@ -2,358 +2,170 @@ import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchParentDashboard } from '../features/parent/parentSlice';
+import api from '../services/axios';
 
 const C = {
-  gold: '#C59341', goldL: '#D4A65A',
-  goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
-  goldBg: 'rgba(197,147,65,0.08)', goldBdr: 'rgba(197,147,65,0.22)',
-  bg: '#F5EDD8', card: '#FFFFFF', navy: '#0D1E3A',
-  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: '#EDE3CE',
-  shadow: '0 2px 16px rgba(0,0,0,0.06)',
+  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
+  goldBg: 'rgba(197,147,65,0.08)', border: '#EDE3CE',
+  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF',
   green: '#10B981', greenBg: 'rgba(16,185,129,0.08)',
   red: '#EF4444', redBg: 'rgba(239,68,68,0.08)',
   blue: '#3B82F6', blueBg: 'rgba(59,130,246,0.08)',
-  purple: '#8B5CF6', purpleBg: 'rgba(139,92,246,0.08)',
   amber: '#F59E0B', amberBg: 'rgba(245,158,11,0.08)',
+  shadow: '0 2px 16px rgba(0,0,0,0.06)',
 };
 
-const card = (e: React.CSSProperties = {}): React.CSSProperties => ({
-  background: '#FFFFFF', borderRadius: 16, padding: 20,
-  boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #EDE3CE', ...e,
-});
-
-function PageHeader({ title, sub }: { title: string; sub: string }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <div style={{ width: 4, height: 22, borderRadius: 2, background: C.goldGrad }} />
-        <h1 style={{ color: C.text, fontWeight: 900, fontSize: 22, margin: 0 }}>{title}</h1>
-      </div>
-      <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>{sub}</p>
-    </div>
-  );
-}
-
 const CHILD_COLORS = ['#C59341', '#3B82F6', '#10B981', '#8B5CF6'];
-const SUBJECTS: string[] = [];
-const SUBJECT_ICONS: string[] = [];
-const MONTHS: string[] = [];
-const SCORES: Record<number, number[][]> = {};
-const EXAMS: { name: string; subject: string; date: string; score: number; total: number }[] = [];
 
-const SUBJECT_COLORS = [C.gold, C.blue, C.green, C.purple, C.amber];
+interface ReportData {
+  attendance: { total: number; present: number; absent: number; late: number; rate: number | null };
+  exams: {
+    count: number;
+    average: number | null;
+    recent: { title: string | null; score: number; total: number; pct: number; date: string | null }[];
+  };
+  homework: { submitted: number; late: number; average: number | null };
+  progress: { videos_completed: number };
+}
 
 export default function ParentAcademicProgressPage() {
   const dispatch = useAppDispatch();
   const { children } = useAppSelector(s => s.parent);
-  useEffect(() => { if (children.length === 0) dispatch(fetchParentDashboard()); }, [dispatch, children.length]);
+  const [selectedChild, setSelectedChild] = useState<number | null>(null);
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (children.length === 0) dispatch(fetchParentDashboard());
+  }, [dispatch, children.length]);
+
   const CHILDREN = children.map((c, i) => ({
-    id: c.id, name: c.name,
+    id: c.id,
+    name: c.name,
     initials: c.name.split(' ').slice(0, 2).map(w => w[0]).join(''),
     color: CHILD_COLORS[i % CHILD_COLORS.length],
   }));
-  const [selectedChild, setSelectedChild] = useState<number | null>(null);
-  useEffect(() => { if (CHILDREN.length && selectedChild == null) setSelectedChild(CHILDREN[0].id); }, [CHILDREN, selectedChild]);
-  const [selectedSubject, setSelectedSubject] = useState('الكل');
-  const [selectedSemester, setSelectedSemester] = useState('الفصل الأول');
 
-  const scores = (selectedChild != null ? SCORES[selectedChild] : undefined) ?? [];
-  const lastMonth = Math.max(0, MONTHS.length - 1);
+  useEffect(() => {
+    if (CHILDREN.length && selectedChild == null) setSelectedChild(CHILDREN[0].id);
+  }, [CHILDREN, selectedChild]);
 
-  const allScores = scores.flat();
-  const avg = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
-  const max = allScores.length ? Math.max(...allScores) : 0;
-  const min = allScores.length ? Math.min(...allScores) : 0;
-  const examCount = EXAMS.length;
+  useEffect(() => {
+    if (selectedChild == null) return;
+    setLoading(true);
+    setError(null);
+    api.get(`/parent/children/${selectedChild}/report`)
+      .then(r => setReport(r.data.data ?? null))
+      .catch(() => {
+        setReport(null);
+        setError('تعذّر تحميل مؤشر التطور');
+      })
+      .finally(() => setLoading(false));
+  }, [selectedChild]);
 
-  // Chart
-  const chartW = 520, chartH = 200;
-  const padL = 36, padR = 16, padT = 16, padB = 28;
-  const innerW = chartW - padL - padR;
-  const innerH = chartH - padT - padB;
-  const xStep = innerW / (MONTHS.length - 1);
-  const yScale = (v: number) => padT + innerH - ((v - 0) / 100) * innerH;
-  const xScale = (i: number) => padL + i * xStep;
-
-  const gridLines = [0, 25, 50, 75, 100];
+  const exams = report?.exams.recent ?? [];
+  const avg = report?.exams.average ?? 0;
+  const max = exams.length ? Math.max(...exams.map(e => e.pct)) : 0;
+  const min = exams.length ? Math.min(...exams.map(e => e.pct)) : 0;
 
   return (
     <ParentLayout>
       <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", padding: 24 }}>
-        <PageHeader title="مؤشر التطور الأكاديمي" sub="تابع تقدم أبنائك الأكاديمي عبر المواد والفصول الدراسية" />
-
-        {/* Filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-          {/* Child tabs */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            {CHILDREN.map(ch => (
-              <button
-                key={ch.id}
-                onClick={() => setSelectedChild(ch.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 16px', borderRadius: 40, border: 'none', cursor: 'pointer',
-                  background: selectedChild === ch.id ? C.goldGrad : '#fff',
-                  color: selectedChild === ch.id ? '#fff' : C.text,
-                  fontWeight: 700, fontSize: 13,
-                  boxShadow: selectedChild === ch.id ? '0 4px 12px rgba(197,147,65,0.3)' : C.shadow,
-                  transition: 'all 0.15s',
-                  fontFamily: "'Cairo',sans-serif",
-                }}
-              >
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%',
-                  background: selectedChild === ch.id ? 'rgba(255,255,255,0.3)' : ch.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontWeight: 900, fontSize: 11,
-                }}>{ch.initials}</div>
-                {ch.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Subject select */}
-          <select
-            value={selectedSubject}
-            onChange={e => setSelectedSubject(e.target.value)}
-            style={{
-              padding: '8px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
-              background: '#fff', color: C.text, fontSize: 13, fontWeight: 600,
-              fontFamily: "'Cairo',sans-serif", cursor: 'pointer',
-            }}
-          >
-            <option>الكل</option>
-            {SUBJECTS.map(s => <option key={s}>{s}</option>)}
-          </select>
-
-          {/* Semester select */}
-          <select
-            value={selectedSemester}
-            onChange={e => setSelectedSemester(e.target.value)}
-            style={{
-              padding: '8px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
-              background: '#fff', color: C.text, fontSize: 13, fontWeight: 600,
-              fontFamily: "'Cairo',sans-serif", cursor: 'pointer',
-            }}
-          >
-            <option>الفصل الأول</option>
-            <option>الفصل الثاني</option>
-            <option>السنة كاملة</option>
-          </select>
-        </div>
-
-        {/* KPI Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 14, marginBottom: 20 }}>
-          {[
-            { label: 'متوسط الدرجات', value: `${avg}%`, icon: '📊', color: C.gold, bg: C.goldBg },
-            { label: 'أعلى درجة', value: `${max}%`, icon: '🏆', color: C.green, bg: C.greenBg },
-            { label: 'أدنى درجة', value: `${min}%`, icon: '📉', color: C.red, bg: C.redBg },
-            { label: 'عدد الاختبارات', value: examCount, icon: '📝', color: C.blue, bg: C.blueBg },
-          ].map((k, i) => (
-            <div key={i} style={card({ padding: 18 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: '50%',
-                  background: k.bg, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: 22, flexShrink: 0,
-                }}>{k.icon}</div>
-                <div>
-                  <div style={{ fontSize: 24, fontWeight: 900, color: k.color, lineHeight: 1.1 }}>{k.value}</div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{k.label}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Chart */}
-        <div style={card({ marginBottom: 20, padding: 20 })}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 14 }}>منحنى التطور الأكاديمي</div>
-          <div style={{ overflowX: 'auto' }}>
-            <svg width={chartW} height={chartH} style={{ display: 'block', minWidth: chartW }}>
-              {/* Grid lines */}
-              {gridLines.map(g => (
-                <g key={g}>
-                  <line
-                    x1={padL} y1={yScale(g)} x2={chartW - padR} y2={yScale(g)}
-                    stroke="#EDE3CE" strokeWidth={1} strokeDasharray="4,3"
-                  />
-                  <text x={padL - 4} y={yScale(g) + 4} textAnchor="end" fontSize={9} fill={C.dim}>{g}</text>
-                </g>
-              ))}
-              {/* X axis labels */}
-              {MONTHS.map((m, i) => (
-                <text key={m} x={xScale(i)} y={chartH - 6} textAnchor="middle" fontSize={8.5} fill={C.dim}>{m}</text>
-              ))}
-              {/* Lines */}
-              {scores.map((subjectScores, si) => {
-                if (selectedSubject !== 'الكل' && SUBJECTS[si] !== selectedSubject) return null;
-                const pts = subjectScores.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
-                return (
-                  <g key={si}>
-                    <polyline points={pts} fill="none" stroke={SUBJECT_COLORS[si]} strokeWidth={2} strokeLinejoin="round" />
-                    {subjectScores.map((v, i) => (
-                      <circle key={i} cx={xScale(i)} cy={yScale(v)} r={3.5} fill={SUBJECT_COLORS[si]} stroke="#fff" strokeWidth={1.5} />
-                    ))}
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-          {/* Legend */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 12 }}>
-            {SUBJECTS.map((s, i) => (
-              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 24, height: 3, borderRadius: 2, background: SUBJECT_COLORS[i] }} />
-                <span style={{ fontSize: 11, color: C.sub }}>{s}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Monthly Delta Chart */}
-        <div style={{ ...card(), marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <div style={{ width: 4, height: 18, borderRadius: 2, background: C.goldGrad }} />
-            <span style={{ color: C.text, fontWeight: 800, fontSize: 14 }}>الفروق الشهرية غير التراكمية 📊</span>
-          </div>
-          <p style={{ color: C.sub, fontSize: 12, marginBottom: 14 }}>
-            التغيير في النقاط مقارنةً بالشهر السابق — موجب يعني تحسن، سالب يعني تراجع
-          </p>
-          <div style={{ overflowX: 'auto' }}>
-            <svg width={520} height={160} style={{ display: 'block', minWidth: 520 }}>
-              {/* Zero line */}
-              <line x1={36} y1={80} x2={504} y2={80} stroke={C.border} strokeWidth={1.5} />
-              <text x={30} y={84} textAnchor="end" fontSize={9} fill={C.dim}>0</text>
-              {/* Grid */}
-              {[-15, 15].map(g => {
-                const y = 80 - (g / 20) * 60;
-                return (
-                  <g key={g}>
-                    <line x1={36} y1={y} x2={504} y2={y} stroke={C.border} strokeWidth={0.6} strokeDasharray="3,3" />
-                    <text x={30} y={y + 4} textAnchor="end" fontSize={8} fill={C.dim}>{g > 0 ? `+${g}` : g}</text>
-                  </g>
-                );
-              })}
-              {/* Bars per subject, per month pair */}
-              {scores.map((subjectScores, si) => {
-                const step = (504 - 36) / (MONTHS.length - 1);
-                return subjectScores.slice(1).map((v, i) => {
-                  const delta = v - subjectScores[i];
-                  const clipped = Math.max(-20, Math.min(20, delta));
-                  const barH = Math.abs(clipped / 20) * 55;
-                  const x = 36 + (i + 0.5) * step + (si - 2) * 7;
-                  const positive = clipped >= 0;
-                  const y = positive ? 80 - barH : 80;
-                  return (
-                    <rect key={`${si}-${i}`} x={x - 3} y={y} width={6} height={Math.max(barH, 1)} rx={2}
-                      fill={positive ? SUBJECT_COLORS[si] : `${SUBJECT_COLORS[si]}88`} opacity={0.85} />
-                  );
-                });
-              })}
-              {/* Month labels */}
-              {MONTHS.slice(1).map((m, i) => {
-                const step = (504 - 36) / (MONTHS.length - 1);
-                return (
-                  <text key={m} x={36 + (i + 0.5) * step} y={155} textAnchor="middle" fontSize={8} fill={C.dim}>{m}</text>
-                );
-              })}
-            </svg>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
-            {SUBJECTS.map((s, i) => (
-              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 16, height: 8, borderRadius: 2, background: SUBJECT_COLORS[i] }} />
-                <span style={{ fontSize: 10, color: C.sub }}>{s}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Subject Breakdown */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 12 }}>تفاصيل المواد الدراسية</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
-            {SUBJECTS.map((subj, si) => {
-              const monthScores = scores[si];
-              const current = monthScores[lastMonth];
-              const prev = monthScores[lastMonth - 1];
-              const avg2 = Math.round(monthScores.reduce((a, b) => a + b, 0) / monthScores.length);
-              const up = current >= prev;
-              const classAvg = 72;
-              const aboveAvg = avg2 >= classAvg;
-              return (
-                <div key={subj} style={card({ padding: 16 })}>
-                  <div style={{ fontSize: 28, textAlign: 'center', marginBottom: 8 }}>{SUBJECT_ICONS[si]}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textAlign: 'center', marginBottom: 10 }}>{subj}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
-                    <span style={{ fontSize: 32, fontWeight: 900, color: SUBJECT_COLORS[si] }}>{current}</span>
-                    <span style={{ fontSize: 12, color: C.dim }}>/100</span>
-                    <span style={{ fontSize: 16, color: up ? C.green : C.red }}>{up ? '↑' : '↓'}</span>
-                  </div>
-                  {/* Bar */}
-                  <div style={{ height: 6, background: '#F3F4F6', borderRadius: 3, marginBottom: 8, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${current}%`, background: SUBJECT_COLORS[si], borderRadius: 3, transition: 'width 0.5s' }} />
-                  </div>
-                  <div style={{
-                    textAlign: 'center', fontSize: 10, fontWeight: 700,
-                    color: aboveAvg ? C.green : C.red,
-                    background: aboveAvg ? C.greenBg : C.redBg,
-                    borderRadius: 20, padding: '3px 8px',
-                  }}>
-                    {aboveAvg ? 'أعلى من المتوسط' : 'دون المتوسط'}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{ width: 4, height: 22, borderRadius: 2, background: C.goldGrad }} />
+            <h1 style={{ color: C.text, fontWeight: 900, fontSize: 22, margin: 0 }}>مؤشر التطور الأكاديمي</h1>
           </div>
+          <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>درجات وامتحانات وواجبات أبنائك من سجلات المنصة</p>
         </div>
 
-        {/* Exams Table */}
-        <div style={card()}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 14 }}>سجل الاختبارات</div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: C.goldBg }}>
-                  {['الاختبار', 'المادة', 'التاريخ', 'الدرجة', 'المئوية', 'التقييم'].map(h => (
-                    <th key={h} style={{ padding: '10px 12px', textAlign: 'right', color: C.gold, fontWeight: 800, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {EXAMS.map((ex, i) => {
-                  const pct = Math.round((ex.score / ex.total) * 100);
-                  const grade = pct >= 90 ? 'ممتاز' : pct >= 80 ? 'جيد جداً' : pct >= 70 ? 'جيد' : pct >= 60 ? 'مقبول' : 'ضعيف';
-                  const badgeColor = pct >= 80 ? C.green : pct >= 60 ? C.amber : C.red;
-                  const badgeBg = pct >= 80 ? C.greenBg : pct >= 60 ? C.amberBg : C.redBg;
-                  return (
-                    <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <td style={{ padding: '10px 12px', color: C.text, fontWeight: 600 }}>{ex.name}</td>
-                      <td style={{ padding: '10px 12px', color: C.sub }}>{ex.subject}</td>
-                      <td style={{ padding: '10px 12px', color: C.sub, direction: 'ltr', textAlign: 'right' }}>{ex.date}</td>
-                      <td style={{ padding: '10px 12px', color: C.text, fontWeight: 700 }}>{ex.score}/{ex.total}</td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ flex: 1, height: 6, background: '#F3F4F6', borderRadius: 3, overflow: 'hidden', minWidth: 60 }}>
-                            <div style={{ height: '100%', width: `${pct}%`, background: badgeColor, borderRadius: 3 }} />
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: badgeColor, minWidth: 32 }}>{pct}%</span>
+        {CHILDREN.length === 0 ? (
+          <p style={{ color: C.sub }}>لا أبناء مرتبطون بهذا الحساب</p>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {CHILDREN.map(ch => (
+                <button
+                  key={ch.id}
+                  onClick={() => setSelectedChild(ch.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 16px', borderRadius: 40, border: 'none', cursor: 'pointer',
+                    background: selectedChild === ch.id ? C.goldGrad : '#fff',
+                    color: selectedChild === ch.id ? '#fff' : C.text,
+                    fontWeight: 700, fontSize: 13, boxShadow: C.shadow,
+                    fontFamily: "'Cairo',sans-serif",
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: selectedChild === ch.id ? 'rgba(255,255,255,0.3)' : ch.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 900, fontSize: 11,
+                  }}>{ch.initials}</div>
+                  {ch.name}
+                </button>
+              ))}
+            </div>
+
+            {error && <p style={{ color: C.red, fontSize: 13 }}>{error}</p>}
+            {loading ? (
+              <p style={{ color: C.sub }}>جاري التحميل...</p>
+            ) : !report ? (
+              <p style={{ color: C.sub }}>لا توجد بيانات بعد</p>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 14, marginBottom: 20 }}>
+                  {[
+                    { label: 'متوسط الامتحانات', value: report.exams.average != null ? `${report.exams.average}%` : '—', icon: '📊', color: C.gold, bg: C.goldBg },
+                    { label: 'أعلى درجة حديثة', value: exams.length ? `${max}%` : '—', icon: '🏆', color: C.green, bg: C.greenBg },
+                    { label: 'أدنى درجة حديثة', value: exams.length ? `${min}%` : '—', icon: '📉', color: C.red, bg: C.redBg },
+                    { label: 'عدد الاختبارات', value: report.exams.count, icon: '📝', color: C.blue, bg: C.blueBg },
+                    { label: 'متوسط الواجبات', value: report.homework.average != null ? `${report.homework.average}%` : '—', icon: '📚', color: C.amber, bg: C.amberBg },
+                    { label: 'نسبة الحضور', value: report.attendance.rate != null ? `${report.attendance.rate}%` : '—', icon: '✅', color: C.green, bg: C.greenBg },
+                    { label: 'فيديوهات مكتملة', value: report.progress.videos_completed, icon: '🎬', color: C.blue, bg: C.blueBg },
+                  ].map((k, i) => (
+                    <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 18, boxShadow: C.shadow, border: `1px solid ${C.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 48, height: 48, borderRadius: '50%', background: k.bg,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                        }}>{k.icon}</div>
+                        <div>
+                          <p style={{ margin: 0, color: C.sub, fontSize: 12 }}>{k.label}</p>
+                          <p style={{ margin: 0, color: k.color, fontWeight: 900, fontSize: 20 }}>{k.value}</p>
                         </div>
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <span style={{
-                          background: badgeBg, color: badgeColor,
-                          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                        }}>{grade}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.border}` }}>
+                  <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: C.text }}>آخر الامتحانات</h2>
+                  {exams.length === 0 ? (
+                    <p style={{ color: C.dim, fontSize: 13, margin: 0 }}>لا امتحانات مُصحَّحة بعد لهذا الطالب</p>
+                  ) : exams.map((e, i) => (
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '10px 0', borderBottom: i < exams.length - 1 ? `1px solid ${C.border}` : 'none',
+                    }}>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: C.text }}>{e.title || 'امتحان'}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: 11, color: C.dim }}>
+                          {e.date ? new Date(e.date).toLocaleDateString('ar') : ''}
+                        </p>
+                      </div>
+                      <span style={{ fontWeight: 900, color: e.pct >= 70 ? C.green : e.pct >= 50 ? C.amber : C.red }}>
+                        {e.score}/{e.total} ({e.pct}%)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
     </ParentLayout>
   );

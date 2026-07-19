@@ -117,9 +117,9 @@ function RippleButton({ children, disabled, type = 'button' }: {
         style={{
           width: '100%', height: 56, borderRadius: 16, border: 'none',
           background: disabled
-            ? 'rgba(245,166,35,0.3)'
+            ? 'linear-gradient(135deg,#8a6a1a 0%,#a67c1a 100%)'
             : 'linear-gradient(135deg,#f5a623 0%,#ffd166 50%,#e09000 100%)',
-          color: disabled ? 'rgba(255,255,255,0.45)' : '#0d1b4b',
+          color: disabled ? 'rgba(255,255,255,0.85)' : '#0d1b4b',
           fontSize: 17, fontWeight: 900,
           fontFamily: "'Cairo','Tajawal',sans-serif",
           letterSpacing: '-0.01em',
