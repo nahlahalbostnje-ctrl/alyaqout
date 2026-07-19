@@ -36,6 +36,7 @@ import TeacherEmergencyPage       from './pages/TeacherEmergencyPage';
 import AdminSettingsPage          from './pages/AdminSettingsPage';
 import AdminLeaguePage            from './pages/AdminLeaguePage';
 import AdminReviewVideosPage      from './pages/AdminReviewVideosPage';
+import AdminLibraryPage           from './pages/AdminLibraryPage';
 import AdminCouponsPage           from './pages/AdminCouponsPage';
 import AdminBannersPage           from './pages/AdminBannersPage';
 import AdminLeadsPage             from './pages/AdminLeadsPage';
@@ -244,6 +245,9 @@ export default function App() {
         } />
         <Route path="/admin/review-videos" element={
           <PrivateRoute roles={['admin']}><AdminReviewVideosPage /></PrivateRoute>
+        } />
+        <Route path="/admin/library" element={
+          <PrivateRoute roles={['admin']}><AdminLibraryPage /></PrivateRoute>
         } />
         <Route path="/admin/coupons" element={
           <PrivateRoute roles={['admin']}><AdminCouponsPage /></PrivateRoute>
