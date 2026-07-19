@@ -14,11 +14,13 @@ use App\Http\Controllers\Admin\UnitController as AdminUnitController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Admin\LibraryController as AdminLibraryController;
+use App\Http\Controllers\Admin\TalentController as AdminTalentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\HomeController as StudentHomeController;
 use App\Http\Controllers\Student\CourseContentController as StudentCourseContentController;
 use App\Http\Controllers\Student\ReviewVideoController as StudentReviewVideoController;
 use App\Http\Controllers\Student\LibraryController as StudentLibraryController;
+use App\Http\Controllers\Student\TalentController as StudentTalentController;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
@@ -305,6 +307,8 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::patch('library/{libraryItem}/toggle',      [AdminLibraryController::class, 'toggle']);
     Route::delete('library/{libraryItem}',            [AdminLibraryController::class, 'destroy']);
 
+    Route::get('talents',                             [AdminTalentController::class, 'index']);
+
     // Coupons
     Route::get('coupons',                            [AdminCouponController::class, 'index']);
     Route::post('coupons',                           [AdminCouponController::class, 'store']);
@@ -411,6 +415,9 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::post('videos/{video}/complete',          [StudentCourseContentController::class, 'markComplete']);
     Route::get('review-videos',                     [StudentReviewVideoController::class, 'index']);
     Route::get('library',                           [StudentLibraryController::class, 'index']);
+    Route::get('talent',                            [StudentTalentController::class, 'show']);
+    Route::post('talent',                           [StudentTalentController::class, 'store']);
+    Route::put('talent',                            [StudentTalentController::class, 'update']);
 
     // Exams
     Route::get('exams',                             [StudentExamController::class, 'index']);
