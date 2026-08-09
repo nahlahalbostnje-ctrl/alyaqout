@@ -71,15 +71,27 @@ export default function StudentDashboardPage() {
     if (withP.length === 0) return null;
     return Math.round(withP.reduce((s, c) => s + (c.progress as number), 0) / withP.length);
   })();
+  /** لا نعرض 0% كضعف — ننتظر بدء حقيقي */
+  const performanceReady = avgProgress != null && avgProgress > 0;
 
-  const continueCourse = courses
+  const inProgress = courses
     .map((c) => ({
       id: c.id,
       title: c.title,
       progress: typeof c.progress === 'number' ? c.progress : 0,
     }))
     .filter((c) => c.progress > 0 && c.progress < 100)
-    .sort((a, b) => b.progress - a.progress)[0] ?? null;
+    .sort((a, b) => b.progress - a.progress)[0];
+
+  const continueCourse = inProgress ?? (
+    courses[0]
+      ? {
+          id: courses[0].id,
+          title: courses[0].title,
+          progress: typeof courses[0].progress === 'number' ? courses[0].progress : 0,
+        }
+      : null
+  );
 
   const tasks: { text: string; tone: 'warn' | 'info' | 'ok'; to: string }[] = [];
   if (pendingHw > 0) {
@@ -269,22 +281,34 @@ export default function StudentDashboardPage() {
               <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 14, alignSelf: 'stretch', textAlign: 'right' }}>
                 📈 مؤشر أداء الطالب
               </p>
-              <div style={{
-                width: 88, height: 88, borderRadius: '50%',
-                background: `conic-gradient(${ST.primary} ${(avgProgress ?? 0) * 3.6}deg, ${ST.border} 0)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+              {performanceReady ? (
+                <>
+                  <div style={{
+                    width: 88, height: 88, borderRadius: '50%',
+                    background: `conic-gradient(${ST.primary} ${(avgProgress as number) * 3.6}deg, ${ST.border} 0)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <div style={{
+                      width: 68, height: 68, borderRadius: '50%', background: ST.card,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{ color: ST.navy, fontWeight: 900, fontSize: 20, lineHeight: 1 }}>
+                        {avgProgress}%
+                      </span>
+                    </div>
+                  </div>
+                  <p style={{ margin: '10px 0 0', color: ST.sub, fontSize: 11.5, fontWeight: 600 }}>مستوى الأداء</p>
+                </>
+              ) : (
                 <div style={{
-                  width: 68, height: 68, borderRadius: '50%', background: ST.card,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexDirection: 'column',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '12px 8px', minHeight: 100,
                 }}>
-                  <span style={{ color: ST.navy, fontWeight: 900, fontSize: 20, lineHeight: 1 }}>
-                    {avgProgress != null ? `${avgProgress}%` : '—'}
-                  </span>
+                  <p style={{ margin: 0, color: ST.sub, fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>
+                    لم يبدأ التقييم بعد
+                  </p>
                 </div>
-              </div>
-              <p style={{ margin: '10px 0 0', color: ST.sub, fontSize: 11.5, fontWeight: 600 }}>مستوى الأداء</p>
+              )}
             </div>
           </div>
 
@@ -323,9 +347,9 @@ export default function StudentDashboardPage() {
             ))}
           </div>
 
-          {/* 4) Tasks (no quick notifications) */}
+          {/* 4) Tasks + notes */}
           <div style={{ ...card({ marginBottom: gap }) }}>
-            <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>📋 المهام</p>
+            <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>📋 شريط المهام والملاحظات</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {shownTasks.map((t) => (
                 <button
@@ -372,39 +396,95 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          {/* 6) Continue — one item */}
-          {continueCourse && (
-            <div style={{ ...card({ marginBottom: gap }) }}>
-              <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>أكمل من حيث توقفت</p>
+          {/* 6) Continue learning — always visible */}
+          <div style={{ ...card({ marginBottom: gap }) }}>
+            <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>📚 أكمل من حيث توقفت</p>
+            {continueCourse ? (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
                 padding: '12px 14px', borderRadius: 16, background: ST.bg, border: `1px solid ${ST.border}`,
               }}>
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 14 }}>{continueCourse.title}</p>
-                  <div style={{ height: 7, borderRadius: 99, background: ST.card, marginTop: 8, overflow: 'hidden' }}>
+                  <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 14 }}>
+                    {continueCourse.title}
+                    {continueCourse.progress > 0 ? ` — متابعة المحتوى` : ' — ابدأ الدرس'}
+                  </p>
+                  <p style={{ margin: '4px 0 8px', color: ST.sub, fontSize: 12 }}>
+                    الإنجاز {continueCourse.progress}%
+                  </p>
+                  <div style={{ height: 7, borderRadius: 99, background: ST.card, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', width: `${continueCourse.progress}%`,
                       background: ST.blueGrad, borderRadius: 99,
                     }} />
                   </div>
                 </div>
-                <span style={{ color: ST.primary, fontWeight: 800, fontSize: 13 }}>{continueCourse.progress}%</span>
                 <button
                   type="button"
                   onClick={() => navigate(`/student/courses/${continueCourse.id}/content`)}
                   style={{
-                    padding: '9px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                    padding: '10px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
                     background: ST.blueGrad, color: '#fff', fontWeight: 800, fontSize: 12.5, fontFamily: ST.font,
                   }}
                 >
-                  متابعة
+                  متابعة الدرس
                 </button>
               </div>
-            </div>
-          )}
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate('/student/catalog')}
+                style={{
+                  width: '100%', textAlign: 'right', padding: '12px 14px', borderRadius: 14,
+                  border: `1px solid ${ST.border}`, background: ST.bg, cursor: 'pointer',
+                  fontFamily: ST.font, color: ST.sub, fontWeight: 600, fontSize: 13,
+                }}
+              >
+                لا يوجد تقدّم بعد — تصفّح الكتالوج للبدء
+              </button>
+            )}
+          </div>
 
-          {/* 7) Announcements — hide when empty (no empty large section) */}
+          {/* 7) Challenges & rewards — light */}
+          <div style={{ ...card({ marginBottom: gap }) }}>
+            <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>🏆 التحديات والجوائز</p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: 10,
+            }}>
+              <button
+                type="button"
+                onClick={() => navigate('/student/challenges')}
+                style={{
+                  textAlign: 'right', padding: '14px', borderRadius: 16, cursor: 'pointer',
+                  border: `1px solid ${ST.primary}33`, background: ST.primarySoft,
+                  fontFamily: ST.font,
+                }}
+              >
+                <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 13 }}>تحدي اليوم</p>
+                <p style={{ margin: '6px 0 0', color: ST.text, fontSize: 12.5, fontWeight: 600 }}>
+                  {pendingHw > 0 ? `أنهِ ${Math.min(pendingHw, 3)} واجب${Math.min(pendingHw, 3) > 1 ? 'ات' : ''}` : 'حل 3 أسئلة مراجعة'}
+                </p>
+                <p style={{ margin: '8px 0 0', color: ST.primary, fontSize: 12, fontWeight: 800 }}>المكافأة: +50 نقطة</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/student/points')}
+                style={{
+                  textAlign: 'right', padding: '14px', borderRadius: 16, cursor: 'pointer',
+                  border: `1px solid ${ST.gold}44`, background: ST.goldSoft,
+                  fontFamily: ST.font,
+                }}
+              >
+                <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 13 }}>الجوائز</p>
+                <p style={{ margin: '6px 0 0', color: ST.text, fontSize: 12.5, fontWeight: 600 }}>
+                  اجمع النقاط وافتح المكافآت
+                </p>
+                <p style={{ margin: '8px 0 0', color: ST.gold, fontSize: 12, fontWeight: 800 }}>فتح نقاطي ←</p>
+              </button>
+            </div>
+          </div>
 
         </div>
       </div>

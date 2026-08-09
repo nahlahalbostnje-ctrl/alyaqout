@@ -59,8 +59,8 @@ export default function StudentLayout({ children, xp }: Props) {
         boxShadow: ST.shadow,
         position: 'sticky', top: 0, zIndex: 40, flexShrink: 0,
       }}>
-        {/* Right: Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: isHome && !isMobile ? '0 1 240px' : '1 1 auto' }}>
+        {/* Right: Logo + welcome on home */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: isHome && !isMobile ? '0 1 260px' : '1 1 auto' }}>
           {!isHome && (
             <button
               type="button"
@@ -76,18 +76,31 @@ export default function StudentLayout({ children, xp }: Props) {
           )}
           <Link to="/student/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', minWidth: 0 }}>
             <BrandLogo size={isHome ? 40 : 34} style={{ flexShrink: 0, borderRadius: 12 }} />
-            {!isMobile && (
+            {isHome ? (
               <div style={{ minWidth: 0 }}>
-                <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 13, lineHeight: 1.25 }}>
-                  منصة الياقوت لخدمات التعليم
+                <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: isMobile ? 14 : 15, lineHeight: 1.25 }}>
+                  مرحباً {user?.name?.split(' ')[0] ?? 'طالب'} 👋
                 </p>
-                {!isHome && (
-                  <p style={{ margin: '2px 0 0', color: ST.sub, fontSize: 11, fontWeight: 600 }}>{pageName}</p>
+                {!isMobile && (
+                  <p style={{ margin: '2px 0 0', color: ST.sub, fontSize: 11, fontWeight: 600 }}>
+                    منصة الياقوت لخدمات التعليم
+                  </p>
                 )}
               </div>
-            )}
-            {isMobile && !isHome && (
-              <span style={{ color: ST.text, fontWeight: 700, fontSize: 13 }}>{pageName}</span>
+            ) : (
+              <>
+                {!isMobile && (
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 13, lineHeight: 1.25 }}>
+                      منصة الياقوت لخدمات التعليم
+                    </p>
+                    <p style={{ margin: '2px 0 0', color: ST.sub, fontSize: 11, fontWeight: 600 }}>{pageName}</p>
+                  </div>
+                )}
+                {isMobile && (
+                  <span style={{ color: ST.text, fontWeight: 700, fontSize: 13 }}>{pageName}</span>
+                )}
+              </>
             )}
           </Link>
         </div>
