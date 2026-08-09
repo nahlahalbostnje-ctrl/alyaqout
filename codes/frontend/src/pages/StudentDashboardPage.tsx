@@ -56,7 +56,6 @@ export default function StudentDashboardPage() {
   const pendingHw = dashStats?.pending_homework ?? 0;
   const upcomingExams = dashStats?.upcoming_exams ?? 0;
   const totalCourses = dashStats?.total_courses ?? courses.length;
-  const daysLeft = subscription?.days_remaining;
   const rankTotal = leaderboard.length > 0 ? leaderboard.length : null;
 
   const goals = [
@@ -129,35 +128,52 @@ export default function StudentDashboardPage() {
       <div dir="rtl" style={{ background: ST.bg, minHeight: '100%' }}>
         <div style={wrap}>
 
-          {/* 1) Subscription */}
-          {daysLeft != null && daysLeft <= 14 && (
-            <div style={card({
-              marginBottom: gap,
-              minHeight: 72,
-              padding: '14px 18px',
-              background: ST.goldGrad,
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              flexWrap: 'wrap',
-            })}>
-              <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 14 }}>
-                اشتراكك ينتهي خلال {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'}
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/student/messages')}
-                style={{
-                  padding: '9px 16px', borderRadius: 14, border: 'none', cursor: 'pointer',
-                  background: ST.navy, color: '#fff', fontWeight: 800, fontSize: 12.5, fontFamily: ST.font,
-                }}
-              >
-                تواصل مع الإدارة
-              </button>
-            </div>
-          )}
+          {/* 1) Subscription status — management only, no payment gateway */}
+          {subscription && (() => {
+            const days = subscription.days_remaining;
+            const expired = days <= 0 || subscription.status === 'expired' || subscription.status === 'cancelled';
+            const endingSoon = !expired && days <= 5;
+            const active = !expired && !endingSoon;
+            const bg = expired ? 'rgba(224,122,122,0.12)' : endingSoon ? 'rgba(201,162,39,0.12)' : 'rgba(111,175,138,0.15)';
+            const border = expired ? 'rgba(224,122,122,0.35)' : endingSoon ? 'rgba(201,162,39,0.35)' : 'rgba(111,175,138,0.35)';
+            return (
+              <div style={card({
+                marginBottom: gap,
+                minHeight: 72,
+                padding: '14px 18px',
+                background: bg,
+                border: `1px solid ${border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                flexWrap: 'wrap',
+              })}>
+                <div>
+                  <p style={{ margin: 0, color: ST.navy, fontWeight: 800, fontSize: 14 }}>
+                    {active && `🟢 اشتراكك نشط — ${subscription.package_name}`}
+                    {endingSoon && `🟡 اشتراكك ينتهي خلال ${days} ${days === 1 ? 'يوم' : 'أيام'}`}
+                    {expired && '🔴 انتهى اشتراكك'}
+                  </p>
+                  {!expired && (
+                    <p style={{ margin: '4px 0 0', fontSize: 12, color: ST.sub }}>
+                      من {subscription.starts_at} إلى {subscription.ends_at}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/messages')}
+                  style={{
+                    padding: '9px 14px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                    background: ST.navy, color: '#fff', fontWeight: 800, fontSize: 12.5, fontFamily: ST.font,
+                  }}
+                >
+                  تواصل مع الإدارة
+                </button>
+              </div>
+            );
+          })()}
 
           {/* 2) Hero row: goals 25% | live 50% | performance 25% */}
           <div style={{

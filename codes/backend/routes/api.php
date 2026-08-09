@@ -119,11 +119,16 @@ Route::get('settings/public', [AdminSettingsController::class, 'publicShow']);
 
 // Landing Page public data
 Route::prefix('public')->group(function () {
-    Route::get('countries', [PublicController::class, 'countries']);
-    Route::get('banners',   [PublicController::class, 'banners']);
-    Route::get('faqs',      [PublicController::class, 'faqs']);
-    Route::get('social',    [PublicController::class, 'social']);
-    Route::get('stats',     [PublicController::class, 'stats']);
+    Route::get('countries',    [PublicController::class, 'countries']);
+    Route::get('banners',      [PublicController::class, 'banners']);
+    Route::get('faqs',         [PublicController::class, 'faqs']);
+    Route::get('social',       [PublicController::class, 'social']);
+    Route::get('stats',        [PublicController::class, 'stats']);
+    Route::get('courses',      [PublicController::class, 'courses']);
+    Route::get('teachers',     [PublicController::class, 'teachers']);
+    Route::get('live-classes', [PublicController::class, 'liveClasses']);
+    Route::get('leaderboard',  [PublicController::class, 'leaderboard']);
+    Route::get('challenges',   [PublicController::class, 'challenges']);
 });
 
 Route::get('certificates/verify/{code}', [CertificateVerifyController::class, 'show'])

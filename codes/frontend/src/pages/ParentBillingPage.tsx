@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import ParentLayout from '../components/ParentLayout';
 import api from '../services/axios';
 import { useCurrency } from '../hooks/useCurrency';
 import { C } from '../theme/palette';
+
+/**
+ * Subscription & Invoice management for parents.
+ * No Payment Gateway / card checkout — admin settles invoices offline.
+ */
 
 interface Installment {
   id: number;
@@ -15,16 +21,27 @@ interface Installment {
   paid_at: string | null;
 }
 
+interface SubRow {
+  id: number;
+  student: { id: number; name: string };
+  package: { id: number; name: string; price: string };
+  status: string;
+  payment_status: string;
+  starts_at: string;
+  ends_at: string;
+}
 
-const CHILD_COLORS: Record<string, string> = {};
+const STATUS_UI: Record<string, { label: string; color: string; bg: string }> = {
+  paid: { label: 'مدفوعة', color: C.green, bg: C.greenBg },
+  pending: { label: 'مستحقة', color: C.amber, bg: C.amberBg },
+  overdue: { label: 'متأخرة', color: C.red, bg: C.redBg },
+  cancelled: { label: 'ملغاة', color: C.dim, bg: 'rgba(138,154,163,0.12)' },
+  active: { label: 'نشط', color: C.green, bg: C.greenBg },
+  expired: { label: 'منتهٍ', color: C.red, bg: C.redBg },
+};
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    paid: { label: 'مدفوع', color: C.green, bg: C.greenBg },
-    pending: { label: 'معلق', color: C.amber, bg: C.amberBg },
-    overdue: { label: 'متأخر', color: C.red, bg: C.redBg },
-  };
-  const s = map[status] ?? map['pending'];
+  const s = STATUS_UI[status] ?? STATUS_UI.pending;
   return (
     <span style={{
       display: 'inline-block', padding: '3px 10px', borderRadius: 20,
@@ -34,320 +51,229 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ChildPill({ name }: { name: string }) {
-  const first = name.split(' ')[0];
-  const color = CHILD_COLORS[first] ?? C.purple;
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-      color, background: `${color}12`, border: `1px solid ${color}30`,
-    }}>
-      <span style={{ width: 20, height: 20, borderRadius: '50%', background: color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, fontWeight: 900 }}>
-        {name.split(' ').slice(0, 2).map(w => w[0]).join('')}
-      </span>
-      {name}
-    </span>
-  );
-}
-
-function DeviceRequestModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:28, width:420, maxWidth:'92vw', fontFamily:"'Cairo',sans-serif", direction:'rtl', textAlign:'center' }}>
-        <h3 style={{ color:C.text, fontWeight:900, fontSize:17, marginBottom:10 }}>طلب جهاز بالتقسيط</h3>
-        <p style={{ color:C.sub, fontSize:13, marginBottom:20 }}>لا توجد باقات أجهزة متاحة حالياً</p>
-        <button onClick={onClose} style={{ padding:'10px 24px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer' }}>إغلاق</button>
-      </div>
-    </div>
-  );
+function daysUntil(dateStr: string): number {
+  const end = new Date(dateStr);
+  const now = new Date();
+  end.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.ceil((end.getTime() - now.getTime()) / 86400000);
 }
 
 export default function ParentBillingPage() {
-  const { currency, formatMoney } = useCurrency();
+  const { currency } = useCurrency();
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
-  const [showDeviceModal, setShowDeviceModal] = useState(false);
-  const [showRenewalModal, setShowRenewalModal] = useState(false);
-  const [renewPlan, setRenewPlan] = useState<'monthly'|'quarterly'|'annual'>('annual');
-  const [renewDone, setRenewDone] = useState(false);
-
   const [installments, setInstallments] = useState<Installment[]>([]);
-  const [installmentsLoading, setInstallmentsLoading] = useState(true);
+  const [subs, setSubs] = useState<SubRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/parent/billing/installments')
-      .then(({ data }) => setInstallments(data.data ?? []))
-      .catch(() => setInstallments([]))
-      .finally(() => setInstallmentsLoading(false));
+    Promise.all([
+      api.get('/parent/billing/installments').then(({ data }) => setInstallments(data.data ?? [])).catch(() => setInstallments([])),
+      api.get('/parent/subscriptions').then(({ data }) => setSubs(data.data ?? [])).catch(() => setSubs([])),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const totalPaid = installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
   const totalPending = installments.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
   const totalOverdue = installments.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
-  const hasPending = totalPending + totalOverdue > 0;
-
+  const hasDue = totalPending + totalOverdue > 0;
   const filtered = filter === 'all' ? installments : installments.filter(i => i.status === filter);
+  const activeSubs = subs.filter(s => s.status === 'active');
+
+  const printInvoice = (inst: Installment) => {
+    const w = window.open('', '_blank', 'width=720,height=900');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><title>فاتورة ${inst.id}</title>
+      <style>body{font-family:Cairo,Tahoma,sans-serif;padding:32px;color:#243746}h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:16px}td,th{border:1px solid #E2EBF0;padding:10px;text-align:right}</style>
+      </head><body>
+      <h1>منصة الياقوت — فاتورة / قسط</h1>
+      <p>رقم المرجع: INV-${inst.id}</p>
+      <table>
+        <tr><th>الابن</th><td>${inst.child}</td></tr>
+        <tr><th>الباقة</th><td>${inst.package}</td></tr>
+        <tr><th>رقم القسط</th><td>${inst.installment_no}</td></tr>
+        <tr><th>المبلغ</th><td>${Number(inst.amount).toLocaleString('ar-SA')} ${currency || ''}</td></tr>
+        <tr><th>تاريخ الاستحقاق</th><td>${inst.due_date}</td></tr>
+        <tr><th>الحالة</th><td>${STATUS_UI[inst.status]?.label ?? inst.status}</td></tr>
+      </table>
+      <p style="margin-top:24px;font-size:12px;color:#5A6B75">هذه فاتورة إدارية. التسوية تتم عبر إدارة المنصة (لا يوجد دفع إلكتروني حالياً).</p>
+      <script>window.print()</script>
+      </body></html>`);
+    w.document.close();
+  };
 
   return (
     <ParentLayout>
-      {showDeviceModal && <DeviceRequestModal onClose={() => setShowDeviceModal(false)} />}
-
-      {/* Renewal Modal */}
-      {showRenewalModal && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)' }}
-          onClick={() => { setShowRenewalModal(false); setRenewDone(false); }}>
-          <div style={{ background:'#fff', borderRadius:20, padding:'28px', width:'100%', maxWidth:420, fontFamily:"'Cairo',sans-serif", direction:'rtl', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}
-            onClick={e => e.stopPropagation()}>
-            <h3 style={{ color:'#0D1E3A', fontWeight:800, fontSize:18, marginBottom:6 }}>تجديد الاشتراك</h3>
-            <p style={{ color:'#6B7280', fontSize:13, marginBottom:20 }}>اختر مدة التجديد المناسبة لك</p>
-            {renewDone ? (
-              <div style={{ background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:12, padding:'16px', textAlign:'center', color:'#10B981', fontWeight:700, fontSize:15 }}>
-                ✅ تم تجديد اشتراكك بنجاح! سيصلك تأكيد على واتساب.
-              </div>
-            ) : (
-              <>
-                <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
-                  {([['monthly','شهري',`99 ${currency || ''} / شهر`.trim(),''], ['quarterly','ربع سنوي',`270 ${currency || ''} / 3 أشهر`.trim(),`وفّر 27 ${currency || ''}`.trim()], ['annual','سنوي',`960 ${currency || ''} / سنة`.trim(),`🎁 وفّر 228 ${currency || ''}`.trim()]] as const).map(([v,l,p,save]) => (
-                    <button key={v} onClick={() => setRenewPlan(v)}
-                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${renewPlan===v?C.gold:'#EDE3CE'}`, background: renewPlan===v?C.goldBg:'#F8FAFC', cursor:'pointer', fontFamily:"'Cairo',sans-serif", textAlign:'right', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <div>
-                        <p style={{ color: renewPlan===v?C.gold:'#1B2038', fontWeight:800, fontSize:14, margin:0 }}>{l}</p>
-                        <p style={{ color:'#6B7280', fontSize:12, margin:0 }}>{p}</p>
-                      </div>
-                      {save && <span style={{ background:C.goldBg, color:C.gold, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>{save}</span>}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display:'flex', gap:10 }}>
-                  <button onClick={() => setRenewDone(true)}
-                    style={{ flex:1, padding:'13px', borderRadius:14, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:15, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
-                    تجديد الآن 🎉
-                  </button>
-                  <button onClick={() => setShowRenewalModal(false)}
-                    style={{ flex:1, padding:'13px', borderRadius:14, background:'#F1F5F9', color:'#6B7280', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif" }}>
-                    لاحقاً
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       <div dir="rtl" style={{ padding: 24, fontFamily: "'Cairo',sans-serif" }}>
-        {/* Subscription expiry banner */}
-        <div style={{ background:'linear-gradient(135deg,#0D1E3A,#162144)', borderRadius:16, padding:'16px 20px', marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div>
-            <p style={{ color:'rgba(255,255,255,0.6)', fontSize:12, marginBottom:2 }}>اشتراكك الحالي</p>
-            <p style={{ color:'#fff', fontWeight:800, fontSize:16, margin:0 }}>الباقة الذهبية — ينتهي في 15/08/2026</p>
-            <p style={{ color:C.gold, fontSize:12, marginTop:2 }}>متبقي 46 يوم</p>
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{ width: 4, height: 22, borderRadius: 2, background: C.goldGrad }} />
+            <h1 style={{ color: C.text, fontWeight: 900, fontSize: 22, margin: 0 }}>الاشتراك والفواتير</h1>
           </div>
-          <button onClick={() => { setShowRenewalModal(true); setRenewDone(false); }}
-            style={{ padding:'10px 20px', borderRadius:12, background:C.goldGrad, color:'#1B2038', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', fontFamily:"'Cairo',sans-serif", boxShadow:'0 4px 14px rgba(197,147,65,0.4)' }}>
-            🔄 تجديد الاشتراك
-          </button>
+          <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
+            متابعة الاشتراكات والمستحقات — التسوية عبر الإدارة (بدون بوابة دفع إلكتروني حالياً).
+          </p>
         </div>
 
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <div style={{ width: 4, height: 22, borderRadius: 2, background: 'linear-gradient(135deg,#C59341,#D4A65A)' }} />
-              <h1 style={{ color: '#1B2038', fontWeight: 900, fontSize: 22, margin: 0 }}>المدفوعات والفواتير</h1>
-            </div>
-            <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>إدارة الفواتير ومتابعة المدفوعات لجميع أبنائك</p>
-          </div>
-          <button onClick={() => setShowDeviceModal(true)} style={{ padding:'10px 18px', borderRadius:12, background:C.goldGrad, color:'#fff', fontSize:13, fontWeight:700, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 14px rgba(197,147,65,0.35)', fontFamily:"'Cairo',sans-serif" }}>
-            <span style={{ fontSize:16 }}>📦</span> طلب جهاز بالتقسيط
-          </button>
-        </div>
-
-        {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 20 }}>
-          {/* Paid */}
-          <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.green}20` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>إجمالي المدفوع</p>
-                <p style={{ color: C.green, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalPaid.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
-              </div>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" fill="none" stroke={C.green} viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: C.greenBg }}>
-              <div style={{ height: '100%', width: '100%', borderRadius: 2, background: C.green }} />
-            </div>
-          </div>
-
-          {/* Pending */}
-          <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.amber}20` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>المستحقات</p>
-                <p style={{ color: C.amber, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalPending.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
-              </div>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: C.amberBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" fill="none" stroke={C.amber} viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: C.amberBg }}>
-              <div style={{ height: '100%', width: totalPending ? '60%' : '0%', borderRadius: 2, background: C.amber }} />
-            </div>
-          </div>
-
-          {/* Overdue */}
-          <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, border: `1px solid ${C.red}20` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ color: C.sub, fontSize: 12, margin: '0 0 6px' }}>متأخرات</p>
-                <p style={{ color: C.red, fontSize: 28, fontWeight: 900, margin: 0 }}>{totalOverdue.toLocaleString('ar-SA')}</p>
-                <p style={{ color: C.dim, fontSize: 11, margin: '4px 0 0' }}>{currency || '—'}</p>
-              </div>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: C.redBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" fill="none" stroke={C.red} viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-            </div>
-            <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: C.redBg }}>
-              <div style={{ height: '100%', width: totalOverdue ? '40%' : '0%', borderRadius: 2, background: C.red }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Gateway Banner */}
-        {hasPending && (
-          <div style={{
-            background: C.goldGrad, borderRadius: 16, padding: '16px 22px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 20, boxShadow: '0 4px 20px rgba(197,147,65,0.3)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <div>
-                <p style={{ color: '#fff', fontWeight: 800, fontSize: 15, margin: 0 }}>لديك مستحقات معلقة</p>
-                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: '2px 0 0' }}>
-                  إجمالي المبلغ المطلوب: {formatMoney(totalPending + totalOverdue)}
-                </p>
-              </div>
-            </div>
-            <button onClick={() => { setShowRenewalModal(true); setRenewDone(false); }} style={{
-              background: '#fff', color: C.gold, border: 'none',
-              borderRadius: 10, padding: '10px 22px', fontWeight: 800,
-              fontSize: 14, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        {/* Active subscriptions — real data only */}
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: '0 0 12px' }}>الاشتراك الحالي</h2>
+          {loading ? (
+            <p style={{ color: C.dim, fontSize: 13 }}>جارٍ التحميل...</p>
+          ) : activeSubs.length === 0 ? (
+            <div style={{
+              background: C.card, borderRadius: 16, padding: 18, border: `1px dashed ${C.border}`,
+              color: C.sub, fontSize: 13,
             }}>
-              ادفع الآن
-            </button>
-          </div>
-        )}
-
-        {/* Installments (خطة التقسيط) */}
-        {(installmentsLoading || installments.length > 0) && (
-          <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 4, height: 18, borderRadius: 2, background: C.goldGrad }} />
-              <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>خطة التقسيط</h2>
-            </div>
-
-            {installmentsLoading ? (
-              <p style={{ color: C.dim, fontSize: 13, textAlign: 'center', padding: '20px 0' }}>جارٍ التحميل...</p>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                      {['القسط #', 'الابن', 'الباقة', currency ? `المبلغ (${currency})` : 'المبلغ', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
-                        <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {installments.map((inst) => (
-                      <tr key={inst.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                        <td style={{ padding: '10px 12px', color: C.dim, fontSize: 12 }}>{inst.installment_no}</td>
-                        <td style={{ padding: '10px 12px' }}><ChildPill name={inst.child} /></td>
-                        <td style={{ padding: '10px 12px', color: C.text, fontSize: 13 }}>{inst.package}</td>
-                        <td style={{ padding: '10px 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{Number(inst.amount).toLocaleString('ar-SA')}</td>
-                        <td style={{ padding: '10px 12px', color: C.sub, fontSize: 12 }}>{inst.due_date}</td>
-                        <td style={{ padding: '10px 12px' }}><StatusBadge status={inst.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              لا يوجد اشتراك نشط حالياً. يمكنك طلب باقة من صفحة الباقات، أو التواصل مع الإدارة.
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Link to="/parent/packages" style={linkBtn}>الباقات والاشتراك</Link>
+                <Link to="/parent/communication" style={linkBtnGhost}>تواصل مع الإدارة</Link>
               </div>
-            )}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12 }}>
+              {activeSubs.map(s => {
+                const left = daysUntil(s.ends_at);
+                const tone = left <= 0 ? C.red : left <= 5 ? C.amber : C.green;
+                return (
+                  <div key={s.id} style={{
+                    background: C.card, borderRadius: 16, padding: 16, border: `1px solid ${C.border}`,
+                    boxShadow: C.shadow,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                      <p style={{ margin: 0, fontWeight: 800, color: C.text }}>{s.package.name}</p>
+                      <StatusBadge status={s.status} />
+                    </div>
+                    <p style={{ margin: '0 0 4px', fontSize: 13, color: C.sub }}>الابن: {s.student.name}</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 13, color: C.sub }}>
+                      من {s.starts_at} إلى {s.ends_at}
+                    </p>
+                    <p style={{ margin: '0 0 8px', fontSize: 13, color: C.sub }}>
+                      قيمة الاشتراك: {Number(s.package.price).toLocaleString('ar-SA')} {currency || ''}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: tone }}>
+                      {left > 5 && `🟢 اشتراك نشط — متبقي ${left} يوماً`}
+                      {left > 0 && left <= 5 && `🟡 ينتهي خلال ${left} ${left === 1 ? 'يوم' : 'أيام'}`}
+                      {left <= 0 && '🔴 انتهى الاشتراك'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {hasDue && (
+          <div style={{
+            background: C.amberBg, border: `1px solid ${C.amber}40`, borderRadius: 16,
+            padding: '14px 18px', marginBottom: 20, display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          }}>
+            <div>
+              <p style={{ margin: 0, fontWeight: 800, color: C.text, fontSize: 14 }}>لديك مستحقات</p>
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: C.sub }}>
+                راجع الفواتير أدناه وتواصل مع الإدارة لتسوية المبالغ.
+              </p>
+            </div>
+            <Link to="/parent/communication" style={{
+              ...linkBtn, background: C.navy, color: '#fff',
+            }}>تواصل مع الإدارة</Link>
           </div>
         )}
 
-        {/* Filter Tabs + Table */}
+        {/* Summary */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: 'مدفوعة', value: totalPaid, color: C.green, bg: C.greenBg },
+            { label: 'مستحقة', value: totalPending, color: C.amber, bg: C.amberBg },
+            { label: 'متأخرة', value: totalOverdue, color: C.red, bg: C.redBg },
+          ].map(x => (
+            <div key={x.label} style={{
+              background: C.card, borderRadius: 14, padding: 16, border: `1px solid ${C.border}`,
+            }}>
+              <p style={{ margin: '0 0 6px', fontSize: 12, color: C.sub }}>{x.label}</p>
+              <p style={{ margin: 0, fontSize: 24, fontWeight: 900, color: x.color }}>
+                {x.value.toLocaleString('ar-SA')}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: C.dim }}>{currency || '—'}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Invoices / installments */}
         <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>سجل الأقساط</h2>
-            <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>
+            <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: 0 }}>الفواتير</h2>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {(['all', 'paid', 'pending', 'overdue'] as const).map(f => {
-                const labels: Record<string, string> = { all: 'الكل', paid: 'مدفوع', pending: 'معلق', overdue: 'متأخر' };
+                const labels = { all: 'الكل', paid: 'مدفوعة', pending: 'مستحقة', overdue: 'متأخرة' };
                 return (
-                  <button key={f} onClick={() => setFilter(f)} style={{
-                    padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  <button key={f} type="button" onClick={() => setFilter(f)} style={{
+                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
                     fontFamily: "'Cairo',sans-serif", fontSize: 12, fontWeight: 700,
                     background: filter === f ? C.goldGrad : C.goldBg,
-                    color: filter === f ? '#fff' : C.gold,
-                    boxShadow: filter === f ? '0 2px 8px rgba(197,147,65,0.3)' : 'none',
-                    transition: 'all 0.15s',
+                    color: filter === f ? '#fff' : C.primary,
                   }}>{labels[f]}</button>
                 );
               })}
             </div>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                  {['#', 'القسط', 'الطفل', 'الباقة', currency ? `المبلغ (${currency})` : 'المبلغ', 'تاريخ الاستحقاق', 'الحالة'].map(h => (
-                    <th key={h} style={{ color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv, idx) => (
-                  <tr key={inv.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                    <td style={{ padding: '12px 12px', color: C.dim, fontSize: 12 }}>{idx + 1}</td>
-                    <td style={{ padding: '12px 12px', fontSize: 12, color: C.navy, fontWeight: 700 }}>{inv.installment_no}</td>
-                    <td style={{ padding: '12px 12px' }}><ChildPill name={inv.child} /></td>
-                    <td style={{ padding: '12px 12px', color: C.text, fontSize: 13 }}>{inv.package}</td>
-                    <td style={{ padding: '12px 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{Number(inv.amount).toLocaleString('ar-SA')}</td>
-                    <td style={{ padding: '12px 12px', color: C.sub, fontSize: 12 }}>{inv.due_date}</td>
-                    <td style={{ padding: '12px 12px' }}><StatusBadge status={inv.status} /></td>
+          {loading ? (
+            <p style={{ color: C.dim, fontSize: 13, textAlign: 'center', padding: 20 }}>جارٍ التحميل...</p>
+          ) : filtered.length === 0 ? (
+            <p style={{ color: C.dim, fontSize: 13, textAlign: 'center', padding: 24 }}>لا توجد فواتير في هذا التصنيف</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                    {['رقم الفاتورة', 'الابن', 'الباقة', 'القيمة', 'التاريخ', 'الحالة', ''].map(h => (
+                      <th key={h || 'a'} style={{
+                        color: C.sub, fontSize: 11, fontWeight: 700, padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap',
+                      }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '30px 0', color: C.dim, fontSize: 14 }}>
-                لا توجد أقساط في هذا التصنيف
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Monthly Chart placeholder */}
-        <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: C.shadow }}>
-          <h2 style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: '0 0 4px' }}>المصروفات الشهرية</h2>
-          <p style={{ color: C.sub, fontSize: 13, textAlign: 'center', padding: '30px 0' }}>لا تتوفر بيانات مصروفات شهرية بعد</p>
+                </thead>
+                <tbody>
+                  {filtered.map(inv => (
+                    <tr key={inv.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '12px', fontSize: 12, fontWeight: 700, color: C.navy }}>INV-{inv.id}</td>
+                      <td style={{ padding: '12px', fontSize: 13 }}>{inv.child}</td>
+                      <td style={{ padding: '12px', fontSize: 13 }}>{inv.package}</td>
+                      <td style={{ padding: '12px', fontWeight: 800, fontSize: 14 }}>
+                        {Number(inv.amount).toLocaleString('ar-SA')}
+                      </td>
+                      <td style={{ padding: '12px', fontSize: 12, color: C.sub }}>{inv.due_date}</td>
+                      <td style={{ padding: '12px' }}><StatusBadge status={inv.status} /></td>
+                      <td style={{ padding: '12px' }}>
+                        <button type="button" onClick={() => printInvoice(inv)} style={{
+                          padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.border}`,
+                          background: C.bg, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+                          fontSize: 11, fontWeight: 700, color: C.primary,
+                        }}>
+                          عرض / طباعة
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </ParentLayout>
   );
 }
+
+const linkBtn: CSSProperties = {
+  display: 'inline-block', padding: '9px 14px', borderRadius: 10, textDecoration: 'none',
+  background: C.goldGrad, color: '#fff', fontWeight: 800, fontSize: 12.5,
+};
+
+const linkBtnGhost: CSSProperties = {
+  display: 'inline-block', padding: '9px 14px', borderRadius: 10, textDecoration: 'none',
+  background: C.bg, color: C.text, fontWeight: 700, fontSize: 12.5, border: `1px solid ${C.border}`,
+};

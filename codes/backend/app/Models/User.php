@@ -94,6 +94,11 @@ class User extends Authenticatable implements JWTSubject
             ->withTimestamps();
     }
 
+    public function taughtCourses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'teacher_id');
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';

@@ -20,7 +20,7 @@ class LeadController extends Controller
             'school'       => 'nullable|string|max:255',
             'region'       => 'nullable|string|max:100',
             'subjects'     => 'nullable|array',
-            'source'       => 'required|in:book_now,free_class',
+            'source'       => 'required|in:book_now,free_class,register,try_free',
         ]);
 
         Lead::create($validated);

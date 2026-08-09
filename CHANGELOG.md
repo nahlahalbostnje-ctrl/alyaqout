@@ -1,5 +1,21 @@
 # Changelog — منصة الياقوت التعليمية
 
+## [2026-08-09] — بوابة الهبوط + Visitor Mode + فواتير بلا دفع إلكتروني
+
+### ✨ ميزات
+- إعادة تصميم الصفحة الرئيسية كـ Educational Landing + Visitor Gateway
+- وضع زائر حقيقي `/explore` مع Dialog للخدمات المغلقة
+- طلب إنشاء حساب `/register` عبر Lead (بدون تسجيل ذاتي فوري)
+- Public APIs: courses, teachers, live-classes, leaderboard, challenges
+- تنظيف فوترة ولي الأمر من UX بوابة الدفع؛ طباعة فاتورة + بيانات اشتراك حقيقية
+- بانر حالة الاشتراك في لوحة الطالب (نشط / ينتهي / منتهٍ)
+
+### 🔧
+- توسيع `leads.source`: `register`, `try_free`
+- فصل منطقي: Subscription → Invoice Status (قابل لإضافة Payment Gateway لاحقاً)
+
+---
+
 ## [2026-07-19] — ميزات الطالب/ولي الأمر + جودة + هبوط جديد + توثيق
 
 ### ✨ ميزات

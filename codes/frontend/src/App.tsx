@@ -123,6 +123,8 @@ import PrivateRoute               from './components/PrivateRoute';
 import WhatsAppButton             from './components/WhatsAppButton';
 import CookieConsent              from './components/CookieConsent';
 import LandingPage                from './pages/LandingPage';
+import RegisterPage               from './pages/RegisterPage';
+import VisitorExplorePage         from './pages/visitor/VisitorExplorePage';
 
 export default function App() {
   const dispatch   = useAppDispatch();
@@ -147,6 +149,8 @@ export default function App() {
         <Route path="/"      element={<LandingPage />} />
         <Route path="/verify/:code" element={<CertificateVerifyPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/explore" element={<VisitorExplorePage />} />
 
         {/* Super Admin */}
         <Route path="/dashboard" element={
