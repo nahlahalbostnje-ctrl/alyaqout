@@ -58,6 +58,7 @@ use App\Http\Controllers\Live\AgoraController;
 use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\ChallengeController as StudentChallengeController;
 use App\Http\Controllers\Student\CertificateController as StudentCertificateController;
+use App\Http\Controllers\Student\CatalogController as StudentCatalogController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
 use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotController;
@@ -430,6 +431,8 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::get('subscriptions',  [StudentHomeController::class, 'mySubscriptions']);
     Route::get('certificates',           [StudentCertificateController::class, 'index']);
     Route::get('certificates/{certificate}', [StudentCertificateController::class, 'show']);
+    Route::get('catalog',                [StudentCatalogController::class, 'index']);
+    Route::get('catalog/{course}',       [StudentCatalogController::class, 'show']);
 
     // Course Content
     Route::get('courses/{course}/content',          [StudentCourseContentController::class, 'courseUnits']);

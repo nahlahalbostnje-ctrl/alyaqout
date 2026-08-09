@@ -17,6 +17,8 @@ import CourseContentPage          from './pages/CourseContentPage';
 import AdminCourseDossierPage     from './pages/AdminCourseDossierPage';
 import StudentDashboardPage       from './pages/StudentDashboardPage';
 import StudentCoursesPage         from './pages/StudentCoursesPage';
+import StudentCatalogPage         from './pages/StudentCatalogPage';
+import StudentCatalogCoursePage   from './pages/StudentCatalogCoursePage';
 import StudentCertificatesPage    from './pages/StudentCertificatesPage';
 import CertificateVerifyPage      from './pages/CertificateVerifyPage';
 import StudentLiveClassesPage     from './pages/StudentLiveClassesPage';
@@ -317,6 +319,12 @@ export default function App() {
         } />
         <Route path="/student/courses" element={
           <PrivateRoute roles={['student']}><StudentCoursesPage /></PrivateRoute>
+        } />
+        <Route path="/student/catalog" element={
+          <PrivateRoute roles={['student']}><StudentCatalogPage /></PrivateRoute>
+        } />
+        <Route path="/student/catalog/:courseId" element={
+          <PrivateRoute roles={['student']}><StudentCatalogCoursePage /></PrivateRoute>
         } />
         <Route path="/student/certificates" element={
           <PrivateRoute roles={['student']}><StudentCertificatesPage /></PrivateRoute>

@@ -22,6 +22,7 @@ import parentReducer        from '../features/parent/parentSlice';
 import supervisorReducer    from '../features/supervisor/supervisorSlice';
 import gamificationReducer  from '../features/student/gamificationSlice';
 import certificatesReducer  from '../features/student/certificatesSlice';
+import catalogReducer       from '../features/student/catalogSlice';
 import leagueReducer        from '../features/student/leagueSlice';
 import agoraReducer         from '../features/live/agoraSlice';
 import superAdminReducer    from '../features/superAdmin/superAdminSlice';
@@ -51,6 +52,7 @@ export const store = configureStore({
     supervisor:     supervisorReducer,
     gamification:   gamificationReducer,
     certificates:   certificatesReducer,
+    catalog:        catalogReducer,
     league:         leagueReducer,
     agora:          agoraReducer,
     superAdmin:     superAdminReducer,
