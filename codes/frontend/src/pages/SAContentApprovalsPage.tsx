@@ -20,6 +20,9 @@ interface ContentItem {
   created_at: string | null;
   due_date?: string | null;
   scheduled_at?: string | null;
+  units_count?: number;
+  videos_count?: number;
+  ready?: boolean;
 }
 
 interface Meta {
@@ -95,6 +98,10 @@ export default function SAContentApprovalsPage() {
   const rejectedTotal = meta.rejected_exams + meta.rejected_homeworks + meta.rejected_live_classes + meta.rejected_courses;
 
   const decide = async (item: ContentItem, status: 'approved'|'rejected') => {
+    if (status === 'approved' && item.kind === 'course' && item.ready === false) {
+      toast.error('لا يمكن الاعتماد قبل إضافة وحدة ومحتوى واحد على الأقل');
+      return;
+    }
     const key = `${item.kind}-${item.id}`;
     setBusyId(key);
     try {
@@ -197,7 +204,10 @@ export default function SAContentApprovalsPage() {
                     </div>
                   </td>
                   <td style={{padding:'12px 14px',color:C.text,fontWeight:700,fontSize:12.5,maxWidth:220}}>
-                    <p style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</p>
+                    <p style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',margin:0}}>{item.title}</p>
+                    {item.kind === 'course' && item.ready === false && (
+                      <p style={{margin:'4px 0 0',color:C.orange,fontSize:10.5,fontWeight:700}}>ينقص وحدة/محتوى · {item.units_count ?? 0}و / {item.videos_count ?? 0}م</p>
+                    )}
                   </td>
                   <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{item.course || '—'}</td>
                   <td style={{padding:'12px 14px',color:C.sub,fontSize:12}}>{item.country || '—'}</td>

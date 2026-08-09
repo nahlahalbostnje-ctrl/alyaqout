@@ -11,11 +11,14 @@ use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
 use App\Services\ActivityLogger;
+use App\Services\CoursePublishGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ContentApprovalController extends Controller
 {
+    public function __construct(private readonly CoursePublishGate $publishGate) {}
+
     /** GET /super-admin/approvals?status=&type=&country_id= */
     public function index(Request $request): JsonResponse
     {
@@ -142,6 +145,10 @@ class ContentApprovalController extends Controller
     {
         $request->validate(['status' => 'required|in:approved,rejected']);
 
+        if ($request->status === 'approved') {
+            $this->publishGate->assertReadyForApproval($course);
+        }
+
         $approved = $request->status === 'approved';
 
         ActivityLogger::withoutLogging(function () use ($request, $course, $approved): void {
@@ -240,6 +247,8 @@ class ContentApprovalController extends Controller
 
     private function formatCourse(Course $course): array
     {
+        $summary = $this->publishGate->summary($course);
+
         return [
             'id'           => $course->id,
             'kind'         => 'course',
@@ -250,6 +259,9 @@ class ContentApprovalController extends Controller
             'teacher'      => $course->teacher?->name,
             'status'       => $course->approval_status,
             'created_at'   => $course->created_at?->toIso8601String(),
+            'units_count'  => $summary['units_count'],
+            'videos_count' => $summary['videos_count'],
+            'ready'        => $summary['ready'],
         ];
     }
 

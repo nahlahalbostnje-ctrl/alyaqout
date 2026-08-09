@@ -9,12 +9,15 @@ use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
 use App\Models\Course;
+use App\Services\CoursePublishGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TeacherApprovalController extends Controller
 {
+    public function __construct(private readonly CoursePublishGate $publishGate) {}
+
     public function pendingExams(): JsonResponse
     {
         $countryId = Auth::user()->country_id;
@@ -128,7 +131,16 @@ class TeacherApprovalController extends Controller
             ->get([
                 'id', 'title', 'description', 'price', 'is_free',
                 'subject_id', 'grade_id', 'teacher_id', 'created_at',
-            ]);
+            ])
+            ->map(function (Course $course) {
+                $summary = $this->publishGate->summary($course);
+                return [
+                    ...$course->toArray(),
+                    'units_count'  => $summary['units_count'],
+                    'videos_count' => $summary['videos_count'],
+                    'ready'        => $summary['ready'],
+                ];
+            });
 
         return response()->json(['courses' => $courses]);
     }
@@ -138,6 +150,10 @@ class TeacherApprovalController extends Controller
         abort_if((int) $course->country_id !== (int) Auth::user()->country_id, 403);
 
         $request->validate(['status' => 'required|in:approved,rejected']);
+
+        if ($request->status === 'approved') {
+            $this->publishGate->assertReadyForApproval($course);
+        }
 
         $approved = $request->status === 'approved';
         $course->update([

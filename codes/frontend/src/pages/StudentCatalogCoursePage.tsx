@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { clearCatalogDetail, fetchCatalogCourse } from '../features/student/catalogSlice';
+import api from '../services/axios';
 import StudentLayout from '../components/StudentLayout';
 import { C } from '../theme/palette';
 
@@ -12,11 +13,63 @@ export default function StudentCatalogCoursePage() {
   const navigate = useNavigate();
   const { detail, detailLoading, error } = useAppSelector((s) => s.catalog);
 
+  const [avg, setAvg] = useState<number | null>(null);
+  const [ratingsCount, setRatingsCount] = useState(0);
+  const [myRating, setMyRating] = useState<{ rating: number; comment: string | null } | null>(null);
+  const [stars, setStars] = useState(5);
+  const [comment, setComment] = useState('');
+  const [ratingMsg, setRatingMsg] = useState<string | null>(null);
+  const [savingRating, setSavingRating] = useState(false);
+
   useEffect(() => {
     if (!Number.isFinite(id) || id <= 0) return;
     dispatch(fetchCatalogCourse(id));
     return () => { dispatch(clearCatalogDetail()); };
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (!Number.isFinite(id) || id <= 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await api.get(`/student/courses/${id}/rating`);
+        if (cancelled) return;
+        const d = r.data.data as {
+          average: number | null;
+          ratings_count: number;
+          my_rating: { rating: number; comment: string | null } | null;
+        };
+        setAvg(d.average);
+        setRatingsCount(d.ratings_count);
+        setMyRating(d.my_rating);
+        if (d.my_rating) {
+          setStars(d.my_rating.rating);
+          setComment(d.my_rating.comment ?? '');
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const submitRating = async () => {
+    setSavingRating(true);
+    setRatingMsg(null);
+    try {
+      await api.post(`/student/courses/${id}/rating`, { rating: stars, comment: comment || null });
+      setMyRating({ rating: stars, comment: comment || null });
+      setRatingMsg('تم حفظ تقييمك');
+      const r = await api.get(`/student/courses/${id}/rating`);
+      setAvg(r.data.data.average);
+      setRatingsCount(r.data.data.ratings_count);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setRatingMsg(err.response?.data?.message ?? 'تعذر حفظ التقييم');
+    } finally {
+      setSavingRating(false);
+    }
+  };
 
   return (
     <StudentLayout>
@@ -43,6 +96,11 @@ export default function StudentCatalogCoursePage() {
                     {detail.subject?.name ? ` · ${detail.subject.name}` : ''}
                     {detail.grade?.name ? ` · ${detail.grade.name}` : ''}
                   </p>
+                  {avg != null && (
+                    <p style={{ margin: '8px 0 0', color: C.primary, fontSize: 12.5, fontWeight: 700 }}>
+                      تقييم المساق: {avg} / 5 ({ratingsCount})
+                    </p>
+                  )}
                 </div>
                 <span style={{
                   padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 800,
@@ -81,6 +139,40 @@ export default function StudentCatalogCoursePage() {
                 )}
               </div>
             </div>
+
+            {detail.is_entitled && detail.is_complete && (
+              <div style={{
+                background: C.card, borderRadius: 16, padding: 18, border: `1px solid ${C.border}`,
+                boxShadow: C.shadow, marginBottom: 14,
+              }}>
+                <h2 style={{ margin: '0 0 10px', color: C.text, fontSize: 15, fontWeight: 800 }}>قيّم المساق</h2>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button key={n} type="button" onClick={() => setStars(n)} style={{
+                      width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.border}`,
+                      background: n <= stars ? C.goldBg : C.bg, color: n <= stars ? C.primary : C.dim,
+                      fontWeight: 900, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
+                    }}>{n}</button>
+                  ))}
+                </div>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="تعليق اختياري (حتى 500 حرف)"
+                  rows={3}
+                  style={{
+                    width: '100%', boxSizing: 'border-box', borderRadius: 12, border: `1px solid ${C.border}`,
+                    padding: 12, fontFamily: "'Cairo',sans-serif", fontSize: 13, color: C.text, resize: 'vertical',
+                  }}
+                />
+                <button type="button" disabled={savingRating} onClick={submitRating} style={{
+                  marginTop: 10, padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: C.goldGrad, color: '#fff', fontWeight: 800, fontSize: 13,
+                  fontFamily: "'Cairo',sans-serif", opacity: savingRating ? 0.6 : 1,
+                }}>{myRating ? 'تحديث التقييم' : 'إرسال التقييم'}</button>
+                {ratingMsg && <p style={{ margin: '8px 0 0', color: C.sub, fontSize: 12.5 }}>{ratingMsg}</p>}
+              </div>
+            )}
 
             <h2 style={{ margin: '0 0 10px', color: C.text, fontSize: 16, fontWeight: 800 }}>محتوى المساق</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

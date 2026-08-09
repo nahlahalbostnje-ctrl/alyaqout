@@ -53,6 +53,9 @@ interface PendingCourse {
   subject?: { id: number; name: string } | null;
   grade?: { id: number; name: string } | null;
   teacher?: { id: number; name: string } | null;
+  units_count?: number;
+  videos_count?: number;
+  ready?: boolean;
 }
 
 type Tab = 'exams' | 'homeworks' | 'live_classes' | 'courses';
@@ -154,10 +157,17 @@ export default function AdminTeacherApprovalsPage() {
   };
 
   const handleCourseDecision = async (course: PendingCourse, status: 'approved' | 'rejected') => {
+    if (status === 'approved' && course.ready === false) {
+      window.alert('لا يمكن القبول: أضف وحدة واحدة ومحتوى واحد على الأقل داخل المساق أولاً.');
+      return;
+    }
     setBusyId(course.id);
     try {
       await api.patch(`/admin/approvals/courses/${course.id}`, { status });
       setCourses((prev) => prev.filter((c) => c.id !== course.id));
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      window.alert(err.response?.data?.message ?? 'تعذر تحديث حالة الدورة');
     } finally { setBusyId(null); }
   };
 
@@ -469,7 +479,13 @@ export default function AdminTeacherApprovalsPage() {
                   )}
                   <p style={{ fontSize: 12, color: DK.sub, margin: '0 0 12px' }}>
                     {course.is_free ? 'مجانية' : formatMoney(course.price || 0)}
+                    {` · وحدات ${course.units_count ?? 0} · محتوى ${course.videos_count ?? 0}`}
                   </p>
+                  {course.ready === false && (
+                    <p style={{ fontSize: 11.5, color: DK.orange, fontWeight: 700, margin: '0 0 10px' }}>
+                      غير جاهز للاعتماد (ينقص وحدة أو محتوى)
+                    </p>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                     <TeacherAvatar name={course.teacher?.name ?? '?'} />
                     <div>
@@ -480,11 +496,13 @@ export default function AdminTeacherApprovalsPage() {
                   <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
                     <button
                       onClick={() => handleCourseDecision(course, 'approved')}
-                      disabled={busyId === course.id}
+                      disabled={busyId === course.id || course.ready === false}
                       style={{
-                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none',
+                        cursor: course.ready === false ? 'not-allowed' : 'pointer',
                         background: 'rgba(16,185,129,0.1)', color: DK.green, fontSize: 13, fontWeight: 700,
-                        fontFamily: "'Cairo',sans-serif", opacity: busyId === course.id ? 0.5 : 1, transition: 'all 0.15s',
+                        fontFamily: "'Cairo',sans-serif",
+                        opacity: busyId === course.id || course.ready === false ? 0.45 : 1, transition: 'all 0.15s',
                       }}>
                       {busyId === course.id ? '...' : '✓ قبول'}
                     </button>
