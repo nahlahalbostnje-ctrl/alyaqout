@@ -3,19 +3,17 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentDashboard } from '../features/student/studentSlice';
-import { fetchMyPoints, fetchLeaderboard } from '../features/student/gamificationSlice';
 import StudentLayout from '../components/StudentLayout';
 import StudentHomeShortcuts from '../components/StudentHomeShortcuts';
 import { C } from '../theme/palette';
 import { typeScale } from '../features/student/studentNav';
 
 /**
- * Phase A — Student home information hierarchy:
+ * Student home information hierarchy:
  * 1) Welcome (light) + subscription alert if needed
  * 2) Primary 2-col: Now (single class source) | Today’s tasks
  * 3) My courses progress (honest %)
- * 4) Secondary 2-col: ranking | points
- * Alerts only render when they have real data. No navy hero stack. No duplicate class cards.
+ * 4) Icon shortcuts
  */
 
 const card: CSSProperties = {
@@ -96,7 +94,6 @@ export default function StudentDashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { student, upcoming, courses, dashStats, subscription } = useAppSelector((s) => s.student);
-  const { totalPoints, leaderboard } = useAppSelector((s) => s.gamification);
   const user = useAppSelector((s) => s.auth.user);
 
   const [isMobile, setIsMobile] = useState(false);
@@ -109,12 +106,10 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     dispatch(fetchStudentDashboard());
-    dispatch(fetchMyPoints());
-    dispatch(fetchLeaderboard());
   }, [dispatch]);
 
   const firstName = student?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? '...';
-  const pts = dashStats?.total_points ?? totalPoints ?? 0;
+  const pts = dashStats?.total_points ?? 0;
   const level = dashStats?.level ?? Math.floor(pts / 500) + 1;
   const xpIn = dashStats?.xp_in_level ?? (pts % 500);
   const xpNext = dashStats?.xp_for_next ?? 500;
@@ -127,7 +122,6 @@ export default function StudentDashboardPage() {
     ?? null;
   const isLive = focusClass?.status === 'live';
 
-  const leagueTop = [...leaderboard].sort((a, b) => a.rank - b.rank).slice(0, 3);
   const pendingHw = dashStats?.pending_homework ?? 0;
   const upcomingExams = dashStats?.upcoming_exams ?? 0;
   const daysLeft = subscription?.days_remaining;
@@ -333,54 +327,7 @@ export default function StudentDashboardPage() {
             )}
           </div>
 
-          {/* ── Row 4: Ranking | Points ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap, alignItems: 'stretch' }}>
-            <div style={card}>
-              <SectionTitle>ترتيب الصف</SectionTitle>
-              {leagueTop.length === 0 ? (
-                <p style={{ margin: '0 0 12px', color: C.sub, fontSize: 13 }}>لا يوجد ترتيب بعد.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                  {leagueTop.map((p) => (
-                    <div
-                      key={p.rank}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px',
-                        borderRadius: 10, background: p.rank === 1 ? C.goldBg : C.bg,
-                      }}
-                    >
-                      <span style={{ width: 22, color: p.rank === 1 ? C.gold : C.sub, fontSize: 12, fontWeight: 800 }}>
-                        #{p.rank}
-                      </span>
-                      <span style={{
-                        flex: 1, color: C.text, fontSize: 12.5, fontWeight: 700,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {p.name}
-                      </span>
-                      <span style={{ color: C.sub, fontSize: 11, fontWeight: 700 }}>
-                        {p.points.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <GhostBtn label="الترتيب الكامل" onClick={() => navigate('/student/league')} />
-            </div>
-
-            <div style={card}>
-              <SectionTitle>نقاطي</SectionTitle>
-              <p style={{ margin: 0, color: C.text, fontWeight: 800, fontSize: 28, lineHeight: 1.1 }}>
-                {pts.toLocaleString()}
-              </p>
-              <p style={{ margin: '6px 0 12px', color: C.sub, fontSize: 12.5 }}>
-                المستوى {level} · متجر المكافآت والنقاط في مكان واحد
-              </p>
-              <PrimaryBtn label="فتح نقاطي" onClick={() => navigate('/student/points')} />
-            </div>
-          </div>
-
-          {/* ── Row 5: Icon shortcuts (replaces sidebar) ── */}
+          {/* ── Icon shortcuts (replaces sidebar) ── */}
           <div style={{ ...card, marginTop: gap, minHeight: 'auto', height: 'auto' }}>
             <StudentHomeShortcuts />
           </div>
