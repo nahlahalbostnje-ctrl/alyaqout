@@ -213,6 +213,16 @@ export default function CourseContentPage() {
                   ? 'أضف وحدات ودروس ومقاطع — ثم ينتظر المساق موافقة الإدارة للنشر'
                   : 'إدارة الوحدات والدروس والمحتوى'}
               </p>
+              {isTeacher && (
+                <p style={{
+                  margin: '10px 0 0', fontSize: 12, fontWeight: 700,
+                  color: units.length > 0 && Object.values(videos).some((list) => list.length > 0) ? '#059669' : '#D97706',
+                }}>
+                  {units.length > 0 && Object.values(videos).some((list) => list.length > 0)
+                    ? '✓ المحتوى يكفي للاعتماد (وحدة + عنصر واحد على الأقل)'
+                    : '⚠ جاهزية الاعتماد: أضف وحدة واحدة على الأقل ثم درساً ومحتوى واحداً'}
+                </p>
+              )}
             </div>
             <button
               onClick={() => { setEditingUnitId(null); setUnitTitle(''); setUnitModal(true); }}

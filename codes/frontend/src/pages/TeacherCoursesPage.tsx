@@ -133,7 +133,17 @@ export default function TeacherCoursesPage() {
                     {course.grade?.name && (
                       <span style={{ padding: '3px 9px', borderRadius: 8, background: 'rgba(0,0,0,0.04)', color: C.dim, fontSize: 11 }}>{course.grade.name}</span>
                     )}
+                    <span style={{
+                      padding: '3px 9px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                      background: course.ready ? C.greenBg : C.amberBg,
+                      color: course.ready ? C.green : C.amber,
+                    }}>
+                      {course.ready ? 'جاهز للموافقة' : 'محتوى ناقص'}
+                    </span>
                   </div>
+                  <p style={{ margin: '0 0 8px', fontSize: 12, color: C.sub }}>
+                    {(course.units_count ?? 0)} وحدة · {(course.videos_count ?? 0)} محتوى
+                  </p>
                   <p style={{ fontWeight: 800, fontSize: 14, color: course.is_free ? C.green : C.gold, margin: '0 0 12px' }}>
                     {course.is_free ? 'مجاني' : formatMoney(course.price)}
                   </p>
@@ -145,7 +155,7 @@ export default function TeacherCoursesPage() {
                       textDecoration: 'none',
                     }}
                   >
-                    تحرير المحتوى
+                    {course.ready ? 'تحرير المحتوى' : 'أكمل المحتوى'}
                   </Link>
                 </div>
               );

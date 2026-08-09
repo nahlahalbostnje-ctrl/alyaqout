@@ -23,6 +23,9 @@ export interface TeacherCourse {
   category?: CourseCategory;
   subject?: { id: number; name: string; type: string };
   grade?: { id: number; name: string };
+  units_count?: number;
+  videos_count?: number;
+  ready?: boolean;
 }
 
 export interface TeacherLiveClass {

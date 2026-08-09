@@ -13,6 +13,7 @@ use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\LiveClass;
 use App\Models\TeacherSubject;
+use App\Services\CoursePublishGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -129,7 +130,7 @@ class HomeController extends Controller
         ]);
     }
 
-    public function courses(): JsonResponse
+    public function courses(CoursePublishGate $publishGate): JsonResponse
     {
         $courses = Course::where('teacher_id', $this->teacherId())
             ->with([
@@ -139,7 +140,28 @@ class HomeController extends Controller
                 'category.grade:id,name',
             ])
             ->orderBy('sort_order')
-            ->get();
+            ->get()
+            ->map(function (Course $course) use ($publishGate) {
+                $summary = $publishGate->summary($course);
+
+                return [
+                    'id'               => $course->id,
+                    'title'            => $course->title,
+                    'description'      => $course->description,
+                    'thumbnail'        => $course->thumbnail,
+                    'price'            => $course->price,
+                    'is_free'          => $course->is_free,
+                    'is_active'        => $course->is_active,
+                    'approval_status'  => $course->approval_status,
+                    'subject'          => $course->subject,
+                    'grade'            => $course->grade,
+                    'category'         => $course->category,
+                    'units_count'      => $summary['units_count'],
+                    'videos_count'     => $summary['videos_count'],
+                    'ready'            => $summary['ready'],
+                ];
+            })
+            ->values();
 
         return response()->json(['success' => true, 'data' => $courses]);
     }
