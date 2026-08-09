@@ -13,6 +13,7 @@ export const STUDENT_HOME_GRID: HomeGridItem[] = [
   { to: '/student/exams', title: 'الامتحانات', emoji: '📋' },
   { to: '/student/library', title: 'المكتبة', emoji: '📖' },
   { to: '/student/messages', title: 'الرسائل', emoji: '💬' },
+  { to: '/student/courses?tab=schedule', title: 'الحصص المباشرة', emoji: '🎥' },
   // صف 2
   { to: '/student/league', title: 'لوحة المتصدرين', emoji: '🏆' },
   { to: '/student/study-24', title: 'غرفة المذاكرة', emoji: '🧠' },
