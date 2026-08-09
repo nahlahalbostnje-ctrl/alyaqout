@@ -5,7 +5,9 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchStudentDashboard } from '../features/student/studentSlice';
 import { fetchMyPoints, fetchLeaderboard } from '../features/student/gamificationSlice';
 import StudentLayout from '../components/StudentLayout';
+import StudentHomeShortcuts from '../components/StudentHomeShortcuts';
 import { C } from '../theme/palette';
+import { typeScale } from '../features/student/studentNav';
 
 /**
  * Phase A — Student home information hierarchy:
@@ -31,7 +33,12 @@ const card: CSSProperties = {
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <p style={{ margin: '0 0 12px', color: C.text, fontWeight: 800, fontSize: 14 }}>{children}</p>
+    <p style={{
+      margin: '0 0 12px', color: C.text,
+      fontWeight: typeScale.h2.fontWeight,
+      fontSize: typeScale.h2.fontSize,
+      lineHeight: typeScale.h2.lineHeight,
+    }}>{children}</p>
   );
 }
 
@@ -138,17 +145,27 @@ export default function StudentDashboardPage() {
 
   return (
     <StudentLayout>
-      <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", background: C.bg, minHeight: '100%' }}>
+      <div dir="rtl" style={{ fontFamily: typeScale.font, background: C.bg, minHeight: '100%' }}>
         <div style={{ padding: isMobile ? '14px 12px 28px' : '18px 20px 32px', maxWidth: 980, margin: '0 auto' }}>
 
           {/* ── Row 1: Welcome ── */}
           <div style={{ ...card, marginBottom: gap, minHeight: 'auto', height: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ minWidth: 0 }}>
-                <h1 style={{ margin: 0, color: C.text, fontWeight: 900, fontSize: isMobile ? 18 : 22 }}>
+                <h1 style={{
+                  margin: 0, color: C.text,
+                  fontWeight: typeScale.h1.fontWeight,
+                  fontSize: isMobile ? 18 : typeScale.h1.fontSize,
+                  lineHeight: typeScale.h1.lineHeight,
+                }}>
                   مرحباً {firstName}
                 </h1>
-                <p style={{ margin: '6px 0 0', color: C.sub, fontSize: 13 }}>
+                <p style={{
+                  margin: '6px 0 0', color: C.sub,
+                  fontSize: typeScale.caption.fontSize,
+                  fontWeight: typeScale.caption.fontWeight,
+                  lineHeight: typeScale.caption.lineHeight,
+                }}>
                   المستوى {level} · {pts.toLocaleString()} نقطة
                 </p>
               </div>
@@ -353,7 +370,7 @@ export default function StudentDashboardPage() {
 
             <div style={card}>
               <SectionTitle>نقاطي</SectionTitle>
-              <p style={{ margin: 0, color: C.text, fontWeight: 900, fontSize: 28, lineHeight: 1.1 }}>
+              <p style={{ margin: 0, color: C.text, fontWeight: 800, fontSize: 28, lineHeight: 1.1 }}>
                 {pts.toLocaleString()}
               </p>
               <p style={{ margin: '6px 0 12px', color: C.sub, fontSize: 12.5 }}>
@@ -361,6 +378,11 @@ export default function StudentDashboardPage() {
               </p>
               <PrimaryBtn label="فتح نقاطي" onClick={() => navigate('/student/points')} />
             </div>
+          </div>
+
+          {/* ── Row 5: Icon shortcuts (replaces sidebar) ── */}
+          <div style={{ ...card, marginTop: gap, minHeight: 'auto', height: 'auto' }}>
+            <StudentHomeShortcuts />
           </div>
 
         </div>
