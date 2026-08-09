@@ -10,9 +10,10 @@
 - تنظيف فوترة ولي الأمر من UX بوابة الدفع؛ طباعة فاتورة + بيانات اشتراك حقيقية
 - بانر حالة الاشتراك في لوحة الطالب (نشط / ينتهي / منتهٍ)
 
-### 🔧
-- توسيع `leads.source`: `register`, `try_free`
-- فصل منطقي: Subscription → Invoice Status (قابل لإضافة Payment Gateway لاحقاً)
+### 📄 توثيق
+- `docs/LANDING_PAGE.md` — مرجع كامل للبوابة وVisitor Mode وAPIs
+- `docs/PLATFORM_STATUS_2026-08-09.md` — جرد محدّث
+- `docs/README.md` · `PROJECT_LOG.md` · `CHANGELOG.md`
 
 ---
 

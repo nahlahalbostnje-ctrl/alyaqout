@@ -14,6 +14,42 @@
 
 ---
 
+## 2026-08-09
+
+### [2026-08-09] — بوابة الهبوط + Visitor Mode + فواتير بلا Payment Gateway
+
+- **ما تم:**
+  - إعادة تصميم `/` كـ Educational Landing + Visitor Gateway (Header، Hero، أقسام البرومبت، Footer).
+  - وضع زائر حقيقي: `/explore` + `VisitorGateDialog` + `sessionStorage`.
+  - طلب إنشاء حساب `/register` عبر Lead (`source=register`) دون تسجيل ذاتي فوري ودون دفع إلكتروني.
+  - توسيع Public APIs: courses، teachers، live-classes، leaderboard، challenges.
+  - توسيع `leads.source`: `register`، `try_free` (migration).
+  - تنظيف `/parent/billing` من UX بوابة الدفع؛ اشتراكات حقيقية + طباعة فاتورة + تواصل إدارة.
+  - بانر حالة الاشتراك في لوحة الطالب (نشط / ينتهي ≤5 أيام / منتهٍ).
+  - نشر الإنتاج: commit `81e9999` على https://alyaqoutgroup.net
+  - توثيق: `docs/LANDING_PAGE.md`، `docs/PLATFORM_STATUS_2026-08-09.md`، `docs/README.md`، `CHANGELOG.md`.
+
+- **الملفات المتأثرة:**
+  - `codes/frontend/src/pages/LandingPage.tsx`
+  - `codes/frontend/src/pages/RegisterPage.tsx` ← جديد
+  - `codes/frontend/src/pages/visitor/VisitorExplorePage.tsx` ← جديد
+  - `codes/frontend/src/features/visitor/visitorMode.ts` ← جديد
+  - `codes/frontend/src/components/visitor/VisitorGateDialog.tsx` ← جديد
+  - `codes/frontend/src/pages/ParentBillingPage.tsx`
+  - `codes/frontend/src/pages/StudentDashboardPage.tsx`
+  - `codes/backend/app/Http/Controllers/PublicController.php`
+  - `codes/backend/app/Http/Controllers/LeadController.php`
+  - `codes/backend/database/migrations/2026_08_09_220000_expand_leads_source_enum.php` ← جديد
+  - `docs/LANDING_PAGE.md` · `docs/PLATFORM_STATUS_2026-08-09.md` · `docs/README.md`
+
+- **ما تبقى / ملاحظات:**
+  - CMS نصوص/صور الهبوط من الأدمن.
+  - Testimonials حقيقية من لوحة التحكم.
+  - عدّاد غرفة المذاكرة الحي إن وُجد API.
+  - **لا** Payment Gateway حالياً — البنية Subscription → Invoice Status قابلة للتوسع لاحقاً.
+
+---
+
 ## 2026-06-10
 
 ### [2026-06-10] — تأسيس مستندات المشروع
