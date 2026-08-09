@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import StudentLayout from '../components/StudentLayout';
 import api from '../services/axios';
 import { C } from '../theme/palette';
@@ -19,17 +20,37 @@ interface LibraryItem {
 const TYPE_LABELS: Record<LibType, { label: string; icon: string; color: string }> = {
   book: { label: 'كتب', icon: '📚', color: '#C9952A' },
   dedication: { label: 'إهداءات', icon: '🎁', color: '#7C3AED' },
-  past_exam: { label: 'أسئلة سنوات', icon: '📝', color: '#2563EB' },
+  past_exam: { label: 'سنوات سابقة', icon: '📑', color: '#2563EB' },
   summary: { label: 'ملخصات', icon: '📄', color: '#16A34A' },
 };
 
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 export default function StudentLibraryPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeParam = searchParams.get('type');
+  const initialTab: '' | LibType =
+    typeParam === 'past_exam' || typeParam === 'book' || typeParam === 'dedication' || typeParam === 'summary'
+      ? typeParam
+      : '';
+
   const [items, setItems] = useState<LibraryItem[]>([]);
-  const [tab, setTab] = useState<'' | LibType>('');
+  const [tab, setTab] = useState<'' | LibType>(initialTab);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = searchParams.get('type');
+    if (t === 'past_exam' || t === 'book' || t === 'dedication' || t === 'summary') {
+      setTab(t);
+    }
+  }, [searchParams]);
+
+  const selectTab = (t: '' | LibType) => {
+    setTab(t);
+    if (t) setSearchParams({ type: t });
+    else setSearchParams({});
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,7 +81,7 @@ export default function StudentLibraryPage() {
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, margin: '0 0 4px' }}>موارد تعليمية</p>
           <h1 style={{ color: '#fff', fontWeight: 900, fontSize: 22, margin: 0 }}>مكتبة الياقوت</h1>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, margin: '8px 0 0', maxWidth: 420 }}>
-            كتب، أسئلة سنوات سابقة، ملخصات، وإهداءات من معلميك — حسب دولتك وصفّك
+            كتب، سنوات سابقة، ملخصات، وإهداءات من معلميك — حسب دولتك وصفّك
           </p>
         </div>
 
@@ -71,7 +92,7 @@ export default function StudentLibraryPage() {
             width: 'fit-content',
           }}>
             <button
-              onClick={() => setTab('')}
+              onClick={() => selectTab('')}
               style={{
                 padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
                 fontSize: 13, fontWeight: 700, ...font,
@@ -84,7 +105,7 @@ export default function StudentLibraryPage() {
             {(Object.keys(TYPE_LABELS) as LibType[]).map((t) => (
               <button
                 key={t}
-                onClick={() => setTab(t)}
+                onClick={() => selectTab(t)}
                 style={{
                   padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: 700, ...font,
