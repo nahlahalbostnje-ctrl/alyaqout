@@ -4,7 +4,7 @@ export const ST = {
   primary: '#0B5ED7',
   secondary: '#1E88E5',
   navy: '#0A2540',
-  bg: '#F7FAFC',
+  bg: '#F8FAFC',
   card: '#FFFFFF',
   gold: '#F59E0B',
   success: '#10B981',
