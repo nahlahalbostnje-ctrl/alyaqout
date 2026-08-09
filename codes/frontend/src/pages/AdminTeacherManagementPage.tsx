@@ -4,17 +4,8 @@ import AdminLayout from '../components/AdminLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchUsers, toggleUser } from '../features/admin/usersSlice';
 import { useCurrency } from '../hooks/useCurrency';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  navy:'#0D1E3A', bg:'#F5EDD8', card:'#FFFFFF', text:'#1B2038',
-  sub:'#6B7280', border:'#EDE3CE', shadow:'0 2px 16px rgba(0,0,0,0.06)',
-  green:'#10B981', greenBg:'rgba(16,185,129,0.08)', greenBdr:'rgba(16,185,129,0.2)',
-  red:'#DC2626', redBg:'rgba(220,38,38,0.08)',
-  blue:'#3B82F6', blueBg:'rgba(59,130,246,0.08)',
-  amber:'#F59E0B', amberBg:'rgba(245,158,11,0.08)',
-  goldBg:'rgba(197,147,65,0.08)', goldBdr:'rgba(197,147,65,0.25)',
-};
 
 interface Teacher {
   id: number;

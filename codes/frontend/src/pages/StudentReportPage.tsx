@@ -3,15 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import StudentLayout from '../components/StudentLayout';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyReport } from '../features/student/reportSlice';
+import { C } from '../theme/palette';
 
-const C = {
-  bg: '#F2EDE4', card: '#FFFFFF', navy: '#0D1535', navy2: '#1B2038',
-  gold: '#C9952A', goldL: '#DDAD50', goldGrad: 'linear-gradient(135deg,#C9952A 0%,#DDAD50 100%)',
-  goldBg: 'rgba(201,149,42,0.09)', goldBdr: 'rgba(201,149,42,0.25)',
-  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: 'rgba(0,0,0,0.07)',
-  shadow: '0 2px 14px rgba(0,0,0,0.07)',
-  red: '#EF4444', green: '#16A34A', blue: '#2563EB', purple: '#7C3AED',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 const PERIODS = ['هذا الشهر', 'الفصل الأول', 'الفصل الثاني', 'العام الكامل'] as const;

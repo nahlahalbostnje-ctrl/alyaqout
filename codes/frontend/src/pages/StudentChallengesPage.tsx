@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import StudentLayout from '../components/StudentLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
 type ChallengeType = 'individual' | 'family';
 type ChallengeStatus = 'pending' | 'active' | 'completed' | 'cancelled';
@@ -21,11 +22,6 @@ interface Challenge {
   student: { id: number; name: string } | null;
 }
 
-const C = {
-  card: '#FFFFFF', gold: '#C9952A', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)',
-  text: '#1B2038', sub: '#6B7280', border: 'rgba(0,0,0,0.07)', shadow: '0 2px 14px rgba(0,0,0,0.07)',
-  green: '#16A34A', amber: '#D97706', red: '#EF4444', purple: '#7C3AED',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 const CATEGORIES = [

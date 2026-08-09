@@ -8,8 +8,8 @@
 html { scroll-behavior: auto; direction: rtl; }
 body {
   font-family: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-  background: #060d1f;
-  color: #fff;
+  background: #F7F9FA;
+  color: #243746;
   line-height: 1.75;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
@@ -18,19 +18,35 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
-   DESIGN TOKENS
+   DESIGN TOKENS — ثيم فاتح هادئ (2026-08)
 ═══════════════════════════════════════════════ */
 
 :root {
-  /* Colors */
-  --gold:        #f5a623;
-  --gold-light:  #ffd166;
-  --gold-pale:   #fff8e7;
-  --dark-base:   #060d1f;
-  --dark-deep:   #040a18;
-  --dark-mid:    #070e22;
-  --dark-card:   #0a1628;
-  --navy:        #0d1b4b;
+  /* Surfaces */
+  --bg:          #F7F9FA;
+  --card:        #FFFFFF;
+  --text:        #243746;
+  --text-sub:    #5A6B75;
+  --border:      #E2EBF0;
+
+  /* Interactive (أزرق هادئ) */
+  --primary:     #3B82A0;
+  --primary-soft:#78B7C9;
+  --success:     #6FAF8A;
+
+  /* هوية الياقوت — للشعار فقط ~3% */
+  --brand-gold:  #C59341;
+  --brand-gold-l:#D4A65A;
+
+  /* توافق أسماء قديمة */
+  --gold:        var(--primary);
+  --gold-light:  var(--primary-soft);
+  --gold-pale:   rgba(59,130,160,0.08);
+  --dark-base:   #F7F9FA;
+  --dark-deep:   #EEF3F6;
+  --dark-mid:    #E8EEF2;
+  --dark-card:   #FFFFFF;
+  --navy:        #243746;
 
   /* Type scale — clamp(min, fluid, max) */
   --text-xs:   clamp(0.68rem, 1.2vw,  0.75rem);

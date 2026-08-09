@@ -1,11 +1,6 @@
 import { useState } from 'react';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  navy:'#0D1E3A', card:'#fff', border:'#E8EDF5', sub:'#64748B',
-  text:'#1E293B', goldBg:'rgba(197,147,65,0.08)', goldBdr:'rgba(197,147,65,0.25)',
-  shadow:'0 2px 8px rgba(13,30,58,0.06)', green:'#25D366',
-};
 
 export default function NearestBranchWidget() {
   const [open, setOpen] = useState(false);

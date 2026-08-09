@@ -7,6 +7,7 @@ import {
   useMotionValue, useSpring,
 } from 'framer-motion';
 import BrandLogo from '../components/BrandLogo';
+import { C } from '../theme/palette';
 
 /* ── Constants ─────────────────────────────── */
 const ROLE_ROUTES: Record<string, string> = {
@@ -117,9 +118,9 @@ function RippleButton({ children, disabled, type = 'button' }: {
         style={{
           width: '100%', height: 56, borderRadius: 16, border: 'none',
           background: disabled
-            ? 'linear-gradient(135deg,#8a6a1a 0%,#a67c1a 100%)'
-            : 'linear-gradient(135deg,#f5a623 0%,#ffd166 50%,#e09000 100%)',
-          color: disabled ? 'rgba(255,255,255,0.85)' : '#0d1b4b',
+            ? 'linear-gradient(135deg,#2F6A84 0%,#3B82A0 100%)'
+            : 'linear-gradient(135deg,#3B82A0 0%,#78B7C9 100%)',
+          color: disabled ? 'rgba(255,255,255,0.85)' : C.text,
           fontSize: 17, fontWeight: 900,
           fontFamily: "'Cairo','Tajawal',sans-serif",
           letterSpacing: '-0.01em',
@@ -168,7 +169,7 @@ function FloatingInput({ value, onChange, hasError, label, type = 'text', autoCo
         animate={{
           top:      floated ? 9  : 20,
           fontSize: floated ? 11 : 15,
-          color: hasError ? '#f87171' : focused ? '#f5a623' : 'rgba(255,255,255,0.36)',
+          color: hasError ? '#f87171' : focused ? C.goldL : 'rgba(255,255,255,0.36)',
         }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
         style={{
@@ -299,8 +300,8 @@ export default function LoginPage() {
         style={{
           flex: 1, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer',
           fontFamily: "'Cairo','Tajawal',sans-serif", fontWeight: 800, fontSize: 13,
-          background: active ? 'linear-gradient(135deg,#f5a623,#ffd166)' : 'rgba(255,255,255,0.04)',
-          color: active ? '#0d1b4b' : 'rgba(255,255,255,0.55)',
+          background: active ? 'linear-gradient(135deg,#78B7C9,#a8d4e0)' : 'rgba(255,255,255,0.04)',
+          color: active ? C.text : 'rgba(255,255,255,0.7)',
           transition: 'all 0.25s ease',
         }}>
         {label}
@@ -310,17 +311,17 @@ export default function LoginPage() {
 
   return (
     <div dir="rtl" style={{
-      minHeight: '100vh', background: '#060d1f',
+      minHeight: '100vh', background: C.bg,
       position: 'relative', overflow: 'hidden',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        background: 'linear-gradient(155deg,#0d1b4b 0%,#060d1f 52%,#091424 100%)',
+        background: 'linear-gradient(155deg,#3B82A0 0%,#2F6A84 45%,#243746 100%)',
       }} />
       <div style={{
         position: 'absolute', width: 800, height: 600, borderRadius: '50%',
-        background: 'radial-gradient(ellipse,rgba(245,166,35,0.2) 0%,transparent 68%)',
+        background: 'radial-gradient(ellipse,rgba(120,183,201,0.35) 0%,transparent 68%)',
         top: -250, right: -200, filter: 'blur(100px)', zIndex: 1,
         animation: 'au1 22s ease-in-out infinite alternate',
       }} />
@@ -352,7 +353,7 @@ export default function LoginPage() {
 
           <div style={{
             height: 3,
-            background: 'linear-gradient(90deg,transparent,#f5a623,#ffd166,#f5a623,transparent)',
+            background: 'linear-gradient(90deg,transparent,#78B7C9,#a8d4e0,#78B7C9,transparent)',
             backgroundSize: '250% auto',
             animation: 'yq-shimmer 3.5s linear infinite',
           }} />
@@ -374,7 +375,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(245,166,35,0.2),transparent)', margin: '0 28px' }} />
+          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(120,183,201,0.35),transparent)', margin: '0 28px' }} />
 
           <div style={{ padding: '24px 32px 32px' }}>
             {/* Tabs */}
@@ -469,7 +470,7 @@ export default function LoginPage() {
                     <button type="button"
                       onClick={() => { setOtpSent(false); setOtp(''); setDebugOtp(null); setInfoMsg(''); }}
                       style={{
-                        background: 'none', border: 'none', color: '#f5a623', fontSize: 12,
+                        background: 'none', border: 'none', color: C.goldL, fontSize: 12,
                         fontWeight: 700, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
                       }}>
                       تغيير الرقم / إعادة إرسال
@@ -484,7 +485,7 @@ export default function LoginPage() {
                     }}>
                       {infoMsg}
                       {debugOtp && (
-                        <div style={{ marginTop: 6, fontSize: 18, fontWeight: 900, color: '#f5a623', letterSpacing: 4 }}>
+                        <div style={{ marginTop: 6, fontSize: 18, fontWeight: 900, color: C.goldL, letterSpacing: 4 }}>
                           {debugOtp}
                         </div>
                       )}

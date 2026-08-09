@@ -3,14 +3,8 @@ import { ref, push, onValue } from 'firebase/database';
 import { db } from '../services/firebase';
 import { useAppSelector } from '../app/hooks';
 import StudentLayout from '../components/StudentLayout';
+import { C } from '../theme/palette';
 
-const C = {
-  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
-  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
-  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.25)',
-  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
-  shadow:'0 2px 14px rgba(0,0,0,0.07)', red:'#EF4444',
-};
 
 interface Message {
   id:        string;

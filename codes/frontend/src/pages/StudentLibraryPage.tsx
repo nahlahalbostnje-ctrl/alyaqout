@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import StudentLayout from '../components/StudentLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
 type LibType = 'book' | 'dedication' | 'past_exam' | 'summary';
 
@@ -22,10 +23,6 @@ const TYPE_LABELS: Record<LibType, { label: string; icon: string; color: string 
   summary: { label: 'ملخصات', icon: '📄', color: '#16A34A' },
 };
 
-const C = {
-  card: '#FFFFFF', gold: '#C9952A', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)',
-  text: '#1B2038', sub: '#6B7280', border: 'rgba(0,0,0,0.07)', shadow: '0 2px 14px rgba(0,0,0,0.07)',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 export default function StudentLibraryPage() {

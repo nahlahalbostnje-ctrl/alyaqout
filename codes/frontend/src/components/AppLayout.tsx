@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
+import { C, brand } from '../theme/palette';
 
 export interface NavItem {
   to: string;
@@ -21,9 +22,6 @@ interface Props {
   profilePath?: string;
 }
 
-const SB = '#0D1E3A';
-const GOLD = '#C59341';
-const GOLD_L = '#D4A65A';
 
 export default function AppLayout({ children, navItems, roleLabel, profilePath }: Props) {
   const dispatch = useAppDispatch();
@@ -76,7 +74,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
     <div
       dir="rtl"
       data-layout="app-root"
-      style={{ display: 'flex', minHeight: '100vh', background: '#F5EDD8', fontFamily: "'Cairo', sans-serif" }}
+      style={{ display: 'flex', minHeight: '100vh', background: C.bg, fontFamily: "'Cairo', sans-serif" }}
     >
       {/* ══ MOBILE BACKDROP ══ */}
       {isMobile && sidebarOpen && (
@@ -89,7 +87,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
         style={{
           width: 280,
           flexShrink: 0,
-          background: SB,
+          background: C.sidebar,
           display: 'flex',
           flexDirection: 'column',
           height: '100dvh',
@@ -99,7 +97,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           top: 0,
           right: 0,
           zIndex: isMobile ? 50 : 'auto',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          borderLeft: `1px solid ${C.sidebarBorder}`,
           transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(100%)') : 'none',
           transition: 'transform 0.25s ease',
         }}
@@ -108,14 +106,14 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
         <div
           style={{
             padding: '20px 16px 18px',
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            borderBottom: `1px solid ${C.border}`,
             flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <BrandLogo size={44} style={{ flexShrink: 0, borderRadius: 10 }} />
             <div>
-              <p style={{ color: GOLD_L, fontSize: 13, fontWeight: 700 }}>{roleLabel}</p>
+              <p style={{ color: brand.gold, fontSize: 13, fontWeight: 700 }}>{roleLabel}</p>
             </div>
           </div>
         </div>
@@ -149,14 +147,14 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                     alignItems: 'center',
                     gap: 10,
                     padding: '11px 12px',
-                    borderRadius: 12,
-                    fontSize: 15,
-                    fontWeight: isActive ? 800 : 700,
-                    background: isActive ? GOLD : 'transparent',
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
+                    borderRadius: 10,
+                    fontSize: 14.5,
+                    fontWeight: isActive ? 800 : 600,
+                    background: isActive ? C.sidebarActiveBg : 'transparent',
+                    color: isActive ? C.primary : C.text,
+                    borderRight: isActive ? `3px solid ${C.primary}` : '3px solid transparent',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
-                    boxShadow: isActive ? `0 4px 12px rgba(197,147,65,0.35)` : 'none',
                   }}
                 >
                   <span
@@ -164,7 +162,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                       width: 20,
                       height: 20,
                       flexShrink: 0,
-                      color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
+                      color: 'inherit',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -184,7 +182,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           style={{
             flexShrink: 0,
             padding: '10px 10px 14px',
-            borderTop: '1px solid rgba(255,255,255,0.07)',
+            borderTop: `1px solid ${C.border}`,
           }}
         >
           <div
@@ -194,7 +192,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
               gap: 10,
               padding: '10px 12px',
               borderRadius: 12,
-              background: 'rgba(255,255,255,0.06)',
+              background: C.bg,
               marginBottom: 6,
             }}
           >
@@ -203,7 +201,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                 width: 36,
                 height: 36,
                 borderRadius: 11,
-                background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
+                background: `linear-gradient(135deg, ${C.primary}, ${C.goldL})`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -219,7 +217,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
               <p style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.name}
               </p>
-              <p style={{ color: GOLD_L, fontSize: 10.5, marginTop: 1 }}>{roleLabel}</p>
+              <p style={{ color: C.goldL, fontSize: 10.5, marginTop: 1 }}>{roleLabel}</p>
             </div>
           </div>
           <button
@@ -265,7 +263,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
             top: 0,
             zIndex: 10,
             background: '#FFFFFF',
-            borderBottom: '1px solid #EDE3CE',
+            borderBottom: `1px solid ${C.border}`,
             boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
           }}
         >
@@ -273,7 +271,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(o => !o)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: SB }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: C.navy }}>
                 <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
                 </svg>
@@ -284,7 +282,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
               {currentPage && (
                 <>
                   <span style={{ color: '#D1C4A8', fontSize: 12 }}>/</span>
-                  <span style={{ color: '#0D1E3A', fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
+                  <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
                 </>
               )}
             </div>
@@ -298,7 +296,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
             {/* Bell */}
             <NotificationBell />
 
-            <div style={{ width: 1, height: 28, background: '#EDE3CE' }} />
+            <div style={{ width: 1, height: 28, background: C.border }} />
 
             {/* User profile dropdown */}
             <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
@@ -314,8 +312,8 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                   gap: 9,
                   padding: '4px 6px 4px 8px',
                   borderRadius: 12,
-                  border: profileMenuOpen ? `1.5px solid ${GOLD}` : '1.5px solid transparent',
-                  background: profileMenuOpen ? 'rgba(197,147,65,0.08)' : 'transparent',
+                  border: profileMenuOpen ? `1.5px solid ${C.primary}` : '1.5px solid transparent',
+                  background: profileMenuOpen ? C.goldBg : 'transparent',
                   cursor: 'pointer',
                   fontFamily: "'Cairo', sans-serif",
                 }}
@@ -325,7 +323,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                     width: 34,
                     height: 34,
                     borderRadius: 10,
-                    background: `linear-gradient(135deg, ${GOLD}, ${GOLD_L})`,
+                    background: `linear-gradient(135deg, ${C.primary}, ${C.goldL})`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -339,8 +337,8 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                 </div>
                 {!isMobile && (
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ color: '#1B2038', fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>{user?.name}</p>
-                    <p style={{ color: GOLD, fontSize: 10.5, margin: 0 }}>{roleLabel}</p>
+                    <p style={{ color: C.text, fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>{user?.name}</p>
+                    <p style={{ color: C.primary, fontSize: 10.5, margin: 0 }}>{roleLabel}</p>
                   </div>
                 )}
                 <span style={{ color: '#9CA3AF', fontSize: 10, transform: profileMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
@@ -356,7 +354,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                     minWidth: 200,
                     background: '#fff',
                     borderRadius: 14,
-                    border: '1px solid #EDE3CE',
+                    border: `1px solid ${C.border}`,
                     boxShadow: '0 10px 32px rgba(0,0,0,0.12)',
                     padding: 6,
                     zIndex: 60,
@@ -377,14 +375,14 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
                         borderRadius: 10,
                         border: 'none',
                         background: 'transparent',
-                        color: '#1B2038',
+                        color: C.text,
                         fontSize: 13,
                         fontWeight: 700,
                         cursor: 'pointer',
                         fontFamily: "'Cairo', sans-serif",
                         textAlign: 'right',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(197,147,65,0.1)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = C.goldBg; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <span style={{ fontSize: 15 }}>👤</span>
@@ -424,7 +422,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
         </header>
 
         {/* Content */}
-        <main style={{ flex: 1, overflowY: 'auto', background: '#F5EDD8' }}>
+        <main style={{ flex: 1, overflowY: 'auto', background: C.bg }}>
           {children}
         </main>
       </div>

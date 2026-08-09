@@ -1,16 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C9952A', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
-  goldBg:'rgba(201,149,42,0.08)',
-  card:'#FFFFFF', text:'#0D1535', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
-  shadow:'0 2px 16px rgba(0,0,0,0.06)',
-  green:'#10B981', greenBg:'rgba(16,185,129,0.08)',
-  red:'#EF4444', redBg:'rgba(239,68,68,0.08)',
-  blue:'#3B82F6', blueBg:'rgba(59,130,246,0.08)',
-};
 
 const DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 

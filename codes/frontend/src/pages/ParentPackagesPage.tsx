@@ -2,12 +2,8 @@ import { useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
 import api from '../services/axios';
 import { useCurrency } from '../hooks/useCurrency';
+import { C } from '../theme/palette';
 
-const C = {
-  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
-  bg: '#F5EDD8', card: '#FFFFFF', text: '#1B2038', sub: '#6B7280',
-  border: '#EDE3CE', green: '#10B981', orange: '#D97706', red: '#EF4444',
-};
 
 type Child = { id: number; name: string };
 type Pkg = {

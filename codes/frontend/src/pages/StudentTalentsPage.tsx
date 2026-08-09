@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import StudentLayout from '../components/StudentLayout';
 import { useAppSelector } from '../app/hooks';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
 interface Talent {
   id: number;
@@ -14,11 +15,6 @@ interface Talent {
   bio: string | null;
 }
 
-const C = {
-  card: '#FFFFFF', gold: '#C9952A', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)',
-  text: '#1B2038', sub: '#6B7280', border: 'rgba(0,0,0,0.07)', shadow: '0 2px 14px rgba(0,0,0,0.07)',
-  purple: '#7C3AED',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #EDE3CE',

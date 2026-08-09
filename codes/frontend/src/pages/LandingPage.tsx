@@ -7,6 +7,7 @@ import {
 import api from '../services/axios';
 import { useLenis } from '../hooks/useLenis';
 import BrandLogo from '../components/BrandLogo';
+import { C as ThemeC } from '../theme/palette';
 
 /* ── Types ──────────────────────────────────── */
 interface Country    { id: number; name: string; code?: string; }
@@ -21,24 +22,7 @@ const CODE_FLAG: Record<string, string> = {
 };
 const flagFor = (c: Country) => (c.code && CODE_FLAG[c.code.toUpperCase()]) || '🌍';
 
-const C = {
-  gold:    '#C59341',
-  goldLt:  '#D4A65A',
-  goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  goldBg:  'rgba(197,147,65,0.08)',
-  goldBdr: 'rgba(197,147,65,0.22)',
-  navy:    '#0D1E3A',
-  navy2:   '#142a4e',
-  navy3:   '#0a1730',
-  bg:      '#F5EDD8',
-  card:    '#FFFFFF',
-  text:    '#1B2038',
-  sub:     '#6B7280',
-  dim:     '#9CA3AF',
-  border:  '#EDE3CE',
-  shadow:  '0 2px 16px rgba(0,0,0,0.06)',
-  sub2:    '#A1B1CC',
-} as const;
+const C = { ...ThemeC, goldLt: ThemeC.goldL, sub2: ThemeC.dim };
 
 const FONT = "'Cairo','Tajawal',sans-serif";
 const SP  = [0.16, 1, 0.3, 1] as const;
@@ -97,7 +81,7 @@ function ProgressBar() {
   return (
     <motion.div className="fixed top-0 left-0 right-0 z-[9999] origin-left"
       style={{ height: 2, scaleX: scrollYProgress,
-        background: `linear-gradient(90deg,${C.navy},${C.gold},${C.goldLt},${C.gold},${C.navy})` }} />
+        background: `linear-gradient(90deg,${C.bg},${C.primary},${C.goldLt},${C.primary},${C.bg})` }} />
   );
 }
 
@@ -272,9 +256,12 @@ export default function LandingPage() {
       {/* ════════ NAV ════════ */}
       <nav style={{
         position: 'fixed', top: 0, insetInline: 0, zIndex: 50,
-        background: scrolled ? 'rgba(13,30,58,0.96)' : C.navy,
-        backdropFilter: scrolled ? 'blur(12px)' : undefined,
-        boxShadow: scrolled ? '0 4px 28px rgba(13,30,58,0.45)' : 'none',
+        background: scrolled
+          ? 'rgba(247,249,250,0.96)'
+          : 'linear-gradient(180deg, rgba(47,106,132,0.92) 0%, rgba(59,130,160,0.72) 55%, rgba(59,130,160,0.28) 100%)',
+        backdropFilter: scrolled ? 'blur(12px)' : 'blur(6px)',
+        boxShadow: scrolled ? '0 4px 20px rgba(36,55,70,0.08)' : 'none',
+        borderBottom: scrolled ? `1px solid ${C.border}` : 'none',
         transition: 'box-shadow 0.35s ease, background 0.35s ease',
       }}>
         <div style={{
@@ -289,19 +276,21 @@ export default function LandingPage() {
                 onChange={e => setNavCountryId(e.target.value ? Number(e.target.value) : '')}
                 aria-label="اختيار الدولة"
                 style={{
-                  background: 'rgba(255,255,255,0.06)', color: '#fff', border: `1px solid ${C.goldBdr}`,
+                  background: scrolled ? C.card : 'rgba(255,255,255,0.12)',
+                  color: scrolled ? C.text : '#fff',
+                  border: `1px solid ${scrolled ? C.border : 'rgba(255,255,255,0.28)'}`,
                   borderRadius: 999, padding: '8px 36px 8px 28px', fontSize: 12.5, fontWeight: 700,
                   fontFamily: FONT, cursor: 'pointer', outline: 'none', appearance: 'none', minWidth: 120,
                 }}
               >
                 {countries.length === 0 && <option value="">لا دول</option>}
                 {countries.map(c => (
-                  <option key={c.id} value={c.id} style={{ background: C.navy, color: '#fff' }}>
+                  <option key={c.id} value={c.id} style={{ background: C.card, color: C.text }}>
                     {flagFor(c)} {c.name}
                   </option>
                 ))}
               </select>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: C.gold, fontSize: 12, pointerEvents: 'none' }}>
+              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: scrolled ? C.primary : C.goldL, fontSize: 12, pointerEvents: 'none' }}>
                 {selectedCountry ? flagFor(selectedCountry) : '🌍'}
               </span>
             </div>
@@ -310,9 +299,9 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-8">
             {([['المميزات', '#audience'], ['كيف نبدأ؟', '#steps'], ['الأسئلة', '#faqs']] as const).map(([l, h]) => (
               <a key={h} href={h}
-                style={{ fontSize: 13.5, fontWeight: 600, color: C.sub2, textDecoration: 'none' }}
-                onMouseEnter={e => ((e.target as HTMLElement).style.color = '#fff')}
-                onMouseLeave={e => ((e.target as HTMLElement).style.color = C.sub2)}
+                style={{ fontSize: 13.5, fontWeight: 600, color: scrolled ? C.sub : 'rgba(255,255,255,0.88)', textDecoration: 'none' }}
+                onMouseEnter={e => ((e.target as HTMLElement).style.color = scrolled ? C.primary : '#fff')}
+                onMouseLeave={e => ((e.target as HTMLElement).style.color = scrolled ? C.sub : 'rgba(255,255,255,0.88)')}
               >{l}</a>
             ))}
           </div>
@@ -321,14 +310,14 @@ export default function LandingPage() {
             <Link to="/login" style={{
               background: C.goldGrad, borderRadius: 12, color: '#fff', fontWeight: 800, fontSize: 13.5,
               fontFamily: FONT, padding: '10px 20px', textDecoration: 'none',
-              boxShadow: '0 4px 18px rgba(197,147,65,0.4)',
+              boxShadow: '0 4px 18px rgba(59,130,160,0.35)',
             }}>تسجيل الدخول</Link>
             <button type="button" className="md:hidden" onClick={() => setMenuOpen(m => !m)}
               aria-label="القائمة"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
               {[0, 1, 2].map(i => (
                 <div key={i} style={{
-                  width: 22, height: 2, background: '#fff', borderRadius: 2,
+                  width: 22, height: 2, background: scrolled ? C.text : '#fff', borderRadius: 2,
                   ...(menuOpen ? { transform: i === 0 ? 'rotate(45deg) translate(5px,5px)' : i === 2 ? 'rotate(-45deg) translate(5px,-5px)' : 'scaleX(0)' } : {}),
                 }} />
               ))}
@@ -339,15 +328,15 @@ export default function LandingPage() {
         <AnimatePresence>
           {menuOpen && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: 'hidden', borderTop: '1px solid rgba(197,147,65,0.15)' }}>
+              style={{ overflow: 'hidden', borderTop: `1px solid ${scrolled ? C.border : 'rgba(255,255,255,0.2)'}`, background: scrolled ? C.card : 'rgba(47,106,132,0.95)' }}>
               <div style={{ padding: '8px 0 16px', display: 'flex', flexDirection: 'column' }}>
                 {([['المميزات', '#audience'], ['كيف نبدأ؟', '#steps'], ['الأسئلة', '#faqs']] as const).map(([l, h]) => (
                   <a key={h} href={h} onClick={() => setMenuOpen(false)}
-                    style={{ padding: '12px 24px', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>{l}</a>
+                    style={{ padding: '12px 24px', color: scrolled ? C.text : '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>{l}</a>
                 ))}
                 <div style={{ padding: '8px 24px' }}>
                   <button type="button" onClick={() => { setMenuOpen(false); openModal('book_now'); }}
-                    style={{ width: '100%', padding: '12px', borderRadius: 12, border: `1px solid ${C.goldBdr}`, background: 'transparent', color: C.goldLt, fontWeight: 800, fontFamily: FONT, cursor: 'pointer' }}>
+                    style={{ width: '100%', padding: '12px', borderRadius: 12, border: `1px solid ${C.goldBdr}`, background: 'transparent', color: scrolled ? C.primary : C.goldLt, fontWeight: 800, fontFamily: FONT, cursor: 'pointer' }}>
                     احجز مكانك
                   </button>
                 </div>
@@ -371,7 +360,12 @@ export default function LandingPage() {
         />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(105deg, rgba(10,23,48,0.88) 0%, rgba(13,30,58,0.72) 42%, rgba(13,30,58,0.45) 70%, rgba(13,30,58,0.55) 100%)',
+          background: 'linear-gradient(105deg, rgba(36,55,70,0.82) 0%, rgba(47,106,132,0.68) 42%, rgba(59,130,160,0.42) 70%, rgba(47,106,132,0.5) 100%)',
+        }} />
+        {/* شريط أزرق هادئ أعلى الهيرو للهيدر الشفاف */}
+        <div style={{
+          position: 'absolute', top: 0, insetInline: 0, height: 120, pointerEvents: 'none',
+          background: 'linear-gradient(180deg, rgba(47,106,132,0.55) 0%, transparent 100%)',
         }} />
 
         <div style={{
@@ -524,7 +518,7 @@ export default function LandingPage() {
       </section>
 
       {/* ════════ PRODUCT PROOF ════════ */}
-      <section id="features" style={{ background: C.navy, padding: '64px 24px', position: 'relative', overflow: 'hidden' }}>
+      <section id="features" style={{ background: C.bg, padding: '64px 24px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <SectionTitle
             light
@@ -652,7 +646,7 @@ export default function LandingPage() {
       <section style={{ background: C.bg, padding: '0 24px 64px' }}>
         <div style={{
           maxWidth: 960, margin: '0 auto', borderRadius: 24, padding: isMobile ? '36px 20px' : '48px 40px',
-          textAlign: 'center', background: `linear-gradient(135deg,${C.gold},#E9C988,${C.goldLt})`,
+          textAlign: 'center', background: `linear-gradient(135deg,${C.primary},#5BA3B5,${C.goldLt})`,
         }}>
           <h2 style={{ margin: '0 0 10px', fontSize: 'clamp(1.4rem,3vw,2rem)', fontWeight: 900, color: C.navy }}>
             جاهز للانطلاق؟
@@ -668,7 +662,7 @@ export default function LandingPage() {
       </section>
 
       {/* ════════ FOOTER ════════ */}
-      <footer style={{ background: C.navy, padding: '44px 24px 32px' }}>
+      <footer style={{ background: C.text, padding: '44px 24px 32px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20, marginBottom: 28 }}>
             <BrandLogo size={44} style={{ borderRadius: 10 }} />

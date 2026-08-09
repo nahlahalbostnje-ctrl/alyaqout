@@ -1,17 +1,8 @@
 import { useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
 import { useAppSelector } from '../app/hooks';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldL:'#D4A65A',
-  goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  goldBg:'rgba(197,147,65,0.08)', goldBdr:'rgba(197,147,65,0.22)',
-  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
-  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
-  shadow:'0 2px 16px rgba(0,0,0,0.06)',
-  green:'#10B981', greenBg:'rgba(16,185,129,0.08)',
-  red:'#EF4444', redBg:'rgba(239,68,68,0.08)',
-};
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
 interface Child {
   id: number;
@@ -21,10 +22,6 @@ interface Challenge {
   created_by: { id: number; name: string } | null;
 }
 
-const C = {
-  gold: '#C9952A', goldL: '#DDAD50', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)',
-  text: '#1B2038', sub: '#6B7280', border: '#EDE3CE', green: '#16A34A', amber: '#D97706', red: '#EF4444',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 const emptyForm = {

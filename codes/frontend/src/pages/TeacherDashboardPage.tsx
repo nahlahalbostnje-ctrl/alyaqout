@@ -5,15 +5,9 @@ import { fetchTeacherDashboard } from '../features/teacher/teacherSlice';
 import { logout } from '../features/auth/authSlice';
 import BrandLogo from '../components/BrandLogo';
 import DailyRemindersWidget from '../components/DailyRemindersWidget';
+import { C } from '../theme/palette';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
-  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
-  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.22)',
-  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
-  shadow:'0 2px 14px rgba(0,0,0,0.06)', green:'#16A34A', orange:'#D97706', red:'#EF4444', blue:'#2563EB',
-};
 const SW = 280;  // sidebar width
 
 // ─── Nav items ────────────────────────────────────────────────────────────────

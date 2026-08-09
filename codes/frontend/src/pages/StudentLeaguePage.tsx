@@ -6,15 +6,7 @@ import {
   type League,
 } from '../features/student/leagueSlice';
 
-// ── Design tokens (same as StudentDashboardPage) ─────────────────────────────
-const C = {
-  bg: '#F2EDE4', card: '#FFFFFF', navy: '#0D1535', navy2: '#1B2038',
-  gold: '#C9952A', goldL: '#DDAD50', goldGrad: 'linear-gradient(135deg,#C9952A 0%,#DDAD50 100%)',
-  goldBg: 'rgba(201,149,42,0.09)', goldBdr: 'rgba(201,149,42,0.25)',
-  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: 'rgba(0,0,0,0.07)',
-  shadow: '0 2px 14px rgba(0,0,0,0.07)',
-  red: '#EF4444', blue: '#2563EB', green: '#16A34A', purple: '#7C3AED',
-};
+import { C } from '../theme/palette';
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

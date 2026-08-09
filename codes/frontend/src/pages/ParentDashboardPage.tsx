@@ -7,34 +7,7 @@ import ParentLayout from '../components/ParentLayout';
 import BrandLogo from '../components/BrandLogo';
 import NearestBranchWidget from '../components/NearestBranchWidget';
 import type { ChildSummary } from '../features/parent/parentSlice';
-
-// ─── Colors ────────────────────────────────────────────────────────────────────
-const C = {
-  bg:       '#F5EDD8',
-  card:     '#FFFFFF',
-  border:   '#EDE3CE',
-  shadow:   '0 2px 12px rgba(0,0,0,0.06)',
-  shadowLg: '0 8px 28px rgba(0,0,0,0.10)',
-  gold:     '#C9952A',
-  goldL:    '#DDAD50',
-  goldGrad: 'linear-gradient(135deg, #C9952A 0%, #DDAD50 100%)',
-  goldBg:   'rgba(201,149,42,0.08)',
-  goldBdr:  'rgba(201,149,42,0.22)',
-  text:     '#1B2038',
-  sub:      '#6B7280',
-  dim:      '#9CA3AF',
-  navy:     '#1B2038',
-  blue:     '#3B82F6',
-  blueBg:   'rgba(59,130,246,0.08)',
-  teal:     '#0D9488',
-  tealBg:   'rgba(13,148,136,0.08)',
-  green:    '#10B981',
-  greenBg:  'rgba(16,185,129,0.08)',
-  purple:   '#8B5CF6',
-  purpleBg: 'rgba(139,92,246,0.08)',
-  amber:    '#F59E0B',
-  red:      '#EF4444',
-} as const;
+import { C } from '../theme/palette';
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────────
 function Ico({ d, size = 16, color = 'currentColor' }: { d: string; size?: number; color?: string }) {

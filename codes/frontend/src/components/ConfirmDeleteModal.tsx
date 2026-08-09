@@ -1,13 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { C } from '../theme/palette';
 
-const C = {
-  card: '#FFFFFF',
-  bg: '#F8F5EE',
-  text: '#1B2038',
-  sub: '#6B7280',
-  border: 'rgba(0,0,0,0.08)',
-  red: '#EF4444',
-};
 
 export interface ConfirmDeleteModalProps {
   open: boolean;

@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import TeacherLayout from '../components/TeacherLayout';
 import { Link } from 'react-router-dom';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  goldBg:'rgba(197,147,65,0.08)', border:'#EDE3CE',
-  card:'#FFFFFF', text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF',
-  shadow:'0 2px 16px rgba(0,0,0,0.06)',
-};
 
 interface CourseRow { id: number; title: string }
 

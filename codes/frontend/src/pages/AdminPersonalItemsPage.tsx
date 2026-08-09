@@ -2,15 +2,8 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/axios';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldG:'linear-gradient(135deg,#C59341,#D4A65A)',
-  bg:'#F5EDD8', card:'#FFFFFF', navy:'#0D1E3A',
-  text:'#1B2038', sub:'#6B7280', border:'#EDE3CE',
-  shadow:'0 2px 16px rgba(0,0,0,0.06)',
-  green:'#10B981', red:'#EF4444', blue:'#3B82F6',
-  orange:'#F59E0B', purple:'#8B5CF6',
-};
 const card = (e:React.CSSProperties={}):React.CSSProperties=>({background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow,border:`1px solid ${C.border}`,...e});
 const inp = ():React.CSSProperties=>({background:C.bg,border:`1.5px solid ${C.border}`,color:C.text,borderRadius:12,padding:'9px 14px',fontSize:13,width:'100%',outline:'none',fontFamily:"'Cairo',sans-serif",boxSizing:'border-box'});
 

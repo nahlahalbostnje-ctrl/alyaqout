@@ -9,13 +9,8 @@ import type {
 } from 'agora-rtc-sdk-ng';
 import api from '../services/axios';
 import type { AgoraTokenData } from '../features/live/agoraSlice';
+import { C } from '../theme/palette';
 
-const C = {
-  bg: '#F5EDD8', card: '#FFFFFF', navy: '#0D1535', navy2: '#1B2038',
-  gold: '#C9952A', goldL: '#DDAD50', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)', goldBg: 'rgba(201,149,42,0.09)',
-  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: 'rgba(0,0,0,0.07)',
-  red: '#EF4444', green: '#10B981', shadow: '0 2px 12px rgba(0,0,0,0.06)',
-};
 const font = { fontFamily:"'Cairo',sans-serif" };
 
 function RemoteVideo({ user }: { user: IAgoraRTCRemoteUser }) {

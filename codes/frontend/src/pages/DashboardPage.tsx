@@ -6,16 +6,9 @@ import { logout } from '../features/auth/authSlice';
 import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 import BrandLogo from '../components/BrandLogo';
 import { toast } from '../components/Toast';
+import { C } from '../theme/palette';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:'#F2EDE4', card:'#FFFFFF', navy:'#0D1535', navy2:'#1B2038',
-  gold:'#C9952A', goldL:'#DDAD50', goldGrad:'linear-gradient(135deg,#C9952A,#DDAD50)',
-  goldBg:'rgba(201,149,42,0.09)', goldBdr:'rgba(201,149,42,0.22)',
-  text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'rgba(0,0,0,0.07)',
-  shadow:'0 2px 14px rgba(0,0,0,0.06)', green:'#16A34A', orange:'#D97706',
-  red:'#EF4444', blue:'#2563EB', purple:'#7C3AED', teal:'#0E7490',
-};
 const SW = 280;
 
 // ─── Sidebar nav ──────────────────────────────────────────────────────────────

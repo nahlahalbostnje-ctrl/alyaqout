@@ -1,13 +1,6 @@
 import { useState } from 'react';
+import { C } from '../theme/palette';
 
-const C = {
-  gold: '#C59341', goldGrad: 'linear-gradient(135deg,#C59341,#D4A65A)',
-  navy: '#0D1E3A', card: '#fff', border: '#E8EDF5', sub: '#64748B',
-  text: '#1E293B', green: '#16A34A', greenBg: 'rgba(22,163,74,0.08)',
-  red: '#DC2626', redBg: 'rgba(220,38,38,0.08)',
-  goldBg: 'rgba(197,147,65,0.08)', goldBdr: 'rgba(197,147,65,0.25)',
-  shadow: '0 2px 8px rgba(13,30,58,0.06)',
-};
 
 interface Reminder { id: number; text: string; done: boolean; priority: 'high' | 'normal' }
 

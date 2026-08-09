@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import StudentLayout from '../components/StudentLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
 interface ReviewVideo {
   id: number;
@@ -13,12 +14,6 @@ interface ReviewVideo {
   unit_title: string | null;
 }
 
-const C = {
-  card: '#FFFFFF', gold: '#C9952A', goldL: '#DDAD50',
-  goldGrad: 'linear-gradient(135deg,#C9952A 0%,#DDAD50 100%)',
-  text: '#1B2038', sub: '#6B7280', dim: '#9CA3AF', border: 'rgba(0,0,0,0.07)',
-  shadow: '0 2px 14px rgba(0,0,0,0.07)', green: '#16A34A',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 function fmtDuration(secs: number): string {

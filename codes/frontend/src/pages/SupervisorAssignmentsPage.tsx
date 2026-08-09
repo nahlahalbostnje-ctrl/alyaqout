@@ -1,10 +1,6 @@
 import SupervisorLayout from '../components/SupervisorLayout';
+import { C } from '../theme/palette';
 
-const C = {
-  gold:'#C59341', goldGrad:'linear-gradient(135deg,#C59341,#D4A65A)',
-  card:'#FFFFFF', text:'#1B2038', sub:'#6B7280', dim:'#9CA3AF', border:'#EDE3CE',
-  shadow:'0 2px 16px rgba(0,0,0,0.06)',
-};
 
 export default function SupervisorAssignmentsPage() {
   return (

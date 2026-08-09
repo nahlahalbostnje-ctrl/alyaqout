@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import StudentLayout from '../components/StudentLayout';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
-const C = {
-  gold: '#C9952A', goldGrad: 'linear-gradient(135deg,#C9952A,#DDAD50)',
-  text: '#1B2038', sub: '#6B7280', card: '#fff', border: 'rgba(0,0,0,0.07)',
-};
 const font = { fontFamily: "'Cairo', sans-serif" };
 
 function fmt(sec: number) {
