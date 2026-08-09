@@ -21,15 +21,25 @@ type SubRow = {
   starts_at: string;
   ends_at: string;
 };
+type PurchaseRow = {
+  id: number;
+  status: string;
+  amount: string | number;
+  student: { id: number; name: string } | null;
+  course: { id: number; title: string } | null;
+};
 
 export default function ParentPackagesPage() {
   const { formatMoney } = useCurrency();
   const [children, setChildren] = useState<Child[]>([]);
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [subs, setSubs] = useState<SubRow[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [studentId, setStudentId] = useState('');
   const [packageId, setPackageId] = useState('');
+  const [courseId, setCourseId] = useState('');
   const [busy, setBusy] = useState(false);
+  const [buyBusy, setBuyBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
@@ -37,15 +47,17 @@ export default function ParentPackagesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const [ch, pk, su] = await Promise.all([
+      const [ch, pk, su, pu] = await Promise.all([
         api.get('/parent/children'),
         api.get('/parent/packages'),
         api.get('/parent/subscriptions'),
+        api.get('/parent/course-purchases'),
       ]);
       const kids = (ch.data.data ?? ch.data.children ?? []) as Child[];
       setChildren(kids.map((c: Child) => ({ id: c.id, name: c.name })));
       setPackages(pk.data.data ?? []);
       setSubs(su.data.data ?? []);
+      setPurchases(pu.data.data ?? []);
       if (kids.length && !studentId) setStudentId(String(kids[0].id));
     } catch {
       setErr('تعذّر تحميل الباقات');
@@ -77,10 +89,31 @@ export default function ParentPackagesPage() {
     }
   };
 
+  const requestCourse = async () => {
+    if (!studentId || !courseId) return;
+    setBuyBusy(true);
+    setErr('');
+    setMsg('');
+    try {
+      const { data } = await api.post('/parent/course-purchases/request', {
+        student_id: Number(studentId),
+        course_id: Number(courseId),
+      });
+      setMsg(data.message ?? 'تم إرسال طلب شراء المساق');
+      setCourseId('');
+      await load();
+    } catch (e: unknown) {
+      const errObj = e as { response?: { data?: { message?: string } } };
+      setErr(errObj.response?.data?.message ?? 'تعذّر إرسال طلب الشراء');
+    } finally {
+      setBuyBusy(false);
+    }
+  };
+
   const statusLabel = (s: string) => {
-    if (s === 'active') return { t: 'نشط', c: C.green };
+    if (s === 'active' || s === 'approved') return { t: s === 'approved' ? 'معتمد' : 'نشط', c: C.green };
     if (s === 'pending') return { t: 'بانتظار التفعيل', c: C.orange };
-    if (s === 'cancelled') return { t: 'ملغى', c: C.red };
+    if (s === 'cancelled' || s === 'rejected') return { t: s === 'rejected' ? 'مرفوض' : 'ملغى', c: C.red };
     return { t: s, c: C.sub };
   };
 
@@ -129,6 +162,33 @@ export default function ParentPackagesPage() {
               {err && <p style={{ color: C.red, fontWeight: 700, fontSize: 13, marginTop: 12 }}>{err}</p>}
             </div>
 
+            <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+              <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>طلب شراء مساق منفرد</h2>
+              <p style={{ margin: '0 0 14px', fontSize: 12, color: C.sub }}>أدخل رقم المساق من الكتالوج — يُفعّل بعد موافقة الإدارة.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 6 }}>الابن</label>
+                  <select value={studentId} onChange={(e) => setStudentId(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontFamily: "'Cairo',sans-serif" }}>
+                    {children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 6 }}>رقم المساق</label>
+                  <input type="number" value={courseId} onChange={(e) => setCourseId(e.target.value)} placeholder="مثال: 12"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontFamily: "'Cairo',sans-serif", boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <button onClick={() => void requestCourse()} disabled={buyBusy || !studentId || !courseId}
+                style={{
+                  padding: '10px 22px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13,
+                  fontFamily: "'Cairo',sans-serif", opacity: buyBusy || !courseId ? 0.6 : 1,
+                }}>
+                {buyBusy ? 'جارٍ الإرسال...' : 'إرسال طلب شراء المساق'}
+              </button>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, marginBottom: 24 }}>
               {packages.map((p) => (
                 <div key={p.id} style={{ background: C.card, borderRadius: 16, padding: 18, border: `1px solid ${C.border}` }}>
@@ -156,6 +216,31 @@ export default function ParentPackagesPage() {
                         <div>
                           <p style={{ margin: 0, fontWeight: 800, color: C.text }}>{s.package.name}</p>
                           <p style={{ margin: '4px 0 0', fontSize: 12, color: C.sub }}>{s.student.name} · {s.starts_at} → {s.ends_at}</p>
+                        </div>
+                        <span style={{ alignSelf: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, color: st.c, background: `${st.c}18` }}>
+                          {st.t}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginTop: 20 }}>
+              <h2 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: C.text }}>طلبات شراء المساقات</h2>
+              {purchases.length === 0 ? (
+                <p style={{ color: C.sub, fontSize: 13 }}>لا توجد طلبات شراء بعد.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {purchases.map((p) => {
+                    const st = statusLabel(p.status);
+                    return (
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px', background: '#F8F5EE', borderRadius: 12 }}>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 800, color: C.text }}>{p.course?.title ?? `مساق #${p.id}`}</p>
+                          <p style={{ margin: '4px 0 0', fontSize: 12, color: C.sub }}>
+                            {p.student?.name ?? '—'} · {formatMoney(Number(p.amount))}
+                          </p>
                         </div>
                         <span style={{ alignSelf: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, color: st.c, background: `${st.c}18` }}>
                           {st.t}

@@ -23,6 +23,8 @@ export interface CatalogCourseDetail extends Omit<CatalogCourse, 'units_count' |
   total_videos: number | null;
   content_path: string | null;
   packages_hint: string | null;
+  purchase_pending?: boolean;
+  can_request_purchase?: boolean;
   units: Array<{
     id: number;
     title: string;

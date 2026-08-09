@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\CourseEnrollmentController as AdminCourseEnrollmentController;
 use App\Http\Controllers\Admin\LiveClassController as AdminLiveClassController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
+use App\Http\Controllers\Admin\CoursePurchaseController as AdminCoursePurchaseController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\UnitController as AdminUnitController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
@@ -60,6 +61,7 @@ use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\ChallengeController as StudentChallengeController;
 use App\Http\Controllers\Student\CertificateController as StudentCertificateController;
 use App\Http\Controllers\Student\CatalogController as StudentCatalogController;
+use App\Http\Controllers\Student\CoursePurchaseController as StudentCoursePurchaseController;
 use App\Http\Controllers\Student\CourseRatingController as StudentCourseRatingController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
@@ -68,6 +70,7 @@ use App\Http\Controllers\ParentPortal\BillingController as ParentBillingControll
 use App\Http\Controllers\Admin\InstallmentController as AdminInstallmentController;
 use App\Http\Controllers\ParentPortal\MessageController as ParentMessageController;
 use App\Http\Controllers\ParentPortal\PackageController as ParentPackageController;
+use App\Http\Controllers\ParentPortal\CoursePurchaseController as ParentCoursePurchaseController;
 use App\Http\Controllers\ParentPortal\ChallengeController as ParentChallengeController;
 use App\Http\Controllers\ParentPortal\CounselingController as ParentCounselingController;
 use App\Http\Controllers\ParentPortal\InsightsController as ParentInsightsController;
@@ -296,6 +299,10 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::patch('subscriptions/{subscription}/activate',    [AdminSubscriptionController::class, 'activate']);
     Route::get('users/{student}/subscriptions',              [AdminSubscriptionController::class, 'studentSubscriptions']);
 
+    Route::get('course-purchases',                           [AdminCoursePurchaseController::class, 'index']);
+    Route::patch('course-purchases/{purchase}/approve',      [AdminCoursePurchaseController::class, 'approve']);
+    Route::patch('course-purchases/{purchase}/reject',       [AdminCoursePurchaseController::class, 'reject']);
+
     // Installments (تقسيط الدفعات)
     Route::get('subscriptions/{subscription}/installments',              [AdminInstallmentController::class, 'index']);
     Route::post('subscriptions/{subscription}/installments',             [AdminInstallmentController::class, 'store']);
@@ -439,6 +446,8 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::get('certificates/{certificate}', [StudentCertificateController::class, 'show']);
     Route::get('catalog',                [StudentCatalogController::class, 'index']);
     Route::get('catalog/{course}',       [StudentCatalogController::class, 'show']);
+    Route::get('catalog/{course}/purchase-request',  [StudentCoursePurchaseController::class, 'status']);
+    Route::post('catalog/{course}/purchase-request', [StudentCoursePurchaseController::class, 'request']);
     Route::get('courses/{course}/rating', [StudentCourseRatingController::class, 'show']);
     Route::post('courses/{course}/rating', [StudentCourseRatingController::class, 'store']);
 
@@ -568,6 +577,8 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::get('packages',                           [ParentPackageController::class, 'index']);
     Route::get('subscriptions',                      [ParentPackageController::class, 'subscriptions']);
     Route::post('subscriptions/request',             [ParentPackageController::class, 'requestSubscription']);
+    Route::get('course-purchases',                   [ParentCoursePurchaseController::class, 'index']);
+    Route::post('course-purchases/request',          [ParentCoursePurchaseController::class, 'request']);
 
     // Challenges (family)
     Route::get('challenges',                         [ParentChallengeController::class, 'index']);

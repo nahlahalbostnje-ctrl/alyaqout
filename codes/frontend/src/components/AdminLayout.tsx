@@ -9,6 +9,7 @@ const navItems = [
   { to: '/admin/users',         label: 'المستخدمون',         icon: Icons.users          },
   { to: '/admin/packages',      label: 'الباقات',            icon: Icons.package        },
   { to: '/admin/subscriptions', label: 'الاشتراكات',         icon: Icons.creditCard     },
+  { to: '/admin/course-purchases', label: 'شراء المساقات',  icon: Icons.tag            },
   { to: '/admin/live-classes',  label: 'الحصص المباشرة',    icon: Icons.video          },
   { to: '/admin/coupons',       label: 'الكوبونات',          icon: Icons.tag            },
   { to: '/admin/banners',       label: 'البانرات',           icon: Icons.image          },

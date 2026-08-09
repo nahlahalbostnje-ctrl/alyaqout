@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CoursePurchaseRequest;
 use App\Services\CourseCompletionService;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
@@ -93,6 +94,16 @@ class CatalogController extends Controller
             ? $this->completion->progressForCourse((int) $student->id, (int) $course->id)
             : null;
 
+        $purchasePending = ! $entitled && CoursePurchaseRequest::query()
+            ->where('student_id', $student->id)
+            ->where('course_id', $course->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        $canRequestPurchase = ! $entitled
+            && ! $course->is_free
+            && ! $purchasePending;
+
         $units = $course->units->map(function ($unit) use ($entitled) {
             $lessons = $unit->lessons->map(fn ($lesson) => [
                 'id'           => $lesson->id,
@@ -129,7 +140,9 @@ class CatalogController extends Controller
                 'total_videos'=> $progress['total_videos'] ?? null,
                 'units'       => $units,
                 'content_path'=> $entitled ? '/student/courses/'.$course->id.'/content' : null,
-                'packages_hint'=> $entitled ? null : 'هذا المساق متاح ضمن الباقات أو بتسجيل منفصل. راجع ولي الأمر أو الإدارة لتفعيل الوصول.',
+                'packages_hint'=> $entitled ? null : 'هذا المساق متاح ضمن الباقات أو بشراء منفرد بعد موافقة الإدارة.',
+                'purchase_pending' => $purchasePending,
+                'can_request_purchase' => $canRequestPurchase,
             ],
         ]);
     }

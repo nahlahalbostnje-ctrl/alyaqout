@@ -12,6 +12,7 @@ import UsersPage                  from './pages/UsersPage';
 import PackagesPage               from './pages/PackagesPage';
 import LiveClassesPage            from './pages/LiveClassesPage';
 import SubscriptionsPage          from './pages/SubscriptionsPage';
+import AdminCoursePurchasesPage   from './pages/AdminCoursePurchasesPage';
 import AdminNotificationsPage     from './pages/AdminNotificationsPage';
 import CourseContentPage          from './pages/CourseContentPage';
 import AdminCourseDossierPage     from './pages/AdminCourseDossierPage';
@@ -240,6 +241,9 @@ export default function App() {
         } />
         <Route path="/admin/subscriptions" element={
           <PrivateRoute roles={['admin']}><SubscriptionsPage /></PrivateRoute>
+        } />
+        <Route path="/admin/course-purchases" element={
+          <PrivateRoute roles={['admin']}><AdminCoursePurchasesPage /></PrivateRoute>
         } />
         <Route path="/admin/notifications" element={
           <PrivateRoute roles={['admin']}><AdminNotificationsPage /></PrivateRoute>

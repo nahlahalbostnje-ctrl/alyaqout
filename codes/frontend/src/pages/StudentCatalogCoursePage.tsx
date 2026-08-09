@@ -20,6 +20,9 @@ export default function StudentCatalogCoursePage() {
   const [comment, setComment] = useState('');
   const [ratingMsg, setRatingMsg] = useState<string | null>(null);
   const [savingRating, setSavingRating] = useState(false);
+  const [purchaseBusy, setPurchaseBusy] = useState(false);
+  const [purchaseMsg, setPurchaseMsg] = useState<string | null>(null);
+  const [purchasePendingLocal, setPurchasePendingLocal] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(id) || id <= 0) return;
@@ -71,6 +74,25 @@ export default function StudentCatalogCoursePage() {
     }
   };
 
+  const requestPurchase = async () => {
+    setPurchaseBusy(true);
+    setPurchaseMsg(null);
+    try {
+      const r = await api.post(`/student/catalog/${id}/purchase-request`);
+      setPurchasePendingLocal(true);
+      setPurchaseMsg(r.data.message ?? 'تم إرسال طلب الشراء');
+      dispatch(fetchCatalogCourse(id));
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setPurchaseMsg(err.response?.data?.message ?? 'تعذر إرسال طلب الشراء');
+    } finally {
+      setPurchaseBusy(false);
+    }
+  };
+
+  const pendingPurchase = purchasePendingLocal || !!detail?.purchase_pending;
+  const canBuy = !!detail?.can_request_purchase && !pendingPurchase;
+
   return (
     <StudentLayout>
       <div dir="rtl" style={{ fontFamily: "'Cairo',sans-serif", padding: '20px 16px', maxWidth: 820 }}>
@@ -107,12 +129,21 @@ export default function StudentCatalogCoursePage() {
                   background: detail.is_entitled ? C.greenBg : C.amberBg,
                   color: detail.is_entitled ? C.green : C.amber,
                 }}>
-                  {detail.is_entitled ? 'متاح لك' : 'يتطلب باقة'}
+                  {detail.is_entitled ? 'متاح لك' : pendingPurchase ? 'طلب شراء معلّق' : 'غير متاح'}
                 </span>
               </div>
 
               {detail.description && (
                 <p style={{ margin: '14px 0 0', color: C.text, fontSize: 13.5, lineHeight: 1.75 }}>{detail.description}</p>
+              )}
+
+              {!detail.is_free && (
+                <p style={{ margin: '10px 0 0', color: C.primary, fontWeight: 800, fontSize: 14 }}>
+                  السعر: {detail.price ?? '—'}
+                </p>
+              )}
+              {detail.is_free && (
+                <p style={{ margin: '10px 0 0', color: C.green, fontWeight: 800, fontSize: 13 }}>مجاني</p>
               )}
 
               {detail.is_entitled && typeof detail.progress === 'number' && (
@@ -133,8 +164,31 @@ export default function StudentCatalogCoursePage() {
                     width: '100%', background: C.amberBg, borderRadius: 12, padding: '12px 14px',
                     color: C.text, fontSize: 13, lineHeight: 1.65,
                   }}>
-                    <strong style={{ color: C.amber }}>يتطلب باقة نشطة. </strong>
-                    {detail.packages_hint}
+                    {pendingPurchase ? (
+                      <strong style={{ color: C.amber }}>طلب الشراء بانتظار موافقة الإدارة.</strong>
+                    ) : (
+                      <>
+                        <strong style={{ color: C.amber }}>الوصول عبر باقة أو شراء منفرد. </strong>
+                        {detail.packages_hint}
+                      </>
+                    )}
+                    {canBuy && (
+                      <div style={{ marginTop: 12 }}>
+                        <button
+                          type="button"
+                          disabled={purchaseBusy}
+                          onClick={requestPurchase}
+                          style={{
+                            padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                            background: C.goldGrad, color: '#fff', fontWeight: 800, fontSize: 13,
+                            fontFamily: "'Cairo',sans-serif", opacity: purchaseBusy ? 0.6 : 1,
+                          }}
+                        >
+                          {purchaseBusy ? '...' : 'طلب شراء المساق'}
+                        </button>
+                      </div>
+                    )}
+                    {purchaseMsg && <p style={{ margin: '8px 0 0', color: C.sub, fontSize: 12.5 }}>{purchaseMsg}</p>}
                   </div>
                 )}
               </div>
