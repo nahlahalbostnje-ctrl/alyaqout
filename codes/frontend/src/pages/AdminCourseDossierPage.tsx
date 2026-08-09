@@ -48,6 +48,7 @@ interface Dossier {
   students: {
     id: number; name: string; phone: string | null; grade: string | null;
     is_active: boolean; access_via: string; package: string | null; ends_at: string | null;
+    enrollment_id?: number | null;
   }[];
   counts: {
     students: number; homeworks: number; exams: number;
@@ -88,8 +89,11 @@ export default function AdminCourseDossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<Tab>('students');
+  const [studentIdInput, setStudentIdInput] = useState('');
+  const [enrollBusy, setEnrollBusy] = useState(false);
+  const [enrollMsg, setEnrollMsg] = useState('');
 
-  useEffect(() => {
+  const loadDossier = () => {
     if (!courseId) return;
     setLoading(true);
     setError('');
@@ -97,7 +101,52 @@ export default function AdminCourseDossierPage() {
       .then(({ data: res }) => setData(res.data))
       .catch(() => setError('تعذّر تحميل ملف الدورة'))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadDossier();
   }, [courseId]);
+
+  const accessLabel = (via: string) => {
+    if (via === 'free') return { label: 'مجاني', color: DK.green };
+    if (via === 'enrollment') return { label: 'تسجيل يدوي', color: DK.purple };
+    if (via === 'purchase') return { label: 'شراء', color: DK.orange };
+    return { label: 'اشتراك', color: DK.blue };
+  };
+
+  const handleEnroll = async () => {
+    const sid = Number(studentIdInput);
+    if (!courseId || !sid) {
+      setEnrollMsg('أدخل رقم الطالب');
+      return;
+    }
+    setEnrollBusy(true);
+    setEnrollMsg('');
+    try {
+      await api.post(`/admin/courses/${courseId}/enrollments`, {
+        student_id: sid,
+        source: 'manual',
+      });
+      setStudentIdInput('');
+      setEnrollMsg('تم تسجيل الطالب في المساق');
+      loadDossier();
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setEnrollMsg(err.response?.data?.message || 'فشل التسجيل');
+    } finally {
+      setEnrollBusy(false);
+    }
+  };
+
+  const handleRevoke = async (enrollmentId: number) => {
+    if (!confirm('إلغاء تسجيل هذا الطالب من المساق؟')) return;
+    try {
+      await api.patch(`/admin/enrollments/${enrollmentId}/revoke`);
+      loadDossier();
+    } catch {
+      setEnrollMsg('تعذّر إلغاء التسجيل');
+    }
+  };
 
   const tabs: { key: Tab; label: string; count?: number }[] = data ? [
     { key: 'students', label: 'الطلاب', count: data.counts.students },
@@ -194,37 +243,85 @@ export default function AdminCourseDossierPage() {
 
             <div style={card}>
               {tab === 'students' && (
-                data.students.length === 0 ? (
-                  <p style={{ color: DK.sub, textAlign: 'center', margin: 0 }}>لا يوجد طلاب مخوّلون لهذه الدورة بعد (فعّل اشتراكاً يشملها).</p>
-                ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
-                      <thead>
-                        <tr>
-                          {['الطالب', 'الصف', 'الوصول', 'الباقة', 'ينتهي'].map((h) => (
-                            <th key={h} style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: DK.sub, borderBottom: `1px solid ${DK.border}` }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.students.map((s) => (
-                          <tr key={s.id}>
-                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
-                              <p style={{ margin: 0, fontWeight: 700 }}>{s.name}</p>
-                              <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>{s.phone ?? '—'}</p>
-                            </td>
-                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.grade ?? '—'}</td>
-                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
-                              <StatusPill label={s.access_via === 'free' ? 'مجاني' : 'اشتراك'} color={s.access_via === 'free' ? DK.green : DK.blue} />
-                            </td>
-                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.package ?? '—'}</td>
-                            <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.ends_at ?? '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <>
+                  <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
+                    marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${DK.border}`,
+                  }}>
+                    <input
+                      type="number"
+                      placeholder="رقم الطالب (ID)"
+                      value={studentIdInput}
+                      onChange={(e) => setStudentIdInput(e.target.value)}
+                      style={{
+                        padding: '8px 12px', borderRadius: 10, border: `1px solid ${DK.border}`,
+                        fontFamily: "'Cairo',sans-serif", fontSize: 13, minWidth: 160,
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleEnroll}
+                      disabled={enrollBusy}
+                      style={{
+                        padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: DK.goldGrad, color: '#fff', fontWeight: 800, fontSize: 13,
+                        fontFamily: "'Cairo',sans-serif", opacity: enrollBusy ? 0.6 : 1,
+                      }}
+                    >
+                      {enrollBusy ? '...' : 'تسجيل في المساق'}
+                    </button>
+                    {enrollMsg && <span style={{ fontSize: 12, color: DK.sub }}>{enrollMsg}</span>}
                   </div>
-                )
+                  {data.students.length === 0 ? (
+                    <p style={{ color: DK.sub, textAlign: 'center', margin: 0 }}>لا يوجد طلاب مخوّلون لهذه الدورة بعد (فعّل اشتراكاً أو سجّل طالباً يدوياً).</p>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+                        <thead>
+                          <tr>
+                            {['الطالب', 'الصف', 'الوصول', 'المصدر', 'ينتهي', ''].map((h) => (
+                              <th key={h || 'x'} style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: DK.sub, borderBottom: `1px solid ${DK.border}` }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.students.map((s) => {
+                            const a = accessLabel(s.access_via);
+                            return (
+                              <tr key={s.id}>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
+                                  <p style={{ margin: 0, fontWeight: 700 }}>{s.name}</p>
+                                  <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>{s.phone ?? '—'} · #{s.id}</p>
+                                </td>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.grade ?? '—'}</td>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
+                                  <StatusPill label={a.label} color={a.color} />
+                                </td>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.package ?? '—'}</td>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.ends_at ?? '—'}</td>
+                                <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
+                                  {s.enrollment_id ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRevoke(s.enrollment_id!)}
+                                      style={{
+                                        border: 'none', background: 'transparent', color: DK.red,
+                                        fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                                        fontFamily: "'Cairo',sans-serif",
+                                      }}
+                                    >
+                                      إلغاء
+                                    </button>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
               )}
 
               {tab === 'content' && (

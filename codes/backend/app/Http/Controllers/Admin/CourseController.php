@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\LiveClass;
@@ -225,6 +226,12 @@ class CourseController extends Controller
             $candidateIds = $candidateIds->merge($freeQuery->limit(300)->pluck('id'));
         }
 
+        $enrolledIds = CourseEnrollment::query()
+            ->active()
+            ->where('course_id', $courseId)
+            ->pluck('student_id');
+        $candidateIds = $candidateIds->merge($enrolledIds);
+
         $candidateIds = $candidateIds->unique()->values();
         if ($candidateIds->isEmpty()) {
             return [];
@@ -236,11 +243,20 @@ class CourseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'phone', 'grade_id', 'is_active']);
 
+        $enrollmentsByStudent = CourseEnrollment::query()
+            ->active()
+            ->where('course_id', $courseId)
+            ->whereIn('student_id', $users->pluck('id'))
+            ->get()
+            ->keyBy('student_id');
+
         $rows = [];
         foreach ($users as $user) {
             if (! $entitlement->canAccessCourse($user, $course)) {
                 continue;
             }
+
+            $enrollment = $enrollmentsByStudent->get($user->id);
             $activeSub = Subscription::where('student_id', $user->id)
                 ->where('status', 'active')
                 ->whereDate('ends_at', '>=', now()->toDateString())
@@ -248,15 +264,34 @@ class CourseController extends Controller
                 ->latest()
                 ->first();
 
+            if ($enrollment) {
+                $accessVia = $enrollment->source === 'purchase' ? 'purchase' : 'enrollment';
+                $packageLabel = match ($enrollment->source) {
+                    'purchase' => 'شراء مساق',
+                    'package'  => $activeSub?->package?->name ?? 'باقة',
+                    default    => 'تسجيل يدوي',
+                };
+                $endsAt = $enrollment->ends_at?->format('Y-m-d') ?? $activeSub?->ends_at?->format('Y-m-d');
+            } elseif ($course->is_free && ! $activeSub) {
+                $accessVia = 'free';
+                $packageLabel = null;
+                $endsAt = null;
+            } else {
+                $accessVia = 'subscription';
+                $packageLabel = $activeSub?->package?->name;
+                $endsAt = $activeSub?->ends_at?->format('Y-m-d');
+            }
+
             $rows[] = [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'phone'      => $user->phone,
-                'grade'      => $user->grade?->name,
-                'is_active'  => $user->is_active,
-                'access_via' => $course->is_free && ! $activeSub ? 'free' : 'subscription',
-                'package'    => $activeSub?->package?->name,
-                'ends_at'    => $activeSub?->ends_at?->format('Y-m-d'),
+                'id'            => $user->id,
+                'name'          => $user->name,
+                'phone'         => $user->phone,
+                'grade'         => $user->grade?->name,
+                'is_active'     => $user->is_active,
+                'access_via'    => $accessVia,
+                'package'       => $packageLabel,
+                'ends_at'       => $endsAt,
+                'enrollment_id' => $enrollment?->id,
             ];
         }
 

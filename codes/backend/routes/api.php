@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
 use App\Http\Controllers\Admin\TeacherSubjectController as AdminTeacherSubjectController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
+use App\Http\Controllers\Admin\CourseEnrollmentController as AdminCourseEnrollmentController;
 use App\Http\Controllers\Admin\LiveClassController as AdminLiveClassController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
@@ -284,6 +285,10 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::put('courses/{course}',          [AdminCourseController::class, 'update']);
     Route::patch('courses/{course}/toggle', [AdminCourseController::class, 'toggle']);
     Route::delete('courses/{course}',       [AdminCourseController::class, 'destroy']);
+
+    Route::get('courses/{course}/enrollments',              [AdminCourseEnrollmentController::class, 'index']);
+    Route::post('courses/{course}/enrollments',             [AdminCourseEnrollmentController::class, 'store']);
+    Route::patch('enrollments/{enrollment}/revoke',         [AdminCourseEnrollmentController::class, 'revoke']);
 
     Route::get('subscriptions',                              [AdminSubscriptionController::class, 'index']);
     Route::post('subscriptions',                             [AdminSubscriptionController::class, 'store']);

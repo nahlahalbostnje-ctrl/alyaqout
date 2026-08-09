@@ -12,8 +12,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Resolves which courses a student may access from active package subscriptions.
- * Free courses in the student's country/grade remain available without a paid plan.
+ * Resolves which courses a student may access from:
+ * free courses, active package subscriptions, and per-course enrollments.
  */
 class StudentEntitlementService
 {
@@ -47,39 +47,53 @@ class StudentEntitlementService
             })
             ->pluck('id');
 
-        $packageIds = $this->activePackageIds($student);
-        if ($packageIds->isEmpty()) {
-            return Course::query()->whereIn('id', $freeIds);
-        }
-
-        $directCourseIds = Course::query()
-            ->whereIn('id', function ($q) use ($packageIds) {
-                $q->select('course_id')
-                    ->from('package_course')
-                    ->whereIn('package_id', $packageIds);
-            })
-            ->where('country_id', $countryId)
-            ->where('is_active', true)
-            ->where('approval_status', 'approved')
-            ->pluck('id');
-
-        $subjectIds = DB::table('package_subject')
-            ->whereIn('package_id', $packageIds)
-            ->pluck('subject_id');
-
+        $directCourseIds = collect();
         $subjectCourseIds = collect();
-        if ($subjectIds->isNotEmpty()) {
-            $subjectCourseIds = (clone $base)
-                ->whereIn('subject_id', $subjectIds)
-                ->where(function ($q) use ($gradeId) {
-                    $this->applyGradeVisibility($q, $gradeId);
+
+        $packageIds = $this->activePackageIds($student);
+        if ($packageIds->isNotEmpty()) {
+            $directCourseIds = Course::query()
+                ->whereIn('id', function ($q) use ($packageIds) {
+                    $q->select('course_id')
+                        ->from('package_course')
+                        ->whereIn('package_id', $packageIds);
                 })
+                ->where('country_id', $countryId)
+                ->where('is_active', true)
+                ->where('approval_status', 'approved')
                 ->pluck('id');
+
+            $subjectIds = DB::table('package_subject')
+                ->whereIn('package_id', $packageIds)
+                ->pluck('subject_id');
+
+            if ($subjectIds->isNotEmpty()) {
+                $subjectCourseIds = (clone $base)
+                    ->whereIn('subject_id', $subjectIds)
+                    ->where(function ($q) use ($gradeId) {
+                        $this->applyGradeVisibility($q, $gradeId);
+                    })
+                    ->pluck('id');
+            }
         }
+
+        $enrolledIds = (clone $base)
+            ->whereIn('id', function ($q) use ($student) {
+                $q->select('course_id')
+                    ->from('course_enrollments')
+                    ->where('student_id', $student->id)
+                    ->where('status', 'active')
+                    ->where(function ($w) {
+                        $w->whereNull('ends_at')
+                            ->orWhere('ends_at', '>=', now());
+                    });
+            })
+            ->pluck('id');
 
         $allIds = $freeIds
             ->merge($directCourseIds)
             ->merge($subjectCourseIds)
+            ->merge($enrolledIds)
             ->unique()
             ->values();
 

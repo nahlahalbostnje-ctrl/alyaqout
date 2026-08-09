@@ -129,7 +129,7 @@ class CatalogController extends Controller
                 'total_videos'=> $progress['total_videos'] ?? null,
                 'units'       => $units,
                 'content_path'=> $entitled ? '/student/courses/'.$course->id.'/content' : null,
-                'packages_hint'=> $entitled ? null : 'هذا المساق متاح ضمن الباقات المشتركة. راجع باقة ولي الأمر أو الإدارة لتفعيل الوصول.',
+                'packages_hint'=> $entitled ? null : 'هذا المساق متاح ضمن الباقات أو بتسجيل منفصل. راجع ولي الأمر أو الإدارة لتفعيل الوصول.',
             ],
         ]);
     }

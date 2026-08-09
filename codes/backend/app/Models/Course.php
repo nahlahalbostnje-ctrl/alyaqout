@@ -34,4 +34,5 @@ class Course extends Model
     public function grade(): BelongsTo    { return $this->belongsTo(Grade::class); }
     public function teacher(): BelongsTo  { return $this->belongsTo(User::class, 'teacher_id'); }
     public function units(): HasMany      { return $this->hasMany(Unit::class)->orderBy('sort_order'); }
+    public function enrollments(): HasMany { return $this->hasMany(CourseEnrollment::class); }
 }
