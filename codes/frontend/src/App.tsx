@@ -17,6 +17,8 @@ import CourseContentPage          from './pages/CourseContentPage';
 import AdminCourseDossierPage     from './pages/AdminCourseDossierPage';
 import StudentDashboardPage       from './pages/StudentDashboardPage';
 import StudentCoursesPage         from './pages/StudentCoursesPage';
+import StudentCertificatesPage    from './pages/StudentCertificatesPage';
+import CertificateVerifyPage      from './pages/CertificateVerifyPage';
 import StudentLiveClassesPage     from './pages/StudentLiveClassesPage';
 import StudentCourseContentPage   from './pages/StudentCourseContentPage';
 import StudentExamsPage           from './pages/StudentExamsPage';
@@ -141,6 +143,7 @@ export default function App() {
       <CookieConsent />
       <Routes>
         <Route path="/"      element={<LandingPage />} />
+        <Route path="/verify/:code" element={<CertificateVerifyPage />} />
         <Route path="/login" element={<LoginPage />} />
 
         {/* Super Admin */}
@@ -314,6 +317,9 @@ export default function App() {
         } />
         <Route path="/student/courses" element={
           <PrivateRoute roles={['student']}><StudentCoursesPage /></PrivateRoute>
+        } />
+        <Route path="/student/certificates" element={
+          <PrivateRoute roles={['student']}><StudentCertificatesPage /></PrivateRoute>
         } />
         <Route path="/student/courses/:courseId/content" element={
           <PrivateRoute roles={['student']}><StudentCourseContentPage /></PrivateRoute>

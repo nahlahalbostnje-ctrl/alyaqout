@@ -57,6 +57,7 @@ use App\Http\Controllers\Supervisor\PersonalItemController as SupervisorPersonal
 use App\Http\Controllers\Live\AgoraController;
 use App\Http\Controllers\Student\LeagueController as StudentLeagueController;
 use App\Http\Controllers\Student\ChallengeController as StudentChallengeController;
+use App\Http\Controllers\Student\CertificateController as StudentCertificateController;
 use App\Http\Controllers\Student\EmergencyController as StudentEmergencyController;
 use App\Http\Controllers\Student\ChatbotController as StudentChatbotController;
 use App\Http\Controllers\ParentPortal\ChatbotController as ParentChatbotController;
@@ -85,6 +86,7 @@ use App\Http\Controllers\Admin\TeacherApprovalController as AdminTeacherApproval
 use App\Http\Controllers\Admin\TeacherContentController as AdminTeacherContentController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\SuperAdmin\SecurityController;
@@ -114,6 +116,10 @@ Route::prefix('public')->group(function () {
     Route::get('social',    [PublicController::class, 'social']);
     Route::get('stats',     [PublicController::class, 'stats']);
 });
+
+Route::get('certificates/verify/{code}', [CertificateVerifyController::class, 'show'])
+    ->where('code', '[A-Za-z0-9\\-]+')
+    ->middleware('throttle:60,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -422,6 +428,8 @@ Route::middleware(['auth:api', 'student'])->prefix('student')->group(function ()
     Route::get('courses',        [StudentHomeController::class, 'courses']);
     Route::get('live-classes',   [StudentHomeController::class, 'liveClasses']);
     Route::get('subscriptions',  [StudentHomeController::class, 'mySubscriptions']);
+    Route::get('certificates',           [StudentCertificateController::class, 'index']);
+    Route::get('certificates/{certificate}', [StudentCertificateController::class, 'show']);
 
     // Course Content
     Route::get('courses/{course}/content',          [StudentCourseContentController::class, 'courseUnits']);

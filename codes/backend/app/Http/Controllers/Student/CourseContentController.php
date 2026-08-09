@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Video;
 use App\Models\VideoProgress;
+use App\Services\CertificateService;
 use App\Services\CourseCompletionService;
 use App\Services\GamificationService;
 use App\Services\StudentEntitlementService;
@@ -21,6 +22,7 @@ class CourseContentController extends Controller
         private readonly GamificationService $gamification,
         private readonly StudentEntitlementService $entitlement,
         private readonly CourseCompletionService $completion,
+        private readonly CertificateService $certificates,
     ) {}
 
     public function courseUnits(Course $course): JsonResponse
@@ -152,6 +154,18 @@ class CourseContentController extends Controller
             $this->gamification->award($studentId, 'complete_video', $video->title);
         }
 
-        return response()->json(['message' => 'تم تسجيل الإتمام']);
+        $course = $video->lesson?->unit?->course;
+        $certificate = null;
+        if ($course) {
+            $certificate = $this->certificates->issueIfEligible(Auth::user(), $course);
+        }
+
+        return response()->json([
+            'message'     => 'تم تسجيل الإتمام',
+            'certificate' => $certificate ? [
+                'id'   => $certificate->id,
+                'code' => $certificate->code,
+            ] : null,
+        ]);
     }
 }
