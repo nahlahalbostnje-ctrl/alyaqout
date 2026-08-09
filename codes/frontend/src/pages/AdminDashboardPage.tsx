@@ -3,6 +3,8 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAdminStats } from '../features/admin/adminSlice';
 import AdminLayout from '../components/AdminLayout';
 import DailyRemindersWidget from '../components/DailyRemindersWidget';
+import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
+import { ADMIN_HOME_ICONS } from '../features/nav/roleHomeIcons';
 import { C } from '../theme/palette';
 
 const STAT_DEFS: { key: string; label: string; icon: string; accent: string; pastel: string }[] = [
@@ -139,6 +141,13 @@ export default function AdminDashboardPage() {
             ))}
           </div>
         )}
+
+        <div style={{
+          marginTop: 20, background: C.card, borderRadius: 16, padding: 18,
+          border: `1px solid ${C.border}`, boxShadow: C.shadow,
+        }}>
+          <RoleHomeIconGrid title="الخدمات" items={ADMIN_HOME_ICONS} />
+        </div>
 
         <div style={{ maxWidth: 480, marginTop: 16 }}>
           <DailyRemindersWidget role="admin" initItems={[

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import SupervisorLayout from '../components/SupervisorLayout';
+import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
+import { SUPERVISOR_HOME_ICONS } from '../features/nav/roleHomeIcons';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchSupervisedStudents, fetchStudentPerformance, removeStudent,
@@ -97,6 +99,13 @@ export default function SupervisorStudentsPage() {
             <h1 className="text-xl font-bold" style={{ color: C.text }}>طلابي</h1>
           </div>
           <p className="text-xs mr-4" style={{ color: C.dim }}>{students.length} طالب تحت إشرافك</p>
+        </div>
+
+        <div style={{
+          marginBottom: 20, background: C.card, borderRadius: 16, padding: 16,
+          border: `1px solid ${C.border}`, boxShadow: C.shadow,
+        }}>
+          <RoleHomeIconGrid title="الخدمات" items={SUPERVISOR_HOME_ICONS} excludeTo="/supervisor/students" />
         </div>
 
         {loading ? (

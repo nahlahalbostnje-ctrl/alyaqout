@@ -6,6 +6,8 @@ import { logout } from '../features/auth/authSlice';
 import { fetchSuperAdminStats } from '../features/superAdmin/superAdminSlice';
 import BrandLogo from '../components/BrandLogo';
 import { toast } from '../components/Toast';
+import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
+import { SUPER_ADMIN_HOME_ICONS } from '../features/nav/roleHomeIcons';
 import { C } from '../theme/palette';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -423,6 +425,10 @@ export default function DashboardPage() {
                 <p style={{ color:s.color, fontSize:10.5, fontWeight:600, marginTop:5 }}>{s.sub}</p>
               </div>
             ))}
+          </div>
+
+          <div style={{ ...card(), marginBottom:14 }}>
+            <RoleHomeIconGrid title="الخدمات" items={SUPER_ADMIN_HOME_ICONS} />
           </div>
 
           {/* ── ROW 2: Approvals | Growth | Alerts+Donut ── */}

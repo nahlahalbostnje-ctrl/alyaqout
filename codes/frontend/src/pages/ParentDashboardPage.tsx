@@ -5,12 +5,13 @@ import { fetchParentDashboard } from '../features/parent/parentSlice';
 import ParentLayout from '../components/ParentLayout';
 import BrandLogo from '../components/BrandLogo';
 import NearestBranchWidget from '../components/NearestBranchWidget';
+import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
 import type { ChildSummary } from '../features/parent/parentSlice';
+import { PARENT_HOME_ICONS } from '../features/nav/roleHomeIcons';
 import { C } from '../theme/palette';
 
 /**
- * Phase C — Parent home: show only real content.
- * Empty academy / achievements / invoices / fake attendance / empty recs are omitted.
+ * Parent home: real content only + full icon services grid.
  */
 
 function Ico({ d, size = 16, color = 'currentColor' }: { d: string; size?: number; color?: string }) {
@@ -37,15 +38,6 @@ function SecHead({ title, action, onAction }: { title: string; action?: string; 
     </div>
   );
 }
-
-const QUICK: { label: string; to: string; d: string }[] = [
-  { label: 'أبنائي', to: '/parent/children', d: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-  { label: 'التقارير', to: '/parent/reports', d: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-  { label: 'الحضور', to: '/parent/attendance', d: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-  { label: 'المدفوعات', to: '/parent/billing', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
-  { label: 'التواصل', to: '/parent/communication', d: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
-  { label: 'الباقات', to: '/parent/packages', d: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-];
 
 export default function ParentDashboardPage() {
   const dispatch = useAppDispatch();
@@ -142,33 +134,7 @@ export default function ParentDashboardPage() {
               </div>
 
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, boxShadow: C.shadow }}>
-                <SecHead title="اختصارات سريعة" />
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)',
-                  gap: 10,
-                }}>
-                  {QUICK.map((q) => (
-                    <button
-                      key={q.to}
-                      type="button"
-                      onClick={() => navigate(q.to)}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                        padding: '12px 6px', borderRadius: 12, border: `1px solid ${C.border}`,
-                        background: C.bg, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
-                      }}
-                    >
-                      <span style={{
-                        width: 40, height: 40, borderRadius: 11, background: C.goldBg, color: C.primary,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Ico d={q.d} color={C.primary} size={18} />
-                      </span>
-                      <span style={{ color: C.text, fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{q.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <RoleHomeIconGrid title="الخدمات" items={PARENT_HOME_ICONS} />
               </div>
 
               <div style={{

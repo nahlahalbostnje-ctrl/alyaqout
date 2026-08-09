@@ -6,6 +6,8 @@ import { fetchTeacherExams, fetchTeacherHomework } from '../features/teacher/exa
 import { logout } from '../features/auth/authSlice';
 import api from '../services/axios';
 import { C } from '../theme/palette';
+import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
+import { TEACHER_HOME_ICONS } from '../features/nav/roleHomeIcons';
 
 // ─── Design Tokens (aligned with calm light C palette) ─────────────────────
 const T = {
@@ -281,6 +283,10 @@ function HomeScreen({ stats, upcoming, teacher, recentSubmissions }: {
   return (
     <div>
       <SectionTitle title={`مرحباً، أ. ${teacher?.name?.split(' ')[0] ?? '...'} 👋`} sub="هذا ملخص نشاط اليوم"/>
+
+      <div style={{ ...card(), marginBottom: 20 }}>
+        <RoleHomeIconGrid title="الخدمات" items={TEACHER_HOME_ICONS} />
+      </div>
 
       {/* KPI grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
