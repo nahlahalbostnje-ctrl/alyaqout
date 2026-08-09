@@ -1,4 +1,4 @@
-/** شبكة الوصول السريع — صفّان × 7 · أيقونة + عنوان فقط */
+/** شبكة الوصول السريع — كل الوجهات ظاهرة (لا حذف) */
 
 export type HomeGridItem = {
   to: string;
@@ -23,4 +23,12 @@ export const STUDENT_HOME_GRID: HomeGridItem[] = [
   { to: '/student/review-videos', title: 'التسجيلات', emoji: '🎙️' },
   { to: '/student/certificates', title: 'الشهادات', emoji: '🎓' },
   { to: '/student/report', title: 'الإعدادات', emoji: '⚙️' },
+  // صف 3 — مُعاد بالكامل
+  { to: '/student/challenges', title: 'التحديات', emoji: '🎯' },
+  { to: '/student/points', title: 'الجوائز', emoji: '🎁' },
+  { to: '/student/report', title: 'التقارير', emoji: '📊' },
+  { to: '/student/teacher-contact', title: 'حجز جلسة', emoji: '👨‍🏫' },
+  { to: '/student/peer-league', title: 'مجموعات الدراسة', emoji: '👥' },
+  { to: '/student/notifications', title: 'الإشعارات', emoji: '🔔' },
+  { to: '/student/emergency', title: 'الدعم الفني', emoji: '☎️' },
 ];
