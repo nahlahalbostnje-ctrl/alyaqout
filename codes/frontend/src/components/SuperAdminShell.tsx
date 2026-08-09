@@ -10,27 +10,77 @@ export { C };
 
 export const SW = 280;
 
-const NAV = [
-  { label:'الرئيسية',               to:'/dashboard',                   icon:'🏠', end:true },
-  { label:'مؤشرات المنصة',         to:'/dashboard/analytics',         icon:'📊', end:false },
-  { label:'الأفرع',                to:'/dashboard/schools',           icon:'🌍', end:false },
-  { label:'الدول',                 to:'/dashboard/countries',         icon:'🗺️', end:false },
-  { label:'المعلمون والموظفون',     to:'/dashboard/staff',             icon:'👨‍🏫', end:false },
-  { label:'الطلاب وأولياء الأمور', to:'/dashboard/students',          icon:'👥', end:false },
-  { label:'المحتوى والاعتمادات',    to:'/dashboard/content-approvals', icon:'✅', end:false },
-  { label:'المالية والفواتير',      to:'/dashboard/billing',           icon:'💰', end:false },
-  { label:'الخطط والاشتراكات',      to:'/dashboard/plans',             icon:'📋', end:false },
-  { label:'التقارير والتحليلات',    to:'/dashboard/reports',           icon:'📈', end:false },
-  { label:'نظام التنبيهات',         to:'/dashboard/notifications',     icon:'🔔', end:false },
-  { label:'الأسئلة الشائعة',        to:'/dashboard/faqs',              icon:'❓', end:false },
-  { label:'الإعدادات العامة',       to:'/dashboard/settings',          icon:'⚙️', end:false },
-  { label:'الصلاحيات والأدوار',     to:'/dashboard/roles',             icon:'🔑', end:false },
-  { label:'سجل العمليات',          to:'/dashboard/activity-log',      icon:'📝', end:false },
-  { label:'مركز الأمان',             to:'/super-admin/security',         icon:'🔐', end:false },
-  { label:'الرسائل',               to:'/dashboard/messages',          icon:'💬', end:false },
-  { label:'الدعم الفني',           to:'/dashboard/support',           icon:'🎧', end:false },
-  { label:'مركز التطوير',          to:'/dashboard/dev-center',        icon:'🛠️', end:false },
+type SaNavItem = { label: string; to: string; icon: string; end?: boolean };
+type SaNavGroup = { id: string; label: string; items: SaNavItem[]; alwaysOpen?: boolean };
+
+const NAV_GROUPS: SaNavGroup[] = [
+  {
+    id: 'home',
+    label: '',
+    alwaysOpen: true,
+    items: [
+      { label: 'الرئيسية', to: '/dashboard', icon: '🏠', end: true },
+    ],
+  },
+  {
+    id: 'insights',
+    label: 'المؤشرات والتقارير',
+    items: [
+      { label: 'مؤشرات المنصة', to: '/dashboard/analytics', icon: '📊' },
+      { label: 'التقارير والتحليلات', to: '/dashboard/reports', icon: '📈' },
+    ],
+  },
+  {
+    id: 'network',
+    label: 'الشبكة والفروع',
+    items: [
+      { label: 'الأفرع', to: '/dashboard/schools', icon: '🌍' },
+      { label: 'الدول', to: '/dashboard/countries', icon: '🗺️' },
+    ],
+  },
+  {
+    id: 'people',
+    label: 'المستخدمون والمحتوى',
+    items: [
+      { label: 'المعلمون والموظفون', to: '/dashboard/staff', icon: '👨‍🏫' },
+      { label: 'الطلاب وأولياء الأمور', to: '/dashboard/students', icon: '👥' },
+      { label: 'المحتوى والاعتمادات', to: '/dashboard/content-approvals', icon: '✅' },
+      { label: 'الأسئلة الشائعة', to: '/dashboard/faqs', icon: '❓' },
+    ],
+  },
+  {
+    id: 'finance',
+    label: 'المالية',
+    items: [
+      { label: 'المالية والفواتير', to: '/dashboard/billing', icon: '💰' },
+      { label: 'الخطط والاشتراكات', to: '/dashboard/plans', icon: '📋' },
+    ],
+  },
+  {
+    id: 'comms',
+    label: 'التواصل والدعم',
+    items: [
+      { label: 'نظام التنبيهات', to: '/dashboard/notifications', icon: '🔔' },
+      { label: 'الرسائل', to: '/dashboard/messages', icon: '💬' },
+      { label: 'الدعم الفني', to: '/dashboard/support', icon: '🎧' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'النظام والأمان',
+    items: [
+      { label: 'الإعدادات العامة', to: '/dashboard/settings', icon: '⚙️' },
+      { label: 'الصلاحيات والأدوار', to: '/dashboard/roles', icon: '🔑' },
+      { label: 'سجل العمليات', to: '/dashboard/activity-log', icon: '📝' },
+      { label: 'مركز الأمان', to: '/super-admin/security', icon: '🔐' },
+      { label: 'مركز التطوير', to: '/dashboard/dev-center', icon: '🛠️' },
+    ],
+  },
 ];
+
+function saItemMatches(item: SaNavItem, pathname: string) {
+  return item.end ? pathname === item.to : pathname.startsWith(item.to);
+}
 
 export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
@@ -43,6 +93,17 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of NAV_GROUPS) {
+      if (g.alwaysOpen || !g.label) {
+        init[g.id] = true;
+        continue;
+      }
+      init[g.id] = g.items.some((item) => saItemMatches(item, typeof window !== 'undefined' ? window.location.pathname : '/dashboard'));
+    }
+    return init;
+  });
 
   useEffect(() => {
     dispatch(fetchSuperAdminStats());
@@ -58,11 +119,31 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
   useEffect(() => { if (isMobile) setSidebarOpen(false); setProfileMenuOpen(false); }, [location.pathname, isMobile]);
 
   useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const g of NAV_GROUPS) {
+        if (g.alwaysOpen || !g.label) {
+          next[g.id] = true;
+          continue;
+        }
+        if (g.items.some((item) => saItemMatches(item, location.pathname))) {
+          next[g.id] = true;
+        }
+      }
+      return next;
+    });
+  }, [location.pathname]);
+
+  useEffect(() => {
     if (!profileMenuOpen) return;
     const onDoc = () => setProfileMenuOpen(false);
     document.addEventListener('click', onDoc);
     return () => document.removeEventListener('click', onDoc);
   }, [profileMenuOpen]);
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -100,17 +181,73 @@ export default function SuperAdminShell({ children }: { children: ReactNode }) {
           <p style={{ color:C.text, fontWeight:900, fontSize:14, lineHeight:1.3 }}>مركز القيادة</p>
           <p style={{ color:C.primary, fontSize:10, marginTop:3 }}>الإدارة العليا للمنصة</p>
         </div>
-        <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:4, overflowY:'auto', minHeight:0, WebkitOverflowScrolling:'touch', scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.25) transparent' }}>
-          {NAV.map((item, i) => (
-            <NavLink key={i} to={item.to} end={item.end} style={{ textDecoration:'none' }}>
-              {({ isActive }) => (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:12, fontSize:15, fontWeight:isActive?800:700, lineHeight:1.35, background:isActive?C.sidebarActiveBg:'transparent', color:isActive?C.primary:C.text, borderRight:isActive?`3px solid ${C.primary}`:'3px solid transparent', cursor:'pointer', transition:'all 0.15s' }}>
-                  <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
-                  <span style={{ flex:1 }}>{item.label}</span>
-                </div>
-              )}
-            </NavLink>
-          ))}
+        <nav style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto', minHeight:0, WebkitOverflowScrolling:'touch', scrollbarWidth:'thin', scrollbarColor:'rgba(255,255,255,0.25) transparent' }}>
+          {NAV_GROUPS.map((group) => {
+            const isOpen = openGroups[group.id] !== false;
+            const hasHeader = Boolean(group.label) && !group.alwaysOpen;
+            const groupActive = group.items.some((item) => saItemMatches(item, location.pathname));
+
+            return (
+              <div key={group.id} style={{ marginBottom: hasHeader ? 6 : 2 }}>
+                {hasHeader && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.id)}
+                    aria-expanded={isOpen}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: groupActive ? 'rgba(197,147,65,0.08)' : 'transparent',
+                      cursor: 'pointer',
+                      fontFamily: "'Cairo',sans-serif",
+                      color: groupActive ? C.primary : C.sub,
+                    }}
+                  >
+                    <span style={{ fontSize: 11.5, fontWeight: 800 }}>{group.label}</span>
+                    <svg
+                      width="14"
+                      height="14"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.2}
+                      style={{
+                        flexShrink: 0,
+                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.18s ease',
+                        opacity: 0.7,
+                      }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
+                {isOpen && group.items.map((item) => (
+                  <NavLink key={item.to} to={item.to} end={item.end} style={{ textDecoration: 'none' }}>
+                    {({ isActive }) => (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12,
+                        fontSize: 14.5, fontWeight: isActive ? 800 : 700, lineHeight: 1.35,
+                        background: isActive ? C.sidebarActiveBg : 'transparent',
+                        color: isActive ? C.primary : C.text,
+                        borderRight: isActive ? `3px solid ${C.primary}` : '3px solid transparent',
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}>
+                        <span style={{ fontSize: 17, flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                      </div>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div style={{ flexShrink:0, margin:'10px 10px 12px', padding:'14px 12px', background:C.bg, borderRadius:14, border:`1px solid ${C.border}`, textAlign:'center' }}>
           <BrandLogo size={40} style={{ margin:'0 auto 8px', borderRadius:8 }} />
