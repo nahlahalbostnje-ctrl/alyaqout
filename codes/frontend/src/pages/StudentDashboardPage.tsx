@@ -373,7 +373,7 @@ export default function StudentDashboardPage() {
             <p style={{ margin: '0 0 12px', color: ST.navy, fontWeight: 800, fontSize: 15 }}>الوصول السريع</p>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : 'repeat(7, 1fr)',
+              gridTemplateColumns: 'repeat(6, 1fr)',
               gap: 8,
             }}>
               {STUDENT_HOME_GRID.map((item) => (
