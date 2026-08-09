@@ -5,33 +5,30 @@ import { fetchTeacherDashboard, updateTeacherClassStatus } from '../features/tea
 import { fetchTeacherExams, fetchTeacherHomework } from '../features/teacher/examSlice';
 import { logout } from '../features/auth/authSlice';
 import api from '../services/axios';
+import { C } from '../theme/palette';
 
-// ─── Design Tokens ─────────────────────────────────────────────────────────
+// ─── Design Tokens (aligned with calm light C palette) ─────────────────────
 const T = {
-  // Content area — light cream
-  bg:        '#F5EFE0',
-  card:      '#FFFFFF',
-  card2:     '#FDF6EC',
-  text:      '#0D1535',
-  sub:       'rgba(13,21,53,0.58)',
-  dim:       'rgba(13,21,53,0.35)',
-  border:    'rgba(201,149,42,0.22)',
-  goldBdr:   'rgba(201,149,42,0.45)',
-  goldBg:    'rgba(201,149,42,0.09)',
-  // Sidebar — dark navy (same as student portal)
-  sidebar:   '#0D1535',
-  sText:     '#FFFFFF',
-  sSub:      'rgba(255,255,255,0.55)',
-  sBorder:   'rgba(255,255,255,0.1)',
-  // Accent gold
-  gold:      '#C9952A',
-  goldL:     '#DDAD50',
-  goldGrad:  'linear-gradient(135deg,#C9952A,#DDAD50)',
-  // Status colors
-  green:     '#16A34A',
-  orange:    '#D97706',
-  red:       '#DC2626',
-  blue:      '#2563EB',
+  bg:        C.bg,
+  card:      C.card,
+  card2:     C.bg,
+  text:      C.text,
+  sub:       C.sub,
+  dim:       C.dim,
+  border:    C.border,
+  goldBdr:   C.goldBdr,
+  goldBg:    C.goldBg,
+  sidebar:   C.sidebar,
+  sText:     C.text,
+  sSub:      C.sub,
+  sBorder:   C.sidebarBorder,
+  gold:      C.primary,
+  goldL:     C.primarySoft,
+  goldGrad:  C.goldGrad,
+  green:     C.green,
+  orange:    C.orange,
+  red:       C.red,
+  blue:      C.primary,
 };
 
 type Screen = 'home'|'schedule'|'homework'|'exams'|'reports'|'ai'|'messages'|'live'|'students';
@@ -95,7 +92,7 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
         transform: open ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.25s ease', boxShadow: open ? '-8px 0 24px rgba(0,0,0,0.3)' : 'none',
       } : {
-        width: 280, background: T.sidebar, borderLeft: `1px solid rgba(255,255,255,0.08)`,
+        width: 280, background: T.sidebar, borderLeft: `1px solid ${T.sBorder}`,
         display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100vh',
         overflow: 'hidden', position: 'sticky', top: 0, flexShrink: 0,
       }}>
@@ -105,7 +102,7 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: '0 4px 14px rgba(201,149,42,0.4)' }}>👨‍🏫</div>
           <div>
             <p style={{ color: T.sText, fontWeight: 800, fontSize: 13.5 }}>أ. {teacher?.name ?? '...'}</p>
-            <p style={{ color: T.goldL, fontSize: 11, fontWeight: 600, marginTop: 4, lineHeight: 1.4 }}>
+            <p style={{ color: T.sSub, fontSize: 11, fontWeight: 600, marginTop: 4, lineHeight: 1.4 }}>
               {subjectsLabel}
             </p>
           </div>
@@ -117,16 +114,16 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
         flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '12px 10px',
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+        scrollbarColor: `${C.border} transparent`,
       }}>
         {NAV_ITEMS.map(item => {
           const isActive = active === item.screen;
           const badge = item.screen === 'homework' || item.screen === 'exams' ? pendingTotal : 0;
           return (
             <button key={item.screen} onClick={() => { onNav(item.screen); if (isMobile) onClose?.(); }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, marginBottom: 3, background: isActive ? T.goldGrad : 'transparent', border: `1px solid ${isActive ? T.gold : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, marginBottom: 3, background: isActive ? T.goldBg : 'transparent', border: `1px solid ${isActive ? T.goldBdr : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
-              <span style={{ color: isActive ? T.sidebar : 'rgba(255,255,255,0.88)', fontWeight: isActive ? 800 : 700, fontSize: 15, flex: 1 }}>{item.label}</span>
+              <span style={{ color: isActive ? T.gold : T.sText, fontWeight: isActive ? 800 : 600, fontSize: 14, flex: 1 }}>{item.label}</span>
               {!isActive && badge > 0 && <Badge n={badge}/>}
             </button>
           );
@@ -135,7 +132,7 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
 
       {/* Logout */}
       <div style={{ padding: '14px 10px', borderTop: `1px solid ${T.sBorder}`, flexShrink: 0 }}>
-        <button onClick={onLogout} style={{ width: '100%', padding: '10px 14px', borderRadius: 12, background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.28)', color: '#FF8080', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={onLogout} style={{ width: '100%', padding: '10px 14px', borderRadius: 12, background: C.redBg, border: `1px solid rgba(224,122,122,0.35)`, color: C.red, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>🚪</span> تسجيل الخروج
         </button>
       </div>

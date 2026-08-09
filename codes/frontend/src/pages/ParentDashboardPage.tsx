@@ -172,7 +172,7 @@ function AICard({ userName }: { userName: string }) {
         <span style={{ color: C.text, fontWeight: 700, fontSize: 13.5 }}>مساعد الياقوت الذكي</span>
       </div>
       <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <div style={{ width: 82, height: 82, margin: '0 auto 12px', background: 'linear-gradient(135deg, #1B2038 0%, #2D3561 100%)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, boxShadow: '0 8px 24px rgba(27,32,56,0.35)' }}>
+        <div style={{ width: 82, height: 82, margin: '0 auto 12px', background: C.goldGrad, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>
           🤖
         </div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 15, marginBottom: 4 }}>مرحباً أ. {userName}</p>
@@ -180,7 +180,7 @@ function AICard({ userName }: { userName: string }) {
           أنا هنا لمساعدتك في<br />دعم رحلة أبنائك التعليمية
         </p>
       </div>
-      <button onClick={() => navigate('/parent/ai-assistant')} style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'linear-gradient(135deg, #1B2038, #2D3561)', color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 4px 14px rgba(27,32,56,0.3)' }}>
+      <button onClick={() => navigate('/parent/ai-assistant')} style={{ width: '100%', padding: '11px', borderRadius: 12, background: C.goldGrad, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
         <span>✨</span>تحديث التحليل
       </button>
     </div>
@@ -296,7 +296,7 @@ export default function ParentDashboardPage() {
               </div>
 
               {/* Central Diamond Hub — simplified (no academic/attendance, adds reports/contact) */}
-              <div style={{ background: 'linear-gradient(160deg, #FBF5E6, #F5EDD8)', border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, boxShadow: C.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, boxShadow: C.shadow, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <p style={{ color: C.text, fontWeight: 700, fontSize: 14, marginBottom: 8, textAlign: 'center' }}>مركز العائلة</p>
 
                 <div style={{ position: 'relative', width: 230, height: 230 }}>
