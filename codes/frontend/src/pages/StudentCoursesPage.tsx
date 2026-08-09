@@ -27,7 +27,7 @@ export default function StudentCoursesPage() {
 
   const display = courses.map(c => ({
     ...c,
-    progress: 0,
+    progress: typeof c.progress === 'number' ? c.progress : 0,
     emoji: SUBJECT_EMOJI[c.category?.name ?? ''] ?? '📚',
   })).filter(c => {
     const matchCat = cat === 'الكل' || c.category?.name?.includes(cat) || cat === 'اللغات' && (c.category?.name?.includes('اللغة') || c.category?.name === 'اللغات');

@@ -11,13 +11,17 @@ use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\LiveClass;
 use App\Models\Subscription;
+use App\Services\CourseCompletionService;
 use App\Services\GamificationService;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
 {
-    public function __construct(private readonly StudentEntitlementService $entitlement) {}
+    public function __construct(
+        private readonly StudentEntitlementService $entitlement,
+        private readonly CourseCompletionService $completion,
+    ) {}
 
     private function countryId(): int
     {
@@ -30,16 +34,19 @@ class HomeController extends Controller
         $studentId = (int) $student->id;
         $courseIds = $this->entitlement->courseIdsFor($student);
 
-        $courses = $this->entitlement->entitledCoursesQuery($student)
-            ->with([
-                'subject:id,name,type',
-                'grade:id,name',
-                'category:id,name,grade_id',
-                'category.grade:id,name',
-                'teacher:id,name',
-            ])
-            ->orderBy('sort_order')
-            ->get(['id', 'category_id', 'subject_id', 'grade_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail']);
+        $courses = $this->completion->appendToCourses(
+            $studentId,
+            $this->entitlement->entitledCoursesQuery($student)
+                ->with([
+                    'subject:id,name,type',
+                    'grade:id,name',
+                    'category:id,name,grade_id',
+                    'category.grade:id,name',
+                    'teacher:id,name',
+                ])
+                ->orderBy('sort_order')
+                ->get(['id', 'category_id', 'subject_id', 'grade_id', 'teacher_id', 'title', 'description', 'price', 'is_free', 'thumbnail'])
+        );
 
         $upcoming = LiveClass::where('country_id', $this->countryId())
             ->where('approval_status', 'approved')
@@ -134,19 +141,23 @@ class HomeController extends Controller
     public function courses(): JsonResponse
     {
         $student = auth()->user();
+        $studentId = (int) $student->id;
 
-        $courses = $this->entitlement->entitledCoursesQuery($student)
-            ->with([
-                'subject:id,name,type',
-                'grade:id,name',
-                'category:id,name,grade_id',
-                'category.grade:id,name',
-                'teacher:id,name',
-            ])
-            ->orderBy('sort_order')
-            ->get();
+        $courses = $this->completion->appendToCourses(
+            $studentId,
+            $this->entitlement->entitledCoursesQuery($student)
+                ->with([
+                    'subject:id,name,type',
+                    'grade:id,name',
+                    'category:id,name,grade_id',
+                    'category.grade:id,name',
+                    'teacher:id,name',
+                ])
+                ->orderBy('sort_order')
+                ->get()
+        );
 
-        return response()->json(['success' => true, 'data' => $courses]);
+        return response()->json(['success' => true, 'data' => $courses->values()]);
     }
 
     public function liveClasses(): JsonResponse

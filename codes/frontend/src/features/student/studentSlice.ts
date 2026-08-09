@@ -14,6 +14,10 @@ export interface StudentCourse {
   is_free: boolean;
   category: Category;
   teacher: Teacher | null;
+  progress?: number;
+  total_videos?: number;
+  completed_videos?: number;
+  is_complete?: boolean;
 }
 
 export interface StudentLiveClass {

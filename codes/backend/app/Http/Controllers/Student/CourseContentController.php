@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Video;
 use App\Models\VideoProgress;
+use App\Services\CourseCompletionService;
 use App\Services\GamificationService;
 use App\Services\StudentEntitlementService;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +20,7 @@ class CourseContentController extends Controller
     public function __construct(
         private readonly GamificationService $gamification,
         private readonly StudentEntitlementService $entitlement,
+        private readonly CourseCompletionService $completion,
     ) {}
 
     public function courseUnits(Course $course): JsonResponse
@@ -72,16 +74,18 @@ class CourseContentController extends Controller
             ];
         });
 
-        $totalVideos    = $units->sum(fn ($u) => $u->lessons->sum(fn ($l) => $l->videos->count()));
-        $completedCount = $completedVideoIds->count();
+        $summary = $this->completion->progressForCourse($studentId, (int) $course->id);
 
         return response()->json([
-            'course'    => [
-                'id'       => $course->id,
-                'title'    => $course->title,
-                'progress' => $totalVideos > 0 ? round($completedCount / $totalVideos * 100) : 0,
+            'course' => [
+                'id'               => $course->id,
+                'title'            => $course->title,
+                'progress'         => $summary['progress'],
+                'total_videos'     => $summary['total_videos'],
+                'completed_videos' => $summary['completed_videos'],
+                'is_complete'      => $summary['is_complete'],
             ],
-            'units'     => $data,
+            'units' => $data,
         ]);
     }
 
