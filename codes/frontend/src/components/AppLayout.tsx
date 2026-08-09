@@ -14,16 +14,31 @@ export interface NavItem {
   end?: boolean;
 }
 
+export interface NavGroup {
+  id: string;
+  /** عنوان القسم — فارغ = عناصر دون ترويسة (مثل الرئيسية) */
+  label: string;
+  items: NavItem[];
+  /** دائماً مفتوح بلا زر طي */
+  alwaysOpen?: boolean;
+}
+
 interface Props {
   children: ReactNode;
-  navItems: NavItem[];
+  /** قائمة مسطّحة (للتوافق العكسي) */
+  navItems?: NavItem[];
+  /** مجموعات قابلة للطي — لها الأولوية إن وُجدت */
+  navGroups?: NavGroup[];
   roleLabel: string;
   /** مسار صفحة الملف الشخصي — إن وُجد يظهر في القائمة المنسدلة */
   profilePath?: string;
 }
 
+function itemMatches(item: NavItem, pathname: string) {
+  return item.end ? pathname === item.to : pathname.startsWith(item.to);
+}
 
-export default function AppLayout({ children, navItems, roleLabel, profilePath }: Props) {
+export default function AppLayout({ children, navItems, navGroups, roleLabel, profilePath }: Props) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,6 +46,25 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const groups: NavGroup[] =
+    navGroups && navGroups.length > 0
+      ? navGroups
+      : [{ id: 'all', label: '', items: navItems ?? [], alwaysOpen: true }];
+
+  const flatItems = groups.flatMap((g) => g.items);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of groups) {
+      if (g.alwaysOpen || !g.label) {
+        init[g.id] = true;
+        continue;
+      }
+      init[g.id] = g.items.some((item) => itemMatches(item, location.pathname));
+    }
+    return init;
+  });
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -41,6 +75,23 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
   useEffect(() => {
     if (sidebarOpen) setSidebarOpen(false);
     setProfileMenuOpen(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const g of groups) {
+        if (g.alwaysOpen || !g.label) {
+          next[g.id] = true;
+          continue;
+        }
+        if (g.items.some((item) => itemMatches(item, location.pathname))) {
+          next[g.id] = true;
+        }
+      }
+      return next;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -61,13 +112,58 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
     navigate('/login', { replace: true });
   };
 
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const now = new Date();
   const dateStr = now.toLocaleDateString('ar-EG', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const currentPage = navItems.find((n) =>
-    n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)
+  const currentPage = flatItems.find((n) => itemMatches(n, location.pathname));
+
+  const renderNavItem = (item: NavItem) => (
+    <NavLink
+      key={item.to}
+      to={item.to}
+      end={item.end}
+      style={{ textDecoration: 'none' }}
+    >
+      {({ isActive }) => (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 10,
+            fontSize: 14.5,
+            fontWeight: isActive ? 800 : 600,
+            background: isActive ? C.sidebarActiveBg : 'transparent',
+            color: isActive ? C.primary : C.text,
+            borderRight: isActive ? `3px solid ${C.primary}` : '3px solid transparent',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          <span
+            style={{
+              width: 20,
+              height: 20,
+              flexShrink: 0,
+              color: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {item.icon}
+          </span>
+          <span style={{ flex: 1, fontSize: 14.5, fontWeight: isActive ? 800 : 700, lineHeight: 1.35 }}>{item.label}</span>
+        </div>
+      )}
+    </NavLink>
   );
 
   return (
@@ -133,48 +229,62 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
             scrollbarColor: 'rgba(255,255,255,0.25) transparent',
           }}
         >
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              style={{ textDecoration: 'none' }}
-            >
-              {({ isActive }) => (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '11px 12px',
-                    borderRadius: 10,
-                    fontSize: 14.5,
-                    fontWeight: isActive ? 800 : 600,
-                    background: isActive ? C.sidebarActiveBg : 'transparent',
-                    color: isActive ? C.primary : C.text,
-                    borderRight: isActive ? `3px solid ${C.primary}` : '3px solid transparent',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <span
+          {groups.map((group) => {
+            const isOpen = openGroups[group.id] !== false;
+            const hasHeader = Boolean(group.label) && !group.alwaysOpen;
+            const groupActive = group.items.some((item) => itemMatches(item, location.pathname));
+
+            return (
+              <div key={group.id} style={{ marginBottom: hasHeader ? 6 : 2 }}>
+                {hasHeader && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.id)}
+                    aria-expanded={isOpen}
                     style={{
-                      width: 20,
-                      height: 20,
-                      flexShrink: 0,
-                      color: 'inherit',
+                      width: '100%',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: groupActive ? 'rgba(197,147,65,0.08)' : 'transparent',
+                      cursor: 'pointer',
+                      fontFamily: "'Cairo', sans-serif",
+                      color: groupActive ? C.primary : C.sub,
                     }}
                   >
-                    {item.icon}
-                  </span>
-                  <span style={{ flex: 1, fontSize: 15, fontWeight: isActive ? 800 : 700, lineHeight: 1.35 }}>{item.label}</span>
-                </div>
-              )}
-            </NavLink>
-          ))}
+                    <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.02em' }}>
+                      {group.label}
+                    </span>
+                    <svg
+                      width="14"
+                      height="14"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.2}
+                      style={{
+                        flexShrink: 0,
+                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.18s ease',
+                        opacity: 0.7,
+                      }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
+                {isOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {group.items.map(renderNavItem)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* User + Logout */}
@@ -282,7 +392,7 @@ export default function AppLayout({ children, navItems, roleLabel, profilePath }
               {currentPage && (
                 <>
                   <span style={{ color: '#D1C4A8', fontSize: 12 }}>/</span>
-                  <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
+                  <span style={{ color: C.text, fontSize: 12, fontWeight: 700 }}>{currentPage.label}</span>
                 </>
               )}
             </div>
