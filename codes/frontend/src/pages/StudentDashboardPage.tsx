@@ -245,7 +245,7 @@ export default function StudentDashboardPage() {
                         if (isLive) {
                           navigate(`/live/${focusClass.agora_channel ?? 'demo'}?classId=${focusClass.id}`);
                         } else {
-                          navigate('/student/live-classes');
+                          navigate('/student/courses?tab=schedule');
                         }
                       }}
                       style={{
@@ -262,7 +262,7 @@ export default function StudentDashboardPage() {
                     <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.9 }}>لا حصة مجدولة الآن</p>
                     <button
                       type="button"
-                      onClick={() => navigate('/student/live-classes')}
+                      onClick={() => navigate('/student/courses?tab=schedule')}
                       style={{
                         padding: '11px 18px', borderRadius: 14, border: 'none', cursor: 'pointer',
                         background: 'rgba(255,255,255,0.95)', color: ST.primary, fontWeight: 800,
