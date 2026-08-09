@@ -22,6 +22,7 @@ import StudentCatalogPage         from './pages/StudentCatalogPage';
 import StudentCatalogCoursePage   from './pages/StudentCatalogCoursePage';
 import StudentCertificatesPage    from './pages/StudentCertificatesPage';
 import CertificateVerifyPage      from './pages/CertificateVerifyPage';
+import StudentLiveClassesPage     from './pages/StudentLiveClassesPage';
 import StudentCourseContentPage   from './pages/StudentCourseContentPage';
 import StudentExamsPage           from './pages/StudentExamsPage';
 import StudentHomeworkPage        from './pages/StudentHomeworkPage';
@@ -336,7 +337,7 @@ export default function App() {
           <PrivateRoute roles={['student']}><StudentCourseContentPage /></PrivateRoute>
         } />
         <Route path="/student/live-classes" element={
-          <PrivateRoute roles={['student']}><Navigate to="/student/courses?tab=schedule" replace /></PrivateRoute>
+          <PrivateRoute roles={['student']}><StudentLiveClassesPage /></PrivateRoute>
         } />
         <Route path="/student/exams" element={
           <PrivateRoute roles={['student']}><StudentExamsPage /></PrivateRoute>

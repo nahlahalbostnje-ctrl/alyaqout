@@ -10,7 +10,7 @@ interface PublicSettings {
 
 const STUDENT_ROUTES_WITH_BOTTOM_NAV = [
   '/student/homework', '/student/exams', '/student/points',
-  '/student/courses', '/student/review-videos',
+  '/student/live-classes', '/student/courses', '/student/review-videos',
   '/student/study-room',
 ];
 
