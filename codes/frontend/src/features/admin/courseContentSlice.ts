@@ -2,6 +2,18 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/axios';
 
+export type ContentApiScope = 'admin' | 'teacher';
+
+let contentApiScope: ContentApiScope = 'admin';
+
+export function setContentApiScope(scope: ContentApiScope) {
+  contentApiScope = scope;
+}
+
+function apiBase() {
+  return `/${contentApiScope}`;
+}
+
 export interface VideoItem {
   id: number;
   title: string;
@@ -49,7 +61,7 @@ const initialState: CourseContentState = {
 export const fetchUnits = createAsyncThunk(
   'courseContent/fetchUnits',
   async (courseId: number) => {
-    const res = await api.get(`/admin/courses/${courseId}/units`);
+    const res = await api.get(`${apiBase()}/courses/${courseId}/units`);
     return { courseId, units: res.data.data as UnitItem[] };
   }
 );
@@ -57,7 +69,7 @@ export const fetchUnits = createAsyncThunk(
 export const addUnit = createAsyncThunk(
   'courseContent/addUnit',
   async (payload: { courseId: number; title: string }) => {
-    const res = await api.post(`/admin/courses/${payload.courseId}/units`, { title: payload.title });
+    const res = await api.post(`${apiBase()}/courses/${payload.courseId}/units`, { title: payload.title });
     return res.data.data as UnitItem;
   }
 );
@@ -65,7 +77,7 @@ export const addUnit = createAsyncThunk(
 export const updateUnit = createAsyncThunk(
   'courseContent/updateUnit',
   async (payload: { courseId: number; unitId: number; title: string }) => {
-    const res = await api.put(`/admin/courses/${payload.courseId}/units/${payload.unitId}`, { title: payload.title });
+    const res = await api.put(`${apiBase()}/courses/${payload.courseId}/units/${payload.unitId}`, { title: payload.title });
     return res.data.data as UnitItem;
   }
 );
@@ -73,7 +85,7 @@ export const updateUnit = createAsyncThunk(
 export const deleteUnit = createAsyncThunk(
   'courseContent/deleteUnit',
   async (payload: { courseId: number; unitId: number }) => {
-    await api.delete(`/admin/courses/${payload.courseId}/units/${payload.unitId}`);
+    await api.delete(`${apiBase()}/courses/${payload.courseId}/units/${payload.unitId}`);
     return payload.unitId;
   }
 );
@@ -81,7 +93,7 @@ export const deleteUnit = createAsyncThunk(
 export const fetchLessons = createAsyncThunk(
   'courseContent/fetchLessons',
   async (unitId: number) => {
-    const res = await api.get(`/admin/units/${unitId}/lessons`);
+    const res = await api.get(`${apiBase()}/units/${unitId}/lessons`);
     return { unitId, lessons: res.data.data as LessonItem[] };
   }
 );
@@ -89,7 +101,7 @@ export const fetchLessons = createAsyncThunk(
 export const addLesson = createAsyncThunk(
   'courseContent/addLesson',
   async (payload: { unitId: number; title: string }) => {
-    const res = await api.post(`/admin/units/${payload.unitId}/lessons`, { title: payload.title });
+    const res = await api.post(`${apiBase()}/units/${payload.unitId}/lessons`, { title: payload.title });
     return { unitId: payload.unitId, lesson: res.data.data as LessonItem };
   }
 );
@@ -97,7 +109,7 @@ export const addLesson = createAsyncThunk(
 export const updateLesson = createAsyncThunk(
   'courseContent/updateLesson',
   async (payload: { unitId: number; lessonId: number; title: string }) => {
-    const res = await api.put(`/admin/units/${payload.unitId}/lessons/${payload.lessonId}`, {
+    const res = await api.put(`${apiBase()}/units/${payload.unitId}/lessons/${payload.lessonId}`, {
       title: payload.title,
     });
     return { unitId: payload.unitId, lesson: res.data.data as LessonItem };
@@ -107,7 +119,7 @@ export const updateLesson = createAsyncThunk(
 export const deleteLesson = createAsyncThunk(
   'courseContent/deleteLesson',
   async (payload: { unitId: number; lessonId: number }) => {
-    await api.delete(`/admin/units/${payload.unitId}/lessons/${payload.lessonId}`);
+    await api.delete(`${apiBase()}/units/${payload.unitId}/lessons/${payload.lessonId}`);
     return payload;
   }
 );
@@ -115,7 +127,7 @@ export const deleteLesson = createAsyncThunk(
 export const fetchVideos = createAsyncThunk(
   'courseContent/fetchVideos',
   async (lessonId: number) => {
-    const res = await api.get(`/admin/lessons/${lessonId}/videos`);
+    const res = await api.get(`${apiBase()}/lessons/${lessonId}/videos`);
     return { lessonId, videos: res.data.data as VideoItem[] };
   }
 );
@@ -130,7 +142,7 @@ export const addVideo = createAsyncThunk(
     duration: number;
     is_review: boolean;
   }) => {
-    const res = await api.post(`/admin/lessons/${payload.lessonId}/videos`, payload);
+    const res = await api.post(`${apiBase()}/lessons/${payload.lessonId}/videos`, payload);
     return { lessonId: payload.lessonId, video: res.data.data as VideoItem };
   }
 );
@@ -147,7 +159,7 @@ export const updateVideo = createAsyncThunk(
     is_review: boolean;
   }) => {
     const { lessonId, videoId, ...body } = payload;
-    const res = await api.put(`/admin/lessons/${lessonId}/videos/${videoId}`, body);
+    const res = await api.put(`${apiBase()}/lessons/${lessonId}/videos/${videoId}`, body);
     return { lessonId, video: res.data.data as VideoItem };
   }
 );
@@ -155,7 +167,7 @@ export const updateVideo = createAsyncThunk(
 export const deleteVideo = createAsyncThunk(
   'courseContent/deleteVideo',
   async (payload: { lessonId: number; videoId: number }) => {
-    await api.delete(`/admin/lessons/${payload.lessonId}/videos/${payload.videoId}`);
+    await api.delete(`${apiBase()}/lessons/${payload.lessonId}/videos/${payload.videoId}`);
     return payload;
   }
 );

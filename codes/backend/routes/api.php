@@ -37,6 +37,9 @@ use App\Http\Controllers\Teacher\LiveClassController as TeacherLiveClassControll
 use App\Http\Controllers\Teacher\CourseController as TeacherCourseController;
 use App\Http\Controllers\Teacher\ExamController as TeacherExamController;
 use App\Http\Controllers\Teacher\HomeworkController as TeacherHomeworkController;
+use App\Http\Controllers\Teacher\UnitController as TeacherUnitController;
+use App\Http\Controllers\Teacher\LessonController as TeacherLessonController;
+use App\Http\Controllers\Teacher\VideoController as TeacherVideoController;
 use App\Http\Controllers\ParentPortal\HomeController as ParentHomeController;
 use App\Http\Controllers\ParentPortal\ReportController as ParentReportController;
 use App\Http\Controllers\Student\ReportController as StudentReportController;
@@ -516,6 +519,22 @@ Route::middleware(['auth:api', 'teacher'])->prefix('teacher')->group(function ()
     Route::get('me/subjects',                        [TeacherHomeController::class, 'mySubjects']);
     Route::get('courses',                            [TeacherHomeController::class, 'courses']);
     Route::post('courses',                           [TeacherCourseController::class, 'store']);
+
+    Route::get('courses/{course}/units',             [TeacherUnitController::class, 'index']);
+    Route::post('courses/{course}/units',            [TeacherUnitController::class, 'store']);
+    Route::put('courses/{course}/units/{unit}',      [TeacherUnitController::class, 'update']);
+    Route::delete('courses/{course}/units/{unit}',   [TeacherUnitController::class, 'destroy']);
+
+    Route::get('units/{unit}/lessons',               [TeacherLessonController::class, 'index']);
+    Route::post('units/{unit}/lessons',              [TeacherLessonController::class, 'store']);
+    Route::put('units/{unit}/lessons/{lesson}',      [TeacherLessonController::class, 'update']);
+    Route::delete('units/{unit}/lessons/{lesson}',   [TeacherLessonController::class, 'destroy']);
+
+    Route::get('lessons/{lesson}/videos',            [TeacherVideoController::class, 'index']);
+    Route::post('lessons/{lesson}/videos',           [TeacherVideoController::class, 'store']);
+    Route::put('lessons/{lesson}/videos/{video}',    [TeacherVideoController::class, 'update']);
+    Route::delete('lessons/{lesson}/videos/{video}', [TeacherVideoController::class, 'destroy']);
+
     Route::get('live-classes',                       [TeacherHomeController::class, 'liveClasses']);
     Route::post('live-classes',                      [TeacherLiveClassController::class, 'store']);
     Route::put('live-classes/{liveClass}',           [TeacherLiveClassController::class, 'update']);

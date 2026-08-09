@@ -404,6 +404,9 @@ export default function App() {
         <Route path="/teacher/courses" element={
           <PrivateRoute roles={['teacher']}><TeacherCoursesPage /></PrivateRoute>
         } />
+        <Route path="/teacher/courses/:courseId/content" element={
+          <PrivateRoute roles={['teacher']}><CourseContentPage /></PrivateRoute>
+        } />
         <Route path="/teacher/live-classes" element={
           <PrivateRoute roles={['teacher']}><TeacherLiveClassesPage /></PrivateRoute>
         } />

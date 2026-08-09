@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   createTeacherCourse,
@@ -83,7 +84,7 @@ export default function TeacherCoursesPage() {
             <div style={{ width: 4, height: 28, borderRadius: 4, background: C.goldGrad }} />
             <div>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: C.text }}>دوراتي</h2>
-              <p style={{ margin: 0, fontSize: 12, color: C.sub, marginTop: 2 }}>إنشاء دورة يُرسل لموافقة أدمن البلد</p>
+              <p style={{ margin: 0, fontSize: 12, color: C.sub, marginTop: 2 }}>أنشئ الدورة ثم أضف الوحدات والدروس — الأدمن يعتمد النشر</p>
             </div>
           </div>
           <button onClick={() => { setForm(EMPTY); setFormError(''); setShowCreate(true); }}
@@ -133,9 +134,19 @@ export default function TeacherCoursesPage() {
                       <span style={{ padding: '3px 9px', borderRadius: 8, background: 'rgba(0,0,0,0.04)', color: C.dim, fontSize: 11 }}>{course.grade.name}</span>
                     )}
                   </div>
-                  <p style={{ fontWeight: 800, fontSize: 14, color: course.is_free ? C.green : C.gold, margin: 0 }}>
+                  <p style={{ fontWeight: 800, fontSize: 14, color: course.is_free ? C.green : C.gold, margin: '0 0 12px' }}>
                     {course.is_free ? 'مجاني' : formatMoney(course.price)}
                   </p>
+                  <Link
+                    to={`/teacher/courses/${course.id}/content`}
+                    style={{
+                      display: 'block', textAlign: 'center', padding: '9px 12px', borderRadius: 12,
+                      background: C.goldGrad, color: '#1B2038', fontWeight: 800, fontSize: 13,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    تحرير المحتوى
+                  </Link>
                 </div>
               );
             })}

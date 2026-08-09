@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
+import TeacherLayout from '../components/TeacherLayout';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import {
   fetchUnits, addUnit, updateUnit, deleteUnit,
   fetchLessons, addLesson, updateLesson, deleteLesson,
   fetchVideos, addVideo, updateVideo, deleteVideo,
-  clearContent,
+  clearContent, setContentApiScope,
 } from '../features/admin/courseContentSlice';
 
 type ContentType = 'video' | 'pdf' | 'attachment';
@@ -61,8 +62,16 @@ function fmtDuration(secs: number): string {
 export default function CourseContentPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const cId = Number(courseId);
+  const location = useLocation();
+  const isTeacher = location.pathname.startsWith('/teacher');
   const dispatch = useAppDispatch();
   const { units, lessons, videos, loading, saving } = useAppSelector((s) => s.courseContent);
+
+  const Layout = ({ children }: { children: ReactNode }) =>
+    isTeacher ? <TeacherLayout>{children}</TeacherLayout> : <AdminLayout>{children}</AdminLayout>;
+
+  const backHref = isTeacher ? '/teacher/courses' : '/admin/courses';
+  const backLabel = isTeacher ? '← دوراتي' : '← الدورات';
 
   const [openUnits, setOpenUnits]     = useState<Set<number>>(new Set());
   const [openLessons, setOpenLessons] = useState<Set<number>>(new Set());
@@ -91,9 +100,12 @@ export default function CourseContentPage() {
 
 
   useEffect(() => {
+    setContentApiScope(isTeacher ? 'teacher' : 'admin');
     dispatch(clearContent());
-    dispatch(fetchUnits(cId));
-  }, [dispatch, cId]);
+    if (Number.isFinite(cId) && cId > 0) {
+      dispatch(fetchUnits(cId));
+    }
+  }, [dispatch, cId, isTeacher]);
 
   function toggleUnit(id: number) {
     const next = new Set(openUnits);
@@ -177,19 +189,30 @@ export default function CourseContentPage() {
   }
 
   return (
-    <AdminLayout>
+    <Layout>
       <div className="p-8 min-h-screen" style={{ fontFamily: "'Cairo', sans-serif", background: '#F5EDD8' }} dir="rtl">
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
+              <Link to={backHref} style={{
+                display: 'inline-block', marginBottom: 10, padding: '6px 12px', borderRadius: 10,
+                border: '1px solid #EDE3CE', background: '#fff', color: DK.dimTxt,
+                textDecoration: 'none', fontWeight: 700, fontSize: 12,
+              }}>{backLabel}</Link>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${DK.gold}, ${DK.goldL})` }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>إدارة المحتوى</span>
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: DK.gold, opacity: 0.65 }}>
+                  {isTeacher ? 'تأليف المحتوى' : 'إدارة المحتوى'}
+                </span>
               </div>
               <h1 className="text-2xl font-black" style={{ color: '#1B2038' }}>محتوى الكورس</h1>
-              <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>إدارة الوحدات والدروس والمحتوى</p>
+              <p className="text-sm mt-1" style={{ color: DK.dimTxt }}>
+                {isTeacher
+                  ? 'أضف وحدات ودروس ومقاطع — ثم ينتظر المساق موافقة الإدارة للنشر'
+                  : 'إدارة الوحدات والدروس والمحتوى'}
+              </p>
             </div>
             <button
               onClick={() => { setEditingUnitId(null); setUnitTitle(''); setUnitModal(true); }}
@@ -608,6 +631,6 @@ export default function CourseContentPage() {
         onConfirm={() => void confirmPendingDelete()}
         onCancel={() => { if (!deleteBusy) { setPendingDelete(null); setDeleteError(null); } }}
       />
-    </AdminLayout>
+    </Layout>
   );
 }
