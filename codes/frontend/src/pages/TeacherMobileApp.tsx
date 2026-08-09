@@ -33,16 +33,44 @@ const T = {
 
 type Screen = 'home'|'schedule'|'homework'|'exams'|'reports'|'ai'|'messages'|'live'|'students';
 
-const NAV_ITEMS: { icon:string; label:string; screen:Screen; route?: string }[] = [
-  { icon:'🏠', label:'الرئيسية',         screen:'home'     },
-  { icon:'📅', label:'جدول الحصص',       screen:'schedule', route: '/teacher/live-classes' },
-  { icon:'📚', label:'الواجبات',          screen:'homework', route: '/teacher/homework' },
-  { icon:'📝', label:'الامتحانات',        screen:'exams',    route: '/teacher/exams' },
-  { icon:'📊', label:'التقارير',          screen:'reports'  },
-  { icon:'✉️', label:'الرسائل',           screen:'messages' },
-  { icon:'🤖', label:'المساعد الذكي',     screen:'ai'       },
-  { icon:'👥', label:'إدارة الطلاب',     screen:'students' },
-  { icon:'📹', label:'غرفة البث',         screen:'live'     },
+type TeachNavItem = { icon: string; label: string; screen: Screen; route?: string };
+type TeachNavGroup = { id: string; label: string; items: TeachNavItem[]; alwaysOpen?: boolean };
+
+const NAV_GROUPS: TeachNavGroup[] = [
+  {
+    id: 'home',
+    label: '',
+    alwaysOpen: true,
+    items: [
+      { icon: '🏠', label: 'الرئيسية', screen: 'home' },
+    ],
+  },
+  {
+    id: 'teaching',
+    label: 'التدريس',
+    items: [
+      { icon: '📅', label: 'جدول الحصص', screen: 'schedule', route: '/teacher/live-classes' },
+      { icon: '📚', label: 'الواجبات', screen: 'homework', route: '/teacher/homework' },
+      { icon: '📝', label: 'الامتحانات', screen: 'exams', route: '/teacher/exams' },
+      { icon: '📹', label: 'غرفة البث', screen: 'live' },
+    ],
+  },
+  {
+    id: 'students',
+    label: 'الطلاب والمتابعة',
+    items: [
+      { icon: '👥', label: 'إدارة الطلاب', screen: 'students' },
+      { icon: '📊', label: 'التقارير', screen: 'reports' },
+    ],
+  },
+  {
+    id: 'tools',
+    label: 'أدوات',
+    items: [
+      { icon: '✉️', label: 'الرسائل', screen: 'messages' },
+      { icon: '🤖', label: 'المساعد الذكي', screen: 'ai' },
+    ],
+  },
 ];
 
 /** شاشات الإدارة الكاملة (إضافة / تعديل / أرشفة) */
@@ -80,6 +108,36 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
   open?: boolean;
   onClose?: () => void;
 }) {
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of NAV_GROUPS) {
+      if (g.alwaysOpen || !g.label) {
+        init[g.id] = true;
+        continue;
+      }
+      init[g.id] = g.items.some((item) => item.screen === active);
+    }
+    return init;
+  });
+
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const g of NAV_GROUPS) {
+        if (g.alwaysOpen || !g.label) {
+          next[g.id] = true;
+          continue;
+        }
+        if (g.items.some((item) => item.screen === active)) {
+          next[g.id] = true;
+        }
+      }
+      return next;
+    });
+  }, [active]);
+
+  const toggleGroup = (id: string) => setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+
   return (
     <>
       {isMobile && open && (
@@ -116,16 +174,65 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
         scrollbarWidth: 'thin',
         scrollbarColor: `${C.border} transparent`,
       }}>
-        {NAV_ITEMS.map(item => {
-          const isActive = active === item.screen;
-          const badge = item.screen === 'homework' || item.screen === 'exams' ? pendingTotal : 0;
+        {NAV_GROUPS.map((group) => {
+          const isOpen = openGroups[group.id] !== false;
+          const hasHeader = Boolean(group.label) && !group.alwaysOpen;
+          const groupActive = group.items.some((item) => item.screen === active);
+
           return (
-            <button key={item.screen} onClick={() => { onNav(item.screen); if (isMobile) onClose?.(); }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12, marginBottom: 3, background: isActive ? T.goldBg : 'transparent', border: `1px solid ${isActive ? T.goldBdr : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
-              <span style={{ color: isActive ? T.gold : T.sText, fontWeight: isActive ? 800 : 600, fontSize: 14, flex: 1 }}>{item.label}</span>
-              {!isActive && badge > 0 && <Badge n={badge}/>}
-            </button>
+            <div key={group.id} style={{ marginBottom: hasHeader ? 6 : 2 }}>
+              {hasHeader && (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id)}
+                  aria-expanded={isOpen}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: groupActive ? T.goldBg : 'transparent',
+                    cursor: 'pointer',
+                    fontFamily: "'Cairo',sans-serif",
+                    color: groupActive ? T.gold : T.sSub,
+                  }}
+                >
+                  <span style={{ fontSize: 11.5, fontWeight: 800 }}>{group.label}</span>
+                  <svg
+                    width="14"
+                    height="14"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.2}
+                    style={{
+                      flexShrink: 0,
+                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.18s ease',
+                      opacity: 0.7,
+                    }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
+              {isOpen && group.items.map((item) => {
+                const isActive = active === item.screen;
+                const badge = item.screen === 'homework' || item.screen === 'exams' ? pendingTotal : 0;
+                return (
+                  <button key={item.screen} type="button" onClick={() => { onNav(item.screen); if (isMobile) onClose?.(); }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, marginBottom: 2, background: isActive ? T.goldBg : 'transparent', border: `1px solid ${isActive ? T.goldBdr : 'transparent'}`, cursor: 'pointer', textAlign: 'right', transition: 'all 0.15s' }}>
+                    <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icon}</span>
+                    <span style={{ color: isActive ? T.gold : T.sText, fontWeight: isActive ? 800 : 600, fontSize: 13.5, flex: 1 }}>{item.label}</span>
+                    {!isActive && badge > 0 && <Badge n={badge}/>}
+                  </button>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
