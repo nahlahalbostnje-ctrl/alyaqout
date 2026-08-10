@@ -1,6 +1,4 @@
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
@@ -51,8 +49,6 @@ const NAV_GROUPS: SupNavGroup[] = [
 const FLAT_NAV = NAV_GROUPS.flatMap((g) => g.items);
 
 export default function SupervisorLayout({ children }: { children: ReactNode }) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -99,7 +95,6 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
 
   const dateStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const pageLabel = FLAT_NAV.find((n) => location.pathname.startsWith(n.to))?.label ?? 'بوابة المشرف';
-  const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
   const toggleGroup = (id: string) => setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
@@ -201,19 +196,11 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         </nav>
 
         <div style={{ flexShrink: 0, padding: '10px 8px 14px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ marginBottom: 8 }}>
-            <AccountMenu
-              profilePath="/supervisor/settings"
-              roleLabel="مشرف"
-              triggerStyle={{ width: '100%', justifyContent: 'flex-start', background: C.bg }}
-            />
-          </div>
-          <button type="button" onClick={handleLogout} style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10,
-            background: 'transparent', border: 'none', cursor: 'pointer', color: C.sub, fontSize: 12, fontFamily: "'Cairo',sans-serif",
-          }}>
-            تسجيل الخروج
-          </button>
+          <AccountMenu
+            profilePath="/supervisor/settings"
+            roleLabel="مشرف"
+            variant="sidebar"
+          />
         </div>
       </aside>
 

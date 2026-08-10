@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+import { NavLink, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
@@ -24,8 +22,6 @@ const navItems = [
 const PAGE_NAMES: Record<string, string> = Object.fromEntries(navItems.map((n) => [n.to, n.label]));
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -40,7 +36,6 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
 
   const dateStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const pageName = PAGE_NAMES[location.pathname] ?? 'بوابة المعلم';
-  const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, fontFamily: "'Cairo',sans-serif", direction: 'rtl' }}>
@@ -92,19 +87,11 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div style={{ flexShrink: 0, padding: '10px 8px 14px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ marginBottom: 8 }}>
-            <AccountMenu
-              profilePath="/teacher/profile"
-              roleLabel="معلم"
-              triggerStyle={{ width: '100%', justifyContent: 'flex-start', background: C.bg }}
-            />
-          </div>
-          <button type="button" onClick={handleLogout} style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10,
-            background: 'transparent', border: 'none', cursor: 'pointer', color: C.sub, fontSize: 12, fontFamily: "'Cairo',sans-serif",
-          }}>
-            تسجيل الخروج
-          </button>
+          <AccountMenu
+            profilePath="/teacher/profile"
+            roleLabel="معلم"
+            variant="sidebar"
+          />
         </div>
       </aside>
 

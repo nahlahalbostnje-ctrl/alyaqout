@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+import { NavLink, useLocation } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
 import AccountMenu from './AccountMenu';
@@ -31,7 +29,7 @@ interface Props {
   /** مجموعات قابلة للطي — لها الأولوية إن وُجدت */
   navGroups?: NavGroup[];
   roleLabel: string;
-  /** مسار صفحة الملف الشخصي — إن وُجد يظهر في القائمة المنسدلة */
+  /** مسار صفحة الملف الشخصي */
   profilePath?: string;
 }
 
@@ -40,10 +38,7 @@ function itemMatches(item: NavItem, pathname: string) {
 }
 
 export default function AppLayout({ children, navItems, navGroups, roleLabel, profilePath }: Props) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
-  const user = useAppSelector((s) => s.auth.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -93,15 +88,6 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
-
-  const initials = user?.name
-    ? user.name.split(' ').slice(0, 2).map((w: string) => w[0]).join('')
-    : 'م';
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login', { replace: true });
-  };
 
   const toggleGroup = (id: string) => {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -278,7 +264,6 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
           })}
         </nav>
 
-        {/* User + Logout */}
         <div
           style={{
             flexShrink: 0,
@@ -286,66 +271,12 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
             borderTop: `1px solid ${C.border}`,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 12px',
-              borderRadius: 12,
-              background: C.bg,
-              marginBottom: 6,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 11,
-                background: `linear-gradient(135deg, ${C.primary}, ${C.goldL})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 900,
-                fontSize: 13,
-                color: '#fff',
-                flexShrink: 0,
-              }}
-            >
-              {initials}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.name}
-              </p>
-              <p style={{ color: C.goldL, fontSize: 10.5, marginTop: 1 }}>{roleLabel}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '9px 12px',
-              borderRadius: 11,
-              border: 'none',
-              background: 'transparent',
-              color: 'rgba(239,68,68,0.7)',
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.1)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-          >
-            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            تسجيل الخروج
-          </button>
+          <AccountMenu
+            profilePath={profilePath || '/admin/profile'}
+            roleLabel={roleLabel}
+            variant="sidebar"
+            avatarGradient={`linear-gradient(135deg, ${C.primary}, ${C.goldL})`}
+          />
         </div>
       </aside>
 
