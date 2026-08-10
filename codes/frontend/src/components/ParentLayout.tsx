@@ -12,7 +12,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/parent/activity': 'الدوري والتحديات',
   '/parent/league': 'الدوري والتحديات',
   '/parent/challenges': 'الدوري والتحديات',
-  '/parent/ai-assistant': 'المعلم المناوب ٢٤/٧',
+  '/parent/ai-assistant': 'المعلم المناوب 24/7',
   ...Object.fromEntries(PARENT_HOME_ICONS.map((i) => [i.to, i.label])),
 };
 

@@ -13,7 +13,7 @@ interface Message {
 
 const INITIAL_MSG: Message = {
   id: 1, role: 'assistant',
-  text: 'مرحباً! أنا المعلم المناوب ٢٤/٧ 👨‍🏫\n\nأنا هنا لمساعدتك في متابعة رحلة أبنائك التعليمية في أي وقت. يمكنك سؤالي عن:\n• مستوى أبنائك الأكاديمي وكيفية التحسين\n• نصائح تربوية لتحسين التحصيل الدراسي\n• كيفية التعامل مع صعوبات التعلم\n• إدارة وقت المذاكرة في المنزل\n• تفسير التقارير والنتائج',
+  text: 'مرحباً! أنا المعلم المناوب 24/7 👨‍🏫\n\nأنا هنا لمساعدتك في متابعة رحلة أبنائك التعليمية في أي وقت. يمكنك سؤالي عن:\n• مستوى أبنائك الأكاديمي وكيفية التحسين\n• نصائح تربوية لتحسين التحصيل الدراسي\n• كيفية التعامل مع صعوبات التعلم\n• إدارة وقت المذاكرة في المنزل\n• تفسير التقارير والنتائج',
   time: new Date().toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' }),
 };
 
@@ -99,7 +99,7 @@ export default function ParentAIAssistantPage() {
           {/* AI avatar */}
           <div style={{ textAlign:'center', padding:'10px 0 16px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ width:80, height:80, borderRadius:24, background:`linear-gradient(135deg,${C.navy},#2D3561)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:42, margin:'0 auto 12px', boxShadow:'0 8px 24px rgba(13,30,58,0.35)' }}>🤖</div>
-            <p style={{ color:C.text, fontWeight:900, fontSize:16, marginBottom:3 }}>المعلم المناوب ٢٤/٧</p>
+            <p style={{ color:C.text, fontWeight:900, fontSize:16, marginBottom:3 }}>المعلم المناوب 24/7</p>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
               <div style={{ width:8, height:8, borderRadius:'50%', background:C.green }} />
               <span style={{ color:C.green, fontSize:12, fontWeight:600 }}>مدعوم بـ Claude AI</span>
@@ -147,7 +147,7 @@ export default function ParentAIAssistantPage() {
           <div style={{ padding:'14px 20px', background:C.card, borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ width:38, height:38, borderRadius:12, background:`linear-gradient(135deg,${C.navy},#2D3561)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🤖</div>
             <div>
-              <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>المعلم المناوب ٢٤/٧</p>
+              <p style={{ color:C.text, fontWeight:800, fontSize:14 }}>المعلم المناوب 24/7</p>
               <p style={{ color:C.green, fontSize:11.5, fontWeight:600 }}>🟢 متاح على مدار الساعة</p>
             </div>
           </div>
