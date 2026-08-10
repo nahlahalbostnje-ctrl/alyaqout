@@ -7,6 +7,7 @@ export type RoleIconNavItem = {
   label: string;
   shortLabel?: string;
   icon: string;
+  emoji?: string;
 };
 
 type Props = {
@@ -15,6 +16,11 @@ type Props = {
   excludeTo?: string;
   /** عدد أعمدة على الديسكتوب */
   columns?: number;
+  /**
+   * emoji = ثيم الوصول السريع للطالب (إيموجي ملون بدون دائرة ذهبية)
+   * svg = الافتراضي للأدوار الأخرى
+   */
+  variant?: 'svg' | 'emoji';
 };
 
 export default function RoleHomeIconGrid({
@@ -22,6 +28,7 @@ export default function RoleHomeIconGrid({
   title = 'الخدمات',
   excludeTo,
   columns,
+  variant = 'svg',
 }: Props) {
   const navigate = useNavigate();
   const list = excludeTo ? items.filter((i) => i.to !== excludeTo) : items;
@@ -37,6 +44,8 @@ export default function RoleHomeIconGrid({
 
   if (list.length === 0) return null;
 
+  const useEmoji = variant === 'emoji';
+
   let colCount: number | null = columns ?? null;
   if (colCount) {
     if (width < 520) colCount = Math.min(colCount, 3);
@@ -50,12 +59,12 @@ export default function RoleHomeIconGrid({
   return (
     <section style={{ marginTop: 4 }}>
       <p style={{
-        margin: '0 0 12px', color: C.text, fontSize: 16, fontWeight: 700, lineHeight: 1.4,
+        margin: '0 0 12px', color: C.text, fontSize: useEmoji ? 15 : 16, fontWeight: useEmoji ? 800 : 700, lineHeight: 1.4,
         fontFamily: "'Cairo',sans-serif",
       }}>
         {title}
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: useEmoji ? 8 : 10 }}>
         {list.map((item) => (
           <button
             key={item.to}
@@ -65,26 +74,34 @@ export default function RoleHomeIconGrid({
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 8,
-              padding: '14px 8px',
-              borderRadius: 14,
+              gap: useEmoji ? 6 : 8,
+              padding: useEmoji ? '12px 4px' : '14px 8px',
+              borderRadius: useEmoji ? 16 : 14,
               border: `1px solid ${C.border}`,
-              background: C.card,
+              background: useEmoji ? C.bg : C.card,
               cursor: 'pointer',
               fontFamily: "'Cairo',sans-serif",
-              minHeight: 88,
+              minHeight: useEmoji ? 76 : 88,
             }}
           >
+            {useEmoji && item.emoji ? (
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{item.emoji}</span>
+            ) : (
+              <span style={{
+                width: 42, height: 42, borderRadius: 12, background: C.goldBg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary,
+              }}>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                </svg>
+              </span>
+            )}
             <span style={{
-              width: 42, height: 42, borderRadius: 12, background: C.goldBg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary,
-            }}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-              </svg>
-            </span>
-            <span style={{
-              color: C.text, fontSize: 11, fontWeight: 600, lineHeight: 1.3, textAlign: 'center',
+              color: C.text,
+              fontSize: useEmoji ? 10.5 : 11,
+              fontWeight: useEmoji ? 700 : 600,
+              lineHeight: 1.25,
+              textAlign: 'center',
             }}>
               {item.shortLabel ?? item.label}
             </span>

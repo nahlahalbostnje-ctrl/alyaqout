@@ -314,7 +314,7 @@ export default function ParentDashboardPage() {
             </div>
 
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18, boxShadow: C.shadow }}>
-              <RoleHomeIconGrid title="الخدمات" items={PARENT_HOME_ICONS} columns={7} />
+              <RoleHomeIconGrid title="الخدمات" items={PARENT_HOME_ICONS} columns={7} variant="emoji" />
             </div>
 
             {childList.length === 0 && (
