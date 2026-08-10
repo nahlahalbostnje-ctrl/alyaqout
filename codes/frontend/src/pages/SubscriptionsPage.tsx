@@ -300,7 +300,6 @@ export default function SubscriptionsPage() {
                         <td style={{ ...TD, color: DK.dim, fontWeight:700, width:48 }}>{idx + 1}</td>
                         <td style={TD}>
                           <p style={{ margin:0, fontWeight:700, color: DK.text }}>{sub.student.name}</p>
-                          <p style={{ margin:0, fontSize:11, color: DK.sub }}>{sub.student.phone}</p>
                         </td>
                         <td style={TD}>
                           <p style={{ margin:0, color: DK.text }}>{sub.package.name}</p>
@@ -363,7 +362,7 @@ export default function SubscriptionsPage() {
                 style={{ ...inp(focused==='student'), cursor:'pointer' }}
                 onFocus={() => setFocused('student')} onBlur={() => setFocused(null)}>
                 <option value="">اختر الطالب...</option>
-                {students.map(s => <option key={s.id} value={s.id}>{s.name} — {s.phone}</option>)}
+                {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div style={{ marginBottom:14 }}>

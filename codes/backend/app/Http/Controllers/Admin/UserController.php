@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AdminStudentPrivacy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,15 +34,35 @@ class UserController extends Controller
         }
 
         $users = $query->get(['id', 'name', 'phone', 'email', 'role', 'address', 'city_id', 'is_active', 'created_at']);
+        $users->load([
+            'courseEnrollments' => fn ($q) => $q->active()->with('course:id,title'),
+        ]);
 
-        $users->transform(function (User $u) {
-            if ($u->role === 'parent') {
-                $u->phone = $this->maskPhone($u->phone);
+        $data = $users->map(function (User $u) {
+            if ($u->role === 'student') {
+                return AdminStudentPrivacy::listItem($u);
             }
-            return $u;
-        });
 
-        return response()->json(['success' => true, 'data' => $users]);
+            $row = [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'phone'      => $u->phone,
+                'email'      => $u->email,
+                'role'       => $u->role,
+                'address'    => $u->address,
+                'city_id'    => $u->city_id,
+                'is_active'  => $u->is_active,
+                'created_at' => $u->created_at,
+            ];
+
+            if ($u->role === 'parent') {
+                $row['phone'] = $this->maskPhone((string) $u->phone);
+            }
+
+            return $row;
+        })->values();
+
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
     /**
@@ -53,17 +74,26 @@ class UserController extends Controller
         if ($len <= 4) {
             return str_repeat('*', $len);
         }
-        return str_repeat('*', $len - 4) . substr($phone, -4);
+
+        return str_repeat('*', $len - 4).substr($phone, -4);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $learner = in_array($request->role, ['student', 'parent'], true);
+        // Students are created only via public /register (lead flow) — not by region admin.
+        if ($request->input('role') === 'student') {
+            return response()->json([
+                'success' => false,
+                'message' => 'إنشاء حسابات الطلاب يتم عبر صفحة تسجيل حساب جديد فقط. التفاصيل الكاملة متاحة للسوبر أدمن.',
+            ], 403);
+        }
+
+        $learner = $request->role === 'parent';
 
         $request->validate([
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:20|unique:users,phone',
-            'role'      => 'required|in:teacher,student,parent',
+            'role'      => 'required|in:teacher,parent',
             'parent_id' => 'nullable|exists:users,id',
             'address'   => 'nullable|string|max:500',
             'city_id'   => 'nullable|exists:cities,id',
@@ -77,17 +107,6 @@ class UserController extends Controller
             ],
         ]);
 
-        $parentId = null;
-        if ($request->role === 'student' && $request->filled('parent_id')) {
-            $parent = User::where('id', $request->parent_id)
-                ->where('country_id', $this->countryId())
-                ->where('role', 'parent')
-                ->first();
-            if ($parent) {
-                $parentId = $parent->id;
-            }
-        }
-
         $user = User::create([
             'name'       => $request->name,
             'phone'      => $request->phone,
@@ -95,9 +114,9 @@ class UserController extends Controller
             'password'   => $request->filled('password') ? $request->password : null,
             'role'       => $request->role,
             'country_id' => $this->countryId(),
-            'parent_id'  => $parentId,
+            'parent_id'  => null,
             'address'    => $request->role === 'teacher' ? $request->address : null,
-            'city_id'    => $request->role === 'student' ? $request->city_id : null,
+            'city_id'    => null,
             'is_active'  => true,
         ]);
 
@@ -112,7 +131,35 @@ class UserController extends Controller
     {
         $this->authorizeUser($user);
 
-        $learner = in_array($user->role, ['student', 'parent'], true);
+        if ($user->role === 'student') {
+            // Region admin may only toggle name/active ops via other endpoints — no contact PII.
+            $request->validate([
+                'name' => 'sometimes|string|max:255',
+            ]);
+
+            if ($request->hasAny(['phone', 'email', 'password', 'address', 'city_id'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تعديل بيانات التواصل للطالب متاح للسوبر أدمن فقط.',
+                ], 403);
+            }
+
+            if ($request->filled('name')) {
+                $user->update(['name' => $request->name]);
+            }
+
+            $user->load([
+                'courseEnrollments' => fn ($q) => $q->active()->with('course:id,title'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث الاسم.',
+                'data'    => AdminStudentPrivacy::listItem($user->fresh()),
+            ]);
+        }
+
+        $learner = $user->role === 'parent';
 
         $request->validate([
             'name'     => 'sometimes|string|max:255',
@@ -153,10 +200,17 @@ class UserController extends Controller
             'role' => 'required|in:teacher,student,parent',
         ]);
 
+        if ($request->role === 'student' || $user->role === 'student') {
+            return response()->json([
+                'success' => false,
+                'message' => 'تحويل دور الطالب متاح للسوبر أدمن فقط.',
+            ], 403);
+        }
+
         $user->update([
             'role'      => $request->role,
-            'parent_id' => $request->role === 'student' ? $user->parent_id : null,
-            'city_id'   => $request->role === 'student' ? $user->city_id : null,
+            'parent_id' => null,
+            'city_id'   => null,
             'address'   => $request->role === 'teacher' ? $user->address : null,
         ]);
 
@@ -185,6 +239,17 @@ class UserController extends Controller
         $this->authorizeUser($user);
 
         $user->update(['is_active' => ! $user->is_active]);
+
+        if ($user->role === 'student') {
+            $user->load([
+                'courseEnrollments' => fn ($q) => $q->active()->with('course:id,title'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data'    => AdminStudentPrivacy::listItem($user),
+            ]);
+        }
 
         return response()->json(['success' => true, 'data' => $user->only(['id', 'name', 'phone', 'role', 'is_active'])]);
     }

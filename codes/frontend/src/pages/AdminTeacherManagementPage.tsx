@@ -51,8 +51,8 @@ export default function AdminTeacherManagementPage() {
   const { list: users, loading } = useAppSelector(s => s.adminUsers);
   useEffect(() => { dispatch(fetchUsers('teacher')); }, [dispatch]);
 
-  const mapUser = (u: { id:number; name:string; phone:string; is_active:boolean; created_at:string }): Teacher => ({
-    id: u.id, name: u.name, subject: '—', phone: u.phone, email: '—',
+  const mapUser = (u: { id:number; name:string; phone?:string; is_active:boolean; created_at?:string }): Teacher => ({
+    id: u.id, name: u.name, subject: '—', phone: u.phone ?? '—', email: '—',
     status: u.is_active ? 'active' : 'inactive',
     hoursPerWeek: 0, studentsCount: 0, coursesCount: 0,
     joinDate: u.created_at?.slice(0, 10) ?? '—',

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/axios';
 
-export interface SubStudent { id: number; name: string; phone: string }
+export interface SubStudent { id: number; name: string; phone?: string }
 export interface SubPackage  { id: number; name: string; duration_days: number }
 
 export interface Subscription {

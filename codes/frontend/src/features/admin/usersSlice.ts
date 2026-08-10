@@ -6,13 +6,14 @@ export type UserRole = 'teacher' | 'student' | 'parent';
 export interface AdminUser {
   id: number;
   name: string;
-  phone: string;
+  phone?: string;
   email?: string | null;
   role: UserRole;
   address?: string | null;
   city_id?: number | null;
   is_active: boolean;
-  created_at: string;
+  created_at?: string;
+  courses?: { id: number; title: string }[];
 }
 
 interface UsersState {

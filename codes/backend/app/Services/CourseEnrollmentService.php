@@ -56,14 +56,14 @@ class CourseEnrollmentService
         if ($enrollment) {
             $enrollment->fill($payload)->save();
 
-            return $enrollment->fresh(['student:id,name,phone', 'course:id,title']);
+            return $enrollment->fresh(['student:id,name', 'course:id,title']);
         }
 
         return CourseEnrollment::create([
             'student_id' => $student->id,
             'course_id'  => $course->id,
             ...$payload,
-        ])->load(['student:id,name,phone', 'course:id,title']);
+        ])->load(['student:id,name', 'course:id,title']);
     }
 
     public function revoke(CourseEnrollment $enrollment, ?string $notes = null): CourseEnrollment
@@ -74,7 +74,7 @@ class CourseEnrollmentService
         }
         $enrollment->save();
 
-        return $enrollment->fresh(['student:id,name,phone', 'course:id,title']);
+        return $enrollment->fresh(['student:id,name', 'course:id,title']);
     }
 
     /** @return Collection<int, int> active enrolled course IDs for student */
@@ -93,7 +93,7 @@ class CourseEnrollmentService
         return [
             'id'              => $e->id,
             'student'         => $e->student
-                ? ['id' => $e->student->id, 'name' => $e->student->name, 'phone' => $e->student->phone]
+                ? ['id' => $e->student->id, 'name' => $e->student->name]
                 : null,
             'course_id'       => $e->course_id,
             'source'          => $e->source,

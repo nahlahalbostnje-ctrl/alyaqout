@@ -35,9 +35,14 @@ class SupervisorAssignmentController extends Controller
         $studentIds = SupervisorStudent::where('supervisor_id', $supervisor->id)->pluck('student_id');
 
         $students = User::whereIn('id', $studentIds)
-            ->select('id', 'name', 'phone', 'grade_id')
+            ->select('id', 'name', 'grade_id')
             ->with('grade:id,name')
-            ->get();
+            ->get()
+            ->map(fn (User $s) => [
+                'id'    => $s->id,
+                'name'  => $s->name,
+                'grade' => $s->grade,
+            ]);
 
         return response()->json([
             'supervisor' => ['id' => $supervisor->id, 'name' => $supervisor->name],
@@ -85,9 +90,14 @@ class SupervisorAssignmentController extends Controller
             ->where('role', 'student')
             ->where('is_active', true)
             ->whereNotIn('id', $assignedIds)
-            ->select('id', 'name', 'phone', 'grade_id')
+            ->select('id', 'name', 'grade_id')
             ->with('grade:id,name')
-            ->get();
+            ->get()
+            ->map(fn (User $s) => [
+                'id'    => $s->id,
+                'name'  => $s->name,
+                'grade' => $s->grade,
+            ]);
 
         return response()->json(['students' => $students]);
     }

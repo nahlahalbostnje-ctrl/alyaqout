@@ -30,7 +30,7 @@ class CoursePurchaseController extends Controller
 
         $query = CoursePurchaseRequest::query()
             ->where('country_id', $this->countryId())
-            ->with(['student:id,name,phone', 'course:id,title,price', 'requester:id,name,role'])
+            ->with(['student:id,name', 'course:id,title,price', 'requester:id,name,role'])
             ->latest();
 
         if ($request->filled('status')) {

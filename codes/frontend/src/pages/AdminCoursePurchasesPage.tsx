@@ -14,7 +14,7 @@ type Purchase = {
   status: string;
   amount: string | number;
   notes: string | null;
-  student: { id: number; name: string; phone: string | null } | null;
+  student: { id: number; name: string; phone?: string | null } | null;
   course: { id: number; title: string; price: string | number } | null;
   requester: { id: number; name: string; role: string } | null;
   created_at: string | null;
@@ -124,7 +124,7 @@ export default function AdminCoursePurchasesPage() {
                       <tr key={r.id}>
                         <td style={{ padding: '12px 14px', borderBottom: '1px solid #F3EDE0' }}>
                           <p style={{ margin: 0, fontWeight: 700 }}>{r.student?.name ?? '—'}</p>
-                          <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>{r.student?.phone ?? ''} · #{r.student?.id}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>#{r.student?.id}</p>
                         </td>
                         <td style={{ padding: '12px 14px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>
                           {r.course?.title ?? '—'}

@@ -57,7 +57,7 @@ class CoursePurchaseService
             'amount'       => $course->price,
             'status'       => 'pending',
             'notes'        => $notes,
-        ])->load(['student:id,name,phone', 'course:id,title,price', 'requester:id,name,role']);
+        ])->load(['student:id,name', 'course:id,title,price', 'requester:id,name,role']);
     }
 
     public function approve(CoursePurchaseRequest $request, User $admin, ?string $notes = null): CoursePurchaseRequest
@@ -87,7 +87,7 @@ class CoursePurchaseService
             }
             $request->save();
 
-            return $request->fresh(['student:id,name,phone', 'course:id,title,price', 'requester:id,name,role']);
+            return $request->fresh(['student:id,name', 'course:id,title,price', 'requester:id,name,role']);
         });
     }
 
@@ -105,7 +105,7 @@ class CoursePurchaseService
         }
         $request->save();
 
-        return $request->fresh(['student:id,name,phone', 'course:id,title,price', 'requester:id,name,role']);
+        return $request->fresh(['student:id,name', 'course:id,title,price', 'requester:id,name,role']);
     }
 
     public function format(CoursePurchaseRequest $r): array
@@ -116,7 +116,7 @@ class CoursePurchaseService
             'amount'       => $r->amount,
             'notes'        => $r->notes,
             'student'      => $r->student
-                ? ['id' => $r->student->id, 'name' => $r->student->name, 'phone' => $r->student->phone]
+                ? ['id' => $r->student->id, 'name' => $r->student->name]
                 : null,
             'course'       => $r->course
                 ? ['id' => $r->course->id, 'title' => $r->course->title, 'price' => $r->course->price]

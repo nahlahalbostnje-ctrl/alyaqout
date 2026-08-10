@@ -36,7 +36,7 @@ class CourseEnrollmentController extends Controller
 
         $rows = CourseEnrollment::query()
             ->where('course_id', $course->id)
-            ->with('student:id,name,phone')
+            ->with('student:id,name')
             ->latest()
             ->get();
 

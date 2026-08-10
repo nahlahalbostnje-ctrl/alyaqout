@@ -10,7 +10,7 @@ interface TalentRow {
   age: number | null;
   goal: string | null;
   dream: string | null;
-  student: { id: number; name: string; phone: string | null } | null;
+  student: { id: number; name: string; phone?: string | null } | null;
   created_at: string | null;
 }
 

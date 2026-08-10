@@ -241,7 +241,7 @@ class CourseController extends Controller
             ->where('role', 'student')
             ->with('grade:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'phone', 'grade_id', 'is_active']);
+            ->get(['id', 'name', 'grade_id', 'is_active']);
 
         $enrollmentsByStudent = CourseEnrollment::query()
             ->active()
@@ -285,7 +285,6 @@ class CourseController extends Controller
             $rows[] = [
                 'id'            => $user->id,
                 'name'          => $user->name,
-                'phone'         => $user->phone,
                 'grade'         => $user->grade?->name,
                 'is_active'     => $user->is_active,
                 'access_via'    => $accessVia,

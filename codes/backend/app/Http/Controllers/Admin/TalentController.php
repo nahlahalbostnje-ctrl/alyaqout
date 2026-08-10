@@ -14,7 +14,7 @@ class TalentController extends Controller
     public function index(): JsonResponse
     {
         $items = Talent::where('country_id', Auth::user()->country_id)
-            ->with('student:id,name,phone')
+            ->with('student:id,name')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Talent $t) => [
@@ -27,7 +27,7 @@ class TalentController extends Controller
                 'dream'        => $t->dream,
                 'bio'          => $t->bio,
                 'student'      => $t->student
-                    ? ['id' => $t->student->id, 'name' => $t->student->name, 'phone' => $t->student->phone]
+                    ? ['id' => $t->student->id, 'name' => $t->student->name]
                     : null,
                 'created_at'   => $t->created_at?->toISOString(),
             ]);

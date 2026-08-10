@@ -63,7 +63,7 @@ class CoursePurchaseController extends Controller
 
         $rows = CoursePurchaseRequest::query()
             ->whereIn('student_id', $childIds)
-            ->with(['student:id,name,phone', 'course:id,title,price', 'requester:id,name,role'])
+            ->with(['student:id,name', 'course:id,title,price', 'requester:id,name,role'])
             ->latest()
             ->limit(100)
             ->get();

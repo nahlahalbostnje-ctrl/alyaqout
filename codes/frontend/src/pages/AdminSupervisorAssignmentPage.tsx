@@ -36,8 +36,8 @@ interface Supervisor {
 interface Student {
   id: number;
   name: string;
-  phone: string;
-  grade_id: number | null;
+  phone?: string;
+  grade_id?: number | null;
   grade?: { id: number; name: string } | null;
 }
 
@@ -149,10 +149,10 @@ export default function AdminSupervisorAssignmentPage() {
   };
 
   const filteredAssigned = assigned.filter((s) =>
-    s.name.includes(searchAssigned) || s.phone.includes(searchAssigned)
+    s.name.includes(searchAssigned)
   );
   const filteredUnassigned = unassigned.filter((s) =>
-    s.name.includes(searchFree) || s.phone.includes(searchFree)
+    s.name.includes(searchFree)
   );
 
   const TH: React.CSSProperties = {
@@ -308,7 +308,6 @@ export default function AdminSupervisorAssignmentPage() {
                         <tr>
                           <th style={TH}>اسم الطالب</th>
                           <th style={TH}>الصف</th>
-                          <th style={TH}>رقم الهاتف</th>
                           <th style={{ ...TH, textAlign: 'center' }}>إجراء</th>
                         </tr>
                       </thead>
@@ -328,7 +327,6 @@ export default function AdminSupervisorAssignmentPage() {
                               </div>
                             </td>
                             <td style={{ ...TD, color: DK.sub }}>{student.grade?.name ?? '—'}</td>
-                            <td style={{ ...TD, color: DK.sub, direction: 'ltr', textAlign: 'right' }}>{student.phone}</td>
                             <td style={{ ...TD, textAlign: 'center' }}>
                               <button
                                 onClick={() => askRemove(student)}

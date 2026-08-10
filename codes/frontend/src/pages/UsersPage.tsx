@@ -73,7 +73,15 @@ const ROLE_COLOR: Record<Role, { color:string; bg:string }> = {
   parent:  { color: DK.purple, bg: 'rgba(139,92,246,0.1)'  },
 };
 
-interface UserItem { id: number; name: string; phone?: string; email?: string | null; role: string; is_active?: boolean; }
+interface UserItem {
+  id: number;
+  name: string;
+  phone?: string;
+  email?: string | null;
+  role: string;
+  is_active?: boolean;
+  courses?: { id: number; title: string }[];
+}
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
@@ -251,27 +259,32 @@ export default function UsersPage() {
   const filtered = users.filter((u) => {
     const matchTab = activeTab === 'all' || u.role === activeTab;
     const q = search.trim().toLowerCase();
-    const matchSearch = !q || u.name.toLowerCase().includes(q) || (u.phone ?? '').toLowerCase().includes(q);
+    const matchSearch = !q || u.name.toLowerCase().includes(q)
+      || (u.role !== 'student' && (u.phone ?? '').toLowerCase().includes(q));
     return matchTab && matchSearch;
   });
 
   const openModal = () => {
-    setForm({ name: '', phone: '', email: '', password: '', role: activeTab !== 'all' ? activeTab as Role : 'teacher', address: '', city_id: '' });
+    const defaultRole: Role = activeTab === 'teacher' || activeTab === 'parent' ? activeTab : 'teacher';
+    setForm({ name: '', phone: '', email: '', password: '', role: defaultRole, address: '', city_id: '' });
     setAddError(null);
     setShowModal(true);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((form.role === 'student' || form.role === 'parent') && (!form.email.trim() || !form.password.trim())) {
-      setAddError('البريد الإلكتروني وكلمة المرور مطلوبان للطالب وولي الأمر');
+    if (form.role === 'student') {
+      setAddError('إنشاء الطلاب يتم عبر صفحة تسجيل حساب جديد فقط.');
+      return;
+    }
+    if (form.role === 'parent' && (!form.email.trim() || !form.password.trim())) {
+      setAddError('البريد الإلكتروني وكلمة المرور مطلوبان لولي الأمر');
       return;
     }
     setAddLoading(true); setAddError(null);
     const payload: Parameters<typeof addUser>[0] = { name: form.name, phone: form.phone, role: form.role };
     if (form.role === 'teacher' && form.address.trim()) payload.address = form.address.trim();
-    if (form.role === 'student' && form.city_id) payload.city_id = Number(form.city_id);
-    if (form.role === 'student' || form.role === 'parent') {
+    if (form.role === 'parent') {
       payload.email = form.email.trim().toLowerCase();
       payload.password = form.password.trim();
     }
@@ -352,7 +365,7 @@ export default function UsersPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="بحث بالاسم أو رقم الهاتف..."
+            placeholder={activeTab === 'student' ? 'بحث باسم الطالب...' : 'بحث بالاسم أو رقم الهاتف...'}
             style={{ ...inp(focused==='search'), paddingRight:40 }}
             onFocus={() => setFocused('search')}
             onBlur={() => setFocused(null)}
@@ -373,7 +386,7 @@ export default function UsersPage() {
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
                 <tr>
-                  {['#','الاسم','رقم الهاتف','الدور','الحالة','إجراءات'].map(h => (
+                  {['#','الاسم','التواصل / المواد','الدور','الحالة','إجراءات'].map(h => (
                     <th key={h} style={TH}>{h}</th>
                   ))}
                 </tr>
@@ -381,6 +394,7 @@ export default function UsersPage() {
               <tbody>
                 {filtered.map((user, idx) => {
                   const rc = ROLE_COLOR[user.role as Role] ?? { color: DK.sub, bg: '#F3F4F6' };
+                  const courses = (user as UserItem).courses ?? [];
                   return (
                     <tr key={user.id}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(197,147,65,0.04)')}
@@ -394,7 +408,24 @@ export default function UsersPage() {
                           <span style={{ fontWeight:700 }}>{user.name}</span>
                         </div>
                       </td>
-                      <td style={{ ...TD, color: DK.sub, direction:'ltr', unicodeBidi:'embed' }}>{user.phone ?? '—'}</td>
+                      <td style={{ ...TD, color: DK.sub, maxWidth: 280 }}>
+                        {user.role === 'student' ? (
+                          courses.length > 0 ? (
+                            <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                              {courses.map((c) => (
+                                <span key={c.id} style={{
+                                  padding:'2px 8px', borderRadius:8, fontSize:11, fontWeight:700,
+                                  background:'rgba(16,185,129,0.1)', color: DK.green,
+                                }}>{c.title}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize:12 }}>لا مواد مسجّلة</span>
+                          )
+                        ) : (
+                          <span style={{ direction:'ltr', unicodeBidi:'embed' }}>{user.phone ?? '—'}</span>
+                        )}
+                      </td>
                       <td style={TD}>
                         <StatusBadge label={ROLE_LABEL[user.role as Role] ?? user.role} color={rc.color} bg={rc.bg} />
                       </td>
@@ -403,36 +434,30 @@ export default function UsersPage() {
                       </td>
                       <td style={TD}>
                         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
-                          <button title="تعديل" onClick={() => openEdit(user as UserItem)}
-                            style={{ width:30, height:30, borderRadius:8, border:'1px solid #EDE3CE', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
-                            ✏️
-                          </button>
-                          {user.role === 'student' && (
-                            <button title="تحويل الطالب" onClick={() => { setTransferUser(user as UserItem); setTransferRole('parent'); }}
-                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(37,99,235,0.3)`, background:`rgba(37,99,235,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.blue, fontFamily:"'Cairo',sans-serif" }}>
-                              تحويل
+                          {user.role !== 'student' && (
+                            <button title="تعديل" onClick={() => openEdit(user as UserItem)}
+                              style={{ width:30, height:30, borderRadius:8, border:'1px solid #EDE3CE', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>
+                              ✏️
                             </button>
                           )}
-                          {user.role === 'student' && (
-                            <button title="فك الربط بولي الأمر" onClick={() => { setUnlinkUser(user as UserItem); setUnlinkDone(false); }}
-                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(239,68,68,0.3)`, background:`rgba(239,68,68,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.red, fontFamily:"'Cairo',sans-serif" }}>
-                              فك الربط
-                            </button>
-                          )}
-                          {(user.role === 'parent') && (
+                          {user.role === 'parent' && (
                             <button title="إرسال رسالة" onClick={() => { setMsgUser(user as UserItem); setMsgText(''); setMsgSent(false); }}
                               style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(16,185,129,0.3)`, background:`rgba(16,185,129,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color:'#10B981', fontFamily:"'Cairo',sans-serif" }}>
                               رسالة
                             </button>
                           )}
-                          <button title="تغيير الباقة" onClick={() => { setSubUser(user as UserItem); setSubPackage('basic'); setSubDuration('monthly'); }}
-                            style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(139,92,246,0.3)`, background:`rgba(139,92,246,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color:'#8B5CF6', fontFamily:"'Cairo',sans-serif" }}>
-                            باقة
-                          </button>
-                          <button title="دمج الحساب" onClick={() => { setMergeUser(user as UserItem); setMergeTarget(''); }}
-                            style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(217,119,6,0.3)`, background:`rgba(217,119,6,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.orange, fontFamily:"'Cairo',sans-serif" }}>
-                            دمج
-                          </button>
+                          {user.role === 'student' && (
+                            <button title="تغيير الباقة" onClick={() => { setSubUser(user as UserItem); setSubPackage('basic'); setSubDuration('monthly'); }}
+                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(139,92,246,0.3)`, background:`rgba(139,92,246,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color:'#8B5CF6', fontFamily:"'Cairo',sans-serif" }}>
+                              باقة
+                            </button>
+                          )}
+                          {user.role !== 'student' && (
+                            <button title="دمج الحساب" onClick={() => { setMergeUser(user as UserItem); setMergeTarget(''); }}
+                              style={{ height:30, padding:'0 10px', borderRadius:8, border:`1px solid rgba(217,119,6,0.3)`, background:`rgba(217,119,6,0.06)`, cursor:'pointer', fontSize:11.5, fontWeight:700, color: DK.orange, fontFamily:"'Cairo',sans-serif" }}>
+                              دمج
+                            </button>
+                          )}
                           <button title="حذف" onClick={() => askDelete(user.id, user.name)} disabled={deleting === user.id}
                             style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, opacity: deleting === user.id ? 0.5 : 1 }}>
                             🗑️
@@ -472,12 +497,14 @@ export default function UsersPage() {
                 style={{ ...inp(focused==='role'), cursor:'pointer' }}
                 onFocus={() => setFocused('role')} onBlur={() => setFocused(null)}>
                 <option value="teacher">معلم</option>
-                <option value="student">طالب</option>
                 <option value="parent">ولي أمر</option>
               </select>
+              <p style={{ fontSize:11.5, color: DK.dim, margin:'8px 0 0', lineHeight:1.5 }}>
+                حسابات الطلاب تُنشأ عبر صفحة «تسجيل حساب جديد» فقط — التفاصيل الكاملة عند السوبر أدمن.
+              </p>
             </div>
 
-            {(form.role === 'student' || form.role === 'parent') && (
+            {form.role === 'parent' && (
               <>
                 <div style={{ marginBottom:14 }}>
                   <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>البريد الإلكتروني</label>
@@ -503,21 +530,6 @@ export default function UsersPage() {
                   placeholder="مثال: رام الله، شارع الإرسال"
                   style={inp(focused==='address')}
                   onFocus={() => setFocused('address')} onBlur={() => setFocused(null)} />
-              </div>
-            )}
-
-            {form.role === 'student' && (
-              <div style={{ marginBottom:14 }}>
-                <label style={{ display:'block', fontSize:12, fontWeight:700, color: DK.sub, marginBottom:6 }}>المدينة (اختياري)</label>
-                <select value={form.city_id} onChange={e => setForm({...form, city_id: e.target.value})}
-                  style={{ ...inp(focused==='city'), cursor:'pointer' }}
-                  onFocus={() => setFocused('city')} onBlur={() => setFocused(null)}>
-                  <option value="">— اختر المدينة —</option>
-                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                {cities.length === 0 && (
-                  <p style={{ fontSize:11, color: DK.dim, marginTop:4 }}>لا توجد مدن مضافة بعد — يمكن للأدمن إضافتها من صفحة المدن</p>
-                )}
               </div>
             )}
             {addError && (
@@ -553,7 +565,7 @@ export default function UsersPage() {
                   style={{ ...inp(false), cursor:'pointer' }}>
                   <option value="">— اختر حساباً —</option>
                   {users.filter(u => u.id !== mergeUser.id && u.role === mergeUser.role).map(u => (
-                    <option key={u.id} value={u.id}>{u.name} — {u.phone}</option>
+                    <option key={u.id} value={u.id}>{u.name}{u.phone ? ` — ${u.phone}` : ''}</option>
                   ))}
                 </select>
               </div>

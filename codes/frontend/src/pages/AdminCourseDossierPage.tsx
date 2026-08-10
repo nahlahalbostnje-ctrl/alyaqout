@@ -46,7 +46,7 @@ interface Dossier {
     session_type: string; teacher: string | null;
   }[];
   students: {
-    id: number; name: string; phone: string | null; grade: string | null;
+    id: number; name: string; phone?: string | null; grade: string | null;
     is_active: boolean; access_via: string; package: string | null; ends_at: string | null;
     enrollment_id?: number | null;
   }[];
@@ -291,7 +291,7 @@ export default function AdminCourseDossierPage() {
                               <tr key={s.id}>
                                 <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>
                                   <p style={{ margin: 0, fontWeight: 700 }}>{s.name}</p>
-                                  <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>{s.phone ?? '—'} · #{s.id}</p>
+                                  <p style={{ margin: 0, fontSize: 11, color: DK.sub }}>#{s.id}</p>
                                 </td>
                                 <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0', fontSize: 13 }}>{s.grade ?? '—'}</td>
                                 <td style={{ padding: '10px 12px', borderBottom: '1px solid #F3EDE0' }}>

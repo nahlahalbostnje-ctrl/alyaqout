@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\AdminStudentPrivacy;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class SubscriptionController extends Controller
     {
         return [
             'id'             => $sub->id,
-            'student'        => ['id' => $sub->student->id, 'name' => $sub->student->name, 'phone' => $sub->student->phone],
+            'student'        => AdminStudentPrivacy::brief($sub->student),
             'package'        => ['id' => $sub->package->id, 'name' => $sub->package->name, 'duration_days' => $sub->package->duration_days],
             'starts_at'      => $sub->starts_at->format('Y-m-d'),
             'ends_at'        => $sub->ends_at->format('Y-m-d'),
@@ -45,7 +46,7 @@ class SubscriptionController extends Controller
         ]);
 
         $query = Subscription::where('country_id', $this->countryId())
-            ->with(['student:id,name,phone', 'package:id,name,duration_days'])
+            ->with(['student:id,name', 'package:id,name,duration_days'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -114,7 +115,7 @@ class SubscriptionController extends Controller
             'notes'          => $request->notes,
         ]);
 
-        $sub->load(['student:id,name,phone', 'package:id,name,duration_days']);
+        $sub->load(['student:id,name', 'package:id,name,duration_days']);
 
         return response()->json([
             'success' => true,
@@ -134,7 +135,7 @@ class SubscriptionController extends Controller
         }
 
         $subscription->update(['status' => 'cancelled']);
-        $subscription->load(['student:id,name,phone', 'package:id,name,duration_days']);
+        $subscription->load(['student:id,name', 'package:id,name,duration_days']);
 
         return response()->json([
             'success' => true,
@@ -168,7 +169,7 @@ class SubscriptionController extends Controller
             'notes'          => trim(($subscription->notes ? $subscription->notes.' | ' : '').'فعّله الأدمن '.now()->toDateTimeString()),
         ]);
 
-        $subscription->load(['student:id,name,phone', 'package:id,name,duration_days']);
+        $subscription->load(['student:id,name', 'package:id,name,duration_days']);
 
         return response()->json([
             'success' => true,

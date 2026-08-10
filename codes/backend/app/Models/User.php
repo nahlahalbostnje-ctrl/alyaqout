@@ -100,6 +100,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Course::class, 'teacher_id');
     }
 
+    public function courseEnrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class, 'student_id');
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
