@@ -41,7 +41,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        background: C.bg,
+        background: '#DEE6EC',
         fontFamily: "'Cairo', sans-serif",
       }}
     >
@@ -122,7 +122,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main style={{ flex: 1, overflowY: 'auto', background: C.bg }}>{children}</main>
+      <main style={{ flex: 1, overflowY: 'auto', background: '#DEE6EC' }}>{children}</main>
     </div>
   );
 }
