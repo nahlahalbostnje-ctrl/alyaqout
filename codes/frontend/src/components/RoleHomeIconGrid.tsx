@@ -1,34 +1,51 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { C } from '../theme/palette';
 
 export type RoleIconNavItem = {
   to: string;
   label: string;
-  /** تسمية قصيرة تحت الأيقونة */
   shortLabel?: string;
-  /** مسار SVG stroke path */
   icon: string;
 };
 
 type Props = {
   items: RoleIconNavItem[];
   title?: string;
-  /** استبعاد مسار الحالية (مثل الرئيسية) */
   excludeTo?: string;
+  /** عدد أعمدة على الديسكتوب */
+  columns?: number;
 };
 
-/**
- * شبكة أيقونات موحّدة لرئيسية الأدوار — بدون قوائم «المزيد» النصية.
- */
 export default function RoleHomeIconGrid({
   items,
   title = 'الخدمات',
   excludeTo,
+  columns,
 }: Props) {
   const navigate = useNavigate();
   const list = excludeTo ? items.filter((i) => i.to !== excludeTo) : items;
+  const [width, setWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200,
+  );
+
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   if (list.length === 0) return null;
+
+  let colCount: number | null = columns ?? null;
+  if (colCount) {
+    if (width < 520) colCount = Math.min(colCount, 3);
+    else if (width < 900) colCount = Math.min(colCount, 4);
+  }
+
+  const gridCols = colCount
+    ? `repeat(${colCount}, minmax(0, 1fr))`
+    : 'repeat(auto-fill, minmax(88px, 1fr))';
 
   return (
     <section style={{ marginTop: 4 }}>
@@ -38,11 +55,7 @@ export default function RoleHomeIconGrid({
       }}>
         {title}
       </p>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))',
-        gap: 10,
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 10 }}>
         {list.map((item) => (
           <button
             key={item.to}

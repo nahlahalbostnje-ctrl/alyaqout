@@ -6,10 +6,13 @@ namespace App\Http\Controllers\ParentPortal;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
+use App\Models\Exam;
 use App\Models\ExamSubmission;
+use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\User;
 use App\Models\VideoProgress;
+use App\Services\StudentEntitlementService;
 use App\Services\WaSenderService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -19,8 +22,10 @@ use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly WaSenderService $waSender)
-    {
+    public function __construct(
+        private readonly WaSenderService $waSender,
+        private readonly StudentEntitlementService $entitlement,
+    ) {
     }
 
     private function buildReport(int $studentId): array
@@ -87,6 +92,137 @@ class ReportController extends Controller
     public function childReport(int $studentId): JsonResponse
     {
         return response()->json(['data' => $this->buildReport($studentId)]);
+    }
+
+    /**
+     * Dashboard insight boxes for one child: attendance, upcoming work, notes, improvement.
+     */
+    public function childInsights(int $studentId): JsonResponse
+    {
+        $parent = Auth::user();
+        $student = User::where('id', $studentId)
+            ->where('parent_id', $parent->id)
+            ->firstOrFail();
+
+        $report = $this->buildReport($studentId);
+
+        $courseIds = $this->entitlement->entitledCoursesQuery($student)->pluck('id')->all();
+
+        $upcomingExams = [];
+        $upcomingHomework = [];
+        if ($courseIds !== []) {
+            $upcomingExams = Exam::query()
+                ->whereIn('course_id', $courseIds)
+                ->whereNull('archived_at')
+                ->where('status', 'approved')
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '>=', now()->subDay());
+                })
+                ->with(['course:id,title'])
+                ->orderBy('starts_at')
+                ->limit(8)
+                ->get(['id', 'course_id', 'title', 'starts_at', 'status'])
+                ->map(fn (Exam $e) => [
+                    'type'  => 'exam',
+                    'id'    => $e->id,
+                    'title' => $e->title,
+                    'course'=> $e->course?->title,
+                    'at'    => $e->starts_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all();
+
+            $upcomingHomework = Homework::query()
+                ->whereIn('course_id', $courseIds)
+                ->whereNull('archived_at')
+                ->where('status', 'approved')
+                ->where(function ($q) {
+                    $q->whereNull('due_date')->orWhere('due_date', '>=', now()->toDateString());
+                })
+                ->with(['course:id,title'])
+                ->orderBy('due_date')
+                ->limit(8)
+                ->get(['id', 'course_id', 'title', 'due_date', 'status'])
+                ->map(fn (Homework $h) => [
+                    'type'  => 'homework',
+                    'id'    => $h->id,
+                    'title' => $h->title,
+                    'course'=> $h->course?->title,
+                    'at'    => $h->due_date?->toDateString(),
+                ])
+                ->values()
+                ->all();
+        }
+
+        $upcoming = collect([...$upcomingExams, ...$upcomingHomework])
+            ->sortBy(fn ($row) => $row['at'] ?? '9999')
+            ->take(10)
+            ->values()
+            ->all();
+
+        $notes = HomeworkSubmission::query()
+            ->where('student_id', $studentId)
+            ->whereNotNull('teacher_feedback')
+            ->where('teacher_feedback', '!=', '')
+            ->with(['homework:id,title,course_id', 'homework.course:id,title'])
+            ->latest('submitted_at')
+            ->limit(8)
+            ->get()
+            ->map(fn (HomeworkSubmission $s) => [
+                'id'      => $s->id,
+                'note'    => $s->teacher_feedback,
+                'source'  => 'واجب: '.($s->homework?->title ?? '—'),
+                'course'  => $s->homework?->course?->title,
+                'at'      => $s->submitted_at,
+            ])
+            ->values()
+            ->all();
+
+        $examAvg = $report['exams']['average'];
+        $hwAvg = $report['homework']['average'];
+        $attRate = $report['attendance']['rate'];
+        $videos = $report['progress']['videos_completed'];
+
+        $scoreParts = array_values(array_filter([
+            is_numeric($examAvg) ? (float) $examAvg : null,
+            is_numeric($hwAvg) ? (float) $hwAvg : null,
+            is_numeric($attRate) ? (float) $attRate : null,
+        ], fn ($v) => $v !== null));
+        $overall = $scoreParts !== [] ? round(array_sum($scoreParts) / count($scoreParts), 1) : null;
+
+        $improvementLabel = 'لا توجد بيانات كافية بعد';
+        $improvementTone = 'neutral';
+        if ($overall !== null) {
+            if ($overall >= 75) {
+                $improvementLabel = 'أداء جيد ومستقر';
+                $improvementTone = 'good';
+            } elseif ($overall >= 50) {
+                $improvementLabel = 'يحتاج متابعة خفيفة';
+                $improvementTone = 'warn';
+            } else {
+                $improvementLabel = 'يحتاج تدخلاً ومتابعة';
+                $improvementTone = 'alert';
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'student' => $report['student'],
+                'attendance' => $report['attendance'],
+                'upcoming' => $upcoming,
+                'teacher_notes' => $notes,
+                'improvement' => [
+                    'overall' => $overall,
+                    'label'   => $improvementLabel,
+                    'tone'    => $improvementTone,
+                    'exam_avg'=> $examAvg,
+                    'hw_avg'  => $hwAvg,
+                    'attendance_rate' => $attRate,
+                    'videos_completed' => $videos,
+                ],
+            ],
+        ]);
     }
 
     private function renderPdf(int $studentId)

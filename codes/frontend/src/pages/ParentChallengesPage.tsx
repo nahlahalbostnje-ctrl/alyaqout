@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import ParentLayout from '../components/ParentLayout';
+import ParentActivityTabs from '../components/ParentActivityTabs';
 import api from '../services/axios';
 import { C } from '../theme/palette';
 
@@ -128,18 +129,19 @@ export default function ParentChallengesPage() {
 
   return (
     <ParentLayout>
-      <div style={{ ...font, direction: 'rtl', padding: '8px 4px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ ...font, direction: 'rtl', padding: '8px 4px 32px', maxWidth: 720, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <div style={{ width: 4, height: 22, borderRadius: 2, background: C.goldGrad }} />
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: C.text }}>التحديات العائلية</h1>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: C.text }}>الدوري والتحديات</h1>
             </div>
             <p style={{ margin: 0, color: C.sub, fontSize: 13 }}>
               وافق على اقتراحات أبنائك أو أنشئ تحدياً مشتركاً وتابعوا التقدم معاً
             </p>
           </div>
           <button
+            type="button"
             onClick={() => {
               setForm({
                 ...emptyForm,
@@ -148,13 +150,14 @@ export default function ParentChallengesPage() {
               setModal(true);
             }}
             style={{
-              padding: '10px 18px', borderRadius: 12, border: 'none', background: C.goldGrad,
-              color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', ...font,
+              padding: '10px 16px', borderRadius: 12, border: 'none', background: C.goldGrad,
+              color: '#1B2038', fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: "'Cairo',sans-serif",
             }}
           >
-            + تحدٍ لابنك
+            + تحدٍ جديد
           </button>
         </div>
+        <ParentActivityTabs active="challenges" />
 
         {error && (
           <div style={{

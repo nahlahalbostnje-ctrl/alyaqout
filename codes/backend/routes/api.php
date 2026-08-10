@@ -594,6 +594,7 @@ Route::middleware(['auth:api', 'parent'])->prefix('parent')->group(function () {
     Route::get('children',                           [ParentHomeController::class, 'listChildren']);
     Route::get('children/{student}/live-classes',    [ParentHomeController::class, 'childLiveClasses']);
     Route::get('children/{student}/report',          [ParentReportController::class, 'childReport']);
+    Route::get('children/{student}/insights',        [ParentReportController::class, 'childInsights']);
     Route::get('children/{student}/report/pdf',      [ParentReportController::class, 'downloadPdf']);
     Route::post('children/{student}/report/whatsapp', [ParentReportController::class, 'sendPdfViaWhatsapp']);
 
