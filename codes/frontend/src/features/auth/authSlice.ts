@@ -13,6 +13,7 @@ export interface AuthUser {
   name: string;
   phone: string;
   email?: string | null;
+  avatar_url?: string | null;
   role: string;
   country_id: number | null;
   country?: AuthCountry | null;
@@ -95,6 +96,24 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+export const uploadAvatar = createAsyncThunk(
+  'auth/uploadAvatar',
+  async (file: File, { rejectWithValue }) => {
+    try {
+      const form = new FormData();
+      form.append('avatar', file);
+      const { data } = await api.post('/auth/avatar', form);
+      return data.data as AuthUser;
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.avatar?.[0] ||
+        'فشل رفع الصورة';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 function applyAuthSuccess(state: AuthState, payload: { token: string; user: AuthUser }) {
   state.loading = false;
   state.error   = null;
@@ -173,6 +192,9 @@ const authSlice = createSlice({
       })
 
       .addCase(updateProfile.fulfilled, (state, action) => {
+        if (state.user) state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(uploadAvatar.fulfilled, (state, action) => {
         if (state.user) state.user = { ...state.user, ...action.payload };
       });
   },

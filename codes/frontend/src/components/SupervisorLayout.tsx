@@ -1,10 +1,11 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { useAppDispatch } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
+import AccountMenu from './AccountMenu';
 import { C, brand } from '../theme/palette';
 
 type SupNavItem = { to: string; label: string; d: string };
@@ -53,7 +54,6 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useAppSelector((s) => s.auth.user);
 
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -97,7 +97,6 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
     });
   }, [location.pathname]);
 
-  const initials = user?.name?.split(' ').slice(0, 2).map((w) => w[0]).join('') ?? 'م';
   const dateStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const pageLabel = FLAT_NAV.find((n) => location.pathname.startsWith(n.to))?.label ?? 'بوابة المشرف';
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
@@ -202,15 +201,12 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
         </nav>
 
         <div style={{ flexShrink: 0, padding: '10px 8px 14px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12, background: C.bg, marginBottom: 8 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%', background: C.goldGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 12, flexShrink: 0,
-            }}>{initials}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: C.text, fontWeight: 700, fontSize: 12, lineHeight: 1.2 }}>{user?.name ?? 'المشرف'}</p>
-              <p style={{ color: C.primary, fontSize: 10.5 }}>مشرف</p>
-            </div>
+          <div style={{ marginBottom: 8 }}>
+            <AccountMenu
+              profilePath="/supervisor/settings"
+              roleLabel="مشرف"
+              triggerStyle={{ width: '100%', justifyContent: 'flex-start', background: C.bg }}
+            />
           </div>
           <button type="button" onClick={handleLogout} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10,
@@ -248,14 +244,7 @@ export default function SupervisorLayout({ children }: { children: ReactNode }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {!isMobile && <span style={{ color: C.dim, fontSize: 12 }}>{dateStr}</span>}
             <NotificationBell />
-            <button type="button" onClick={handleLogout} title="تسجيل الخروج" style={{
-              width: 36, height: 36, borderRadius: 10, background: C.redBg, border: '1px solid rgba(224,122,122,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.red,
-            }}>
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            <AccountMenu profilePath="/supervisor/settings" roleLabel="مشرف" />
           </div>
         </header>
         <main style={{ flex: 1, overflowY: 'auto', background: C.bg }}>{children}</main>

@@ -79,9 +79,10 @@ export const STUDENT_ALL_NAV: StudentNavItem[] = [
   ...STUDENT_SECONDARY_NAV,
 ];
 
-export const STUDENT_PAGE_NAMES: Record<string, string> = Object.fromEntries(
-  STUDENT_ALL_NAV.map((i) => [i.to, i.label]),
-);
+export const STUDENT_PAGE_NAMES: Record<string, string> = {
+  ...Object.fromEntries(STUDENT_ALL_NAV.map((i) => [i.to, i.label])),
+  '/student/profile': 'الملف الشخصي',
+};
 
 /** Type scale — Cairo weights keep hierarchy calm */
 export const typeScale = {

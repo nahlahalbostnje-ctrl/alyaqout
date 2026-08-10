@@ -143,6 +143,7 @@ Route::get('certificates/verify/{code}', [CertificateVerifyController::class, 's
 Route::middleware('auth:api')->prefix('auth')->group(function () {
     Route::get('me',             [AuthController::class, 'me']);
     Route::put('profile',        [AuthController::class, 'updateProfile']);
+    Route::post('avatar',        [AuthController::class, 'uploadAvatar']);
     Route::post('logout',        [AuthController::class, 'logout']);
     Route::post('refresh',       [AuthController::class, 'refresh']);
 });

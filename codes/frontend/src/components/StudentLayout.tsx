@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+import { useAppSelector } from '../app/hooks';
 import NotificationBell from './NotificationBell';
 import EmergencyButton from './EmergencyButton';
 import ChatbotWidget from './ChatbotWidget';
 import BrandLogo from './BrandLogo';
+import AccountMenu from './AccountMenu';
 import { ST } from '../theme/studentTheme';
 import { STUDENT_PAGE_NAMES } from '../features/student/studentNav';
 
@@ -20,7 +20,6 @@ type Props = {
  * الصفحات الداخلية: رجوع للرئيسية + عنوان الصفحة.
  */
 export default function StudentLayout({ children, xp }: Props) {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector((s) => s.auth.user);
@@ -32,17 +31,11 @@ export default function StudentLayout({ children, xp }: Props) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const initials = user?.name?.split(' ').map((w) => w[0]).slice(0, 2).join('') ?? 'ط';
   const isHome = location.pathname === '/student/dashboard';
   const pageName = STUDENT_PAGE_NAMES[location.pathname] ?? 'بوابة الطالب';
   const xpPct = xp
     ? Math.min(100, Math.round((xp.inLevel / Math.max(xp.forNext, 1)) * 100))
     : 0;
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login', { replace: true });
-  };
 
   return (
     <div style={{
@@ -142,29 +135,12 @@ export default function StudentLayout({ children, xp }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            title="تسجيل الخروج"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 4px 10px',
-              borderRadius: 14, border: `1px solid ${ST.border}`, background: ST.card,
-              cursor: 'pointer', fontFamily: ST.font,
-            }}
-          >
-            <div style={{
-              width: 34, height: 34, borderRadius: '50%', background: ST.blueGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 800, fontSize: 11,
-            }}>
-              {initials}
-            </div>
-            {!isMobile && (
-              <span style={{ color: ST.text, fontWeight: 700, fontSize: 12.5, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.name?.split(' ')[0] ?? 'طالب'}
-              </span>
-            )}
-          </button>
+          <AccountMenu
+            profilePath="/student/profile"
+            roleLabel="طالب"
+            avatarGradient={ST.blueGrad}
+            triggerStyle={{ background: ST.card, borderColor: ST.border }}
+          />
         </div>
       </header>
 

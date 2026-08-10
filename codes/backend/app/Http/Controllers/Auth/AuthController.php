@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -295,6 +296,34 @@ class AuthController extends Controller
         ]);
     }
 
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth('api')->user();
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,jpg,png,webp|max:2048',
+        ]);
+
+        $file = $request->file('avatar');
+        $path = $file->store('avatars', 'public');
+
+        if ($user->avatar_url) {
+            $old = $this->avatarRelativePath($user->avatar_url);
+            if ($old && Storage::disk('public')->exists($old)) {
+                Storage::disk('public')->delete($old);
+            }
+        }
+
+        $user->update(['avatar_url' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث الصورة الشخصية بنجاح.',
+            'data'    => $this->userPayload($user->fresh()),
+        ]);
+    }
+
     public function logout(): JsonResponse
     {
         auth('api')->logout();
@@ -337,6 +366,7 @@ class AuthController extends Controller
             'name'       => $user->name,
             'phone'      => $user->phone,
             'email'      => $user->email,
+            'avatar_url' => $this->absoluteAvatarUrl($user->avatar_url),
             'role'       => $user->role,
             'country_id' => $user->country_id,
             'country'    => $country ? [
@@ -347,6 +377,33 @@ class AuthController extends Controller
             ] : null,
             'is_active'  => $user->is_active,
         ];
+    }
+
+    private function absoluteAvatarUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
+    }
+
+    private function avatarRelativePath(string $stored): ?string
+    {
+        if (str_starts_with($stored, 'http://') || str_starts_with($stored, 'https://')) {
+            $marker = '/storage/';
+            $pos = strpos($stored, $marker);
+            if ($pos === false) {
+                return null;
+            }
+
+            return ltrim(substr($stored, $pos + strlen($marker)), '/');
+        }
+
+        return ltrim($stored, '/');
     }
 
     /**

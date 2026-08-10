@@ -7,6 +7,7 @@ import { logout } from '../features/auth/authSlice';
 import api from '../services/axios';
 import { C } from '../theme/palette';
 import RoleHomeIconGrid from '../components/RoleHomeIconGrid';
+import AccountMenu from '../components/AccountMenu';
 import { TEACHER_HOME_ICONS } from '../features/nav/roleHomeIcons';
 
 // ─── Design Tokens (aligned with calm light C palette) ─────────────────────
@@ -110,6 +111,7 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
   open?: boolean;
   onClose?: () => void;
 }) {
+  const navigate = useNavigate();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     for (const g of NAV_GROUPS) {
@@ -239,8 +241,15 @@ function Sidebar({ active, onNav, teacher, subjectsLabel, pendingTotal, onLogout
         })}
       </nav>
 
-      {/* Logout */}
-      <div style={{ padding: '14px 10px', borderTop: `1px solid ${T.sBorder}`, flexShrink: 0 }}>
+      {/* Account + Logout */}
+      <div style={{ padding: '14px 10px', borderTop: `1px solid ${T.sBorder}`, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => { navigate('/teacher/profile'); if (isMobile) onClose?.(); }}
+          style={{ width: '100%', padding: '10px 14px', borderRadius: 12, background: T.goldBg, border: `1px solid ${T.goldBdr}`, color: T.gold, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+        >
+          <span>👤</span> الملف الشخصي
+        </button>
         <button onClick={onLogout} style={{ width: '100%', padding: '10px 14px', borderRadius: 12, background: C.redBg, border: `1px solid rgba(224,122,122,0.35)`, color: C.red, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>🚪</span> تسجيل الخروج
         </button>
@@ -934,8 +943,7 @@ export default function TeacherMobileApp() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <button onClick={() => setNavOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, background: T.card, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 18 }}>☰</button>
             <span style={{ color: T.text, fontWeight: 800, fontSize: 14 }}>أ. {teacher?.name?.split(' ')[0] ?? '...'}</span>
-            {/* Always-visible logout — no need to open the sidebar drawer */}
-            <button onClick={handleLogout} title="تسجيل الخروج" style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.28)', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🚪</button>
+            <AccountMenu profilePath="/teacher/profile" roleLabel="معلم" compact hideChevron />
           </div>
         )}
         {screen === 'home' && (

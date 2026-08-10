@@ -12,6 +12,10 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('yaqoot_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // Let the browser set multipart boundary for FormData
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

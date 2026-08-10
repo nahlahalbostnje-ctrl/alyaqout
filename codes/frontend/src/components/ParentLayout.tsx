@@ -1,10 +1,11 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { useAppDispatch } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
+import AccountMenu from './AccountMenu';
 import { C, brand } from '../theme/palette';
 
 const NAV = [
@@ -30,7 +31,6 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useAppSelector((s) => s.auth.user);
 
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,10 +45,6 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
   useEffect(() => { if (isMobile) setSidebarOpen(false); }, [location.pathname, isMobile]);
 
   const handleLogout = () => { dispatch(logout()); navigate('/login', { replace: true }); };
-
-  const initials = user?.name
-    ? user.name.split(' ').slice(0, 2).map((w: string) => w[0]).join('')
-    : 'و';
 
   const dateStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const currentPage = NAV.find((n) => n.end ? location.pathname === n.to : location.pathname.startsWith(n.to));
@@ -105,17 +101,14 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div style={{ flexShrink: 0, padding: '10px 8px 14px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 11px', borderRadius: 12, background: C.bg, marginBottom: 6 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-              background: C.goldGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 900, fontSize: 13,
-            }}>{initials}</div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <p style={{ color: C.text, fontWeight: 700, fontSize: 12.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>أ. {user?.name}</p>
-              <p style={{ color: C.primary, fontSize: 10, marginTop: 1 }}>ولي أمر</p>
-            </div>
+          <div style={{ marginBottom: 6 }}>
+            <AccountMenu
+              profilePath="/parent/settings"
+              roleLabel="ولي أمر"
+              namePrefix="أ. "
+              showName
+              triggerStyle={{ width: '100%', justifyContent: 'flex-start', background: C.bg }}
+            />
           </div>
           <button type="button" onClick={handleLogout} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 7,
@@ -156,31 +149,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10 }}>
             {!isMobile && <span style={{ color: C.dim, fontSize: 12 }}>{dateStr}</span>}
             <NotificationBell />
-            {!isMobile && (
-              <>
-                <div style={{ width: 1, height: 26, background: C.border }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: '50%',
-                    background: C.goldGrad,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontWeight: 900, fontSize: 12,
-                  }}>{initials}</div>
-                  <div>
-                    <p style={{ color: C.text, fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>أ. {user?.name}</p>
-                    <p style={{ color: C.primary, fontSize: 10.5 }}>ولي أمر</p>
-                  </div>
-                </div>
-              </>
-            )}
-            <button type="button" onClick={handleLogout} title="تسجيل الخروج" style={{
-              width: 36, height: 36, borderRadius: 10, background: C.redBg, border: '1px solid rgba(224,122,122,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: C.red,
-            }}>
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            <AccountMenu profilePath="/parent/settings" roleLabel="ولي أمر" namePrefix="أ. " />
           </div>
         </header>
 

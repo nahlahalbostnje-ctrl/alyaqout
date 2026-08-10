@@ -73,7 +73,7 @@ const navGroups: NavGroup[] = [
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <AppLayout navGroups={navGroups} roleLabel="لوحة الإدارة">
+    <AppLayout navGroups={navGroups} roleLabel="لوحة الإدارة" profilePath="/admin/profile">
       {children}
     </AppLayout>
   );

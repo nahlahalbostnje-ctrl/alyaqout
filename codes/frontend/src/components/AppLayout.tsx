@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import NotificationBell from './NotificationBell';
 import BrandLogo from './BrandLogo';
+import AccountMenu from './AccountMenu';
 import { C, brand } from '../theme/palette';
 
 export interface NavItem {
@@ -45,7 +46,6 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
   const user = useAppSelector((s) => s.auth.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const groups: NavGroup[] =
     navGroups && navGroups.length > 0
@@ -74,7 +74,6 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
 
   useEffect(() => {
     if (sidebarOpen) setSidebarOpen(false);
-    setProfileMenuOpen(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -95,19 +94,11 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (!profileMenuOpen) return;
-    const onDoc = () => setProfileMenuOpen(false);
-    document.addEventListener('click', onDoc);
-    return () => document.removeEventListener('click', onDoc);
-  }, [profileMenuOpen]);
-
   const initials = user?.name
     ? user.name.split(' ').slice(0, 2).map((w: string) => w[0]).join('')
     : 'م';
 
   const handleLogout = () => {
-    setProfileMenuOpen(false);
     dispatch(logout());
     navigate('/login', { replace: true });
   };
@@ -408,126 +399,11 @@ export default function AppLayout({ children, navItems, navGroups, roleLabel, pr
 
             <div style={{ width: 1, height: 28, background: C.border }} />
 
-            {/* User profile dropdown */}
-            <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => setProfileMenuOpen((o) => !o)}
-                aria-haspopup="menu"
-                aria-expanded={profileMenuOpen}
-                title="الحساب"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 9,
-                  padding: '4px 6px 4px 8px',
-                  borderRadius: 12,
-                  border: profileMenuOpen ? `1.5px solid ${C.primary}` : '1.5px solid transparent',
-                  background: profileMenuOpen ? C.goldBg : 'transparent',
-                  cursor: 'pointer',
-                  fontFamily: "'Cairo', sans-serif",
-                }}
-              >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 10,
-                    background: `linear-gradient(135deg, ${C.primary}, ${C.goldL})`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 900,
-                    fontSize: 12,
-                    color: '#fff',
-                    flexShrink: 0,
-                  }}
-                >
-                  {initials}
-                </div>
-                {!isMobile && (
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ color: C.text, fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>{user?.name}</p>
-                    <p style={{ color: C.primary, fontSize: 10.5, margin: 0 }}>{roleLabel}</p>
-                  </div>
-                )}
-                <span style={{ color: '#9CA3AF', fontSize: 10, transform: profileMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
-              </button>
-
-              {profileMenuOpen && (
-                <div
-                  role="menu"
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    left: 0,
-                    minWidth: 200,
-                    background: '#fff',
-                    borderRadius: 14,
-                    border: `1px solid ${C.border}`,
-                    boxShadow: '0 10px 32px rgba(0,0,0,0.12)',
-                    padding: 6,
-                    zIndex: 60,
-                    fontFamily: "'Cairo', sans-serif",
-                  }}
-                >
-                  {profilePath && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => { setProfileMenuOpen(false); navigate(profilePath); }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '11px 12px',
-                        borderRadius: 10,
-                        border: 'none',
-                        background: 'transparent',
-                        color: C.text,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        fontFamily: "'Cairo', sans-serif",
-                        textAlign: 'right',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = C.goldBg; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <span style={{ fontSize: 15 }}>👤</span>
-                      الملف الشخصي
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={handleLogout}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '11px 12px',
-                      borderRadius: 10,
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#EF4444',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontFamily: "'Cairo', sans-serif",
-                      textAlign: 'right',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <span style={{ fontSize: 15 }}>🚪</span>
-                    تسجيل الخروج
-                  </button>
-                </div>
-              )}
-            </div>
+            <AccountMenu
+              profilePath={profilePath || '/admin/profile'}
+              roleLabel={roleLabel}
+              avatarGradient={`linear-gradient(135deg, ${C.primary}, ${C.goldL})`}
+            />
           </div>
         </header>
 
